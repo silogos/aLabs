@@ -1,0 +1,142 @@
+/**
+ * API client — thin fetch wrappers around the Hono API.
+ *
+ * Calls go to `/api/*` which Vite proxies to the API in dev. The active
+ * organization + project are resolved once at boot (the demo auto-logs-in as
+ * the seed user, who is a member of the seeded Northwind → Atlas project).
+ */
+import type {
+  User,
+  Organization,
+  Project,
+  Task,
+  TaskStatus,
+  TaskLabel,
+  TaskType,
+  Space,
+  Page,
+  FileRef,
+  Iteration,
+  Milestone,
+  Notification,
+  Dashboard,
+  Paginated,
+} from "@pmin/core";
+
+const BASE = "/api";
+
+async function req<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    credentials: "include",
+    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    ...init,
+  });
+  if (res.status === 204) return undefined as T;
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = body?.error?.message ?? `Request failed (${res.status})`;
+    throw new Error(msg);
+  }
+  return body as T;
+}
+
+const unwrap = <T>(r: Promise<{ data: T }>) => r.then((x) => x.data);
+
+/* ---- auth + tenant ---- */
+export const api = {
+  me: () => req<{ data: User }>("/auth/me").then((x) => x.data),
+  orgs: () => req<{ data: Organization[] }>("/organizations").then((x) => x.data),
+  projects: (orgId: string) =>
+    req<{ data: Project[] }>(`/organizations/${orgId}/projects`).then((x) => x.data),
+  members: (orgId: string) =>
+    req<{ data: { id: string; user: User; role: { name: string } }[] }>(
+      `/organizations/${orgId}/members`,
+    ).then((x) => x.data),
+
+  /* ---- tasks ---- */
+  tasks: (pid: string, params: Record<string, string | undefined> = {}) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) if (v) qs.set(k, v);
+    qs.set("limit", "100");
+    return req<Paginated<Task>>(`/projects/${pid}/tasks?${qs}`);
+  },
+  task: (pid: string, id: string) =>
+    req<{ data: Task & { subtasks: Task[]; comments: Comment[] } }>(
+      `/projects/${pid}/tasks/${id}`,
+    ).then((x) => x.data),
+  createTask: (pid: string, body: Partial<Task>) =>
+    req<{ data: Task }>(`/projects/${pid}/tasks`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  updateTask: (pid: string, id: string, body: Partial<Task>) =>
+    req<{ data: Task }>(`/projects/${pid}/tasks/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  statuses: (pid: string) =>
+    req<{ data: TaskStatus[] }>(`/projects/${pid}/tasks/statuses`).then((x) => x.data),
+  labels: (pid: string) =>
+    req<{ data: TaskLabel[] }>(`/projects/${pid}/tasks/labels`).then((x) => x.data),
+  types: (pid: string) =>
+    req<{ data: TaskType[] }>(`/projects/${pid}/tasks/types`).then((x) => x.data),
+
+  /* ---- documents ---- */
+  spaces: (pid: string) =>
+    req<{ data: Space[] }>(`/projects/${pid}/documents/spaces`).then((x) => x.data),
+  pages: (pid: string) =>
+    req<Paginated<Page>>(`/projects/${pid}/documents/pages?limit=100`),
+  page: (pid: string, id: string) =>
+    req<{ data: Page }>(`/projects/${pid}/documents/pages/${id}`).then((x) => x.data),
+  updatePage: (pid: string, id: string, body: Partial<Page>) =>
+    req<{ data: Page }>(`/projects/${pid}/documents/pages/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  files: (pid: string) => {
+    // files live under documents/files (not in the catalog but provided)
+    return req<{ data: FileRef[] } | FileRef[]>(`/projects/${pid}/documents/files`).then(
+      (x) => ((x as { data?: FileRef[] }).data ?? (x as FileRef[])),
+    );
+  },
+
+  /* ---- planning ---- */
+  iterations: (pid: string) =>
+    req<{ data: Iteration[] }>(`/projects/${pid}/planning/iterations`).then((x) => x.data),
+  milestones: (pid: string) =>
+    req<{ data: Milestone[] }>(`/projects/${pid}/planning/milestones`).then((x) => x.data),
+
+  /* ---- reporting ---- */
+  dashboard: (pid: string) =>
+    req<{ data: Dashboard }>(`/projects/${pid}/reporting/dashboard`).then((x) => x.data),
+
+  /* ---- notifications ---- */
+  notifications: () =>
+    req<{ data: Notification[] }>("/notifications").then((x) => x.data),
+};
+
+export interface Comment {
+  id: string;
+  taskId: string;
+  userId: string;
+  body: string;
+  createdAt: string;
+}
+
+// re-export commonly used types for components
+export type {
+  User,
+  Organization,
+  Project,
+  Task,
+  TaskStatus,
+  TaskLabel,
+  TaskType,
+  Space,
+  Page,
+  FileRef,
+  Iteration,
+  Milestone,
+  Dashboard,
+};
+export { unwrap };
