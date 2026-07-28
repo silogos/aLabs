@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "auth/sso-handshake.html",
+  "entry": "auth/sso-handshake.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-07-25T10:43:22.947Z",
+  "updatedAt": "2026-07-25T10:43:22.947Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

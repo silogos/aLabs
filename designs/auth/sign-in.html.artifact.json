@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "auth/sign-in.html",
+  "entry": "auth/sign-in.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-07-25T10:37:26.587Z",
+  "updatedAt": "2026-07-25T10:37:26.587Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

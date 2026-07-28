@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign in · Helix</title>
+<link rel="stylesheet" href="auth.css" />
+</head>
+<body>
+<div class="auth" id="app">
+
+  <!-- ============ BRAND PANEL ============ -->
+  <aside class="brand-panel" aria-label="About Helix">
+    <div class="bp-head">
+      <div class="logo">H</div>
+      <div class="wm"><b>Helix</b><small>workspace</small></div>
+    </div>
+
+    <div class="bp-body">
+      <span class="bp-eyebrow"><span class="d"></span>Helix · v4.2</span>
+      <h2 class="bp-headline">Plan, build, and ship — in <em>one workspace</em>.</h2>
+      <p class="bp-sub">Project delivery for software teams. Tasks, docs, planning and reporting that stay in lock-step from kickoff to launch.</p>
+
+      <ul class="bp-feats">
+        <li>
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+          <div><b>Planning workspace</b><small>Turn PRDs into scoped, ready-to-build tasks.</small></div>
+        </li>
+        <li>
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></span>
+          <div><b>Real-time delivery</b><small>Burndown, milestones, and client portals — always current.</small></div>
+        </li>
+        <li>
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span>
+          <div><b>Enterprise-grade security</b><small>SAML/OIDC SSO, SCIM, audit logs and role-based access.</small></div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="bp-foot">
+      <span class="cert"><span class="bd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>SOC 2 Type II</span>
+      <span class="cert"><span class="bd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg></span>ISO 27001</span>
+      <span class="cert"><span class="bd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></svg></span>GDPR</span>
+    </div>
+  </aside>
+
+  <!-- ============ FORM PANEL ============ -->
+  <main class="form-panel">
+    <div class="form-card">
+      <div class="card-head">
+        <div class="logo-sm">H</div>
+        <h1>Welcome back</h1>
+        <p class="sub">Sign in to your Helix workspace to continue.</p>
+      </div>
+
+      <!-- oauth / sso first (enterprise-first ordering) -->
+      <div class="oauth" style="margin-bottom:6px">
+        <button class="btn oauth-btn full" type="button" onclick="go('sso-handshake.html')">
+          <span class="si" style="width:18px;height:18px;display:inline-grid;place-items:center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1.5"/></svg>
+          </span>
+          Continue with SSO
+        </button>
+        <button class="btn oauth-btn full" type="button" onclick="fakeSubmit(this)">
+          <span class="gi">
+            <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.7-.06-1.4-.18-2.06H12v3.9h5.9a5 5 0 0 1-2.18 3.3v2.7h3.52c2.06-1.9 3.26-4.7 3.26-7.84z"/><path fill="#34A853" d="M12 23c2.94 0 5.42-.98 7.23-2.64l-3.52-2.7c-.98.66-2.23 1.05-3.71 1.05-2.85 0-5.27-1.93-6.13-4.52H2.22v2.79A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.87 14.19a6.6 6.6 0 0 1 0-4.2V7.2H2.22a11 11 0 0 0 0 9.78l3.65-2.79z"/><path fill="#EA4335" d="M12 4.9c1.6 0 3.04.55 4.18 1.64l3.12-3.12A10.6 10.6 0 0 0 12 1 11 11 0 0 0 2.22 7.2l3.65 2.79C6.73 6.83 9.15 4.9 12 4.9z"/></svg>
+          </span>
+          Continue with Google
+        </button>
+      </div>
+
+      <div class="divider"><span>or sign in with email</span></div>
+
+      <form class="form" id="signInForm" novalidate onsubmit="return false">
+        <div class="field">
+          <label for="email">Work email</label>
+          <div class="input-wrap">
+            <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            <input class="input lead-pad" type="email" id="email" name="email" inputmode="email" autocomplete="username" placeholder="you@company.com" required />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="input-wrap">
+            <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            <input class="input lead-pad mono" type="password" id="password" name="password" autocomplete="current-password" placeholder="Enter password" required style="padding-right:42px" />
+            <div class="input-affix">
+              <button class="eye-btn" type="button" aria-label="Show password" onclick="togglePw('password',this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="between-row">
+          <label class="check-row"><input type="checkbox" /> Keep me signed in</label>
+          <a class="link" href="forgot-password.html">Forgot password?</a>
+        </div>
+
+        <button class="btn primary full lg" type="submit" onclick="fakeSubmit(this)">
+          <span class="spinner"></span><span class="lbl-txt">Sign in</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </form>
+
+      <div class="alert info" style="margin-top:16px">
+        <span class="ai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg></span>
+        <div class="ab">Single sign-on enforced for your organization? Use <b>Continue with SSO</b> above.</div>
+      </div>
+
+      <p class="switch-foot" style="margin-top:18px">Don't have an account? <a href="create-account.html">Create one</a></p>
+
+      <div class="legal-foot">
+        <div class="row">
+          <a href="#">Terms</a><a href="#">Privacy</a><a href="#">Security</a><a href="#">Status</a>
+        </div>
+        <div class="row">
+          <span class="lang-pick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></svg>English (US)</span>
+        </div>
+        <div class="row mono" style="font-size:10.5px;letter-spacing:.04em">© Helix Inc. · auth.helix.app</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="auth.js"></script>
+</body>
+</html>

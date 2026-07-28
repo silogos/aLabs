@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Verify your identity · Helix</title>
+<link rel="stylesheet" href="auth.css" />
+</head>
+<body>
+<div class="auth" id="app">
+
+  <!-- BRAND PANEL -->
+  <aside class="brand-panel" aria-label="About Helix">
+    <div class="bp-head">
+      <div class="logo">H</div>
+      <div class="wm"><b>Helix</b><small>workspace</small></div>
+    </div>
+    <div class="bp-body">
+      <span class="bp-eyebrow"><span class="d"></span>Two-factor verification</span>
+      <h2 class="bp-headline">One more step to <em>prove it's really you</em>.</h2>
+      <p class="bp-sub">Two-factor authentication keeps your workspace safe even if your password leaks. You're seeing this because 2FA is required for your account.</p>
+      <ul class="bp-feats">
+        <li>
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
+          <div><b>Authenticator app</b><small>Google Authenticator, 1Password, Authy — time-based codes.</small></div>
+        </li>
+        <li>
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1.5"/></svg></span>
+          <div><b>Backup codes</b><small>Single-use recovery codes saved when you set up 2FA.</small></div>
+        </li>
+        <li>
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
+          <div><b>Trusted devices</b><small>Skip the prompt for 30 days on devices you mark as trusted.</small></div>
+        </li>
+      </ul>
+    </div>
+    <div class="bp-foot">
+      <span class="cert"><span class="bd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>SOC 2 Type II</span>
+      <span class="cert"><span class="bd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg></span>ISO 27001</span>
+    </div>
+  </aside>
+
+  <!-- FORM PANEL -->
+  <main class="form-panel">
+    <div class="form-card center">
+      <div class="card-head" style="margin-bottom:18px">
+        <div class="logo-sm">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <h1>Verify it's you</h1>
+        <p class="sub">For <b style="color:var(--fg)">maya@northbeam.studio</b> · <a href="sign-in.html">not you?</a></p>
+      </div>
+
+      <!-- method tabs -->
+      <div class="method-tabs" role="tablist" style="margin-bottom:22px">
+        <button class="on" role="tab" data-m="totp" onclick="method('totp',this)">Authenticator</button>
+        <button role="tab" data-m="backup" onclick="method('backup',this)">Backup code</button>
+        <button role="tab" data-m="sms" onclick="method('sms',this)">Text (SMS)</button>
+      </div>
+
+      <!-- TOTP -->
+      <div id="m-totp" class="m-panel">
+        <div class="otp-wrap">
+          <div class="otp" id="otp">
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="digit 1" autocomplete="one-time-code" />
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="digit 2" />
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="digit 3" />
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="digit 4" />
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="digit 5" />
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="digit 6" />
+          </div>
+          <p class="otp-meta">Enter the 6-digit code from your authenticator app.<br>
+            Didn't get it? <button type="button" class="resend" id="resend" disabled><span id="resendLbl">Resend in 30s</span></button>
+          </p>
+        </div>
+
+        <label class="check-row" style="margin-top:8px;justify-content:center"><input type="checkbox" id="trust" /> Trust this device for 30 days</label>
+
+        <button class="btn primary full lg" type="button" style="margin-top:16px" id="verifyBtn" onclick="verify(this)">
+          <span class="spinner"></span><span class="lbl-txt">Verify &amp; continue</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      <!-- Backup code -->
+      <div id="m-backup" class="m-panel" style="display:none">
+        <form class="form" onsubmit="return false">
+          <div class="field">
+            <label for="bk">Enter a backup code</label>
+            <div class="input-wrap">
+              <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+              <input class="input lead-pad backup-input" type="text" id="bk" placeholder="XXXX-XXXX" autocomplete="off" style="letter-spacing:.18em" />
+            </div>
+            <div class="hint">Backup codes are 8 characters, hyphenated. Each works once.</div>
+          </div>
+          <button class="btn primary full lg" type="button" onclick="verifyBackup(this)">Use backup code</button>
+        </form>
+        <p class="otp-meta" style="margin-top:14px">Out of backup codes? <a class="link" href="sign-in.html">Sign in</a> to generate new ones — you'll need your authenticator app.</p>
+      </div>
+
+      <!-- SMS -->
+      <div id="m-sms" class="m-panel" style="display:none">
+        <div class="otp-wrap">
+          <p class="otp-meta" style="margin-bottom:4px">We texted a code to <b style="color:var(--fg)">•••• ••44</b>.</p>
+          <div class="otp" id="otpSms">
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="digit 1" autocomplete="one-time-code" />
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="digit 2" />
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="digit 3" />
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="digit 4" />
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="digit 5" />
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="digit 6" />
+          </div>
+          <p class="otp-meta">Didn't receive it? <button type="button" class="resend" id="resendSms" disabled><span id="resendSmsLbl">Resend in 30s</span></button></p>
+        </div>
+        <label class="check-row" style="margin-top:8px;justify-content:center"><input type="checkbox" /> Trust this device for 30 days</label>
+        <button class="btn primary full lg" type="button" style="margin-top:16px" onclick="window.toast('Verified via SMS (prototype).')">Verify &amp; continue</button>
+      </div>
+
+      <div class="sec-note" style="margin-top:20px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Helix will <b>never</b> call or email you to ask for this code.</span>
+      </div>
+
+      <p class="switch-foot" style="margin-top:16px">Having trouble? <a href="#">Use a recovery method</a> · <a href="sign-in.html">Cancel</a></p>
+
+      <div class="legal-foot">
+        <div class="row mono" style="font-size:10.5px;letter-spacing:.04em">© Helix Inc. · auth.helix.app · session 9f2c…ae1</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="auth.js"></script>
+<script>
+function method(id,btn){
+  document.querySelectorAll('.method-tabs button').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  document.querySelectorAll('.m-panel').forEach(function(p){p.style.display='none';});
+  var p=document.getElementById('m-'+id);if(p)p.style.display='block';
+  // focus first input of revealed panel
+  setTimeout(function(){var f=p&&p.querySelector('input');if(f)f.focus();},50);
+}
+
+// OTP auto-advance + paste handling
+function wireOtp(scopeId){
+  var box=document.getElementById(scopeId);if(!box)return;
+  var inputs=box.querySelectorAll('input');
+  inputs.forEach(function(inp,i){
+    inp.addEventListener('input',function(){
+      this.value=this.value.replace(/[^0-9]/g,'').slice(0,1);
+      if(this.value){this.classList.add('filled');if(inputs[i+1])inputs[i+1].focus();}
+      else{this.classList.remove('filled');}
+    });
+    inp.addEventListener('keydown',function(e){
+      if(e.key==='Backspace'&&!this.value&&inputs[i-1]){inputs[i-1].focus();inputs[i-1].value='';inputs[i-1].classList.remove('filled');}
+      if(e.key==='ArrowLeft'&&inputs[i-1])inputs[i-1].focus();
+      if(e.key==='ArrowRight'&&inputs[i+1])inputs[i+1].focus();
+    });
+    inp.addEventListener('paste',function(e){
+      e.preventDefault();
+      var raw=(e.clipboardData||window.clipboardData).getData('text').replace(/[^0-9]/g,'').slice(0,6);
+      raw.split('').forEach(function(ch,j){if(inputs[j]){inputs[j].value=ch;inputs[j].classList.add('filled');}});
+      var last=Math.min(raw.length,inputs.length)-1;
+      if(last>=0&&inputs[last])inputs[last].focus();
+    });
+  });
+  return inputs;
+}
+var totpInputs=wireOtp('otp');
+wireOtp('otpSms');
+
+function verify(btn){
+  var code=Array.prototype.map.call(totpInputs,function(i){return i.value;}).join('');
+  if(code.length<6){
+    totpInputs.forEach(function(i){i.classList.add('err');});
+    window.toast('Enter all 6 digits.');
+    setTimeout(function(){totpInputs.forEach(function(i){i.classList.remove('err');});},500);
+    return;
+  }
+  btn.classList.add('loading');btn.disabled=true;
+  setTimeout(function(){
+    btn.classList.remove('loading');btn.disabled=false;
+    window.toast('Verified. Taking you to your workspace…');
+  },1200);
+}
+function verifyBackup(btn){
+  var v=document.getElementById('bk').value||'';
+  if(v.replace(/[^0-9a-z]/gi,'').length<8){window.toast('Enter a valid 8-character backup code.');return;}
+  fakeSubmit(btn,'Backup code accepted. Verifying…');
+}
+
+// resend countdown(s) — named recursive fns (no arguments.callee)
+function countdown(btnId,lblId,sec,onDone){
+  var btn=document.getElementById(btnId),lbl=document.getElementById(lblId);
+  if(!btn)return;var s=sec;btn.disabled=true;
+  function tick(){
+    lbl.textContent='Resend in '+s+'s';
+    if(s<=0){btn.disabled=false;lbl.textContent='Resend code';if(onDone)onDone();return;}
+    s--;setTimeout(tick,1000);
+  }
+  tick();
+}
+function resendTotp(){window.toast('A new code was generated in your app.');countdown('resend','resendLbl',30,resendTotp);}
+function resendSms(){window.toast('A new SMS code was sent.');countdown('resendSms','resendSmsLbl',30,resendSms);}
+countdown('resend','resendLbl',30,resendTotp);
+countdown('resendSms','resendSmsLbl',30,resendSms);
+</script>
+</body>
+</html>

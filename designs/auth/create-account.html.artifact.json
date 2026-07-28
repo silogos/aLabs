@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "auth/create-account.html",
+  "entry": "auth/create-account.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-07-25T10:40:07.755Z",
+  "updatedAt": "2026-07-25T10:40:07.755Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

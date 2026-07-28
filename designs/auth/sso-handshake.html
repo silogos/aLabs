@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign in with SSO · Helix</title>
+<link rel="stylesheet" href="auth.css" />
+</head>
+<body>
+<div class="auth" id="app">
+
+  <!-- BRAND PANEL -->
+  <aside class="brand-panel" aria-label="About Helix">
+    <div class="bp-head">
+      <div class="logo">H</div>
+      <div class="wm"><b>Helix</b><small>workspace</small></div>
+    </div>
+    <div class="bp-body">
+      <span class="bp-eyebrow"><span class="d"></span>Enterprise single sign-on</span>
+      <h2 class="bp-headline">One identity. <em>Every tool</em>.</h2>
+      <p class="bp-sub">Connect Helix to your identity provider with SAML 2.0 or OIDC. Your team signs in with the same credentials they already use everywhere else.</p>
+      <ul class="bp-feats">
+        <li>
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></svg></span>
+          <div><b>SAML 2.0 &amp; OIDC</b><small>Works with Okta, Entra ID, Google Workspace, OneLogin and more.</small></div>
+        </li>
+        <li>
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></span>
+          <div><b>Automated provisioning</b><small>SCIM sync creates, updates and deactivates users automatically.</small></div>
+        </li>
+        <li>
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v5"/></svg></span>
+          <div><b>Full audit trail</b><small>Every sign-in, group change, and access event is logged.</small></div>
+        </li>
+      </ul>
+    </div>
+    <div class="bp-foot">
+      <span class="cert"><span class="bd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>SOC 2 Type II</span>
+      <span class="cert"><span class="bd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg></span>ISO 27001</span>
+    </div>
+  </aside>
+
+  <!-- FORM PANEL -->
+  <main class="form-panel">
+    <div class="form-card center">
+
+      <!-- ===== STATE A: find organization ===== -->
+      <div id="s-find">
+        <a class="back-link" href="sign-in.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+          Back to sign in
+        </a>
+        <div class="card-head" style="margin-bottom:20px">
+          <div class="logo-sm">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1.5"/></svg>
+          </div>
+          <h1>Sign in with SSO</h1>
+          <p class="sub">Enter your work email and we'll route you to your organization's identity provider.</p>
+        </div>
+
+        <form class="form" onsubmit="return false">
+          <div class="field">
+            <label for="email">Work email</label>
+            <div class="input-wrap">
+              <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+              <input class="input lead-pad" type="email" id="email" inputmode="email" placeholder="you@company.com" value="" />
+            </div>
+            <div class="hint">We detect your SSO connection from your email domain.</div>
+          </div>
+
+          <button class="btn primary full lg" type="submit" id="detectBtn" onclick="detect(this)">
+            <span class="spinner"></span><span class="lbl-txt">Find my organization</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
+
+        <div class="alert info" style="margin-top:16px">
+          <span class="ai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg></span>
+          <div class="ab">Don't have SSO yet? Use <a href="sign-in.html">email &amp; password</a> — your workspace admin can enable SSO from <b>Settings → Security</b>.</div>
+        </div>
+      </div>
+
+      <!-- ===== STATE B: org detected → confirm redirect ===== -->
+      <div id="s-org" style="display:none">
+        <a class="back-link" href="#" onclick="show('s-find');return false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+          Use a different email
+        </a>
+        <div class="card-head" style="margin-bottom:20px;text-align:center">
+          <div class="logo-sm" style="margin:0 auto 18px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1.5"/></svg>
+          </div>
+          <h1>Continue to Helix</h1>
+          <p class="sub" style="margin-left:auto;margin-right:auto">Your organization uses single sign-on. You'll be redirected to your identity provider to authenticate.</p>
+        </div>
+
+        <div class="org-pill" style="margin:0 auto 16px;display:inline-flex">
+          <span class="od">N</span>
+          <div style="text-align:left"><b>Northbeam Studio</b><br><small class="mono">northbeam.studio · Enterprise</small></div>
+        </div>
+
+        <div class="idp-row" style="margin-bottom:16px">
+          <div class="ic okta">O</div>
+          <div class="meta">
+            <b>Okta</b>
+            <small>SSO via SAML 2.0 · https://northbeam.okta.com</small>
+          </div>
+          <span class="status ok" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;height:21px;padding:0 8px;border-radius:999px;color:oklch(42% 0.11 150);background:var(--ok-bg)"><span style="width:6px;height:6px;border-radius:50%;background:currentColor"></span>Connected</span>
+        </div>
+
+        <div class="sec-note" style="margin-bottom:16px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>You're leaving <b>helix.app</b> and signing in through your identity provider. We never see your IdP password.</span>
+        </div>
+
+        <button class="btn primary full lg" type="button" id="contBtn" onclick="redirect(this)">
+          <span class="spinner"></span><span class="lbl-txt">Continue to Okta</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14 3h7v7M21 3l-9 9M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/></svg>
+        </button>
+        <p class="otp-meta" style="margin-top:12px">Redirecting automatically in <b id="autoSec">5</b>s · <button type="button" class="resend" onclick="cancelAuto()">cancel</button></p>
+      </div>
+
+      <!-- ===== STATE C: handshake in progress ===== -->
+      <div id="s-redirect" style="display:none;text-align:center">
+        <div style="padding-top:8px">
+          <div class="big-spin"></div>
+          <h1 style="font-size:21px;font-weight:680;letter-spacing:-.02em;color:var(--fg-strong);margin-top:18px">Connecting to Okta…</h1>
+          <p class="sub" style="color:var(--muted);font-size:13.5px;margin-top:6px">You'll be sent to <span class="mono">northbeam.okta.com</span> to sign in.</p>
+        </div>
+
+        <div class="steps" style="text-align:left;margin-top:24px">
+          <div class="step done">
+            <div class="si"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="sd"><b>Organization verified</b><small>Northbeam Studio · SAML 2.0</small></div>
+          </div>
+          <div class="step active" id="step-connect">
+            <div class="si"><span class="spinner-sm"></span></div>
+            <div class="sd"><b>Establishing secure connection</b><small>Generating SAML request and signing it for your IdP…</small></div>
+          </div>
+          <div class="step pending" id="step-redirect">
+            <div class="si">3</div>
+            <div class="sd"><b>Redirecting to identity provider</b><small>You'll complete sign-in on <span class="mono">northbeam.okta.com</span>, then return here.</small></div>
+          </div>
+        </div>
+
+        <button class="btn full" type="button" style="margin-top:22px" onclick="window.open('sign-in.html','_self')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14 3h7v7M21 3l-9 9M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/></svg>
+          Open Okta manually
+        </button>
+        <p class="switch-foot" style="margin-top:12px"><a href="#" onclick="show('s-org');return false">Cancel</a></p>
+      </div>
+
+      <div class="legal-foot">
+        <div class="row"><a href="#">Terms</a><a href="#">Privacy</a><a href="#">Security</a><a href="#">Status</a></div>
+        <div class="row mono" style="font-size:10.5px;letter-spacing:.04em">© Helix Inc. · auth.helix.app · sso-request 4b8e…f12</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="auth.js"></script>
+<script>
+function show(id){
+  ['s-find','s-org','s-redirect'].forEach(function(s){document.getElementById(s).style.display='none';});
+  document.getElementById(id).style.display='block';
+}
+
+function detect(btn){
+  var email=(document.getElementById('email').value||'').trim();
+  if(!email||email.indexOf('@')<0){window.toast('Enter a valid work email.');return;}
+  btn.classList.add('loading');btn.disabled=true;
+  setTimeout(function(){
+    btn.classList.remove('loading');btn.disabled=false;
+    show('s-org');
+    startAuto();
+  },900);
+}
+
+var _auto,_autoT;
+function startAuto(){
+  var sec=5,el=document.getElementById('autoSec');
+  _autoT=setInterval(function(){
+    sec--;if(el)el.textContent=sec;
+    if(sec<=0){clearInterval(_autoT);doRedirect();}
+  },1000);
+}
+function cancelAuto(){if(_autoT)clearInterval(_autoT);var el=document.getElementById('autoSec');if(el)el.textContent='5';}
+
+function redirect(btn){
+  cancelAuto();
+  btn.classList.add('loading');btn.disabled=true;
+  setTimeout(doRedirect,700);
+}
+function doRedirect(){
+  show('s-redirect');
+  // advance the stepper
+  setTimeout(function(){
+    var c=document.getElementById('step-connect'),r=document.getElementById('step-redirect');
+    if(c){c.classList.remove('active');c.classList.add('done');
+      c.querySelector('.si').innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg>';}
+    if(r){r.classList.remove('pending');r.classList.add('active');
+      r.querySelector('.si').innerHTML='<span class="spinner-sm"></span>';}
+  },1400);
+}
+</script>
+</body>
+</html>

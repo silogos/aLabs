@@ -1,0 +1,1651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atlas · Helix PM</title>
+<style>
+/* ============================================================
+   Helix — enterprise PM platform
+   Direction: tech/utility × modern-minimal (Linear · GitHub lineage)
+   ============================================================ */
+:root{
+  /* surfaces — neutral, slightly cool, easy on eyes for long sessions */
+  --bg:        oklch(98.4% 0.002 250);
+  --surface:   oklch(100% 0 0);
+  --surface-2: oklch(96.6% 0.003 250);
+  --surface-3: oklch(94% 0.004 250);
+  --overlay:   oklch(14% 0.014 250 / 72%);
+
+  /* ink */
+  --fg:        oklch(22% 0.013 250);
+  --fg-strong: oklch(14% 0.015 250);
+  --muted:     oklch(52% 0.012 250);
+  --faint:     oklch(64% 0.010 250);
+
+  /* lines */
+  --border:        oklch(91% 0.004 250);
+  --border-strong: oklch(85% 0.007 250);
+
+  /* rail (dark global nav) */
+  --rail:        oklch(19% 0.013 255);
+  --rail-2:      oklch(23% 0.014 255);
+  --rail-fg:     oklch(74% 0.012 255);
+  --rail-faint:  oklch(46% 0.012 255);
+
+  /* one decisive accent — enterprise indigo */
+  --accent:        oklch(54% 0.18 258);
+  --accent-hover:  oklch(48% 0.19 258);
+  --accent-soft:   oklch(96% 0.03 258);
+  --accent-fg:     oklch(99% 0.01 258);
+
+  /* status — restrained tinted */
+  --ok:    oklch(58% 0.13 150);
+  --ok-bg: oklch(96% 0.04 150);
+  --warn:    oklch(66% 0.14 70);
+  --warn-bg: oklch(96% 0.05 70);
+  --danger:    oklch(56% 0.19 25);
+  --danger-bg: oklch(96% 0.04 25);
+  --info:    oklch(58% 0.12 240);
+  --info-bg: oklch(96% 0.04 240);
+  --violet:    oklch(54% 0.14 300);
+  --violet-bg: oklch(96% 0.04 300);
+
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-lg: 12px;
+
+  --sidebar-w: 232px;
+  --topbar-h: 52px;
+  --projnav-h: 44px;
+
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'IBM Plex Mono', Menlo, Consolas, monospace;
+
+  --shadow-pop: 0 8px 30px rgba(20,24,40,.14), 0 2px 8px rgba(20,24,40,.08);
+  --shadow-card: 0 1px 2px rgba(20,24,40,.05);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--fg);
+  font:13.5px/1.45 var(--font);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+::selection{background:var(--accent-soft)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mono{font-family:var(--mono);font-feature-settings:"tnum" 1}
+.tnum{font-variant-numeric:tabular-nums}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- App shell ---------- */
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;height:100vh;overflow:hidden}
+
+/* Sidebar (dark rail) */
+.sidebar{
+  background:var(--rail);color:var(--rail-fg);
+  display:flex;flex-direction:column;
+  border-right:1px solid oklch(12% 0.01 255);
+}
+.brand{display:flex;align-items:center;gap:9px;padding:13px 14px 11px;color:#fff}
+.brand .logo{
+  width:24px;height:24px;border-radius:6px;flex:none;
+  background:linear-gradient(135deg,var(--accent),oklch(62% 0.16 285));
+  display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+}
+.brand b{font-size:14px;letter-spacing:-.01em;font-weight:650}
+.brand span{color:var(--rail-faint);font-size:11px;font-family:var(--mono)}
+
+.ws-switch{margin:4px 8px 6px;border:1px solid rgba(255,255,255,.07);border-radius:var(--radius-sm);
+  background:var(--rail-2);display:flex;align-items:center;gap:8px;padding:6px 8px;color:#e9eaf0}
+.ws-switch .dot{width:18px;height:18px;border-radius:5px;background:oklch(40% 0.06 280);flex:none;
+  display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+.ws-switch .meta{line-height:1.2;flex:1;min-width:0}
+.ws-switch .meta b{display:block;font-size:12px;font-weight:600;color:#fff}
+.ws-switch .meta small{font-size:10px;color:var(--rail-faint)}
+.ws-switch svg{color:var(--rail-faint)}
+
+.nav-group{padding:6px 8px}
+.nav-label{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--rail-faint);
+  padding:8px 8px 4px;font-weight:600}
+.nav-item{
+  display:flex;align-items:center;gap:9px;width:100%;
+  padding:6px 8px;border-radius:6px;color:var(--rail-fg);font-size:13px;font-weight:500;
+  position:relative;transition:background .12s,color .12s;
+}
+.nav-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.nav-item.active{background:rgba(120,130,255,.16);color:#fff}
+.nav-item.active::before{content:"";position:absolute;left:-8px;top:6px;bottom:6px;width:2px;
+  background:var(--accent);border-radius:2px}
+.nav-item svg{flex:none;opacity:.9}
+.nav-item .count{margin-left:auto;font:11px var(--mono);color:var(--rail-faint)}
+.nav-item.active .count{color:oklch(80% 0.08 280)}
+
+.sidebar .spacer{flex:1}
+.nav-foot{padding:6px 8px 10px;border-top:1px solid rgba(255,255,255,.06)}
+.user{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px}
+.user:hover{background:rgba(255,255,255,.05)}
+.user .av{width:26px;height:26px;border-radius:50%;flex:none;
+  background:oklch(52% 0.14 290);color:#fff;display:grid;place-items:center;font-weight:700;font-size:11px}
+.user .meta{line-height:1.15;flex:1;min-width:0}
+.user .meta b{font-size:12.5px;color:#fff;font-weight:600}
+.user .meta small{font-size:10.5px;color:var(--rail-faint)}
+
+/* Main column */
+.main{display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+
+/* Topbar */
+.topbar{
+  height:var(--topbar-h);flex:none;display:flex;align-items:center;gap:10px;
+  padding:0 14px;border-bottom:1px solid var(--border);background:var(--surface);
+  position:relative;z-index:30;
+}
+.crumbs{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);min-width:0}
+.crumbs b{color:var(--fg-strong);font-weight:600}
+.crumbs .sep{color:var(--faint);font-size:11px}
+.crumbs .cur{color:var(--fg-strong);font-weight:600}
+
+.search{margin-left:auto;position:relative;width:300px;max-width:34vw}
+.search input{
+  width:100%;height:32px;border:1px solid var(--border);border-radius:var(--radius);
+  background:var(--surface-2);padding:0 32px 0 30px;font-size:12.5px;color:var(--fg);
+}
+.search input::placeholder{color:var(--faint)}
+.search input:focus{outline:none;border-color:var(--accent);background:var(--surface);
+  box-shadow:0 0 0 3px var(--accent-soft)}
+.search .ico{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--faint)}
+.search .kbd{position:absolute;right:7px;top:50%;transform:translateY(-50%);
+  font:11px var(--mono);color:var(--faint);border:1px solid var(--border);
+  background:var(--surface);border-radius:4px;padding:1px 5px}
+
+.tbtn{width:32px;height:32px;border-radius:var(--radius);display:grid;place-items:center;
+  color:var(--muted);border:1px solid transparent;position:relative}
+.tbtn:hover{background:var(--surface-2);color:var(--fg)}
+.tbtn .badge{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;
+  background:var(--danger);border:1.5px solid var(--surface)}
+
+.create{display:flex;height:32px;border:1px solid var(--border-strong);border-radius:var(--radius);
+  background:var(--surface);overflow:hidden}
+.create button{padding:0 11px;font-size:12.5px;font-weight:600;color:var(--fg-strong);display:flex;align-items:center;gap:6px}
+.create .main:hover{background:var(--surface-2)}
+.create .caret{border-left:1px solid var(--border);width:24px;display:grid;place-items:center;color:var(--muted)}
+.create .caret:hover{background:var(--surface-2);color:var(--fg)}
+
+/* Project context header */
+.projhead{
+  flex:none;background:var(--surface);border-bottom:1px solid var(--border);
+  padding:10px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.projhead h1{font-size:15.5px;font-weight:650;letter-spacing:-.01em;color:var(--fg-strong);
+  display:flex;align-items:center;gap:9px}
+.projhead .pico{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,oklch(54% 0.16 258),oklch(50% 0.15 290));
+  display:grid;place-items:center;color:#fff;font-weight:800;font-size:11px;flex:none}
+.projhead .meta{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;flex-wrap:wrap}
+.projhead .meta .dot{width:3px;height:3px;border-radius:50%;background:var(--faint)}
+.sprint-tag{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sprint-tag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+.projhead .right{margin-left:auto;display:flex;align-items:center;gap:10px}
+
+/* Sub nav */
+.projnav{flex:none;height:var(--projnav-h);display:flex;align-items:stretch;
+  padding:0 14px;border-bottom:1px solid var(--border);background:var(--surface);gap:2px;
+  overflow-x:auto}
+.projnav a{display:flex;align-items:center;gap:6px;padding:0 11px;height:100%;
+  font-size:13px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.projnav a:hover{color:var(--fg)}
+.projnav a.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.projnav .count{font:11px var(--mono);color:var(--faint)}
+.projnav a.active .count{color:var(--accent)}
+
+/* Content */
+.content{flex:1;overflow:auto;position:relative}
+.view{display:none;padding:18px;max-width:1500px;margin:0 auto;width:100%}
+.view.active{display:block}
+
+/* generic */
+.row{display:flex;align-items:center;gap:10px}
+.row.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column}
+.muted{color:var(--muted)}
+.faint{color:var(--faint)}
+.small{font-size:12px}
+.tiny{font-size:11px}
+.h2{font-size:14px;font-weight:650;letter-spacing:-.01em;color:var(--fg-strong)}
+.section-title{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.section-title h2{font-size:13px;font-weight:650;color:var(--fg-strong);text-transform:none}
+.link{color:var(--accent);font-weight:500}
+.link:hover{text-decoration:underline}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:30px;padding:0 12px;
+  border-radius:var(--radius);font-size:12.5px;font-weight:600;border:1px solid var(--border-strong);
+  background:var(--surface);color:var(--fg-strong);transition:background .12s,border-color .12s}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--surface-2)}
+.btn.subtle{background:var(--surface-2);border-color:transparent}
+.btn.sm{height:26px;padding:0 9px;font-size:11.5px}
+.btn.danger{color:var(--danger)}
+.btn.danger:hover{background:var(--danger-bg)}
+.btn svg{flex:none}
+
+/* chips / pills / badges */
+.chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;
+  font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--fg)}
+.chip.muted{color:var(--muted);background:var(--surface-2)}
+.chip.btn{cursor:pointer;transition:background .1s}
+.chip.btn:hover{background:var(--surface-2)}
+.chip.btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.tag{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:5px;
+  font-size:10.5px;font-weight:600;background:var(--surface-3);color:var(--fg)}
+.tag.b{background:oklch(95% 0.04 258);color:oklch(42% 0.13 258)}
+.tag.g{background:oklch(95% 0.05 150);color:oklch(42% 0.12 150)}
+.tag.v{background:oklch(95% 0.05 300);color:oklch(42% 0.13 300)}
+.tag.o{background:oklch(95% 0.06 70);color:oklch(44% 0.13 70)}
+.tag.r{background:oklch(95% 0.05 25);color:oklch(44% 0.14 25)}
+.tag.i{background:oklch(95% 0.04 240);color:oklch(42% 0.12 240)}
+
+.status{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:0 8px;
+  height:21px;border-radius:999px}
+.status .d{width:6px;height:6px;border-radius:50%;background:currentColor}
+.status.ok{color:oklch(40% 0.11 150);background:var(--ok-bg)}
+.status.warn{color:oklch(46% 0.12 70);background:var(--warn-bg)}
+.status.danger{color:oklch(46% 0.15 25);background:var(--danger-bg)}
+.status.info{color:oklch(42% 0.11 240);background:var(--info-bg)}
+.status.violet{color:oklch(42% 0.12 300);background:var(--violet-bg)}
+.status.neutral{color:var(--muted);background:var(--surface-2)}
+
+.prio{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600}
+.prio .bars{display:inline-flex;align-items:flex-end;gap:1.5px;height:10px}
+.prio .bars i{width:3px;border-radius:1px;background:currentColor}
+.prio .bars i:nth-child(1){height:40%}
+.prio .bars i:nth-child(2){height:70%}
+.prio .bars i:nth-child(3){height:100%}
+.prio.p1{color:var(--danger)} .prio.p1 .bars i:nth-child(-n+1){background:currentColor;opacity:1}
+.prio.p1 .bars i{background:currentColor;opacity:.18} .prio.p1 .bars i:nth-child(-n+1){opacity:1}
+.prio.p2{color:var(--warn)} .prio.p2 .bars i{background:currentColor;opacity:.18} .prio.p2 .bars i:nth-child(-n+2){opacity:1}
+.prio.p3{color:var(--info)} .prio.p3 .bars i{background:currentColor;opacity:.18} .prio.p3 .bars i{opacity:1}
+.prio.p4{color:var(--faint)} .prio.p4 .bars i{background:currentColor;opacity:.2}
+
+/* avatars */
+.av{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:10px;
+  color:#fff;flex:none;border:1.5px solid var(--surface)}
+.av.sm{width:20px;height:20px;font-size:9px}
+.av.lg{width:32px;height:32px;font-size:12px}
+.av.a{background:oklch(52% 0.13 25)} .av.b{background:oklch(52% 0.13 290)}
+.av.c{background:oklch(54% 0.12 175)} .av.d{background:oklch(58% 0.14 70)}
+.av.e{background:oklch(52% 0.13 240)} .av.f{background:oklch(56% 0.12 330)}
+.av-g{display:inline-flex}
+.av-g .av{margin-left:-7px}
+.av-g .av:first-child{margin-left:0}
+.av-g .more{background:var(--surface-3);color:var(--muted)}
+
+/* cards / panels */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-card)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+.panel-head{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border)}
+.panel-head h3{font-size:12.5px;font-weight:650;color:var(--fg-strong)}
+.panel-head .muted{font-size:11.5px}
+.panel-body{padding:12px}
+
+/* grid helpers */
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.span2{grid-column:span 2}
+.span3{grid-column:span 3}
+@media(max-width:1180px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
+
+/* KPI */
+.kpi{padding:13px 14px}
+.kpi .label{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:500}
+.kpi .val{font:600 26px/1.1 var(--font);letter-spacing:-.02em;margin-top:7px;color:var(--fg-strong);font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:5px}
+.kpi .sub .up{color:oklch(42% 0.12 150);font-weight:600}
+.kpi .sub .dn{color:oklch(46% 0.15 25);font-weight:600}
+.kpi .spark{margin-top:8px}
+
+/* progress */
+.bar{height:6px;border-radius:999px;background:var(--surface-3);overflow:hidden}
+.bar > i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.bar.ok > i{background:var(--ok)} .bar.warn > i{background:var(--warn)} .bar.danger > i{background:var(--danger)}
+.ring{--p:68;--c:var(--accent);width:84px;height:84px;border-radius:50%;flex:none;position:relative;
+  background:conic-gradient(var(--c) calc(var(--p)*1%),var(--surface-3) 0)}
+.ring::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--surface)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:18px;font-weight:700;color:var(--fg-strong);font-variant-numeric:tabular-nums}
+
+/* ---------- Data table ---------- */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tbl-wrap{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface)}
+.tbl-scroll{overflow-x:auto}
+table.dt{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:880px}
+.dt thead th{position:sticky;top:0;background:var(--surface-2);text-align:left;font-size:11px;font-weight:600;
+  color:var(--muted);letter-spacing:.02em;padding:0 12px;height:35px;border-bottom:1px solid var(--border);
+  white-space:nowrap;user-select:none}
+.dt thead th.sortable{cursor:pointer}
+.dt thead th.sortable:hover{color:var(--fg)}
+.dt thead th .sorti{opacity:0;color:var(--faint);margin-left:3px}
+.dt thead th.asc .sorti,.dt thead th.desc .sorti{opacity:1;color:var(--accent)}
+.dt thead th.desc .sorti svg{transform:rotate(180deg)}
+.dt tbody td{padding:0 12px;height:38px;border-bottom:1px solid var(--border);color:var(--fg);vertical-align:middle}
+.dt tbody tr:last-child td{border-bottom:none}
+.dt tbody tr{transition:background .08s}
+.dt tbody tr:hover{background:var(--surface-2)}
+.dt tbody tr.sel{background:var(--accent-soft)}
+.dt .ck{width:30px;text-align:center;padding:0}
+.dt .id{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.dt .title{font-weight:600;color:var(--fg-strong)}
+.dt tbody td .due-over{color:var(--danger);font-weight:600}
+.dt .updated{color:var(--faint);font-size:11.5px}
+
+body.compact .dt tbody td{height:31px}
+body.compact .dt thead th{height:31px}
+
+/* checkbox */
+.ck input,.check{appearance:none;width:15px;height:15px;border:1.5px solid var(--border-strong);border-radius:4px;
+  background:var(--surface);display:inline-grid;place-items:center;cursor:pointer;vertical-align:middle;flex:none}
+.ck input:checked,.check:checked{background:var(--accent);border-color:var(--accent)}
+.ck input:checked::after,.check:checked::after{content:"";width:8px;height:5px;border:1.8px solid #fff;
+  border-top:0;border-right:0;transform:rotate(-45deg) translate(.5px,-.5px)}
+.ck input{width:14px;height:14px}
+
+.tbl-foot{display:flex;align-items:center;gap:12px;padding:9px 12px;border-top:1px solid var(--border);
+  background:var(--surface-2);font-size:11.5px;color:var(--muted)}
+.tbl-foot .pg{margin-left:auto;display:flex;align-items:center;gap:4px}
+.pg button{width:26px;height:26px;border-radius:5px;border:1px solid var(--border);background:var(--surface);
+  color:var(--muted);font-size:12px;display:grid;place-items:center}
+.pg button:hover{background:var(--surface-3);color:var(--fg)}
+.pg button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.pg button[disabled]{opacity:.4;cursor:default}
+
+/* bulk bar */
+.bulk{display:none;align-items:center;gap:12px;padding:9px 12px;margin-bottom:12px;
+  border:1px solid var(--accent);border-radius:var(--radius-lg);background:var(--accent-soft)}
+.bulk.show{display:flex}
+.bulk .n{font-weight:700;color:var(--accent)}
+.bulk .sep{width:1px;height:18px;background:var(--border-strong)}
+
+/* ---------- Kanban ---------- */
+.board{display:grid;grid-template-columns:repeat(5,minmax(238px,1fr));gap:12px;align-items:start}
+.col{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);display:flex;flex-direction:column;max-height:70vh}
+.col-h{display:flex;align-items:center;gap:7px;padding:9px 11px;font-size:12px;font-weight:650;color:var(--fg-strong)}
+.col-h .cd{width:7px;height:7px;border-radius:50%}
+.col-h .cnt{margin-left:auto;font:11px var(--mono);color:var(--muted);background:var(--surface);
+  border:1px solid var(--border);border-radius:999px;padding:0 7px;height:18px;display:inline-grid;place-items:center}
+.col-h .add{margin-left:4px;color:var(--faint)} .col-h .add:hover{color:var(--accent)}
+.col-body{padding:4px 8px 8px;display:flex;flex-direction:column;gap:7px;overflow:auto}
+.tcard{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 10px;cursor:pointer;
+  box-shadow:var(--shadow-card);transition:border-color .12s,box-shadow .12s,transform .04s}
+.tcard:hover{border-color:var(--border-strong);box-shadow:0 2px 8px rgba(20,24,40,.08)}
+.tcard:active{transform:translateY(1px)}
+.tcard .ttop{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.tcard .tid{font:10.5px var(--mono);color:var(--faint)}
+.tcard .tt{font-size:12.5px;font-weight:600;color:var(--fg-strong);line-height:1.35;margin-bottom:7px}
+.tcard .trow{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.tcard .trow .due{margin-left:auto;font:11px var(--mono);color:var(--muted);display:inline-flex;align-items:center;gap:3px}
+.tcard .due.late{color:var(--danger)}
+.tcard .tmeta{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;color:var(--muted)}
+.tcard .tmeta .av{margin-left:auto}
+
+/* ---------- Drawer / modal / popover ---------- */
+.scrim{position:fixed;inset:0;background:var(--overlay);z-index:90;opacity:0;pointer-events:none;transition:opacity .16s}
+.scrim.show{opacity:1;pointer-events:auto}
+
+.drawer{position:fixed;top:0;right:0;bottom:0;width:460px;max-width:94vw;background:var(--surface);
+  border-left:1px solid var(--border);z-index:100;transform:translateX(100%);transition:transform .22s cubic-bezier(.23,1,.32,1);
+  display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(20,24,40,.12)}
+.drawer.show{transform:translateX(0)}
+.drawer .dh{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.drawer .dh .tid{font:11px var(--mono);color:var(--accent)}
+.drawer .dh h3{font-size:15px;font-weight:650;letter-spacing:-.01em;margin-top:3px;color:var(--fg-strong)}
+.drawer .dh .x{margin-left:auto;width:30px;height:30px;border-radius:7px;display:grid;place-items:center;color:var(--muted)}
+.drawer .dh .x:hover{background:var(--surface-2);color:var(--fg)}
+.drawer .db{flex:1;overflow:auto;padding:16px}
+.drawer .df{padding:11px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--surface-2)}
+
+.meta-grid{display:grid;grid-template-columns:130px 1fr;gap:9px 12px;font-size:12.5px;align-items:center}
+.meta-grid .k{color:var(--muted)}
+.meta-grid .v{color:var(--fg-strong)}
+.comment{display:flex;gap:9px;padding:11px 0;border-top:1px solid var(--border)}
+.comment:first-of-type{border-top:none}
+.comment .av{margin-top:1px}
+.comment b{font-size:12px;font-weight:600}
+.comment .when{font-size:11px;color:var(--faint);font-weight:400;margin-left:6px}
+.comment p{font-size:12.5px;color:var(--fg);margin-top:2px}
+
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.97);z-index:100;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-pop);width:560px;max-width:92vw;max-height:84vh;display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;transition:opacity .14s,transform .14s}
+.modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.cmdk{width:600px;max-width:92vw;border-radius:12px;overflow:hidden}
+.cmdk .field{display:flex;align-items:center;gap:9px;padding:13px 15px;border-bottom:1px solid var(--border)}
+.cmdk input{flex:1;border:none;outline:none;font-size:14.5px;background:none}
+.cmdk .res{overflow:auto;max-height:46vh;padding:7px}
+.cmdk .grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);
+  font-weight:600;padding:9px 10px 5px}
+.cmdk .ritem{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px}
+.cmdk .ritem:hover,.cmdk .ritem.sel{background:var(--surface-2)}
+.cmdk .ritem.sel{box-shadow:inset 0 0 0 1px var(--accent)}
+.cmdk .ritem .ico{color:var(--muted)}
+.cmdk .ritem .hint{margin-left:auto;font:11px var(--mono);color:var(--faint)}
+.cmdk .foot{display:flex;align-items:center;gap:14px;padding:8px 14px;border-top:1px solid var(--border);
+  background:var(--surface-2);font-size:11px;color:var(--faint)}
+.cmdk .foot .kb{font-family:var(--mono);border:1px solid var(--border);border-radius:4px;padding:1px 5px;background:var(--surface)}
+
+.pop{position:absolute;top:calc(100% + 6px);right:0;z-index:95;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-pop);
+  min-width:230px;padding:6px;opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .12s,transform .12s}
+.pop.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+.pop .pit{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:6px;font-size:12.5px;cursor:pointer;width:100%}
+.pop .pit:hover{background:var(--surface-2)}
+.pop .pit svg{color:var(--muted)}
+.pop .sep{height:1px;background:var(--border);margin:5px -6px}
+.pop .h{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);padding:6px 9px 3px;font-weight:600}
+
+.notif-item{display:flex;gap:9px;padding:9px;border-radius:7px}
+.notif-item:hover{background:var(--surface-2)}
+.notif-item.unread .av{box-shadow:0 0 0 2px var(--accent-soft)}
+.notif-item .bd{flex:1;min-width:0}
+.notif-item .bd b{font-weight:600;font-size:12px}
+.notif-item p{font-size:12px;color:var(--muted);margin-top:1px}
+.notif-item .when{font-size:10.5px;color:var(--faint);margin-top:3px}
+
+/* dropdown menu container */
+.dd{position:relative;display:inline-block}
+
+/* activity feed */
+.feed-item{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--border);font-size:12.5px}
+.feed-item:first-child{border-top:none;padding-top:2px}
+.feed-item .av{margin-top:1px}
+.feed-item .txt{color:var(--fg)}
+.feed-item .txt b{font-weight:600}
+.feed-item .txt .ref{color:var(--accent)}
+.feed-item .when{color:var(--faint);font-size:11px;margin-top:2px;display:block}
+
+/* milestone timeline */
+.mlist{position:relative;padding-left:18px}
+.mlist::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--border)}
+.mnode{position:relative;padding:0 0 16px 8px}
+.mnode:last-child{padding-bottom:0}
+.mnode::before{content:"";position:absolute;left:-16px;top:3px;width:11px;height:11px;border-radius:50%;
+  background:var(--surface);border:2px solid var(--border-strong)}
+.mnode.done::before{background:var(--ok);border-color:var(--ok)}
+.mnode.now::before{background:var(--surface);border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.mnode .mt{font-size:12.5px;font-weight:600;color:var(--fg-strong)}
+.mnode .md{font-size:11.5px;color:var(--muted);margin-top:1px}
+.mnode .when{font:11px var(--mono);color:var(--faint)}
+
+/* documents editor */
+.docs{display:grid;grid-template-columns:208px 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface);min-height:560px}
+.docs-l{border-right:1px solid var(--border);background:var(--surface-2);overflow:auto}
+.docs-l .grp-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);
+  font-weight:600;padding:11px 12px 4px}
+.docs-l .fi{display:flex;align-items:center;gap:7px;padding:5px 12px;font-size:12.5px;color:var(--fg);cursor:pointer;border-radius:0}
+.docs-l .fi:hover{background:var(--surface-3)}
+.docs-l .fi.active{background:var(--accent-soft);color:var(--accent);font-weight:600;box-shadow:inset 2px 0 0 var(--accent)}
+.docs-l .fi.sub{padding-left:26px;color:var(--muted)}
+.docs-l .fi .sz{margin-left:auto;font:10.5px var(--mono);color:var(--faint)}
+
+.editor{display:flex;flex-direction:column;min-width:0}
+.editor .eh{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--border);font-size:12px;color:var(--muted)}
+.editor .eh .save{color:oklch(42% 0.10 150);display:inline-flex;align-items:center;gap:5px;font-weight:500}
+.editor .eh .acts{margin-left:auto;display:flex;align-items:center;gap:4px}
+.doc-body{padding:26px 0;max-width:720px;margin:0 auto;width:100%}
+.doc-body h1{font-size:27px;font-weight:700;letter-spacing:-.02em;color:var(--fg-strong);margin-bottom:6px}
+.doc-body .by{font-size:12px;color:var(--muted);margin-bottom:22px;display:flex;gap:8px;align-items:center}
+.doc-body h2{font-size:17px;font-weight:650;letter-spacing:-.01em;margin:26px 0 9px;color:var(--fg-strong);scroll-margin-top:60px}
+.doc-body p{font-size:14px;line-height:1.65;color:var(--fg);margin-bottom:12px}
+.doc-body ul{list-style:none;margin:0 0 14px}
+.doc-body li{font-size:13.5px;line-height:1.6;color:var(--fg);padding:4px 0 4px 22px;position:relative}
+.doc-body li::before{content:"";position:absolute;left:4px;top:12px;width:5px;height:5px;border-radius:50%;background:var(--faint)}
+.doc-body .callout{background:var(--accent-soft);border:1px solid oklch(88% 0.05 258);border-radius:8px;
+  padding:11px 13px;font-size:13px;color:oklch(38% 0.10 258);margin:14px 0;display:flex;gap:9px}
+.doc-body code{font:12.5px var(--mono);background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:1px 5px}
+
+.doc-toc{border-left:2px solid var(--border);padding-left:12px;font-size:12px}
+.doc-toc a{display:block;padding:3px 0;color:var(--muted)}
+.doc-toc a.on{color:var(--accent);font-weight:600}
+.doc-toc a.l2{padding-left:12px}
+
+/* planning 3-pane */
+.plan{display:grid;grid-template-columns:minmax(280px,1fr) minmax(360px,1.5fr) minmax(300px,1fr);
+  gap:12px;height:calc(100vh - var(--topbar-h) - var(--projnav-h) - 58px - 36px);min-height:540px}
+.pane{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);overflow:hidden}
+.pane .ph{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.pane .ph h3{font-size:12.5px;font-weight:650}
+.pane .ph .pill{margin-left:auto}
+.pane .pb{flex:1;overflow:auto;padding:12px}
+.prd h4{font-size:13px;font-weight:650;color:var(--fg-strong);margin:2px 0 6px}
+.prd h4.sub{margin-top:14px}
+.prd p{font-size:12.5px;line-height:1.6;color:var(--fg);margin-bottom:9px}
+.prd .req{display:flex;gap:8px;padding:8px 0;border-top:1px solid var(--border);font-size:12.5px}
+.prd .req:first-of-type{border-top:none}
+.prd .req .ck{margin-top:2px}
+.prd .req b{font-weight:600}
+.prd .req small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+
+.forecast-item{display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--border);
+  border-radius:9px;margin-bottom:9px;cursor:pointer;background:var(--surface);transition:border-color .12s,background .12s}
+.forecast-item:hover{border-color:var(--border-strong);background:var(--surface-2)}
+.forecast-item.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.forecast-item .fi-top{display:flex;align-items:center;gap:7px}
+.forecast-item .fi-top .tid{font:11px var(--mono);color:var(--accent)}
+.forecast-item .fi-top .conf{margin-left:auto;font:11px var(--mono);color:var(--muted)}
+.forecast-item .fi-tt{font-size:12.5px;font-weight:600;color:var(--fg-strong)}
+.forecast-item .fi-pts{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.conf-dot{width:7px;height:7px;border-radius:50%}
+
+.approval-step{display:flex;gap:10px;padding:0 0 16px 2px;position:relative}
+.approval-step::before{content:"";position:absolute;left:9px;top:20px;bottom:-2px;width:2px;background:var(--border)}
+.approval-step:last-child::before{display:none}
+.approval-step .av{z-index:1}
+.approval-step .abd{flex:1;min-width:0}
+.approval-step .abd .ln{display:flex;align-items:center;gap:7px}
+.approval-step b{font-size:12.5px;font-weight:600}
+.approval-step .role{font-size:11px;color:var(--muted)}
+.approval-step .st{margin-left:auto}
+.approval-step p{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+
+/* reports charts */
+.chart-card{padding:14px}
+.chart-card h3{font-size:12.5px;font-weight:650;margin-bottom:2px}
+.chart-card .sub{font-size:11px;color:var(--muted);margin-bottom:10px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+.legend i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:middle}
+
+/* meetings */
+.meet-item{display:flex;gap:12px;padding:11px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);margin-bottom:9px}
+.meet-item .when{flex:none;width:54px;text-align:center;background:var(--surface-2);border-radius:7px;padding:7px 4px}
+.meet-item .when b{display:block;font-size:16px;font-weight:700;color:var(--fg-strong);line-height:1}
+.meet-item .when small{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.meet-item .bd{flex:1;min-width:0}
+.meet-item .tt{font-size:13px;font-weight:600;color:var(--fg-strong)}
+.meet-item .meta{font-size:11.5px;color:var(--muted);margin-top:2px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.meet-item .acts{display:flex;align-items:center;gap:6px;flex:none}
+
+/* client portal */
+.hero-stat{display:flex;align-items:center;gap:18px;padding:18px}
+.hero-stat .ring{width:104px;height:104px}
+.hero-stat .ring b{font-size:22px}
+.hero-stat h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.hero-stat .sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+.client-act{display:flex;gap:8px;margin-top:12px}
+
+/* settings */
+.settings{display:grid;grid-template-columns:200px 1fr;gap:18px}
+.settings .nav a{display:block;padding:7px 10px;border-radius:6px;font-size:12.5px;color:var(--muted)}
+.settings .nav a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.settings .nav a:hover{background:var(--surface-2);color:var(--fg)}
+.field{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--border)}
+.field:first-child{border-top:none}
+.field .lbl b{display:block;font-size:12.5px;font-weight:600;color:var(--fg-strong)}
+.field .lbl small{font-size:11.5px;color:var(--muted);margin-top:2px;display:block}
+.input{height:32px;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);
+  padding:0 10px;font-size:12.5px;width:100%;max-width:380px}
+.input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.toggle{width:38px;height:22px;border-radius:999px;background:var(--surface-3);position:relative;cursor:pointer;border:1px solid var(--border-strong);flex:none}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.toggle.on{background:var(--accent);border-color:var(--accent)}
+.toggle.on::after{transform:translateX(16px)}
+
+/* toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);z-index:200;
+  background:var(--fg-strong);color:#fff;padding:9px 15px;border-radius:8px;font-size:12.5px;
+  box-shadow:var(--shadow-pop);opacity:0;pointer-events:none;transition:opacity .16s,transform .16s;display:flex;align-items:center;gap:8px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---- interactivity affordances (drag-drop, flash, alive signals) ---- */
+.tcard[draggable="true"]{cursor:grab}
+.tcard[draggable="true"]:active{cursor:grabbing}
+.tcard.dragging{opacity:.45;transform:rotate(1deg) scale(.985)}
+.col-body.drag-over{background:var(--accent-soft);outline:2px solid var(--accent);outline-offset:-2px;border-radius:8px}
+.add-task{margin-top:3px;padding:7px 9px;border-radius:7px;border:1px dashed var(--border-strong);color:var(--muted);
+  font-size:12px;text-align:left;display:block;width:100%;transition:color .12s,border-color .12s,background .12s}
+.add-task:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+@keyframes helix-flash{0%{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}100%{background:transparent;box-shadow:0 0 0 0 transparent}}
+.tcard.flash{animation:helix-flash 1s ease}
+@keyframes helix-vflash{0%{background:var(--accent-soft)}100%{background:transparent}}
+.view .h2.flash{animation:helix-vflash .8s ease;border-radius:7px}
+@keyframes helix-kpulse{0%{box-shadow:0 0 0 0 oklch(54% 0.18 258 / .55)}70%{box-shadow:0 0 0 7px oklch(54% 0.18 258 / 0)}100%{box-shadow:0 0 0 0 oklch(54% 0.18 258 / 0)}}
+.search .kbd.pulse{animation:helix-kpulse 1.3s ease-out 2}
+#errBadge{position:fixed;bottom:14px;right:14px;z-index:300;background:var(--danger);color:#fff;padding:8px 12px;
+  border-radius:8px;font:12px/1.4 var(--mono);max-width:340px;display:none;box-shadow:var(--shadow-pop);cursor:pointer}
+#errBadge.show{display:block}
+
+.empty{text-align:center;padding:34px 16px;color:var(--muted)}
+.empty .ic{width:42px;height:42px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;margin:0 auto 10px;color:var(--faint)}
+
+/* narrow */
+@media(max-width:1024px){
+  .app{grid-template-columns:64px 1fr}
+  .sidebar .brand b,.sidebar .brand span,.ws-switch .meta,.nav-item span,.nav-label,.user .meta,.nav-item .count{display:none}
+  .sidebar{align-items:center} .ws-switch{justify-content:center;padding:8px} .ws-switch .dot{margin:0}
+  .nav-item{justify-content:center} .user{justify-content:center}
+  .search{width:200px}
+  .plan{grid-template-columns:1fr;height:auto}
+  .docs{grid-template-columns:1fr}
+  .board{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<a href="#main" class="sr-only">Skip to content</a>
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" aria-label="Primary">
+    <div class="brand">
+      <div class="logo">H</div>
+      <div><b>Helix</b><br><span>workspace</span></div>
+    </div>
+
+    <div class="ws-switch" role="button" tabindex="0" aria-label="Switch workspace">
+      <div class="dot">N</div>
+      <div class="meta"><b>Northbeam Studio</b><small>Software house · Pro</small></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 9 5-5 5 5M7 15l5 5 5-5"/></svg>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Workspace</div>
+      <button class="nav-item" data-nav="view-dashboard">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" data-nav="view-projects">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        <span>Projects</span><span class="count">5</span>
+      </button>
+      <button class="nav-item" data-nav="view-reports">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18M8 14v4M13 9v9M18 5v13"/></svg>
+        <span>Reports</span>
+      </button>
+      <button class="nav-item" data-nav="view-settings">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>
+        <span>Settings</span>
+      </button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Pinned projects</div>
+      <button class="nav-item" data-nav="view-overview">
+        <span style="width:15px;height:15px;border-radius:4px;background:linear-gradient(135deg,oklch(54% 0.16 258),oklch(50% 0.15 290));display:inline-block;flex:none"></span>
+        <span>Atlas Payments</span><span class="count">28</span>
+      </button>
+      <button class="nav-item" data-nav="view-projects">
+        <span style="width:15px;height:15px;border-radius:4px;background:oklch(60% 0.13 70);display:inline-block;flex:none"></span>
+        <span>Helix CRM</span>
+      </button>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="nav-foot">
+      <button class="nav-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg><span>Help & docs</span></button>
+      <div class="user" role="button" tabindex="0">
+        <div class="av">MC</div>
+        <div class="meta"><b>Maya Chen</b><small>Project Lead</small></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--rail-faint)"><path d="m7 9 5 5 5-5"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="crumbs" id="crumbs">
+        <span class="cur">Dashboard</span>
+      </div>
+
+      <div class="search" role="search">
+        <svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="searchInput" placeholder="Search tasks, docs, people…" aria-label="Search" />
+        <span class="kbd">⌘K</span>
+      </div>
+
+      <div class="dd">
+        <button class="tbtn" id="bellBtn" aria-label="Notifications">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span class="badge"></span>
+        </button>
+        <div class="pop" id="bellPop">
+          <div class="row between" style="padding:6px 9px 4px"><b class="small">Notifications</b><button class="link tiny">Mark all read</button></div>
+          <div class="notif-item unread"><div class="av c sm">PR</div><div class="bd"><b>Priya Nair</b> requested review on <b>ATL-1048</b><p>Idempotency key validation</p><div class="when">12m ago</div></div></div>
+          <div class="notif-item unread"><div class="av d sm">SR</div><div class="bd"><b>Sofia Russo</b> filed a bug <b>ATL-1059</b><p>Duplicate reconciliation event on retry</p><div class="when">1h ago</div></div></div>
+          <div class="notif-item"><div class="av b sm">DO</div><div class="bd"><b>Daniel Osei</b> merged <b>feat/payouts-batch</b><p>into main · 6 commits</p><div class="when">3h ago</div></div></div>
+          <div class="sep"></div>
+          <button class="pit" data-nav="view-meetings">View all activity</button>
+        </div>
+      </div>
+
+      <div class="create">
+        <button class="main" id="createBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Create</button>
+        <button class="caret" id="createCaret" aria-label="Create menu"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="pop" id="createPop" style="min-width:210px">
+          <div class="h">Create</div>
+          <button class="pit" data-create="task"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg> New task<span class="hint" style="margin-left:auto">T</span></button>
+          <button class="pit" data-create="doc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> New document<span class="hint" style="margin-left:auto">D</span></button>
+          <button class="pit" data-create="meeting"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Schedule meeting</button>
+          <button class="pit" data-create="member"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2 21a7 7 0 0 1 14 0M19 8v6M22 11h-6"/></svg> Add member</button>
+          <div class="sep"></div>
+          <button class="pit" data-nav="view-planning"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg> Open planning workspace</button>
+        </div>
+      </div>
+
+      <button class="tbtn" id="meBtn" aria-label="Account"><div class="av sm" style="border:none">MC</div></button>
+    </header>
+
+    <!-- PROJECT HEADER (hidden on dashboard/projects) -->
+    <div class="projhead" id="projHead" style="display:none">
+      <h1><span class="pico">A</span> Atlas Payments Platform</h1>
+      <div class="meta">
+        <span class="status ok"><span class="d"></span>On track</span>
+        <span class="dot"></span>
+        <span class="sprint-tag">Sprint 28 · Payouts GA</span>
+        <span class="dot"></span>
+        <span class="muted">Client · Northwind Retail</span>
+        <span class="dot"></span>
+        <span class="muted">Due <b class="mono" style="color:var(--fg)">Aug 14</b></span>
+      </div>
+      <div class="right">
+        <div class="av-g" title="Team">
+          <div class="av sm b">MC</div><div class="av sm c">PR</div><div class="av sm e">DO</div><div class="av sm d">SR</div><div class="av sm more">+3</div>
+        </div>
+        <button class="btn sm subtle"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg> Share</button>
+        <button class="tbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+      </div>
+    </div>
+
+    <!-- PROJECT SUB-NAV -->
+    <nav class="projnav" id="projNav" aria-label="Project modules" style="display:none">
+      <a data-nav="view-overview" class="active">Overview</a>
+      <a data-nav="view-tasks">Tasks <span class="count">42</span></a>
+      <a data-nav="view-documents">Documents <span class="count">18</span></a>
+      <a data-nav="view-planning">Planning</a>
+      <a data-nav="view-meetings">Meetings <span class="count">3</span></a>
+      <a data-nav="view-reports">Reports</a>
+      <a data-nav="view-client">Client Portal</a>
+      <a data-nav="view-settings">Settings</a>
+    </nav>
+
+    <main class="content" id="main">
+
+      <!-- ===== DASHBOARD ===== -->
+      <section class="view active" id="view-dashboard" data-label="Dashboard">
+        <div class="row between" style="margin-bottom:14px">
+          <div><div class="h2">Good morning, Maya</div><div class="small muted">You have <b>7 tasks</b> due this week and <b style="color:var(--danger)">2 overdue</b>.</div></div>
+          <div class="row">
+            <button class="btn sm subtle">This week</button>
+            <button class="btn primary sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>New task</button>
+          </div>
+        </div>
+
+        <div class="grid g4">
+          <div class="card kpi"><div class="label">Active projects</div><div class="val">5</div><div class="sub"><span class="up">▲ 2</span> vs last month</div></div>
+          <div class="card kpi"><div class="label">Open tasks</div><div class="val">128</div><div class="sub"><span class="dn">▲ 14</span> this sprint</div></div>
+          <div class="card kpi"><div class="label">Overdue</div><div class="val" style="color:var(--danger)">7</div><div class="sub"><span class="dn">2 in Atlas</span> · needs review</div></div>
+          <div class="card kpi"><div class="label">Sprint velocity</div><div class="val">42<span style="font-size:14px;color:var(--muted);font-weight:500"> pts</span></div><div class="sub"><span class="up">▲ 6 pts</span> avg of 4 sprints</div></div>
+        </div>
+
+        <div class="grid g3" style="margin-top:14px">
+          <div class="card panel span2">
+            <div class="panel-head"><h3>My tasks</h3><span class="muted">7 due this week</span>
+              <div class="dd" style="margin-left:auto"><button class="chip btn">Status: All</button></div>
+            </div>
+            <div class="tbl-scroll">
+              <table class="dt">
+                <thead><tr><th>Task</th><th>Project</th><th>Priority</th><th>Due</th></tr></thead>
+                <tbody id="dashTasks"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card panel">
+            <div class="panel-head"><h3>Activity</h3><button class="link tiny">View all</button></div>
+            <div class="panel-body" id="dashFeed"></div>
+          </div>
+        </div>
+
+        <div class="grid g2" style="margin-top:14px">
+          <div class="card chart-card">
+            <h3>Sprint burndown</h3><div class="sub">Atlas · Sprint 28 · day 6 of 10</div>
+            <svg viewBox="0 0 320 120" width="100%" height="130" style="display:block">
+              <defs><linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="oklch(54% 0.18 258 / .22)"/><stop offset="1" stop-color="oklch(54% 0.18 258 / 0)"/></linearGradient></defs>
+              <g stroke="var(--border)" stroke-width="1">
+                <line x1="0" y1="0" x2="320" y2="0"/><line x1="0" y1="40" x2="320" y2="40"/><line x1="0" y1="80" x2="320" y2="80"/><line x1="0" y1="120" x2="320" y2="120"/>
+              </g>
+              <line x1="0" y1="0" x2="320" y2="120" stroke="var(--faint)" stroke-dasharray="3 3"/>
+              <path d="M0,8 L40,26 L80,40 L120,52 L160,66 L200,58 L240,70 L320,92" fill="none" stroke="var(--accent)" stroke-width="2.2"/>
+              <path d="M0,8 L40,26 L80,40 L120,52 L160,66 L200,58 L240,70 L320,92 L320,120 L0,120 Z" fill="url(#bg1)"/>
+              <circle cx="240" cy="70" r="3.2" fill="var(--accent)"/>
+            </svg>
+            <div class="legend"><span><i style="background:var(--accent)"></i>Remaining</span><span><i style="background:var(--faint)"></i>Ideal</span></div>
+          </div>
+          <div class="card panel">
+            <div class="panel-head"><h3>Upcoming deadlines</h3></div>
+            <div class="panel-body">
+              <div class="mlist">
+                <div class="mnode done"><div class="mt">Payments SDK v1.2</div><div class="md">Milestone complete</div><div class="when mono">Jul 18</div></div>
+                <div class="mnode now"><div class="mt">Payouts GA cut</div><div class="md">In review · 3 of 5 epics done</div><div class="when mono">Jul 26</div></div>
+                <div class="mnode"><div class="mt">Client UAT kickoff</div><div class="md">Scheduled with Northwind</div><div class="when mono">Aug 02</div></div>
+                <div class="mnode"><div class="mt">Production launch</div><div class="md">Target release</div><div class="when mono">Aug 14</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PROJECTS LIST ===== -->
+      <section class="view" id="view-projects" data-label="Projects">
+        <div class="row between" style="margin-bottom:14px">
+          <div><div class="h2">Projects</div><div class="small muted">5 active · 1 at risk · 1 completed this quarter</div></div>
+          <div class="row">
+            <button class="btn sm subtle">All clients ▾</button>
+            <button class="btn sm subtle">Status ▾</button>
+            <button class="btn primary sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>New project</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <div class="tbl-scroll">
+            <table class="dt">
+              <thead><tr>
+                <th class="sortable">Project <span class="sorti">▾</span></th><th>Client</th><th>Status</th><th class="sortable asc">Progress <span class="sorti">▾</span></th><th>Team</th><th>Due</th><th></th>
+              </tr></thead>
+              <tbody id="projRows"></tbody>
+            </table>
+          </div>
+          <div class="tbl-foot"><span>5 projects</span><div class="pg"><button>‹</button><button class="on">1</button><button>2</button><button>›</button></div></div>
+        </div>
+      </section>
+
+      <!-- ===== OVERVIEW ===== -->
+      <section class="view" id="view-overview" data-label="Overview">
+        <div class="grid g3">
+          <div class="card panel span2">
+            <div class="panel-head"><h3>Project health</h3><span class="status ok"><span class="d"></span>On track</span></div>
+            <div class="panel-body row" style="gap:24px;align-items:center;flex-wrap:wrap">
+              <div class="ring" style="--p:68;--c:var(--accent)"><b>68%</b></div>
+              <div class="stack" style="gap:9px;flex:1;min-width:220px">
+                <div><div class="row between small"><b>Scope complete</b><span class="mono muted">34 / 50 epics</span></div><div class="bar" style="margin-top:4px"><i style="width:68%"></i></div></div>
+                <div><div class="row between small"><b>Sprint progress</b><span class="mono muted">26 / 42 pts</span></div><div class="bar ok" style="margin-top:4px"><i style="width:62%"></i></div></div>
+                <div><div class="row between small"><b>Test coverage</b><span class="mono muted">81%</span></div><div class="bar" style="margin-top:4px"><i style="width:81%;background:var(--info)"></i></div></div>
+                <div><div class="row between small"><b>Budget used</b><span class="mono muted">$184k / $260k</span></div><div class="bar warn" style="margin-top:4px"><i style="width:71%"></i></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card panel">
+            <div class="panel-head"><h3>Team workload</h3></div>
+            <div class="panel-body stack" style="gap:11px">
+              <div class="row" style="gap:10px"><div class="av b sm">MC</div><div style="flex:1"><div class="row between"><b class="small">Maya Chen</b><span class="tiny muted">PM</span></div><div class="bar" style="margin-top:4px"><i style="width:70%"></i></div></div></div>
+              <div class="row" style="gap:10px"><div class="av e sm">DO</div><div style="flex:1"><div class="row between"><b class="small">Daniel Osei</b><span class="tiny muted">Tech Lead</span></div><div class="bar warn" style="margin-top:4px"><i style="width:95%"></i></div></div></div>
+              <div class="row" style="gap:10px"><div class="av c sm">PR</div><div style="flex:1"><div class="row between"><b class="small">Priya Nair</b><span class="tiny muted">Backend</span></div><div class="bar" style="margin-top:4px"><i style="width:78%"></i></div></div></div>
+              <div class="row" style="gap:10px"><div class="av f sm">LB</div><div style="flex:1"><div class="row between"><b class="small">Lukas Brandt</b><span class="tiny muted">Frontend</span></div><div class="bar" style="margin-top:4px"><i style="width:55%"></i></div></div></div>
+              <div class="row" style="gap:10px"><div class="av d sm">SR</div><div style="flex:1"><div class="row between"><b class="small">Sofia Russo</b><span class="tiny muted">QA</span></div><div class="bar ok" style="margin-top:4px"><i style="width:40%"></i></div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid g2" style="margin-top:14px">
+          <div class="card panel">
+            <div class="panel-head"><h3>Milestones</h3><span class="muted">4 of 7 complete</span></div>
+            <div class="panel-body">
+              <div class="mlist">
+                <div class="mnode done"><div class="mt">Discovery & architecture</div><div class="md">Signed off by Northwind</div><div class="when">Jun 02</div></div>
+                <div class="mnode done"><div class="mt">Core payments API</div><div class="md">Charges, refunds, webhooks</div><div class="when">Jul 04</div></div>
+                <div class="mnode done"><div class="mt">Payments SDK v1.2</div><div class="md">Web + mobile bindings</div><div class="when">Jul 18</div></div>
+                <div class="mnode now"><div class="mt">Payouts GA</div><div class="md">3 of 5 epics merged · in review</div><div class="when">Jul 26</div></div>
+                <div class="mnode"><div class="mt">Client UAT</div><div class="md">Awaiting Northwind sandbox access</div><div class="when">Aug 02</div></div>
+                <div class="mnode"><div class="mt">Production launch</div><div class="md">Soft launch to 5% traffic</div><div class="when">Aug 14</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card panel">
+            <div class="panel-head"><h3>Recent activity</h3></div>
+            <div class="panel-body" id="overviewFeed"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== TASKS ===== -->
+      <section class="view" id="view-tasks" data-label="Tasks">
+        <div class="toolbar">
+          <div class="dd">
+            <div class="row" style="border:1px solid var(--border-strong);border-radius:var(--radius);overflow:hidden;height:30px">
+              <button class="seg" data-view="board" style="padding:0 12px;font-size:12.5px;font-weight:600;color:var(--fg-strong);display:flex;align-items:center;gap:6px;background:var(--surface-2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="6" height="18" rx="1"/><rect x="10" y="3" width="6" height="12" rx="1"/><rect x="17" y="3" width="4" height="8" rx="1"/></svg>Board</button>
+              <button class="seg" data-view="table" style="padding:0 12px;font-size:12.5px;font-weight:500;color:var(--muted);display:flex;align-items:center;gap:6px;border-left:1px solid var(--border)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18"/></svg>Table</button>
+            </div>
+          </div>
+          <button class="chip btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18M6 12h12M10 19h4"/></svg>Filter</button>
+          <button class="chip btn">Assignee ▾</button>
+          <button class="chip btn">Priority ▾</button>
+          <button class="chip btn">Sprint 28 ▾</button>
+          <div class="bulk" id="bulkBar">
+            <span><span class="n" id="bulkN">0</span> selected</span><span class="sep"></span>
+            <button class="btn sm ghost">Change status</button>
+            <button class="btn sm ghost">Assign</button>
+            <button class="btn sm ghost danger">Delete</button>
+            <button class="btn sm ghost" id="bulkClear" style="margin-left:auto">Clear</button>
+          </div>
+          <div class="row" style="margin-left:auto;gap:6px">
+            <div class="dd"><button class="chip btn" id="densityBtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h18M3 6h18M3 18h18"/></svg>Comfortable</button></div>
+            <button class="btn primary sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>New task</button>
+          </div>
+        </div>
+
+        <!-- BOARD -->
+        <div id="boardView">
+          <div class="board" id="board"></div>
+        </div>
+
+        <!-- TABLE -->
+        <div id="tableView" style="display:none">
+          <div class="tbl-wrap">
+            <div class="tbl-scroll">
+              <table class="dt" id="taskTable">
+                <thead><tr>
+                  <th class="ck"><input type="checkbox" id="selectAll" class="check" aria-label="Select all"></th>
+                  <th class="sortable">ID</th>
+                  <th class="sortable">Title</th>
+                  <th>Status</th>
+                  <th class="sortable">Priority <span class="sorti">▾</span></th>
+                  <th>Assignee</th>
+                  <th>Labels</th>
+                  <th class="sortable asc">Due <span class="sorti">▾</span></th>
+                  <th>Updated</th>
+                </tr></thead>
+                <tbody id="taskRows"></tbody>
+              </table>
+            </div>
+            <div class="tbl-foot">
+              <span id="tblCount">12 tasks</span>
+              <span style="color:var(--faint)">·</span>
+              <span>Rows per page</span>
+              <select class="input" style="height:26px;width:auto;padding:0 6px"><option>12</option><option>25</option><option>50</option></select>
+              <div class="pg"><button>‹</button><button class="on">1</button><button>2</button><button>3</button><button>›</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== DOCUMENTS ===== -->
+      <section class="view" id="view-documents" data-label="Documents">
+        <div class="docs">
+          <aside class="docs-l">
+            <div class="grp-h">Atlas Payments</div>
+            <div class="fi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>PRD<span class="sz">8</span></div>
+            <div class="fi active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Payouts spec</div>
+            <div class="fi sub">· Idempotency & retries</div>
+            <div class="fi sub">· Webhook contract</div>
+            <div class="fi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Runbooks<span class="sz">3</span></div>
+            <div class="fi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Architecture</div>
+            <div class="grp-h">Templates</div>
+            <div class="fi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>PRD template</div>
+            <div class="fi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Sprint retro</div>
+          </aside>
+
+          <div class="editor">
+            <div class="eh">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--muted)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              <span class="truncate">Payouts spec</span>
+              <span class="save"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>Saved · 2m ago</span>
+              <div class="acts">
+                <button class="btn sm ghost" id="histBtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v5h5M3.1 9a9 9 0 1 0 2-3L3 8"/><path d="M12 7v5l3 2"/></svg>History</button>
+                <button class="btn sm ghost"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Share</button>
+                <button class="btn sm subtle"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>Done</button>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 200px">
+              <div class="doc-body" id="docBody">
+                <h1 id="s1">Payouts — functional specification</h1>
+                <div class="by"><div class="av sm b">MC</div>Maya Chen · edited 2m ago · <span class="mono">v14</span></div>
+                <div class="callout"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>This spec is shared with the Northwind client. Engineering details live in collapsible blocks.</div>
+                <h2 id="s2">Overview</h2>
+                <p>Payouts lets merchants move settled balances to a destination bank account on a configurable schedule. This spec covers scheduling, batch execution, reconciliation, and failure handling for the GA release.</p>
+                <h2 id="s3">Requirements</h2>
+                <ul>
+                  <li>Merchants schedule payouts daily, weekly, or manual trigger.</li>
+                  <li>Each payout is idempotent — a repeated request with the same key returns the original result.</li>
+                  <li>Failed payouts retry with exponential backoff, max 5 attempts.</li>
+                  <li>Reconciliation runs hourly and surfaces mismatches within 15 minutes.</li>
+                </ul>
+                <h2 id="s4">Acceptance criteria</h2>
+                <ul>
+                  <li><code>POST /payouts</code> with a duplicate idempotency key returns <code>200</code> with the cached payout.</li>
+                  <li>P99 payout initiation latency under 800ms at 500 RPS.</li>
+                  <li>Zero data loss across a regional failover during execution.</li>
+                </ul>
+              </div>
+              <div style="border-left:1px solid var(--border);padding:14px;background:var(--surface-2)">
+                <div class="grp-h" style="padding:0 0 8px">Outline</div>
+                <div class="doc-toc" id="docToc">
+                  <a class="on" data-target="s1">Payouts — functional specification</a>
+                  <a class="l2" data-target="s2">Overview</a>
+                  <a class="l2" data-target="s3">Requirements</a>
+                  <a class="l2" data-target="s4">Acceptance criteria</a>
+                </div>
+                <div class="grp-h" style="padding:16px 0 6px">Comments · 2</div>
+                <div class="comment"><div class="av e sm">DO</div><div><b>Daniel Osei</b><span class="when">1h ago</span><p>Can we tighten the 800ms budget for the EU region? Cold starts add ~120ms.</p></div></div>
+                <div class="comment"><div class="av b sm">MC</div><div><b>Maya Chen</b><span class="when">32m ago</p><p>Agreed — raised budget to 950ms for EU, kept 800ms elsewhere. Will note in AC.</p></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PLANNING ===== -->
+      <section class="view" id="view-planning" data-label="Planning">
+        <div class="row between" style="margin-bottom:12px">
+          <div><div class="h2">Planning workspace</div><div class="small muted">Review forecast items, then convert approved work into project tasks.</div></div>
+          <div class="row">
+            <button class="btn sm subtle">PRD: Payouts GA</button>
+            <button class="btn primary sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Convert to tasks</button>
+          </div>
+        </div>
+        <div class="plan">
+          <!-- LEFT: PRD -->
+          <div class="pane">
+            <div class="ph"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><h3>Requirement / PRD</h3><span class="pill chip muted">v14</span></div>
+            <div class="pb prd">
+              <h4>Payouts GA</h4>
+              <p>Move settled balances to a destination bank account on a configurable schedule. Covers scheduling, batch execution, reconciliation, and failure handling.</p>
+              <h4 class="sub">Goals</h4>
+              <div class="req"><input type="checkbox" class="check" checked><div><b>Configurable payout schedules</b><small>Daily, weekly, or manual trigger per merchant.</small></div></div>
+              <div class="req"><input type="checkbox" class="check" checked><div><b>Idempotent payout execution</b><small>Duplicate requests return the cached result.</small></div></div>
+              <div class="req"><input type="checkbox" class="check"><div><b>Hourly reconciliation with alerts</b><small>Mismatches surfaced within 15 minutes.</small></div></div>
+              <div class="req"><input type="checkbox" class="check"><div><b>Failure retry & dead-letter queue</b><small>Exponential backoff, max 5 attempts.</small></div></div>
+              <h4 class="sub">Non-goals</h4>
+              <p style="margin-bottom:0">Instant payouts (sub-minute) and multi-currency routing are deferred to v2.</p>
+            </div>
+          </div>
+          <!-- CENTER: forecast -->
+          <div class="pane">
+            <div class="ph"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18"/></svg><h3>Forecast items</h3><span class="pill chip muted">7 generated · sorted by confidence</span></div>
+            <div class="pb" id="forecast"></div>
+          </div>
+          <!-- RIGHT: review & approval -->
+          <div class="pane">
+            <div class="ph"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><h3>Review & approval</h3><span class="pill" id="selPill"><span class="chip muted">Select an item</span></span></div>
+            <div class="pb" id="approvalPane">
+              <div class="empty"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3 8-8"/></svg></div>Select a forecast item to review its breakdown, effort estimate, and approval chain.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== MEETINGS ===== -->
+      <section class="view" id="view-meetings" data-label="Meetings">
+        <div class="row between" style="margin-bottom:14px">
+          <div><div class="h2">Meetings</div><div class="small muted">3 upcoming · 12 this sprint</div></div>
+          <div class="row"><button class="btn sm subtle">Week</button><button class="btn primary sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Schedule</button></div>
+        </div>
+        <div class="meet-item"><div class="when"><b>10:00</b><small>Today</small></div><div class="bd"><div class="tt">Sprint planning — Sprint 29</div><div class="meta">10:00–11:00 · Video · <div class="av-g"><div class="av sm b">MC</div><div class="av sm e">DO</div><div class="av sm c">PR</div><div class="av sm more">+3</div></div></div></div><div class="acts"><button class="btn sm primary">Join</button><button class="tbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></button></div></div>
+        <div class="meet-item"><div class="when"><b>14:30</b><small>Today</small></div><div class="bd"><div class="tt">Payouts architecture review</div><div class="meta">14:30–15:15 · Video · agenda attached</div></div><div class="acts"><button class="btn sm subtle">Join</button><button class="tbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></button></div></div>
+        <div class="meet-item"><div class="when"><b>11:00</b><small>Wed</small></div><div class="bd"><div class="tt">Northwind client sync</div><div class="meta">11:00–11:45 · Video · status + UAT prep</div></div><div class="acts"><button class="btn sm subtle">Join</button><button class="tbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></button></div></div>
+
+        <div class="card panel" style="margin-top:14px">
+          <div class="panel-head"><h3>Recent notes</h3><button class="link tiny">All notes</button></div>
+          <div class="panel-body">
+            <div class="comment" style="border-top:none;padding-top:0"><div class="av e sm">DO</div><div><b>Sprint 28 retro</b><span class="when">Jul 19</span><p>Velocity up 6pts. Action: split payout batch job story — it's blocking two downstream tasks.</p></div></div>
+            <div class="comment"><div class="av b sm">MC</div><div><b>Northwind kickoff</b><span class="when">Jul 15</span><p>Client confirmed sandbox access by Aug 02. Approval SLA set to 2 business days.</p></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== REPORTS ===== -->
+      <section class="view" id="view-reports" data-label="Reports">
+        <div class="row between" style="margin-bottom:14px">
+          <div><div class="h2">Reports</div><div class="small muted">Atlas Payments · last 6 sprints</div></div>
+          <div class="row"><button class="btn sm subtle">Export CSV</button><button class="btn sm subtle">Last 6 sprints ▾</button></div>
+        </div>
+        <div class="grid g3">
+          <div class="card chart-card span2">
+            <h3>Velocity</h3><div class="sub">Committed vs completed story points</div>
+            <svg viewBox="0 0 320 130" width="100%" height="140" style="display:block">
+              <g stroke="var(--border)"><line x1="0" y1="0" x2="320" y2="0"/><line x1="0" y1="43" x2="320" y2="43"/><line x1="0" y1="86" x2="320" y2="86"/><line x1="0" y1="129" x2="320" y2="129"/></g>
+              <g font-family="var(--mono)" font-size="8" fill="var(--faint)"><text x="0" y="124">S23</text><text x="52" y="124">S24</text><text x="104" y="124">S25</text><text x="156" y="124">S26</text><text x="208" y="124">S27</text><text x="268" y="124">S28</text></g>
+              <rect x="2" y="60" width="18" height="64" rx="2" fill="var(--surface-3)"/>
+              <rect x="6" y="68" width="10" height="56" rx="2" fill="var(--accent)"/>
+              <rect x="54" y="50" width="18" height="74" rx="2" fill="var(--surface-3)"/>
+              <rect x="58" y="58" width="10" height="66" rx="2" fill="var(--accent)"/>
+              <rect x="106" y="44" width="18" height="80" rx="2" fill="var(--surface-3)"/>
+              <rect x="110" y="52" width="10" height="72" rx="2" fill="var(--accent)"/>
+              <rect x="158" y="54" width="18" height="70" rx="2" fill="var(--surface-3)"/>
+              <rect x="162" y="48" width="10" height="76" rx="2" fill="var(--accent)"/>
+              <rect x="210" y="40" width="18" height="84" rx="2" fill="var(--surface-3)"/>
+              <rect x="214" y="46" width="10" height="78" rx="2" fill="var(--accent)"/>
+              <rect x="270" y="36" width="18" height="88" rx="2" fill="var(--surface-3)"/>
+              <rect x="274" y="42" width="10" height="82" rx="2" fill="var(--accent)"/>
+            </svg>
+            <div class="legend"><span><i style="background:var(--surface-3)"></i>Committed</span><span><i style="background:var(--accent)"></i>Completed</span></div>
+          </div>
+          <div class="card chart-card">
+            <h3>Status distribution</h3><div class="sub">128 open tasks</div>
+            <svg viewBox="0 0 120 120" width="120" height="120" style="display:block;margin:6px auto">
+              <circle cx="60" cy="60" r="46" fill="none" stroke="var(--surface-3)" stroke-width="16"/>
+              <circle cx="60" cy="60" r="46" fill="none" stroke="var(--info)" stroke-width="16" stroke-dasharray="115 289" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="46" fill="none" stroke="var(--accent)" stroke-width="16" stroke-dasharray="87 289" stroke-dashoffset="-115" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="46" fill="none" stroke="var(--warn)" stroke-width="16" stroke-dasharray="58 289" stroke-dashoffset="-202" transform="rotate(-90 60 60)"/>
+              <text x="60" y="58" text-anchor="middle" font-size="18" font-weight="700" fill="var(--fg-strong)">128</text>
+              <text x="60" y="72" text-anchor="middle" font-size="9" fill="var(--muted)">open</text>
+            </svg>
+            <div class="legend"><span><i style="background:var(--info)"></i>In progress 40%</span><span><i style="background:var(--accent)"></i>Todo 30%</span><span><i style="background:var(--warn)"></i>Review 20%</span></div>
+          </div>
+        </div>
+        <div class="card panel" style="margin-top:14px">
+          <div class="panel-head"><h3>Cycle time by type</h3><span class="muted">days, median</span></div>
+          <div class="tbl-scroll"><table class="dt">
+            <thead><tr><th class="sortable asc">Type <span class="sorti">▾</span></th><th>Median</th><th>P90</th><th>Volume</th><th>Trend</th></tr></thead>
+            <tbody>
+              <tr><td class="title">Bug</td><td class="mono">2.1d</td><td class="mono">6.4d</td><td class="mono">34</td><td><span class="status ok"><span class="d"></span>-18%</span></td></tr>
+              <tr><td class="title">Feature</td><td class="mono">5.8d</td><td class="mono">12.1d</td><td class="mono">22</td><td><span class="status ok"><span class="d"></span>-4%</span></td></tr>
+              <tr><td class="title">Task</td><td class="mono">1.4d</td><td class="mono">3.9d</td><td class="mono">51</td><td><span class="status danger"><span class="d"></span>+9%</span></td></tr>
+              <tr><td class="title">Chore</td><td class="mono">0.8d</td><td class="mono">2.2d</td><td class="mono">19</td><td><span class="status neutral"><span class="d"></span>flat</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== CLIENT PORTAL ===== -->
+      <section class="view" id="view-client" data-label="Client Portal">
+        <div class="card">
+          <div class="hero-stat">
+            <div class="ring" style="--p:68;--c:var(--accent);width:104px;height:104px"><b>68%</b></div>
+            <div style="flex:1">
+              <h2>Atlas Payments Platform</h2>
+              <div class="sub">On track · 4 of 7 milestones complete · next review Jul 26</div>
+              <div class="client-act">
+                <span class="status ok"><span class="d"></span>Schedule: on track</span>
+                <span class="status info"><span class="d"></span>Budget: 71% used</span>
+                <span class="status neutral"><span class="d"></span>Launch: Aug 14</span>
+              </div>
+            </div>
+            <button class="btn primary">Download report</button>
+          </div>
+        </div>
+
+        <div class="grid g2" style="margin-top:14px">
+          <div class="card panel">
+            <div class="panel-head"><h3>Timeline</h3></div>
+            <div class="panel-body">
+              <div class="mlist">
+                <div class="mnode done"><div class="mt">Discovery & architecture</div><div class="md">Signed off</div><div class="when">Jun 02</div></div>
+                <div class="mnode done"><div class="mt">Core payments API</div><div class="md">Complete</div><div class="when">Jul 04</div></div>
+                <div class="mnode done"><div class="mt">Payments SDK</div><div class="md">Complete</div><div class="when">Jul 18</div></div>
+                <div class="mnode now"><div class="mt">Payouts</div><div class="md">In progress · 68%</div><div class="when">Jul 26</div></div>
+                <div class="mnode"><div class="mt">User acceptance testing</div><div class="md">Your team · starts Aug 02</div><div class="when">Aug 02</div></div>
+                <div class="mnode"><div class="mt">Production launch</div><div class="md">Planned</div><div class="when">Aug 14</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card panel">
+            <div class="panel-head"><h3>Pending your approval</h3><span class="status warn"><span class="d"></span>2 items</span></div>
+            <div class="panel-body stack" style="gap:10px">
+              <div style="border:1px solid var(--border);border-radius:var(--radius);padding:11px"><div class="row between"><b class="small">Payouts functional spec</b><span class="tag b">Spec</span></div><p class="tiny muted" style="margin:4px 0 9px">v14 · shared by Maya Chen · 2 days ago</p><div class="row" style="gap:6px"><button class="btn sm primary">Approve</button><button class="btn sm">Request changes</button></div></div>
+              <div style="border:1px solid var(--border);border-radius:var(--radius);padding:11px"><div class="row between"><b class="small">UAT test plan</b><span class="tag g">Plan</span></div><p class="tiny muted" style="margin:4px 0 9px">v3 · shared by Daniel Osei · 1 day ago</p><div class="row" style="gap:6px"><button class="btn sm primary">Approve</button><button class="btn sm">Request changes</button></div></div>
+              <div class="empty" style="padding:14px"><div class="tiny">All other deliverables are approved.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card panel" style="margin-top:14px">
+          <div class="panel-head"><h3>Shared documents</h3><button class="link tiny">View all</button></div>
+          <div class="tbl-scroll"><table class="dt">
+            <thead><tr><th>Document</th><th>Shared by</th><th>Date</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="title">Payouts functional spec</td><td>Maya Chen</td><td class="mono updated">Jul 21</td><td><span class="status warn"><span class="d"></span>Awaiting</span></td></tr>
+              <tr><td class="title">UAT test plan</td><td>Daniel Osei</td><td class="mono updated">Jul 22</td><td><span class="status warn"><span class="d"></span>Awaiting</span></td></tr>
+              <tr><td class="title">Architecture overview</td><td>Daniel Osei</td><td class="mono updated">Jul 12</td><td><span class="status ok"><span class="d"></span>Approved</span></td></tr>
+              <tr><td class="title">Monthly status — July</td><td>Maya Chen</td><td class="mono updated">Jul 15</td><td><span class="status ok"><span class="d"></span>Approved</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== SETTINGS ===== -->
+      <section class="view" id="view-settings" data-label="Settings">
+        <div class="h2" style="margin-bottom:14px">Project settings · Atlas Payments</div>
+        <div class="settings">
+          <nav class="nav stack">
+            <a class="on">General</a><a>Members</a><a>Labels</a><a>Automations</a><a>Integrations</a><a>Billing</a><a>Danger zone</a>
+          </nav>
+          <div class="card panel"><div class="panel-body">
+            <div class="field"><div class="lbl"><b>Project name</b><small>Shown across the workspace.</small></div><input class="input" value="Atlas Payments Platform"></div>
+            <div class="field"><div class="lbl"><b>Client</b><small>Linked external organization.</small></div><input class="input" value="Northwind Retail"></div>
+            <div class="field"><div class="lbl"><b>Key</b><small>Short identifier for tasks.</small></div><input class="input mono" value="ATL" style="max-width:120px"></div>
+            <div class="field"><div class="lbl"><b>Default view</b><small>Where members land first.</small></div><select class="input"><option>Overview</option><option>Board</option><option>Table</option></select></div>
+            <div class="field"><div class="lbl"><b>Client portal</b><small>Let Northwind see progress & approvals.</small></div><div class="row" style="gap:10px"><div class="toggle on" data-toggle></div><span class="small muted">Enabled · 2 pending approvals</span></div></div>
+            <div class="field"><div class="lbl"><b>Sprint length</b><small>Cadence for planning.</small></div><select class="input"><option>2 weeks</option><option>1 week</option><option>3 weeks</option></select></div>
+            <div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button class="btn">Cancel</button><button class="btn primary">Save changes</button></div>
+          </div></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- drawer / modal / scrim -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true"></aside>
+<div class="modal cmdk" id="cmdk" role="dialog" aria-label="Command menu">
+  <div class="field"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="cmdkInput" placeholder="Search or jump to…" /><span class="kbd">esc</span></div>
+  <div class="res" id="cmdkRes"></div>
+  <div class="foot"><span>Navigate</span><span class="kb">↑↓</span><span>Select</span><span class="kb">↵</span></div>
+</div>
+<div class="toast" id="toast"></div>
+<div id="errBadge" role="alert" aria-live="assertive"></div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+window.addEventListener('error',function(e){var b=document.getElementById('errBadge');if(b){b.textContent='⚠ '+(e&&e.message||'script error');b.classList.add('show');}});
+let dragId=null,_seq=1077;
+
+/* ---- data ---- */
+const AV={mc:['b','MC'],pr:['c','PR'],do:['e','DO'],lb:['f','LB'],sr:['d','SR'],ap:['a','AP']};
+const PRIO={1:['p1','Critical'],2:['p2','High'],3:['p3','Medium'],4:['p4','Low']};
+function avm(id,sm){const[c,t]=AV[id];return `<span class="av ${sm?'sm':''} ${c}">${t}</span>`}
+
+const TASKS=[
+  {id:'ATL-1042',t:'Implement idempotency key on /charges',st:'progress',p:2,who:'pr',due:'Jul 24',late:false,upd:'2h',labels:[['b','payments'],['r','critical']],col:'progress'},
+  {id:'ATL-1048',t:'Add retry policy for 5xx webhook delivery',st:'review',p:2,who:'pr',due:'Jul 23',late:false,upd:'1h',labels:[['b','payments']],col:'review'},
+  {id:'ATL-1051',t:'Payout batch job — split & parallelize',st:'progress',p:1,who:'do',due:'Jul 22',late:true,upd:'30m',labels:[['b','payouts'],['r','critical']],col:'progress'},
+  {id:'ATL-1059',t:'Fix duplicate reconciliation event on retry',st:'todo',p:1,who:'sr',due:'Jul 25',late:false,upd:'4h',labels:[['o','bug']],col:'todo'},
+  {id:'ATL-1063',t:'Webhook signature verification (HMAC)',st:'review',p:2,who:'lb',due:'Jul 24',late:false,upd:'5h',labels:[['b','payments'],['i','security']],col:'review'},
+  {id:'ATL-1067',t:'Rate limiter for payout initiation',st:'todo',p:3,who:'lb',due:'Jul 28',late:false,upd:'1d',labels:[['i','infra']],col:'todo'},
+  {id:'ATL-1070',t:'Dashboard: payout status widget',st:'done',p:3,who:'lb',due:'Jul 20',late:false,upd:'2d',labels:[['v','ui']],col:'done'},
+  {id:'ATL-1071',t:'Dead-letter queue for failed payouts',st:'todo',p:2,who:'do',due:'Jul 29',late:false,upd:'1d',labels:[['b','payouts']],col:'todo'},
+  {id:'ATL-1073',t:'Load test — payout job at 500 RPS',st:'todo',p:2,who:'ap',due:'Jul 27',late:false,upd:'6h',labels:[['i','qa']],col:'todo'},
+  {id:'ATL-1056',t:'Idempotency store migration script',st:'done',p:3,who:'pr',due:'Jul 19',late:false,upd:'3d',labels:[['b','payments']],col:'done'},
+  {id:'ATL-1075',t:'Expose payout schedule in merchant API',st:'blocked',p:2,who:'do',due:'Jul 30',late:false,upd:'8h',labels:[['b','payouts'],['o','api']],col:'blocked'},
+  {id:'ATL-1077',t:'Sentry alerting for reconciliation lag',st:'progress',p:3,who:'ap',due:'Jul 26',late:false,upd:'3h',labels:[['i','infra']],col:'progress'}
+];
+const STATUS={todo:['neutral','To do'],progress:['info','In progress'],review:['warn','In review'],blocked:['danger','Blocked'],done:['ok','Done']};
+const COLS=[['todo','To do','var(--faint)'],['progress','In progress','var(--info)'],['review','In review','var(--warn)'],['blocked','Blocked','var(--danger)'],['done','Done','var(--ok)']];
+
+function taskRow(t){
+  const[pc,pn]=PRIO[t.p],[sc,sn]=STATUS[t.st];
+  return `<tr data-id="${t.id}">
+    <td class="ck"><input type="checkbox" class="row-check check" aria-label="Select ${t.id}"></td>
+    <td class="id">${t.id}</td>
+    <td class="title">${t.t}</td>
+    <td><span class="status ${sc}"><span class="d"></span>${sn}</span></td>
+    <td><span class="prio ${pc}"><span class="bars"><i></i><i></i><i></i></span>${pn}</span></td>
+    <td>${avm(t.who,true)}</td>
+    <td>${t.labels.map(l=>`<span class="tag ${l[1]}">${l[0]}</span>`).join(' ')}</td>
+    <td class="mono ${t.late?'due-over':'muted'}">${t.due}</td>
+    <td class="mono updated">${t.upd}</td>
+  </tr>`;
+}
+function taskCard(t){
+  const[pc,pn]=PRIO[t.p];
+  return `<div class="tcard" data-id="${t.id}" draggable="true">
+    <div class="ttop"><span class="tid">${t.id}</span><span class="prio ${pc}"><span class="bars"><i></i><i></i><i></i></span>${pn}</span></div>
+    <div class="tt">${t.t}</div>
+    <div class="trow">${t.labels.slice(0,3).map(l=>`<span class="tag ${l[1]}">${l[0]}</span>`).join('')}${t.labels.length>3?`<span class="tag">+${t.labels.length-3}</span>`:''}</div>
+    <div class="tmeta"><span class="mono ${t.late?'late':''}">◷ ${t.due}</span>${avm(t.who)}</div>
+  </div>`;
+}
+
+/* ---- board interactions: drag-drop between columns + inline add-task ---- */
+function wireBoard(){
+  $$('#board .tcard').forEach(c=>{
+    c.addEventListener('dragstart',e=>{dragId=c.dataset.id;try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragId);}catch(_){}c.classList.add('dragging');});
+    c.addEventListener('dragend',()=>{c.classList.remove('dragging');$$('#board .col-body').forEach(b=>b.classList.remove('drag-over'));});
+  });
+  $$('#board .col-body').forEach(b=>{
+    b.addEventListener('dragover',e=>{e.preventDefault();try{e.dataTransfer.dropEffect='move';}catch(_){}b.classList.add('drag-over');});
+    b.addEventListener('dragleave',()=>b.classList.remove('drag-over'));
+    b.addEventListener('drop',e=>{
+      e.preventDefault();b.classList.remove('drag-over');
+      const col=b.dataset.col,t=TASKS.find(x=>x.id===dragId);
+      if(!t||!STATUS[col]||t.col===col)return;
+      const from=STATUS[t.col]?STATUS[t.col][1]:t.col;t.col=col;t.st=col;
+      rerenderBoard();rerenderTable();toast(t.id+' · '+from+' → '+STATUS[col][1]);
+    });
+  });
+  $$('#board .add-task').forEach(b=>b.addEventListener('click',()=>addTask(b.dataset.col)));
+}
+function addTask(col){
+  if(!STATUS[col])col='todo';
+  const id='ATL-'+(++_seq);
+  const t={id,t:'New task — click to open',st:col,p:3,who:'mc',due:'Aug '+(20+(_seq%10)),late:false,upd:'now',labels:[['b','new']],col};
+  TASKS.push(t);
+  rerenderBoard();rerenderTable();
+  navigate('view-tasks');
+  var seg=$('#view-tasks .seg[data-view="board"]');if(seg)seg.click();
+  toast(id+' added · '+STATUS[col][1]);
+  setTimeout(()=>{var c=$('.tcard[data-id="'+id+'"]');if(c){c.classList.add('flash');setTimeout(()=>c.classList.remove('flash'),1000);}},80);
+}
+/* render board (re-runnable) */
+function rerenderBoard(){
+  $('#board').innerHTML=COLS.map(([key,name,color])=>{
+    const items=TASKS.filter(t=>t.col===key);
+    return `<div class="col" data-col="${key}"><div class="col-h"><span class="cd" style="background:${color}"></span>${name}<span class="cnt">${items.length}</span></div>
+      <div class="col-body" data-col="${key}">${items.map(taskCard).join('')}<button class="add-task" data-col="${key}">+ Add task</button></div></div>`;
+  }).join('');
+  wireBoard();
+}
+/* render task table (re-runnable) */
+function rerenderTable(){
+  $('#taskRows').innerHTML=TASKS.map(taskRow).join('');
+  var c=$('#tblCount');if(c)c.textContent=TASKS.length+' tasks';
+  updateBulk();
+}
+rerenderBoard();
+rerenderTable();
+
+/* dashboard mini tables */
+$('#dashTasks').innerHTML=[
+  ['ATL-1042','Implement idempotency key on /charges','Atlas',2,'Jul 24',false],
+  ['ATL-1051','Payout batch job — split & parallelize','Atlas',1,'Jul 22',true],
+  ['ATL-1063','Webhook signature verification (HMAC)','Atlas',2,'Jul 24',false],
+  ['HEL-2031','CRM migration dry-run #2','Helix',3,'Jul 25',false],
+  ['ATL-1073','Load test — payout job at 500 RPS','Atlas',2,'Jul 27',false],
+].map(([id,t,pr,p,due,late])=>{
+  const[pc,pn]=PRIO[p]||PRIO[3];
+  const ptag=pr==='Atlas'?'<span class="tag b">Atlas</span>':'<span class="tag o">Helix</span>';
+  return `<tr data-id="${id}"><td class="title">${t}</td><td>${ptag}</td><td><span class="prio ${pc}"><span class="bars"><i></i><i></i><i></i></span>${pn}</span></td><td class="mono ${late?'due-over':'muted'}">${due}</td></tr>`;
+}).join('');
+
+const FEED=[
+  ['pr','Priya Nair','requested review on','ATL-1048','12m'],
+  ['sr','Sofia Russo','filed bug','ATL-1059','1h'],
+  ['do','Daniel Osei','merged','feat/payouts-batch','3h'],
+  ['lb','Lukas Brandt','commented on','Payouts spec','5h'],
+  ['ap','Aiden Park','moved','ATL-1073 to To do','8h'],
+];
+function feedHtml(){return FEED.map(([w,n,act,ref,when])=>`<div class="feed-item">${avm(w)}<div><div class="txt"><b>${n}</b> ${act} <span class="ref">${ref}</span></div><span class="when">${when} ago</span></div></div>`).join('')}
+$('#dashFeed').innerHTML=feedHtml();
+$('#overviewFeed').innerHTML=feedHtml();
+
+/* projects list */
+$('#projRows').innerHTML=[
+  ['Atlas Payments Platform','Northwind Retail','ok','On track',68,'b','a',5,'Aug 14',true],
+  ['Helix CRM Migration','Meridian Logistics','warn','At risk',41,'o','b',4,'Sep 02',false],
+  ['Beacon Mobile App','Lumen Health','info','Planning',12,'v','c',3,'Oct 15',false],
+  ['Forge DevOps Portal','Internal','ok','On track',85,'i','d',6,'Aug 30',false],
+  ['Tide Analytics','Vertex Capital','neutral','Completed',100,'g','e',4,'Jul 10',false],
+].map(([n,c,sc,sn,p,ic,ac,m,due,active])=>`
+  <tr data-nav="${active?'view-overview':''}" style="cursor:${active?'pointer':'default'}">
+    <td class="title"><span class="av sm ${ac}" style="margin-right:8px">${n[0]}</span>${n}</td>
+    <td class="muted">${c}</td>
+    <td><span class="status ${sc}"><span class="d"></span>${sn}</span></td>
+    <td><div class="row" style="gap:8px"><div class="bar" style="width:120px"><i style="width:${p}%;background:${p===100?'var(--ok)':p<30?'var(--warn)':'var(--accent)'}"></i></div><span class="mono muted">${p}%</span></div></td>
+    <td><div class="av-g">${['b','c','d','e','f','a'].slice(0,m).map((x,i)=>`<div class="av sm ${x}">${['MC','PR','SR','DO','LB','AP'][i]}</div>`).join('')}<div class="av sm more">+${m>4?m-4:''}</div></div></td>
+    <td class="mono muted">${due}</td>
+    <td><button class="tbtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></td>
+  </tr>`).join('');
+
+/* ---- planning data ---- */
+const FORECAST=[
+  {id:'F-01',t:'Payout scheduler service',conf:3,est:'5 pts',effort:['Backend','Cron'],reason:'Configurable daily/weekly/manual triggers per merchant.',appr:[['do','Approved'],['mc','Approved'],['nw','Pending']]},
+  {id:'F-02',t:'Idempotency layer on /payouts',conf:3,est:'3 pts',effort:['Backend','API'],reason:'Cache payout result keyed by client idempotency key (24h TTL).',appr:[['do','Approved'],['mc','Approved'],['nw','Approved']]},
+  {id:'F-03',t:'Reconciliation job + alerting',conf:2,est:'8 pts',effort:['Backend','Ops'],reason:'Hourly comparison of ledger vs bank events; surface mismatches within 15 min.',appr:[['do','Pending'],['mc','Pending'],['nw','Pending']]},
+  {id:'F-04',t:'Retry & dead-letter queue',conf:3,est:'5 pts',effort:['Backend','Infra'],reason:'Exponential backoff, max 5 attempts, then DLQ for manual review.',appr:[['do','Approved'],['mc','Pending'],['nw','Pending']]},
+  {id:'F-05',t:'Merchant payout schedule API',conf:2,est:'3 pts',effort:['API','Docs'],reason:'CRUD for schedule config; versioned contract.',appr:[['do','Pending'],['mc','Pending'],['nw','Pending']]},
+  {id:'F-06',t:'Payout status dashboard widget',conf:2,est:'2 pts',effort:['Frontend','UI'],reason:'Live status, last run, next run, failure count.',appr:[['lb','Approved'],['mc','Pending']]},
+  {id:'F-07',t:'Webhook for payout state changes',conf:3,est:'3 pts',effort:['Backend','API'],reason:'Signed webhook emitted on each state transition.',appr:[['do','Approved'],['mc','Approved'],['nw','Pending']]}
+];
+const APN={mc:['Maya Chen','Project Lead'],do:['Daniel Osei','Tech Lead'],pr:['Priya Nair','Backend'],lb:['Lukas Brandt','Frontend'],sr:['Sofia Russo','QA Engineer'],ap:['Aiden Park','Business Analyst'],nw:['Northwind Contact','Client approver']};
+const CDOT=['var(--danger)','var(--warn)','var(--ok)'];
+$('#forecast').innerHTML=FORECAST.map(f=>`
+  <div class="forecast-item" data-fid="${f.id}">
+    <div class="fi-top"><span class="tid mono">${f.id}</span><span class="conf mono">est ${f.est}</span></div>
+    <div class="fi-tt">${f.t}</div>
+    <div class="fi-pts"><span class="conf-dot" style="background:${CDOT[f.conf-1]}"></span>${['Low','Medium','High'][f.conf-1]} confidence · ${f.effort.map(e=>`<span class="tag">${e}</span>`).join(' ')}</div>
+  </div>`).join('');
+
+function renderApproval(f){
+  const CHAIN={do:'av e',mc:'av b',lb:'av f',nw:'av a'};
+  $('#selPill').innerHTML=`<span class="chip">${f.id} · ${f.est}</span>`;
+  $('#approvalPane').innerHTML=`
+    <div style="margin-bottom:12px"><div class="h2" style="font-size:14px">${f.t}</div><p class="small muted" style="margin-top:4px">${f.reason}</p></div>
+    <div class="grp-h" style="padding:0 0 6px;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:600">Effort</div>
+    <div class="row" style="gap:6px;margin-bottom:14px">${f.effort.map(e=>`<span class="tag">${e}</span>`).join('')}<span class="chip muted">${f.est}</span></div>
+    <div class="grp-h" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:600;padding:0 0 8px">Approval chain</div>
+    ${f.appr.map(([who,st])=>{const[n,r]=APN[who];const done=st==='Approved',pend=st==='Pending';
+      return `<div class="approval-step"><div class="av sm ${who==='do'?'e':who==='mc'?'b':who==='lb'?'f':'a'}">${n.split(' ').map(x=>x[0]).join('')}</div>
+        <div class="abd"><div class="ln"><b>${n}</b><span class="role">${r}</span><span class="st">${done?'<span class="status ok"><span class="d"></span>Approved</span>':pend?'<span class="status warn"><span class="d"></span>Pending</span>':'<span class="status danger"><span class="d"></span>Changes</span>'}</span></div></div></div>`}).join('')}
+    <div class="row" style="gap:8px;margin-top:14px"><button class="btn primary sm" data-approve>Approve & convert</button><button class="btn sm" data-changes>Request changes</button></div>
+  `;
+}
+$$('#forecast .forecast-item').forEach(el=>{
+  el.addEventListener('click',()=>{
+    $$('.forecast-item').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');
+    renderApproval(FORECAST.find(f=>f.id===el.dataset.fid));
+  });
+});
+
+/* ============ NAVIGATION ============ */
+const VIEWS=['view-dashboard','view-projects','view-overview','view-tasks','view-documents','view-planning','view-meetings','view-reports','view-client','view-settings'];
+const LABELS={'view-dashboard':'Dashboard','view-projects':'Projects','view-overview':'Overview','view-tasks':'Tasks','view-documents':'Documents','view-planning':'Planning','view-meetings':'Meetings','view-reports':'Reports','view-client':'Client Portal','view-settings':'Settings'};
+const INPROJECT=new Set(['view-overview','view-tasks','view-documents','view-planning','view-meetings','view-reports','view-client','view-settings']);
+let lastView='view-dashboard';
+function navigate(view){
+  if(!VIEWS.includes(view))return;
+  lastView=view;
+  $$('.view').forEach(v=>v.classList.toggle('active',v.id===view));
+  const inProj=INPROJECT.has(view);
+  $('#projHead').style.display=inProj?'flex':'none';
+  $('#projNav').style.display=inProj?'flex':'none';
+  // sidebar active
+  $$('.nav-item[data-nav]').forEach(n=>n.classList.toggle('active',n.dataset.nav===view));
+  // subnav active
+  $$('#projNav a').forEach(a=>a.classList.toggle('active',a.dataset.nav===view));
+  // breadcrumb
+  let c;
+  if(view==='view-dashboard')c=`<span class="cur">Dashboard</span>`;
+  else if(view==='view-projects')c=`<span>Home</span><span class="sep">/</span><span class="cur">Projects</span>`;
+  else c=`<span>Home</span><span class="sep">/</span><span>Projects</span><span class="sep">/</span><span>Atlas Payments Platform</span><span class="sep">/</span><span class="cur">${LABELS[view]}</span>`;
+  $('#crumbs').innerHTML=c;
+  $('#main').scrollTop=0;
+  var h=$('#'+view+' .h2');if(h){h.classList.remove('flash');void h.offsetWidth;h.classList.add('flash');}
+  try{localStorage.setItem('helix:view',view)}catch(e){}
+  closePopovers();closeDrawer();closeModal();
+}
+document.addEventListener('click',e=>{
+  const nav=e.target.closest('[data-nav]');
+  if(nav){e.preventDefault();navigate(nav.dataset.nav);}
+});
+/* ============ BOARD / TABLE TOGGLE ============ */
+$$('.seg').forEach(b=>b.addEventListener('click',()=>{
+  $$('.seg').forEach(x=>{const a=x===b;x.style.fontWeight=a?600:500;x.style.color=a?'var(--fg-strong)':'var(--muted)';x.style.background=a?'var(--surface-2)':'transparent';});
+  const v=b.dataset.view;
+  $('#boardView').style.display=v==='board'?'block':'none';
+  $('#tableView').style.display=v==='table'?'block':'none';
+}));
+
+/* density */
+$('#densityBtn').addEventListener('click',()=>{
+  const c=document.body.classList.toggle('compact');
+  $('#densityBtn').lastChild.textContent=c?' Compact':' Comfortable';
+  $('#densityBtn').innerHTML=$('#densityBtn').innerHTML.replace(/(Comfortable|Compact)/,c?'Compact':'Comfortable');
+  toast(c?'Density: compact':'Density: comfortable');
+});
+
+/* sortable headers */
+$$('.dt th.sortable').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const wasAsc=th.classList.contains('asc');
+    $$('.dt th.sortable').forEach(x=>x.classList.remove('asc','desc'));
+    th.classList.add(wasAsc?'desc':'asc');
+  });
+});
+
+/* table selection */
+function updateBulk(){
+  const bulk=$('#bulkBar'),bulkN=$('#bulkN');if(!bulk||!bulkN)return;
+  const n=$$('.row-check:checked').length;
+  bulkN.textContent=n;bulk.classList.toggle('show',n>0);
+  $$('#taskRows tr').forEach(tr=>{const ck=tr.querySelector('.row-check');tr.classList.toggle('sel',ck&&ck.checked);});
+}
+$('#selectAll').addEventListener('change',e=>{$$('.row-check').forEach(c=>c.checked=e.target.checked);updateBulk();});
+document.addEventListener('change',e=>{if(e.target.classList.contains('row-check'))updateBulk();});
+$('#bulkClear').addEventListener('click',()=>{$$('.row-check').forEach(c=>c.checked=false);$('#selectAll').checked=false;updateBulk();});
+
+/* ============ DRAWER (task detail) ============ */
+const drawer=$('#drawer'),scrim=$('#scrim');
+function openDrawer(id){
+  const t=TASKS.find(x=>x.id===id)||TASKS[0];
+  const[pc,pn]=PRIO[t.p],[sc,sn]=STATUS[t.st];
+  drawer.innerHTML=`
+    <div class="dh"><div style="flex:1"><span class="tid mono">${t.id}</span><h3>${t.t}</h3>
+      <div class="row" style="gap:8px;margin-top:8px"><span class="status ${sc}"><span class="d"></span>${sn}</span><span class="prio ${pc}"><span class="bars"><i></i><i></i><i></i></span>${pn}</span></div></div>
+      <button class="x" id="drawerX" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="db">
+      <div class="meta-grid">
+        <span class="k">Assignee</span><span class="v">${avm(t.who,true)} ${APN[t.who]?APN[t.who][0]:t.who}</span>
+        <span class="k">Due date</span><span class="v mono ${t.late?'due-over':''}">${t.due}${t.late?' · overdue':''}</span>
+        <span class="k">Labels</span><span class="v">${t.labels.map(l=>`<span class="tag ${l[1]}">${l[0]}</span>`).join(' ')}</span>
+        <span class="k">Sprint</span><span class="v">Sprint 28 — Payouts GA</span>
+        <span class="k">Reporter</span><span class="v">${avm('mc',true)} Maya Chen</span>
+        <span class="k">Estimate</span><span class="v mono">${(t.p*2+1)} pts</span>
+      </div>
+      <div class="grp-h" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:600;padding:18px 0 8px">Description</div>
+      <p class="small" style="color:var(--fg);line-height:1.6;margin-bottom:6px">${t.t}. Includes unit + integration coverage and an entry in the runbook. Linked to the Payouts GA milestone.</p>
+      <div class="grp-h" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:600;padding:18px 0 8px">Subtasks · 2 of 3</div>
+      <div class="stack" style="gap:7px">
+        <label class="row" style="gap:8px"><input type="checkbox" class="check" checked><span class="small muted" style="text-decoration:line-through">Write contract tests</span></label>
+        <label class="row" style="gap:8px"><input type="checkbox" class="check" checked><span class="small muted" style="text-decoration:line-through">Add metrics & alerts</span></label>
+        <label class="row" style="gap:8px"><input type="checkbox" class="check"><span class="small">Peer review with Daniel</span></label>
+      </div>
+      <div class="grp-h" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:600;padding:18px 0 0">Comments · 2</div>
+      <div class="comment"><div class="av e sm">DO</div><div><b>Daniel Osei</b><span class="when">2h ago</span><p>Let's pair on the batch split — the parallelization boundary is the tricky part.</p></div></div>
+      <div class="comment"><div class="av b sm">MC</div><div><b>Maya Chen</b><span class="when">1h ago</span><p>Sounds good — blocked on F-03 reconciliation scope.</p></div></div>
+    </div>
+    <div class="df">
+      <input class="input" placeholder="Comment or /command…" style="flex:1;height:30px">
+      <button class="btn primary sm">Comment</button>
+    </div>`;
+  scrim.classList.add('show');drawer.classList.add('show');drawer.setAttribute('aria-hidden','false');
+  $('#drawerX').addEventListener('click',closeDrawer);
+}
+function closeDrawer(){drawer.classList.remove('show');drawer.setAttribute('aria-hidden','true');if(!$('#cmdk').classList.contains('show')&&!anyPop())scrim.classList.remove('show');}
+document.addEventListener('click',e=>{
+  if(e.target.closest('.row-check,.check,button,a,.tbtn,.seg,.add-task'))return;
+  const c=e.target.closest('.tcard');
+  if(c){openDrawer(c.dataset.id);return;}
+  const tr=e.target.closest('#taskRows tr[data-id]');
+  if(tr){openDrawer(tr.dataset.id);return;}
+  const dashRow=e.target.closest('#dashTasks tr[data-id]');
+  if(dashRow){navigate('view-tasks');}
+});
+scrim.addEventListener('click',()=>{closeDrawer();closeModal();});
+
+/* ============ POPVERS ============ */
+function anyPop(){return $$('.pop.show').length>0}
+function closePopovers(){$$('.pop').forEach(p=>p.classList.remove('show'))}
+function togglePop(btn,pop){
+  const open=pop.classList.contains('show');closePopovers();
+  if(!open){pop.classList.add('show');}
+}
+$('#bellBtn').addEventListener('click',e=>{e.stopPropagation();togglePop(e.currentTarget,$('#bellPop'));});
+$('#createCaret').addEventListener('click',e=>{e.stopPropagation();togglePop(e.currentTarget,$('#createPop'));});
+$('#createBtn').addEventListener('click',()=>{toast('New task — press T anywhere');});
+$$('[data-create]').forEach(b=>b.addEventListener('click',()=>{closePopovers();
+  const m={task:'task',doc:'document',meeting:'meeting',member:'member'}[b.dataset.create];
+  toast(`New ${m} started`);if(b.dataset.create==='member')navigate('view-settings');}));
+document.addEventListener('click',e=>{if(!e.target.closest('.dd')&&!e.target.closest('.pop'))closePopovers();});
+
+/* planning approve */
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-approve]')){toast('Approved & converted to tasks');closeDrawer();}
+  if(e.target.closest('[data-changes]')){toast('Changes requested — item returned to review');}
+});
+
+/* ============ MODAL (cmd-k) ============ */
+const cmdk=$('#cmdk'),cmdkInput=$('#cmdkInput');
+const CMD=[
+  ['Go to Dashboard','view-dashboard','nav'],
+  ['Open Projects','view-projects','nav'],
+  ['Atlas · Overview','view-overview','nav'],
+  ['Atlas · Tasks board','view-tasks','nav'],
+  ['Atlas · Documents','view-documents','nav'],
+  ['Atlas · Planning workspace','view-planning','nav'],
+  ['Atlas · Meetings','view-meetings','nav'],
+  ['Atlas · Reports','view-reports','nav'],
+  ['Client Portal','view-client','nav'],
+  ['Settings','view-settings','nav'],
+  ['Create new task','task','create'],
+  ['Create new document','doc','create']
+];
+let cmdSel=0;
+function renderCmd(q){
+  const list=q?CMD.filter(c=>c[0].toLowerCase().includes(q.toLowerCase())):CMD;
+  cmdSel=Math.min(cmdSel,list.length-1);
+  $('#cmdkRes').innerHTML=list.length?list.map((c,i)=>{
+    const ic=c[2]==='nav'?'<path d="M9 18l6-6-6-6"/>':'<path d="M12 5v14M5 12h14"/>';
+    return `<div class="ritem ${i===cmdSel?'sel':''}" data-nav="${c[2]==='nav'?c[1]:''}" data-create="${c[2]==='create'?c[1]:''}">
+      <svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">${ic}</svg>${c[0]}<span class="hint">${c[2]==='nav'?'open':''}</span></div>`;
+  }).join(''):'<div class="empty" style="padding:20px">No results</div>';
+}
+function openModal(){cmdk.classList.add('show');scrim.classList.add('show');cmdkInput.value='';cmdSel=0;renderCmd('');setTimeout(()=>cmdkInput.focus(),30);}
+function closeModal(){cmdk.classList.remove('show');if(!drawer.classList.contains('show'))scrim.classList.remove('show');}
+$('#searchInput').addEventListener('focus',openModal);
+cmdkInput.addEventListener('input',e=>{cmdSel=0;renderCmd(e.target.value);});
+cmdkInput.addEventListener('keydown',e=>{
+  const items=$$('#cmdkRes .ritem');
+  if(e.key==='ArrowDown'){e.preventDefault();cmdSel=Math.min(cmdSel+1,items.length-1);items.forEach((x,i)=>x.classList.toggle('sel',i===cmdSel));}
+  else if(e.key==='ArrowUp'){e.preventDefault();cmdSel=Math.max(cmdSel-1,0);items.forEach((x,i)=>x.classList.toggle('sel',i===cmdSel));}
+  else if(e.key==='Enter'){e.preventDefault();items[cmdSel]&&items[cmdSel].click();}
+  else if(e.key==='Escape'){closeModal();}
+});
+$('#cmdkRes').addEventListener('click',e=>{
+  const it=e.target.closest('.ritem');if(!it)return;
+  closeModal();
+  if(it.dataset.nav)navigate(it.dataset.nav);
+  else if(it.dataset.create)toast(`New ${it.dataset.create} started`);
+});
+
+/* global keys */
+document.addEventListener('keydown',e=>{
+  const typing=/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)||document.activeElement.isContentEditable;
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();cmdk.classList.contains('show')?closeModal():openModal();return;}
+  if(e.key==='Escape'){closeDrawer();closeModal();closePopovers();}
+  if(typing)return;
+  if(e.key==='t'||e.key==='T'){addTask('todo');}
+  if(e.key==='/'){e.preventDefault();$('#searchInput').focus();}
+});
+
+/* ============ docs outline scroll ============ */
+$$('#docToc a').forEach(a=>a.addEventListener('click',()=>{
+  $$('#docToc a').forEach(x=>x.classList.remove('on'));a.classList.add('on');
+  const el=document.getElementById(a.dataset.target);
+  if(el){const box=$('#docBody')||el.parentElement;if(box){var top=0,n=el;while(n&&n!==box){top+=n.offsetTop;n=n.offsetParent;}box.scrollTop=top;}}
+}));
+$('#histBtn').addEventListener('click',()=>toast('Version history · 14 versions'));
+
+/* ============ toggles ============ */
+document.addEventListener('click',e=>{const t=e.target.closest('[data-toggle]');if(t){t.classList.toggle('on');}});
+
+/* ============ toast ============ */
+let toastT;
+function toast(msg){
+  const el=$('#toast');
+  el.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>${msg}`;
+  el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),1900);
+}
+
+/* ============ initial view (deferred so all DOM refs exist) ============ */
+(function init(){
+  var nt=$('#view-tasks .toolbar .btn.primary');if(nt)nt.addEventListener('click',()=>addTask('todo'));
+  var kb=document.querySelector('.search .kbd');if(kb)kb.classList.add('pulse');
+  var eb=document.getElementById('errBadge');if(eb)eb.addEventListener('click',function(){eb.classList.remove('show');});
+  if(!sessionStorage.getItem('helix:hinted')){sessionStorage.setItem('helix:hinted','1');setTimeout(()=>toast('Live prototype · ⌘K commands · drag cards on the board · click any task'),650);}
+})();
+navigate(localStorage.getItem('helix:view')||'view-dashboard');
+</script>
+</body>
+</html>

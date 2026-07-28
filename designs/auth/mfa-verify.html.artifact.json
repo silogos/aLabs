@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "auth/mfa-verify.html",
+  "entry": "auth/mfa-verify.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-07-25T10:46:00.009Z",
+  "updatedAt": "2026-07-25T10:46:00.009Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}
