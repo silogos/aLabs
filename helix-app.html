@@ -1,0 +1,2200 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet" />
+<title>Helix · Atlas Platform 2.0</title>
+<style>
+/* ============================================================
+   Helix — Workspace prototype
+   Direction: tech/utility × modern-minimal (Linear · GitHub lineage)
+   Tokens mirror designs/auth/auth.css + designs/index.html verbatim
+   ============================================================ */
+:root{
+  --bg:        oklch(98.4% 0.002 250);
+  --surface:   oklch(100% 0 0);
+  --surface-2: oklch(96.6% 0.003 250);
+  --surface-3: oklch(94% 0.004 250);
+  --overlay:   oklch(14% 0.014 250 / 72%);
+
+  --fg:        oklch(22% 0.013 250);
+  --fg-strong: oklch(14% 0.015 250);
+  --muted:     oklch(52% 0.012 250);
+  --faint:     oklch(64% 0.010 250);
+
+  --border:        oklch(91% 0.004 250);
+  --border-strong: oklch(85% 0.007 250);
+
+  --rail:        oklch(19% 0.013 255);
+  --rail-2:      oklch(23% 0.014 255);
+  --rail-fg:     oklch(74% 0.012 255);
+  --rail-faint:  oklch(46% 0.012 255);
+
+  --accent:        oklch(54% 0.18 258);
+  --accent-hover:  oklch(48% 0.19 258);
+  --accent-soft:   oklch(96% 0.03 258);
+  --accent-fg:     oklch(99% 0.01 258);
+
+  --ok:oklch(58% 0.13 150); --ok-bg:oklch(96% 0.04 150);
+  --warn:oklch(66% 0.14 70); --warn-bg:oklch(96% 0.05 70);
+  --danger:oklch(56% 0.19 25); --danger-bg:oklch(96% 0.04 25);
+  --info:oklch(58% 0.12 240); --info-bg:oklch(96% 0.04 240);
+  --violet:oklch(54% 0.14 300); --violet-bg:oklch(96% 0.04 300);
+
+  --radius:8px; --radius-sm:6px; --radius-lg:12px;
+  --sidebar-w:236px; --topbar-h:52px;
+
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,'Helvetica Neue',Arial,sans-serif;
+  --mono:ui-monospace,'SF Mono','JetBrains Mono','IBM Plex Mono',Menlo,Consolas,monospace;
+  --sig:'Caveat','Snell Roundhand','Brush Script MT','Segoe Script','Lucida Handwriting',cursive;
+
+  --shadow-pop:0 8px 30px rgba(20,24,40,.14),0 2px 8px rgba(20,24,40,.08);
+  --shadow-card:0 1px 2px rgba(20,24,40,.05);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--fg);
+  font:13.5px/1.45 var(--font);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+::selection{background:var(--accent-soft)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mono{font-family:var(--mono);font-feature-settings:"tnum" 1}
+.tnum{font-variant-numeric:tabular-nums}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- App shell ---------- */
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;grid-template-rows:minmax(0,1fr);height:100vh;overflow:hidden}
+
+.sidebar{background:var(--rail);color:var(--rail-fg);display:flex;flex-direction:column;border-right:1px solid oklch(12% 0.01 255);min-width:0}
+.brand{display:flex;align-items:center;gap:9px;padding:13px 14px 11px;color:#fff}
+.brand .logo{width:24px;height:24px;border-radius:6px;flex:none;background:linear-gradient(135deg,var(--accent),oklch(62% 0.16 285));display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.brand b{font-size:14px;letter-spacing:-.01em;font-weight:650}
+.brand span{color:var(--rail-faint);font-size:11px;font-family:var(--mono);margin-left:auto}
+
+.ws-switch{margin:4px 8px 6px;border:1px solid rgba(255,255,255,.07);border-radius:var(--radius-sm);background:var(--rail-2);display:flex;align-items:center;gap:8px;padding:6px 8px;color:#e9eaf0}
+.ws-switch:hover{background:oklch(26% 0.014 255)}
+.ws-switch .dot{width:18px;height:18px;border-radius:5px;background:oklch(40% 0.06 280);flex:none;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+.ws-switch .meta{line-height:1.2;flex:1;min-width:0}
+.ws-switch .meta b{display:block;font-size:12px;font-weight:600;color:#fff}
+.ws-switch .meta small{font-size:10px;color:var(--rail-faint)}
+.ws-switch svg{color:var(--rail-faint)}
+
+.nav-group{padding:6px 8px}
+.nav-label{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--rail-faint);padding:8px 8px 4px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;border-radius:6px;color:var(--rail-fg);font-size:13px;font-weight:500;position:relative;transition:background .12s,color .12s}
+.nav-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.nav-item.active{background:rgba(120,130,255,.16);color:#fff}
+.nav-item.active::before{content:"";position:absolute;left:-8px;top:6px;bottom:6px;width:2px;background:var(--accent);border-radius:2px}
+.nav-item svg{flex:none;opacity:.9}
+.nav-item .count{margin-left:auto;font:11px var(--mono);color:var(--rail-faint)}
+.nav-item.active .count{color:oklch(80% 0.08 280)}
+.nav-item.dim{color:var(--rail-faint)}
+.nav-item.dim:hover{color:var(--rail-fg)}
+
+.sidebar .spacer{flex:1}
+.nav-foot{padding:6px 8px 10px;border-top:1px solid rgba(255,255,255,.06)}
+.user{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;width:100%}
+.user:hover{background:rgba(255,255,255,.05)}
+.user .av{width:26px;height:26px;border-radius:50%;flex:none;background:oklch(52% 0.14 290);color:#fff;display:grid;place-items:center;font-weight:700;font-size:11px}
+.user .meta{line-height:1.15;flex:1;min-width:0}
+.user .meta b{font-size:12.5px;color:#fff;font-weight:600}
+.user .meta small{font-size:10.5px;color:var(--rail-faint)}
+
+/* Main */
+.main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
+.topbar{height:var(--topbar-h);flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--border);background:var(--surface);position:relative;z-index:30}
+.tb-left{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-width:0}
+.pico{width:20px;height:20px;border-radius:5px;background:linear-gradient(135deg,oklch(54% 0.16 258),oklch(50% 0.15 290));display:grid;place-items:center;color:#fff;font-weight:800;font-size:10px;flex:none}
+.proj-name{color:var(--fg-strong);font-weight:600;max-width:168px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-left .sep{color:var(--faint);font-size:11px;flex:none}
+.tb-left .cur{color:var(--fg-strong);font-weight:600;white-space:nowrap}
+.tbtn{width:32px;height:32px;border-radius:var(--radius);display:grid;place-items:center;color:var(--muted);border:1px solid transparent;position:relative}
+.tbtn:hover{background:var(--surface-2);color:var(--fg)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:6px;flex:none}
+.tbtn .count{position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;border-radius:999px;background:var(--danger);color:#fff;font:700 9px var(--mono);display:grid;place-items:center;border:1.5px solid var(--surface)}
+
+/* Content */
+.content{flex:1;overflow:auto;position:relative;min-height:0}
+.view{display:none;padding:18px;max-width:1560px;margin:0 auto;width:100%}
+.view.active{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+
+/* helpers */
+.row{display:flex;align-items:center;gap:10px}
+.row.between{justify-content:space-between}
+.row.wrap{flex-wrap:wrap}
+.stack{display:flex;flex-direction:column}
+.muted{color:var(--muted)} .faint{color:var(--faint)}
+.small{font-size:12px} .tiny{font-size:11px}
+.h2{font-size:14px;font-weight:650;letter-spacing:-.01em;color:var(--fg-strong)}
+.section-title{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.section-title h2{font-size:13px;font-weight:650;color:var(--fg-strong)}
+.section-title .link{margin-left:auto}
+.link{color:var(--accent);font-weight:500} .link:hover{text-decoration:underline}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:30px;padding:0 12px;border-radius:var(--radius);font-size:12.5px;font-weight:600;border:1px solid var(--border-strong);background:var(--surface);color:var(--fg-strong);transition:background .12s,border-color .12s}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.ghost{border-color:transparent;background:transparent} .btn.ghost:hover{background:var(--surface-2)}
+.btn.subtle{background:var(--surface-2);border-color:transparent}
+.btn.sm{height:26px;padding:0 9px;font-size:11.5px}
+.btn.icon{width:30px;padding:0}
+.btn svg{flex:none}
+
+.chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:999px;font-size:11.5px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--fg)}
+.chip.muted{color:var(--muted);background:var(--surface-2)}
+.chip.btn{cursor:pointer;transition:background .1s,border-color .1s} .chip.btn:hover{background:var(--surface-2)}
+.chip.btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.tag{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:5px;font-size:10.5px;font-weight:600;background:var(--surface-3);color:var(--fg)}
+.tag.b{background:oklch(95% 0.04 258);color:oklch(42% 0.13 258)}
+.tag.g{background:oklch(95% 0.05 150);color:oklch(42% 0.12 150)}
+.tag.v{background:oklch(95% 0.05 300);color:oklch(42% 0.13 300)}
+.tag.o{background:oklch(95% 0.06 70);color:oklch(44% 0.13 70)}
+.tag.r{background:oklch(95% 0.05 25);color:oklch(44% 0.14 25)}
+.tag.i{background:oklch(95% 0.04 240);color:oklch(42% 0.12 240)}
+
+.status{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:0 8px;height:21px;border-radius:999px}
+.status .d{width:6px;height:6px;border-radius:50%;background:currentColor}
+.status.ok{color:oklch(40% 0.11 150);background:var(--ok-bg)}
+.status.warn{color:oklch(46% 0.12 70);background:var(--warn-bg)}
+.status.danger{color:oklch(46% 0.15 25);background:var(--danger-bg)}
+.status.info{color:oklch(42% 0.11 240);background:var(--info-bg)}
+.status.violet{color:oklch(42% 0.12 300);background:var(--violet-bg)}
+.status.neutral{color:var(--muted);background:var(--surface-2)}
+
+.prio{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600}
+.prio .bars{display:inline-flex;align-items:flex-end;gap:1.5px;height:10px}
+.prio .bars i{width:3px;border-radius:1px;background:currentColor;opacity:.18}
+.prio .bars i:nth-child(1){height:40%} .prio .bars i:nth-child(2){height:70%} .prio .bars i:nth-child(3){height:100%}
+.prio.p1{color:var(--danger)} .prio.p1 .bars i:nth-child(1){opacity:1}
+.prio.p2{color:var(--warn)} .prio.p2 .bars i:nth-child(-n+2){opacity:1}
+.prio.p3{color:var(--info)} .prio.p3 .bars i{opacity:1}
+.prio.p4{color:var(--faint)}
+
+.av{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:10px;color:#fff;flex:none;border:1.5px solid var(--surface)}
+.av.sm{width:20px;height:20px;font-size:9px}
+.av.lg{width:32px;height:32px;font-size:12px}
+.av.a{background:oklch(52% 0.13 25)} .av.b{background:oklch(52% 0.13 290)} .av.c{background:oklch(54% 0.12 175)}
+.av.d{background:oklch(58% 0.14 70)} .av.e{background:oklch(52% 0.13 240)} .av.f{background:oklch(56% 0.12 330)}
+.av-g{display:inline-flex} .av-g .av{margin-left:-7px} .av-g .av:first-child{margin-left:0}
+.av-g .more{background:var(--surface-3);color:var(--muted)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+.panel-head{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border)}
+.panel-head h3{font-size:12.5px;font-weight:650;color:var(--fg-strong)}
+.panel-head .muted{font-size:11.5px}
+.panel-head .right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.panel-body{padding:12px}
+.panel-body.flush{padding:0}
+
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+.span2{grid-column:span 2} .span3{grid-column:span 3}
+@media(max-width:1180px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr}.span3{grid-column:span 1}}
+@media(max-width:760px){.g4{grid-template-columns:1fr}.g2{grid-template-columns:1fr}.span2{grid-column:span 1}}
+
+/* KPI */
+.kpi{padding:14px 15px}
+.kpi .label{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:500}
+.kpi .label svg{color:var(--faint)}
+.kpi .val{font:600 27px/1.1 var(--font);letter-spacing:-.02em;margin-top:8px;color:var(--fg-strong);font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:5px}
+.kpi .sub .up{color:oklch(42% 0.12 150);font-weight:600}
+.kpi .sub .dn{color:oklch(46% 0.15 25);font-weight:600}
+.kpi .spark{margin-top:8px}
+
+.bar{height:6px;border-radius:999px;background:var(--surface-3);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.bar.ok>i{background:var(--ok)} .bar.warn>i{background:var(--warn)} .bar.danger>i{background:var(--danger)}
+.ring{--p:68;--c:var(--accent);width:84px;height:84px;border-radius:50%;flex:none;position:relative;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--surface-3) 0)}
+.ring::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--surface)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:18px;font-weight:700;color:var(--fg-strong);font-variant-numeric:tabular-nums}
+
+/* Data table */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tbl-wrap{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface)}
+.tbl-scroll{overflow-x:auto}
+table.dt{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:920px}
+.dt thead th{position:sticky;top:0;background:var(--surface-2);text-align:left;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.02em;padding:0 12px;height:36px;border-bottom:1px solid var(--border);white-space:nowrap;user-select:none}
+.dt thead th.sortable{cursor:pointer} .dt thead th.sortable:hover{color:var(--fg)}
+.dt tbody td{padding:0 12px;height:40px;border-bottom:1px solid var(--border);color:var(--fg);vertical-align:middle}
+.dt tbody tr:last-child td{border-bottom:none}
+.dt tbody tr{transition:background .08s}
+.dt tbody tr:hover{background:var(--surface-2)}
+.dt .ck-col{width:34px;text-align:center;padding:0;white-space:nowrap}
+.dt .ck-col .ck{vertical-align:middle}
+.dt .id{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.dt .title{font-weight:600;color:var(--fg-strong)} .dt .title:hover{color:var(--accent)}
+.due-over{color:var(--danger);font-weight:600}
+
+/* Kanban */
+.seg{display:inline-flex;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);overflow:hidden;height:30px}
+.seg button{padding:0 12px;font-size:12.5px;font-weight:500;color:var(--muted);display:flex;align-items:center;gap:6px}
+.seg button:hover{color:var(--fg)}
+.seg button.on{background:var(--surface-2);color:var(--fg-strong);font-weight:600}
+.seg button+button{border-left:1px solid var(--border)}
+
+.board-scroll{overflow-x:auto;margin:0 -18px;padding:0 18px 4px}
+.board{display:grid;grid-template-columns:repeat(5,minmax(244px,1fr));gap:12px;align-items:start;min-width:1180px}
+.col{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);display:flex;flex-direction:column;max-height:calc(100vh - 220px)}
+.col-h{display:flex;align-items:center;gap:7px;padding:9px 11px;font-size:12px;font-weight:650;color:var(--fg-strong);flex:none}
+.col-h .cd{width:7px;height:7px;border-radius:50%}
+.col-h .cnt{margin-left:auto;font:11px var(--mono);color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:0 7px;height:18px;display:inline-grid;place-items:center}
+.col-h .pts{font:10.5px var(--mono);color:var(--faint)}
+.col-h .add{margin-left:3px;width:22px;height:22px;border-radius:5px;display:grid;place-items:center;color:var(--faint)} .col-h .add:hover{color:var(--accent);background:var(--surface)}
+.col-body{padding:4px 8px 8px;display:flex;flex-direction:column;gap:7px;overflow:auto;flex:1;min-height:0;transition:background .1s}
+.col-body.drag-over{background:var(--accent-soft)}
+.tcard{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 10px;cursor:pointer;box-shadow:var(--shadow-card);transition:border-color .12s,box-shadow .12s,transform .04s,opacity .12s}
+.tcard:hover{border-color:var(--border-strong);box-shadow:0 2px 8px rgba(20,24,40,.08)}
+.tcard.dragging{opacity:.4;border-style:dashed}
+.tcard .ttop{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.tcard .tid{font:10.5px var(--mono);color:var(--faint)}
+.tcard .tt{font-size:12.5px;font-weight:600;color:var(--fg-strong);line-height:1.35;margin-bottom:7px}
+.tcard .trow{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.tcard .due{font:11px var(--mono);color:var(--muted);display:inline-flex;align-items:center;gap:3px}
+.tcard .due.late{color:var(--danger)}
+.tcard .tmeta{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;color:var(--muted)}
+.tcard .tmeta .av{margin-left:auto}
+.tcard .tmeta .ic{display:inline-flex;align-items:center;gap:3px}
+
+/* Drawer */
+.scrim{position:fixed;inset:0;background:var(--overlay);z-index:90;opacity:0;pointer-events:none;transition:opacity .16s}
+.scrim.show{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:480px;max-width:94vw;background:var(--surface);border-left:1px solid var(--border);z-index:100;transform:translateX(100%);transition:transform .22s cubic-bezier(.23,1,.32,1);display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(20,24,40,.12)}
+.drawer.show{transform:translateX(0)}
+.drawer .dh{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.drawer .dh .tid{font:11px var(--mono);color:var(--accent)}
+.drawer .dh h3{font-size:15px;font-weight:650;letter-spacing:-.01em;margin-top:3px;color:var(--fg-strong)}
+.drawer .dh .x{margin-left:auto;width:30px;height:30px;border-radius:7px;display:grid;place-items:center;color:var(--muted);flex:none}
+.drawer .dh .x:hover{background:var(--surface-2);color:var(--fg)}
+.drawer .db{flex:1;overflow:auto;padding:16px}
+.drawer .df{padding:11px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--surface-2)}
+.meta-grid{display:grid;grid-template-columns:118px 1fr;gap:11px 12px;font-size:12.5px;align-items:center}
+.meta-grid .k{color:var(--muted)}
+.meta-grid .v{color:var(--fg-strong);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sub-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid var(--border)}
+.sub-row:first-of-type{border-top:none}
+.ck{appearance:none;width:15px;height:15px;border:1.5px solid var(--border-strong);border-radius:4px;background:var(--surface);display:inline-grid;place-items:center;cursor:pointer;flex:none}
+.ck:checked{background:var(--accent);border-color:var(--accent)}
+.ck:checked::after{content:"";width:8px;height:5px;border:1.8px solid #fff;border-top:0;border-right:0;transform:rotate(-45deg) translate(.5px,-.5px)}
+.comment{display:flex;gap:9px;padding:11px 0;border-top:1px solid var(--border)} .comment:first-of-type{border-top:none}
+.comment .av{margin-top:1px}
+.comment b{font-size:12px;font-weight:600}
+.comment .when{font-size:11px;color:var(--faint);font-weight:400;margin-left:6px}
+.comment p{font-size:12.5px;color:var(--fg);margin-top:2px;line-height:1.5}
+
+/* Modal / Cmdk */
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.97);z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-pop);width:560px;max-width:92vw;max-height:84vh;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .14s,transform .14s}
+.modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.modal .mh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.modal .mh h3{font-size:14px;font-weight:650}
+.modal .mh .x{margin-left:auto;width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--muted)}
+.modal .mh .x:hover{background:var(--surface-2);color:var(--fg)}
+.modal .mb{padding:16px;overflow:auto}
+.modal .mf{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;justify-content:flex-end;background:var(--surface-2)}
+.cmdk{width:600px;max-width:92vw;border-radius:12px;overflow:hidden}
+.cmdk .field{display:flex;align-items:center;gap:9px;padding:13px 15px;border-bottom:1px solid var(--border)}
+.cmdk input{flex:1;border:none;outline:none;font-size:14.5px;background:none;color:var(--fg)}
+.cmdk input::placeholder{color:var(--faint)}
+.cmdk .res{overflow:auto;max-height:46vh;padding:7px}
+.cmdk .grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:600;padding:9px 10px 5px}
+.cmdk .ritem{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px}
+.cmdk .ritem:hover,.cmdk .ritem.sel{background:var(--surface-2)}
+.cmdk .ritem svg{color:var(--muted)} .cmdk .ritem .hint{margin-left:auto;font:11px var(--mono);color:var(--faint)}
+
+/* Toast */
+.toasts{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:120;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{display:flex;align-items:center;gap:9px;padding:9px 14px;border-radius:999px;background:var(--rail);color:#fff;font-size:12.5px;font-weight:500;box-shadow:var(--shadow-pop);animation:tin .25s ease}
+.toast svg{color:oklch(74% 0.10 150)}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ============ DASHBOARD ============ */
+.dash-grid{display:grid;grid-template-columns:1fr 320px;gap:14px}
+@media(max-width:1100px){.dash-grid{grid-template-columns:1fr}}
+.feed{display:flex;flex-direction:column}
+.feed-item{display:flex;gap:11px;padding:11px 0;border-top:1px solid var(--border)}
+.feed-item:first-of-type{border-top:none;padding-top:4px}
+.feed-ic{width:28px;height:28px;border-radius:7px;flex:none;display:grid;place-items:center;margin-top:1px}
+.feed-ic svg{width:15px;height:15px}
+.feed-ic.move{background:var(--info-bg);color:var(--info)}
+.feed-ic.doc{background:var(--violet-bg);color:var(--violet)}
+.feed-ic.com{background:var(--accent-soft);color:var(--accent)}
+.feed-ic.done{background:var(--ok-bg);color:var(--ok)}
+.feed-ic.mile{background:var(--warn-bg);color:var(--warn)}
+.feed-body{flex:1;min-width:0;font-size:12.5px;line-height:1.5}
+.feed-body b{font-weight:600}
+.feed-body .when{font-size:11px;color:var(--faint);margin-top:1px}
+/* notifications inbox (dashboard) */
+.notif-list{display:flex;flex-direction:column;max-height:420px;overflow:auto}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-top:1px solid var(--border);position:relative}
+.notif-item:first-of-type{border-top:none}
+.notif-item:hover{background:var(--surface-2)}
+.notif-item.read{opacity:.78}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none;margin-top:6px;visibility:hidden}
+.notif-item.unread .notif-dot{visibility:visible}
+.notif-ic{width:28px;height:28px;border-radius:7px;flex:none;display:grid;place-items:center}
+.notif-ic svg{width:14px;height:14px}
+.notif-ic.mention{background:var(--accent-soft);color:var(--accent)}
+.notif-ic.assign{background:var(--info-bg);color:var(--info)}
+.notif-ic.review{background:var(--violet-bg);color:var(--violet)}
+.notif-ic.due{background:var(--warn-bg);color:var(--warn)}
+.notif-ic.reply{background:var(--ok-bg);color:var(--ok)}
+.notif-ic.invite{background:var(--info-bg);color:var(--info)}
+.notif-ic.deadline{background:var(--danger-bg);color:var(--danger)}
+.notif-body{flex:1;min-width:0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.notif-item.unread .notif-body{color:var(--fg)}
+.notif-body b{font-weight:600;color:var(--fg-strong)}
+.notif-body .ref{font-weight:600;color:var(--accent);font:600 11px var(--mono)}
+.notif-body .quote{display:block;margin-top:4px;padding:4px 8px;border-left:2px solid var(--border-strong);color:var(--muted);font-size:11.5px;line-height:1.45;background:var(--surface-2);border-radius:0 4px 4px 0}
+.notif-time{font:11px var(--mono);color:var(--faint);flex:none;margin-top:3px;white-space:nowrap}
+.mtask{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;cursor:pointer}
+.mtask:hover{background:var(--surface-2)}
+.mtask .tid{font:11px var(--mono);color:var(--faint);width:60px;flex:none}
+.mtask .tt{flex:1;min-width:0;font-size:12.5px;font-weight:500;color:var(--fg-strong)}
+.work-row{display:flex;align-items:center;gap:10px;padding:8px 0}
+.work-row .av{flex:none}
+.work-row .nm{width:96px;flex:none;font-size:12px;color:var(--fg);font-weight:500}
+.work-row .wbar{flex:1;height:7px;border-radius:999px;background:var(--surface-3);overflow:hidden;position:relative}
+.work-row .wbar>i{position:absolute;left:0;top:0;height:100%;background:var(--accent);border-radius:999px}
+.work-row .wbar>i.over{background:var(--danger)}
+.work-row .n{width:34px;flex:none;text-align:right;font:11.5px var(--mono);color:var(--muted)}
+.ms-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--border)} .ms-item:first-of-type{border-top:none}
+.ms-ic{width:30px;height:30px;border-radius:7px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.ms-body{flex:1;min-width:0} .ms-body b{font-size:12.5px;font-weight:600;color:var(--fg-strong);display:block}
+.ms-body small{font-size:11px;color:var(--muted)}
+.ms-body .bar{margin-top:6px}
+
+/* ============ DOCUMENTS ============ */
+.docs-grid{display:grid;grid-template-columns:260px 1fr;gap:14px;min-height:calc(100vh - 180px)}
+@media(max-width:860px){.docs-grid{grid-template-columns:1fr}.doc-tree{display:none}}
+.doc-tree{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:8px;overflow:auto}
+.tree-search{margin:2px 4px 8px;position:relative}
+.tree-search input{width:100%;height:30px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2);padding:0 10px 0 28px;font-size:12px;color:var(--fg)}
+.tree-search input:focus{outline:none;border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px var(--accent-soft)}
+.tree-search .ico{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--faint)}
+.space{margin-bottom:4px}
+.space-h{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--fg-strong)}
+.space-h:hover{background:var(--surface-2)}
+.space-h .emo{font-size:13px;width:16px;text-align:center}
+.space-h .chev{margin-left:auto;color:var(--faint);transition:transform .14s;width:14px;height:14px}
+.space.collapsed .chev{transform:rotate(-90deg)}
+.space.collapsed .space-body{display:none}
+.page-item{display:flex;align-items:center;gap:7px;padding:5px 7px 5px 26px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--fg)}
+.page-item:hover{background:var(--surface-2)}
+.page-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.page-item.sub{padding-left:42px}
+.page-item .emo{font-size:13px;width:15px;text-align:center}
+.page-item .add{margin-left:auto;opacity:0;color:var(--faint)}
+.page-item:hover .add{opacity:1}
+
+.doc-main{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.doc-topbar{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border)}
+.doc-crumbs{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.doc-crumbs b{color:var(--fg-strong);font-weight:600}
+.doc-crumbs .sep{color:var(--faint)}
+.doc-topbar .right{margin-left:auto;display:flex;align-items:center;gap:4px}
+.doc-content{padding:26px 34px;overflow:auto;max-width:880px}
+.doc-content h1{font-size:26px;font-weight:680;letter-spacing:-.02em;color:var(--fg-strong);display:flex;align-items:center;gap:10px}
+.doc-content .byline{display:flex;align-items:center;gap:8px;margin:8px 0 22px;font-size:12px;color:var(--muted)}
+.doc-content h2{font-size:17px;font-weight:650;letter-spacing:-.01em;color:var(--fg-strong);margin:24px 0 9px}
+.doc-content p{font-size:13.5px;line-height:1.65;color:var(--fg);margin-bottom:11px}
+.callout{display:flex;gap:11px;padding:12px 14px;border-radius:var(--radius);border:1px solid var(--border);margin:14px 0;font-size:13px;line-height:1.55}
+.callout .ci{width:18px;height:18px;flex:none;margin-top:1px}
+.callout.info{background:var(--info-bg);border-color:oklch(88% 0.05 240);color:oklch(34% 0.08 240)} .callout.info .ci{color:var(--info)}
+.callout.warn{background:var(--warn-bg);border-color:oklch(88% 0.06 70);color:oklch(38% 0.10 70)} .callout.warn .ci{color:var(--warn)}
+.callout b{font-weight:600}
+.doc-check{display:flex;align-items:flex-start;gap:9px;padding:6px 0;font-size:13.5px;color:var(--fg)}
+.doc-check.done{color:var(--muted);text-decoration:line-through}
+.doc-check .ck{margin-top:2px}
+.codeblock{background:var(--rail);color:#e7e9f2;border-radius:var(--radius);padding:13px 15px;font:12.5px/1.6 var(--mono);overflow:auto;margin:14px 0;border:1px solid oklch(14% 0.014 255)}
+.codeblock .k{color:oklch(78% 0.13 290)} .codeblock .s{color:oklch(80% 0.13 150)} .codeblock .c{color:var(--rail-faint)}
+.doc-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:14px 0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.doc-table th{background:var(--surface-2);text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border)}
+.doc-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--fg)}
+.doc-table tr:last-child td{border-bottom:none}
+
+.files-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.file-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;cursor:pointer;transition:border-color .12s,box-shadow .12s}
+.file-card:hover{border-color:var(--border-strong);box-shadow:0 2px 8px rgba(20,24,40,.06)}
+.file-ic{width:40px;height:40px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:11px;color:#fff;margin-bottom:11px}
+.file-ic.pdf{background:oklch(56% 0.19 25)} .file-ic.fig{background:oklch(54% 0.14 300)} .file-ic.img{background:oklch(54% 0.12 175)}
+.file-ic.yml{background:oklch(52% 0.13 240)} .file-ic.doc{background:var(--info)} .file-ic.zip{background:oklch(50% 0.02 250)}
+.file-card b{font-size:12.5px;font-weight:600;color:var(--fg-strong);display:block}
+.file-card .fm{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* ============ PLANNING ============ */
+.iter-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.iter-tab{display:flex;flex-direction:column;gap:3px;padding:9px 13px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);cursor:pointer;min-width:150px;transition:border-color .12s,background .12s}
+.iter-tab:hover{background:var(--surface-2)}
+.iter-tab.on{border-color:var(--accent);background:var(--accent-soft)}
+.iter-tab .it-name{font-size:13px;font-weight:650;color:var(--fg-strong);display:flex;align-items:center;gap:7px}
+.iter-tab .it-meta{font:11px var(--mono);color:var(--muted)}
+.iter-tab.on .it-name{color:var(--accent)}
+.gantt{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:auto;background:var(--surface)}
+.gantt-grid{min-width:760px}
+.gantt-axis{display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2}
+.gantt-axis .lbl{padding:9px 12px;font-size:11px;font-weight:600;color:var(--muted);border-right:1px solid var(--border)}
+.gantt-weeks{display:grid}
+.gantt-week{padding:9px 0;text-align:center;font:11px var(--mono);color:var(--faint);border-right:1px solid var(--border)}
+.gantt-week:last-child{border-right:none}
+.gantt-week.today{color:var(--accent);font-weight:700}
+.gantt-row{display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border);align-items:center}
+.gantt-row:last-child{border-bottom:none}
+.gantt-row .gl{padding:8px 12px;font-size:12px;display:flex;align-items:center;gap:7px;border-right:1px solid var(--border);min-width:0}
+.gantt-row .gl b{font-weight:600;color:var(--fg-strong)} .gantt-row .gl small{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.gantt-track{position:relative;height:34px}
+.gantt-bar{position:absolute;top:7px;height:20px;border-radius:5px;display:flex;align-items:center;padding:0 8px;font-size:10.5px;font-weight:600;color:#fff;cursor:pointer;white-space:nowrap;overflow:hidden;transition:filter .1s}
+.gantt-bar:hover{filter:brightness(1.07)}
+.gantt-bar.iter{background:var(--accent)}
+.gantt-bar.ms{background:var(--violet)}
+.gantt-bar.task{background:oklch(60% 0.05 255)}
+.gantt-bar.done{background:var(--ok)}
+.gantt-today-line{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);opacity:.5;z-index:1}
+.vel-chart{display:flex;align-items:flex-end;gap:14px;height:160px;padding:0 6px}
+.vel-group{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:5px;height:100%}
+.vel-bar{width:22px;border-radius:4px 4px 0 0;position:relative;display:flex;justify-content:center}
+.vel-bar.plan{background:var(--surface-3)}
+.vel-bar.act{background:var(--accent)}
+.vel-group .vl{position:absolute;bottom:-20px;font:11px var(--mono);color:var(--faint);white-space:nowrap}
+.vel-x{display:flex;gap:14px;padding:0 6px;margin-top:24px}
+.vel-x .vx{flex:1;text-align:center;font:11px var(--mono);color:var(--faint)}
+.backlog-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+.backlog-item:hover{background:var(--surface-2);border-color:var(--border)}
+.backlog-item .tid{font:11px var(--mono);color:var(--faint);width:58px;flex:none}
+.backlog-item .tt{flex:1;min-width:0;font-size:12.5px;font-weight:500;color:var(--fg-strong)}
+.backlog-item .pts{font:11px var(--mono);background:var(--surface-3);color:var(--muted);border-radius:5px;padding:1px 7px;flex:none}
+.grab{cursor:grab}
+
+/* ============ RESPONSIVE: collapse rail ============ */
+@media(max-width:880px){
+  :root{--sidebar-w:62px}
+  .brand b,.brand span,.ws-switch .meta,.nav-item span,.nav-label,.user .meta,.nav-item .count{display:none}
+  .nav-item{justify-content:center} .user{justify-content:center}
+  .ws-switch{justify-content:center;padding:6px} .ws-switch .dot{margin:0}
+  .proj-name,.tb-right .status{display:none}
+}
+@media(max-width:520px){
+  .content .view{padding:13px}
+  .tb-left .cur{max-width:120px}
+}
+
+/* ============ MEETINGS ============ */
+.meet-grid{display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start}
+@media(max-width:900px){.meet-grid{grid-template-columns:1fr}}
+.meet-item{padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.meet-item:hover{background:var(--surface-2)}
+.meet-item.sel{background:var(--surface-2);box-shadow:inset 3px 0 0 var(--accent)}
+.meet-item .mt-title{font-weight:600;font-size:13.5px;color:var(--fg-strong);margin:4px 0 5px;line-height:1.25}
+.meet-item .mt-meta{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.meet-item .mt-meta .ic{display:inline-flex;align-items:center;gap:4px}
+.meet-detail{padding:18px}
+.meet-head{padding:0 0 16px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.meet-head h2{font-size:19px;font-weight:700;color:var(--fg-strong);letter-spacing:-.015em;margin:7px 0 8px}
+.meet-facts{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12.5px;color:var(--muted);align-items:center}
+.meet-facts .fact{display:inline-flex;align-items:center;gap:6px}
+/* ---- Agreements ---- */
+.agr-grid{display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start}
+@media(max-width:900px){.agr-grid{grid-template-columns:1fr}}
+.agr-item{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.agr-item:hover{background:var(--surface-2)}
+.agr-item.sel{background:var(--surface-2);box-shadow:inset 3px 0 0 var(--accent)}
+.agr-item .ai-top{display:flex;gap:9px;align-items:flex-start}
+.agr-item .ai-ic{width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.agr-item .ai-title{font-weight:600;font-size:13.5px;color:var(--fg-strong);line-height:1.25;flex:1;min-width:0}
+.agr-item .ai-mid{display:flex;gap:6px;margin:7px 0}
+.agr-item .ai-foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.agr-detail{padding:20px}
+.agr-head{display:flex;gap:14px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.agr-head .agr-icbig{width:44px;height:44px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.agr-head h2{font-size:19px;font-weight:700;color:var(--fg-strong);letter-spacing:-.015em;margin:8px 0 4px}
+.agr-sub{font-size:13px;color:var(--muted)}
+.agr-actions{display:flex;gap:7px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+.agr-facts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.agr-facts .fact{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:11px 13px}
+.agr-facts .fl{font-size:10.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.agr-facts .fv{font-size:14px;font-weight:600;color:var(--fg-strong);margin-top:5px;font-variant-numeric:tabular-nums;line-height:1.2}
+@media(max-width:640px){.agr-facts{grid-template-columns:1fr 1fr}}
+.agr-parties{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.agr-party{display:flex;gap:10px;align-items:center;padding:11px 13px;border:1px solid var(--border);border-radius:9px}
+.agr-party .role{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.agr-party .nm{font-size:13px;font-weight:600;color:var(--fg-strong);margin-top:2px}
+.agr-sec{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 11px}
+.timeline{position:relative;padding-left:26px;margin-bottom:18px}
+.timeline:before{content:"";position:absolute;left:7px;top:5px;bottom:5px;width:2px;background:var(--border)}
+.tl-step{position:relative;padding-bottom:15px}
+.tl-step:last-child{padding-bottom:0}
+.tl-step:before{content:"";position:absolute;left:-22px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--border)}
+.tl-step.done:before{background:var(--ok);border-color:var(--ok)}
+.tl-step.cur:before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.tl-step.danger:before{background:var(--danger);border-color:var(--danger)}
+.tl-step.warn:before{background:var(--warn);border-color:var(--warn)}
+.tl-step .tl-t{font-size:13px;font-weight:600;color:var(--fg-strong)}
+.tl-step .tl-d{font-size:11.5px;color:var(--muted);margin-top:2px}
+.tl-step.future .tl-t,.tl-step.future .tl-d{color:var(--faint)}
+.agr-docs{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}
+.agr-doc{display:flex;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background .12s}
+.agr-doc:hover{background:var(--surface-2)}
+.agr-doc .dnm{font-size:13px;color:var(--fg);font-weight:500}
+.agr-terms{font-size:13px;line-height:1.6;color:var(--fg);background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:13px 15px}
+@media(max-width:640px){.agr-parties{grid-template-columns:1fr}.agr-actions{justify-content:flex-start}}
+/* ===== New agreement modal ===== */
+#agr-modal{width:640px;max-width:94vw}
+#agr-modal .mb{padding-top:14px}
+.fld{height:34px;border:1px solid var(--border-strong);border-radius:7px;padding:0 10px;background:var(--surface);color:var(--fg);font-size:13px;font-family:inherit;width:100%}
+.fld:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea.fld{height:auto;min-height:76px;padding:9px 10px;line-height:1.55;resize:vertical}
+.flab{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;display:block}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.tp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.tp-card{border:1px solid var(--border-strong);border-radius:9px;background:var(--surface);padding:11px 9px;cursor:pointer;text-align:left;transition:border-color .12s,background .12s,box-shadow .12s;display:flex;flex-direction:column;gap:7px}
+.tp-card:hover{background:var(--surface-2)}
+.tp-card.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:var(--accent-soft)}
+.tp-ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none}
+.tp-l{font-size:12.5px;font-weight:650;color:var(--fg-strong)}
+.tp-s{font-size:10.5px;color:var(--muted);line-height:1.3}
+.val-in{display:flex;gap:7px}
+.val-in .fld:first-child{flex:1;min-width:0}
+.val-in select.fld{width:92px;flex:none}
+.dates{display:flex;gap:8px}
+.dates .fld{flex:1;min-width:0}
+.mf .left-meta{margin-right:auto;font-size:11.5px;color:var(--muted)}
+@media(max-width:600px){.tp{grid-template-columns:1fr 1fr}.frow{grid-template-columns:1fr}.dates{flex-direction:column}}
+.agenda{list-style:none;padding:0;margin:0;counter-reset:ag}
+.agenda li{counter-increment:ag;display:flex;gap:10px;padding:7px 0;border-bottom:1px dashed var(--border);font-size:13px;line-height:1.4;color:var(--fg)}
+.agenda li:last-child{border-bottom:none}
+.agenda li::before{content:counter(ag);flex:none;width:21px;height:21px;border-radius:50%;background:var(--surface-3);color:var(--muted);font:600 11px var(--mono);display:grid;place-items:center;margin-top:1px}
+.act-item{display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border)}
+.act-item:last-child{border-bottom:none}
+.act-item .ckbox{flex:none;margin-top:2px}
+.act-item .ai-body{flex:1;min-width:0}
+.act-item .ai-top{display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap}
+.act-item.done .ai-top b{color:var(--muted);text-decoration:line-through;font-weight:500}
+.act-item .ai-meta{font-size:11px;color:var(--muted);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* ============ REPORTS ============ */
+.stbar-row{display:grid;grid-template-columns:96px 1fr 36px;gap:11px;align-items:center;padding:6px 0}
+.stbar-row .lbl{font-size:12.5px;color:var(--fg-strong)}
+.stbar-row .track{height:9px;border-radius:5px;background:var(--surface-3);overflow:hidden}
+.stbar-row .track i{display:block;height:100%;border-radius:5px}
+.stbar-row .n{font:600 12px var(--mono);color:var(--muted);text-align:right}
+.velo{display:flex;align-items:flex-end;gap:14px;height:148px}
+.velo .vcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;justify-content:flex-end}
+.velo .vbars{display:flex;align-items:flex-end;gap:4px;justify-content:center}
+.velo .vbar{width:13px;border-radius:3px 3px 0 0;min-height:3px}
+.velo .vbar.plan{background:var(--surface-3)}
+.velo .vbar.done{background:var(--accent)}
+.velo .vlbl{font:600 11px var(--mono);color:var(--muted)}
+.velo .vnow .vlbl{color:var(--accent);font-weight:700}
+.rpt-card{padding:13px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);transition:border-color .12s,box-shadow .12s;cursor:pointer}
+.rpt-card:hover{border-color:var(--border-strong);box-shadow:0 1px 3px var(--overlay)}
+.rpt-card.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.rpt-card .rc-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.rpt-card .rc-ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;flex:none}
+.rpt-card h4{font-size:14px;font-weight:600;color:var(--fg-strong)}
+.rpt-card .rc-sub{font-size:11.5px;color:var(--muted);margin-top:1px}
+.rpt-body h3{font-size:14px;font-weight:650;color:var(--fg-strong);margin:14px 0 6px}
+.rpt-body h3:first-child{margin-top:0}
+.rpt-body p{font-size:13px;line-height:1.6;color:var(--fg);margin:0 0 8px}
+.rpt-body ul{margin:0 0 8px 18px;font-size:13px;line-height:1.6;color:var(--fg)}
+.rpt-body ul li{margin-bottom:3px}
+
+/* ============ SIGN PAGE (e-signature) ============ */
+.sign-page{position:fixed;inset:0;z-index:95;background:var(--bg);display:flex;flex-direction:column}
+.sign-page.open{display:flex}
+.sign-page:not(.open){display:none}
+.sp-bar{height:var(--topbar-h);flex:none;display:flex;align-items:center;gap:11px;padding:0 16px;border-bottom:1px solid var(--border);background:var(--surface)}
+.sp-back{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px;font-weight:600;padding:6px 10px;border-radius:7px}
+.sp-back:hover{background:var(--surface-2);color:var(--fg)}
+.sp-sep{color:var(--faint)}
+.sp-doc-title{font-size:13.5px;font-weight:650;color:var(--fg-strong);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-bar .sp-id{font:11px var(--mono);color:var(--accent)}
+.sp-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.sp-body{flex:1;min-height:0;display:grid;grid-template-columns:1fr 392px;overflow:hidden}
+.sp-scroll{overflow:auto;padding:34px 28px;display:flex;justify-content:center;background:var(--bg)}
+.sp-doc{width:100%;max-width:760px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:46px 54px;align-self:start}
+.doc-kicker{font:11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.sp-doc h1{font-size:27px;font-weight:750;letter-spacing:-.02em;color:var(--fg-strong);line-height:1.15}
+.doc-parties{display:flex;gap:48px;margin-top:20px;padding:16px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.doc-parties .dp{display:flex;flex-direction:column;gap:3px}
+.doc-parties .dr{font:10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.doc-parties .dn{font-size:13.5px;font-weight:600;color:var(--fg-strong)}
+.doc-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin:22px 0 6px}
+.doc-meta .mc{background:var(--surface-2);padding:12px 15px}
+.doc-meta .ml{font:10.5px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.doc-meta .mv{font-size:15px;font-weight:650;color:var(--fg-strong);margin-top:5px;font-variant-numeric:tabular-nums}
+.sp-doc h3{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:28px 0 10px}
+.doc-terms{font-size:13.5px;line-height:1.7;color:var(--fg)}
+.doc-sigs{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:46px;padding-top:28px;border-top:1px solid var(--border)}
+.sig-block{border:1px solid var(--border-strong);border-radius:10px;padding:16px;transition:border-color .14s,box-shadow .14s}
+.sig-block.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.sig-block .sr{font:600 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:7px}
+.sig-block .sr .sd{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none}
+.sig-block.signed .sr{color:var(--ok)}
+.sig-block.signed .sr .sd{background:var(--ok)}
+.sig-block.pending .sr{color:var(--warn)}
+.sig-block.pending .sr .sd{background:var(--warn)}
+.sig-block .sname{font-size:12.5px;font-weight:600;color:var(--fg-strong);margin-top:9px}
+.sig-render{height:74px;display:flex;align-items:flex-end;justify-content:flex-start;margin-top:4px;border-bottom:1.5px solid var(--fg-strong);position:relative}
+.sig-render .ink{max-height:66px;max-width:100%;object-fit:contain}
+.sig-render .typed{font-family:var(--sig);font-size:42px;font-weight:600;color:var(--fg-strong);line-height:1;transform:rotate(-3deg);transform-origin:left bottom}
+.sig-render .unsigned{font-size:13px;color:var(--faint);font-style:italic}
+.sig-foot{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:9px}
+.sig-foot .sdate{font-family:var(--mono)}
+/* signing panel */
+.sp-panel{border-left:1px solid var(--border);background:var(--surface);overflow:auto}
+.sp-pinner{padding:22px;display:flex;flex-direction:column;gap:18px}
+.sp-card{border:1px solid var(--border);border-radius:11px;padding:16px;background:var(--surface)}
+.sc-h{display:flex;gap:11px;align-items:center;margin-bottom:15px}
+.sc-role{font:600 10.5px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--accent)}
+.sc-name{font-size:14px;font-weight:650;color:var(--fg-strong);margin-top:2px}
+.sp-tog{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;margin-bottom:13px}
+.sp-tog button{font-size:12px;font-weight:600;color:var(--muted);padding:5px 14px;border-radius:6px}
+.sp-tog button.on{background:var(--surface);color:var(--fg-strong);box-shadow:var(--shadow-card)}
+.sig-field{height:132px;border:1.5px dashed var(--border-strong);border-radius:9px;background:var(--surface-2);position:relative;overflow:hidden;touch-action:none}
+.sig-field.draw{cursor:crosshair}
+.sig-field canvas{position:relative;z-index:1;display:block;width:100%;height:100%}
+.sig-field .x-mark{position:absolute;top:22px;left:18px;width:9px;height:9px;border-radius:50%;border:1.5px solid var(--faint);pointer-events:none}
+.sig-field .x-line{position:absolute;left:18px;right:18px;bottom:42px;height:1px;background:var(--border-strong);pointer-events:none}
+.sig-field .x-hint{position:absolute;left:0;right:0;bottom:9px;text-align:center;font-size:11px;color:var(--faint);pointer-events:none}
+.sig-preview{height:92px;border:1px solid var(--border);border-radius:9px;background:var(--surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.sig-preview .x-line{position:absolute;left:18px;right:18px;bottom:22px;height:1px;background:var(--border-strong);pointer-events:none}
+.sig-preview .typed{font-family:var(--sig);font-size:46px;font-weight:600;color:var(--fg-strong);transform:rotate(-3deg);position:relative;z-index:1}
+.sig-preview .ph{font-size:12.5px;color:var(--faint);position:relative;z-index:1;text-align:center;padding:0 20px}
+.sp-name-row{margin:13px 0 0}
+.sp-attest{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;line-height:1.5;color:var(--muted);margin:13px 0 16px}
+.sp-attest input{margin-top:1px;flex:none;accent-color:var(--accent);width:15px;height:15px}
+.sp-cta{width:100%;justify-content:center;padding:9px 14px}
+.sp-done{text-align:center;padding:10px 0 4px}
+.sp-done .check{width:52px;height:52px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:grid;place-items:center;margin:0 auto 16px}
+.sp-done h4{font-size:16.5px;font-weight:750;color:var(--fg-strong);letter-spacing:-.01em}
+.sp-done p{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.6}
+.sp-order{display:flex;flex-direction:column}
+.so-step{display:flex;gap:12px;padding:2px 0 16px;position:relative}
+.so-step:not(:last-child)::before{content:'';position:absolute;left:11px;top:28px;bottom:2px;width:2px;background:var(--border)}
+.so-step.done:not(:last-child)::before{background:var(--ok)}
+.so-ic{width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;border:2px solid var(--border-strong);background:var(--surface);color:var(--muted)}
+.so-step.done .so-ic{background:var(--ok);border-color:var(--ok);color:#fff}
+.so-step.cur .so-ic{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.so-t{font-size:13px;font-weight:600;color:var(--fg-strong)}
+.so-d{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+@media(max-width:920px){.sp-body{grid-template-columns:1fr;grid-template-rows:auto 1fr}.sp-panel{border-left:none;border-top:1px solid var(--border);max-height:48vh}.sp-doc{padding:28px 22px}.doc-sigs{grid-template-columns:1fr}}
+@media(max-width:560px){.sp-scroll{padding:18px 14px}.doc-meta{grid-template-columns:1fr}.doc-parties{gap:24px;flex-wrap:wrap}.sp-doc-title{max-width:150px}}
+</style>
+</head>
+<body>
+<div class="app" data-od-id="app-shell">
+
+  <!-- =================== SIDEBAR RAIL =================== -->
+  <aside class="sidebar" data-od-id="primary-nav">
+    <div class="brand">
+      <span class="logo">H</span>
+      <b>Helix</b>
+      <span>v1.1</span>
+    </div>
+
+    <button class="ws-switch" data-od-id="workspace-switch">
+      <span class="dot">N</span>
+      <span class="meta"><b>Northwind</b><small>Software House</small></span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5 5 5-5"/></svg>
+    </button>
+
+    <div class="nav-group">
+      <div class="nav-label">Atlas Platform 2.0</div>
+      <button class="nav-item active" data-nav="view-dashboard" data-od-id="nav-dashboard">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" data-nav="view-tasks" data-od-id="nav-tasks">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span>Tasks</span><span class="count">118</span>
+      </button>
+      <button class="nav-item" data-nav="view-documents" data-od-id="nav-documents">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
+        <span>Documents</span><span class="count">42</span>
+      </button>
+      <button class="nav-item" data-nav="view-planning" data-od-id="nav-planning">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h3M8 18h3"/></svg>
+        <span>Planning</span>
+      </button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">More</div>
+      <button class="nav-item" data-nav="view-meetings" data-od-id="nav-meetings">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Meetings</span><span class="count">3</span>
+      </button>
+      <button class="nav-item" data-nav="view-reports" data-od-id="nav-reports">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 4-5"/></svg>
+        <span>Reports</span>
+      </button>
+      <button class="nav-item" data-nav="view-agreements" data-od-id="nav-agreements">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13l2 2 4-4"/></svg>
+        <span>Agreements</span><span class="count">7</span>
+      </button>
+      <button class="nav-item dim" data-od-id="nav-clients">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l8-4 8 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>
+        <span>Client portal</span>
+      </button>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="nav-foot">
+      <button class="user" data-od-id="user-menu">
+        <span class="av">AY</span>
+        <span class="meta"><b>Aisha Yusuf</b><small>Product Manager</small></span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--rail-faint)"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- =================== MAIN =================== -->
+  <div class="main">
+    <!-- Topbar -->
+    <header class="topbar" data-od-id="topbar">
+      <div class="tb-left">
+        <span class="pico">A</span>
+        <span class="proj-name">Atlas Platform 2.0</span>
+        <span class="sep">/</span>
+        <span class="cur" id="crumb-cur">Dashboard</span>
+      </div>
+      <div class="tb-right">
+        <span class="status info"><span class="d"></span>Sprint 14 · 4d left</span>
+        <button class="tbtn" data-od-id="notifications" title="3 unread">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span class="count">3</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="content" id="content">
+
+      <!-- ================= DASHBOARD ================= -->
+      <section class="view active" id="view-dashboard" data-od-id="view-dashboard">
+        <div class="row between wrap" style="margin-bottom:14px;gap:12px">
+          <div>
+            <div class="h2">Welcome back, Aisha</div>
+            <div class="small muted" style="margin-top:3px">Here's how <b style="color:var(--fg)">Atlas Platform 2.0</b> is tracking today, Mar 22.</div>
+          </div>
+          <div class="row">
+            <span class="status info"><span class="d"></span>Sprint 14 · Day 10 of 14</span>
+            <button class="btn subtle sm" data-nav="view-planning">Open planning</button>
+          </div>
+        </div>
+
+        <!-- KPI row -->
+        <div class="grid g4" style="margin-bottom:14px" data-od-id="kpi-row">
+          <div class="card kpi">
+            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Active tasks</div>
+            <div class="val">63</div>
+            <div class="sub"><span class="up">▲ 8</span> vs last sprint</div>
+            <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="0,22 25,18 50,20 75,12 100,15 125,9 150,11 175,6 200,8"/></svg></div>
+          </div>
+          <div class="card kpi">
+            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>In progress</div>
+            <div class="val">21</div>
+            <div class="sub"><span class="up">▲ 3</span> moved today</div>
+            <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--info)" stroke-width="2" points="0,18 25,20 50,14 75,16 100,10 125,13 150,8 175,11 200,7"/></svg></div>
+          </div>
+          <div class="card kpi">
+            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Overdue</div>
+            <div class="val" style="color:var(--danger)">4</div>
+            <div class="sub"><span class="dn">▲ 1</span> needs attention</div>
+            <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--danger)" stroke-width="2" points="0,20 25,22 50,18 75,21 100,16 125,19 150,14 175,16 200,12"/></svg></div>
+          </div>
+          <div class="card kpi">
+            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>Done this sprint</div>
+            <div class="val">34</div>
+            <div class="sub"><span class="up">▲ 12</span> 65% of committed</div>
+            <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--ok)" stroke-width="2" points="0,24 25,22 50,20 75,16 100,14 125,10 150,8 175,5 200,3"/></svg></div>
+          </div>
+        </div>
+
+        <!-- Main split -->
+        <div class="dash-grid">
+          <div class="stack" style="gap:14px">
+            <!-- Sprint health + burndown -->
+            <div class="card" data-od-id="sprint-health">
+              <div class="panel-head"><h3>Sprint 14 health</h3><span class="muted">Goal: SSO + Audit-log MVP</span>
+                <div class="right"><span class="status info"><span class="d"></span>Active</span><button class="btn ghost sm" data-nav="view-planning">Plan</button></div>
+              </div>
+              <div class="panel-body" style="display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center">
+                <div class="row" style="gap:18px">
+                  <div class="ring" style="--p:65;--c:var(--accent)"><b>65%</b></div>
+                  <div class="stack" style="gap:6px;font-size:12.5px">
+                    <div class="muted tiny">Committed</div><b class="mono" style="font-size:16px">52 pts</b>
+                    <div class="muted tiny" style="margin-top:4px">Completed</div><b class="mono" style="font-size:16px;color:var(--ok)">34 pts</b>
+                  </div>
+                </div>
+                <div>
+                  <div class="row between" style="margin-bottom:6px"><span class="small muted">Burndown</span><span class="tiny mono muted">4 days remaining</span></div>
+                  <svg viewBox="0 0 340 110" width="100%" height="110" preserveAspectRatio="none">
+                    <defs><linearGradient id="burn" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="oklch(54% 0.18 258 / .22)"/><stop offset="1" stop-color="oklch(54% 0.18 258 / 0)"/></linearGradient></defs>
+                    <line x1="0" y1="100" x2="340" y2="0" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4 4"/>
+                    <path d="M0,8 L340,100" stroke="var(--faint)" stroke-width="1.5" stroke-dasharray="3 3"/>
+                    <path d="M0,8 L40,18 L85,40 L130,34 L175,52 L215,48 L255,64 L300,60 L340,70 L340,100 L0,100 Z" fill="url(#burn)"/>
+                    <path d="M0,8 L40,18 L85,40 L130,34 L175,52 L215,48 L255,64 L300,60 L340,70" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
+                    <circle cx="340" cy="70" r="3.5" fill="var(--accent)"/>
+                  </svg>
+                  <div class="row" style="gap:14px;margin-top:6px"><span class="tiny mono muted">— Ideal</span><span class="tiny mono" style="color:var(--accent)">● Actual</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- My tasks -->
+            <div class="card" data-od-id="my-tasks">
+              <div class="panel-head"><h3>My tasks</h3><span class="muted">4 assigned</span><div class="right"><button class="btn ghost sm" data-nav="view-tasks">View all</button></div></div>
+              <div class="panel-body flush" id="my-tasks-list"></div>
+            </div>
+
+            <!-- Upcoming milestones -->
+            <div class="card" data-od-id="upcoming-milestones">
+              <div class="panel-head"><h3>Upcoming milestones</h3></div>
+              <div class="panel-body">
+                <div class="ms-item">
+                  <div class="ms-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V8l7-4 7 4v13"/><path d="M9 21v-6h6v6"/></svg></div>
+                  <div class="ms-body"><b>v2.0 Beta release</b><small>Due Mar 28 · 7 days · 72% complete</small><div class="bar" style="--p:72"><i style="width:72%"></i></div></div>
+                  <span class="status warn"><span class="d"></span>At risk</span>
+                </div>
+                <div class="ms-item">
+                  <div class="ms-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg></div>
+                  <div class="ms-body"><b>Design System v1</b><small>Due Apr 12 · 21 days · 55% complete</small><div class="bar warn" style="--p:55"><i style="width:55%"></i></div></div>
+                  <span class="status neutral"><span class="d"></span>On track</span>
+                </div>
+                <div class="ms-item">
+                  <div class="ms-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                  <div class="ms-body"><b>Security hardening</b><small>Due Apr 30 · 39 days · 30% complete</small><div class="bar" style="--p:30"><i style="width:30%"></i></div></div>
+                  <span class="status ok"><span class="d"></span>On track</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right rail -->
+          <div class="stack" style="gap:14px">
+            <!-- Notifications -->
+            <div class="card" data-od-id="dashboard-notifications">
+              <div class="panel-head"><h3>Notifications</h3><span class="muted">4 unread</span><div class="right"><button class="btn ghost sm" data-od-id="notif-markall">Mark all read</button></div></div>
+              <div class="panel-body flush">
+                <div class="notif-list">
+                  <div class="notif-item unread" data-od-id="notif-mention">
+                    <span class="notif-dot"></span>
+                    <span class="notif-ic mention"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.5 7.6"/></svg></span>
+                    <div class="notif-body"><b>Marco K.</b> mentioned you on <span class="ref">ATL-101</span><span class="quote">“Can you review the SSO token refresh logic before the demo?”</span></div>
+                    <span class="notif-time">8m</span>
+                  </div>
+                  <div class="notif-item unread" data-od-id="notif-assign">
+                    <span class="notif-dot"></span>
+                    <span class="notif-ic assign"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M19 8v6M22 11h-6"/></svg></span>
+                    <div class="notif-body"><b>Sara R.</b> assigned <span class="ref">ATL-122</span> to you · <span style="color:var(--danger)">P1</span></div>
+                    <span class="notif-time">25m</span>
+                  </div>
+                  <div class="notif-item unread" data-od-id="notif-review">
+                    <span class="notif-dot"></span>
+                    <span class="notif-ic review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
+                    <div class="notif-body"><b>Diego P.</b> requested your review on <b>Audit-log spec</b></div>
+                    <span class="notif-time">1h</span>
+                  </div>
+                  <div class="notif-item unread" data-od-id="notif-due">
+                    <span class="notif-dot"></span>
+                    <span class="notif-ic due"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+                    <div class="notif-body"><span class="ref">ATL-108</span> is due <b style="color:var(--warn)">tomorrow</b></div>
+                    <span class="notif-time">2h</span>
+                  </div>
+                  <div class="notif-item read" data-od-id="notif-reply">
+                    <span class="notif-dot"></span>
+                    <span class="notif-ic reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14l-5-5 5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v2"/></svg></span>
+                    <div class="notif-body"><b>Lin C.</b> replied in <b>Sprint planning</b></div>
+                    <span class="notif-time">3h</span>
+                  </div>
+                  <div class="notif-item read" data-od-id="notif-invite">
+                    <span class="notif-dot"></span>
+                    <span class="notif-ic invite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 7l9 6 9-6M12 13v5M9 16h6"/></svg></span>
+                    <div class="notif-body"><b>Jonas B.</b> invited you to <b>SSO design sync</b></div>
+                    <span class="notif-time">5h</span>
+                  </div>
+                  <div class="notif-item read" data-od-id="notif-deadline">
+                    <span class="notif-dot"></span>
+                    <span class="notif-ic deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M5 3 2 6M22 6l-3-3M12 9v4l2 2"/></svg></span>
+                    <div class="notif-body">Sprint 14 ends in <b>4 days</b></div>
+                    <span class="notif-time">6h</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Activity feed -->
+            <div class="card" data-od-id="activity-feed">
+              <div class="panel-head"><h3>Recent activity</h3></div>
+              <div class="panel-body">
+                <div class="feed">
+                  <div class="feed-item"><div class="feed-ic move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div><div class="feed-body"><b>Marco</b> moved <b>ATL-101</b> to In Progress<div class="when">12 minutes ago</div></div></div>
+                  <div class="feed-item"><div class="feed-ic doc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg></div><div class="feed-body"><b>Jonas</b> updated <b>Design System v1</b><div class="when">38 minutes ago</div></div></div>
+                  <div class="feed-item"><div class="feed-ic com"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="feed-body"><b>Diego</b> commented on <b>ATL-103</b><div class="when">1 hour ago</div></div></div>
+                  <div class="feed-item"><div class="feed-ic done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div><div class="feed-body"><b>Sara</b> closed <b>ATL-112</b><div class="when">2 hours ago</div></div></div>
+                  <div class="feed-item"><div class="feed-ic mile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 4h3v3a3 3 0 0 1-3 3M7 4H4v3a3 3 0 0 0 3 3"/></svg></div><div class="feed-body"><b>Aisha</b> created milestone <b>Security hardening</b><div class="when">3 hours ago</div></div></div>
+                  <div class="feed-item"><div class="feed-ic done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div><div class="feed-body"><b>Lin</b> completed <b>ATL-113</b><div class="when">5 hours ago</div></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Team workload -->
+            <div class="card" data-od-id="team-workload">
+              <div class="panel-head"><h3>Team workload</h3><span class="muted">Sprint 14</span></div>
+              <div class="panel-body">
+                <div class="work-row"><span class="av sm b">MK</span><span class="nm">Marco K.</span><div class="wbar"><i style="width:92%" class="over"></i></div><span class="n">12</span></div>
+                <div class="work-row"><span class="av sm c">LC</span><span class="nm">Lin C.</span><div class="wbar"><i style="width:78%"></i></div><span class="n">10</span></div>
+                <div class="work-row"><span class="av sm d">DP</span><span class="nm">Diego P.</span><div class="wbar"><i style="width:70%"></i></div><span class="n">9</span></div>
+                <div class="work-row"><span class="av sm e">SR</span><span class="nm">Sara R.</span><div class="wbar"><i style="width:55%"></i></div><span class="n">7</span></div>
+                <div class="work-row"><span class="av sm f">JB</span><span class="nm">Jonas B.</span><div class="wbar"><i style="width:48%"></i></div><span class="n">6</span></div>
+                <div class="work-row"><span class="av sm a">AY</span><span class="nm">Aisha Y.</span><div class="wbar"><i style="width:38%"></i></div><span class="n">5</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TASKS ================= -->
+      <section class="view" id="view-tasks" data-od-id="view-tasks">
+        <div class="toolbar">
+          <div class="seg" id="view-seg">
+            <button class="on" data-taskview="board"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="6" height="18" rx="1"/><rect x="10" y="3" width="6" height="12" rx="1"/><rect x="17" y="3" width="4" height="8" rx="1"/></svg>Board</button>
+            <button data-taskview="table"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18"/></svg>List</button>
+          </div>
+          <button class="chip btn" data-filter="assignee"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg>Assignee<span class="muted">Anyone</span></button>
+          <button class="chip btn" data-filter="priority"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V9l4-4M4 9h16l-4 4"/></svg>Priority<span class="muted">Any</span></button>
+          <button class="chip btn" data-filter="type"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.6 9 12 3 3.4 9 12 15z"/><path d="M3.4 9v6L12 21l8.6-6V9"/></svg>Type<span class="muted">All</span></button>
+          <button class="chip btn" data-filter="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-7.2-7.2a2 2 0 0 1-.6-1.4V5a2 2 0 0 1 2-2h7a2 2 0 0 1 1.4.6l7.4 7.4a2 2 0 0 1 0 2.4z"/><circle cx="7.5" cy="7.5" r="1"/></svg>Labels</button>
+          <button class="btn ghost sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M6 12h12M10 18h4"/></svg>Filter</button>
+          <div style="margin-left:auto" class="row">
+            <span class="tiny mono muted">118 tasks · 52 pts</span>
+            <button class="btn primary sm" id="new-task-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New task</button>
+          </div>
+        </div>
+
+        <!-- Board view -->
+        <div id="task-board" class="board-scroll">
+          <div class="board" id="board"></div>
+        </div>
+
+        <!-- Table view -->
+        <div id="task-table" style="display:none">
+          <div class="tbl-wrap"><div class="tbl-scroll">
+            <table class="dt">
+              <thead><tr>
+                <th class="ck-col"><input type="checkbox" class="ck" id="all-ck"></th>
+                <th style="width:70px">ID</th><th>Title</th><th style="width:120px">Status</th><th style="width:92px">Priority</th><th style="width:90px">Type</th><th style="width:130px">Assignee</th><th style="width:110px">Due</th>
+              </tr></thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- ================= DOCUMENTS ================= -->
+      <section class="view" id="view-documents" data-od-id="view-documents">
+        <div class="toolbar">
+          <button class="btn subtle sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M6 12h12M10 18h4"/></svg>All spaces</button>
+          <button class="chip btn on">Engineering</button>
+          <button class="chip btn">Product</button>
+          <button class="chip btn">Design</button>
+          <div style="margin-left:auto" class="row">
+            <button class="btn ghost sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Import</button>
+            <button class="btn primary sm" id="new-doc-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New page</button>
+          </div>
+        </div>
+
+        <div class="docs-grid">
+          <!-- Tree -->
+          <aside class="doc-tree" data-od-id="doc-tree">
+            <div class="tree-search">
+              <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+              <input placeholder="Search documents…" />
+            </div>
+            <div class="space" data-space="product">
+              <div class="space-h"><span class="emo">📐</span>Product<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+              <div class="space-body">
+                <div class="page-item" data-page="vision"><span class="emo">🎯</span>Vision & positioning</div>
+                <div class="page-item" data-page="roadmap"><span class="emo">🗺️</span>Roadmap</div>
+                <div class="page-item sub" data-page="personas"><span class="emo">👥</span>Personas</div>
+                <div class="page-item" data-page="pricing"><span class="emo">💲</span>Pricing model</div>
+              </div>
+            </div>
+            <div class="space" data-space="eng">
+              <div class="space-h"><span class="emo">⚙️</span>Engineering<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+              <div class="space-body">
+                <div class="page-item active" data-page="architecture"><span class="emo">🏛️</span>Architecture</div>
+                <div class="page-item" data-page="data-model"><span class="emo">🗄️</span>Data model</div>
+                <div class="page-item" data-page="api"><span class="emo">🔌</span>API contract</div>
+                <div class="page-item sub" data-page="adrs"><span class="emo">📋</span>ADRs</div>
+                <div class="page-item" data-page="conventions"><span class="emo">📜</span>Conventions</div>
+              </div>
+            </div>
+            <div class="space collapsed" data-space="design">
+              <div class="space-h"><span class="emo">🎨</span>Design<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+              <div class="space-body">
+                <div class="page-item" data-page="design-system"><span class="emo">🎨</span>Design system</div>
+                <div class="page-item" data-page="components"><span class="emo">🧩</span>Component library</div>
+              </div>
+            </div>
+            <div class="space collapsed" data-space="client">
+              <div class="space-h"><span class="emo">🤝</span>Client<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+              <div class="space-body">
+                <div class="page-item" data-page="sow"><span class="emo">📄</span>Northwind SOW</div>
+                <div class="page-item" data-page="status"><span class="emo">📊</span>Status report — Mar</div>
+              </div>
+            </div>
+            <div class="space collapsed" data-space="legal">
+              <div class="space-h"><span class="emo">⚖️</span>Legal<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+              <div class="space-body">
+                <div class="page-item" data-page="msa"><span class="emo">📑</span>Master services agreement</div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Page -->
+          <div class="doc-main" data-od-id="doc-page">
+            <div class="doc-topbar">
+              <div class="doc-crumbs"><span>Engineering</span><span class="sep">/</span><b id="doc-title-crumb">Architecture</b></div>
+              <div class="right">
+                <button class="tbtn" title="Star"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg></button>
+                <button class="tbtn" title="Share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+                <button class="tbtn" title="History"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v5h5M3.1 9a9 9 0 1 0 2.1-3.6L3 8"/><path d="M12 7v5l3 2"/></svg></button>
+                <span class="av-g" style="margin-left:6px"><span class="av sm b">MK</span><span class="av sm c">LC</span><span class="av sm d">DP</span></span>
+                <button class="btn sm" style="margin-left:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Edit</button>
+              </div>
+            </div>
+            <div class="doc-content" id="doc-content"></div>
+          </div>
+        </div>
+
+        <!-- Files -->
+        <div style="margin-top:16px">
+          <div class="section-title"><h2>Files & attachments</h2><span class="link" style="margin-left:auto">Upload</span></div>
+          <div class="files-grid" data-od-id="file-manager">
+            <div class="file-card"><div class="file-ic fig">FIG</div><b>design-system.fig</b><div class="fm">24.1 MB · Jonas · 2d ago</div></div>
+            <div class="file-card"><div class="file-ic pdf">PDF</div><b>northwind-sow.pdf</b><div class="fm">880 KB · Aisha · 5d ago</div></div>
+            <div class="file-card"><div class="file-ic img">PNG</div><b>data-model-v3.png</b><div class="fm">1.2 MB · Diego · 1w ago</div></div>
+            <div class="file-card"><div class="file-ic yml">YML</div><b>openapi.yaml</b><div class="fm">96 KB · Marco · 3d ago</div></div>
+            <div class="file-card"><div class="file-ic doc">DOC</div><b>brand-guidelines.pdf</b><div class="fm">12 MB · Jonas · 6d ago</div></div>
+            <div class="file-card"><div class="file-ic zip">ZIP</div><b>assets-export.zip</b><div class="fm">8.4 MB · Lin · 4d ago</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PLANNING ================= -->
+      <section class="view" id="view-planning" data-od-id="view-planning">
+        <div class="toolbar">
+          <div class="seg">
+            <button class="on" data-planview="board">Iterations</button>
+            <button data-planview="timeline">Timeline</button>
+          </div>
+          <div style="margin-left:auto" class="row">
+            <button class="btn subtle sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18M7 14l3-3 3 2 4-5"/></svg>Velocity</button>
+            <button class="btn primary sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New iteration</button>
+          </div>
+        </div>
+
+        <!-- Iteration tabs -->
+        <div class="iter-tabs" data-od-id="iteration-tabs">
+          <div class="iter-tab on" data-iter="14"><div class="it-name"><span class="status info"><span class="d"></span>Sprint 14</span></div><div class="it-meta">Mar 11–24 · Active</div></div>
+          <div class="iter-tab" data-iter="15"><div class="it-name"><span class="status neutral"><span class="d"></span>Sprint 15</span></div><div class="it-meta">Mar 25–Apr 7 · Planned</div></div>
+          <div class="iter-tab" data-iter="13"><div class="it-name"><span class="status ok"><span class="d"></span>Sprint 13</span></div><div class="it-meta">Feb 26–Mar 10 · Done</div></div>
+        </div>
+
+        <div class="grid g2" style="grid-template-columns:1.4fr 1fr;gap:14px" data-od-id="iter-detail">
+          <!-- Active iteration -->
+          <div class="card" id="iter-card-14">
+            <div class="panel-head"><h3>Sprint 14 — SSO + Audit-log MVP</h3><div class="right"><span class="status info"><span class="d"></span>Day 10 / 14</span></div></div>
+            <div class="panel-body">
+              <div class="row between" style="margin-bottom:6px"><span class="small muted">Progress · 34 of 52 pts</span><span class="mono small" style="color:var(--accent);font-weight:600">65%</span></div>
+              <div class="bar" style="height:8px;margin-bottom:14px"><i style="width:65%"></i></div>
+              <div class="row wrap" style="gap:8px;margin-bottom:14px">
+                <span class="chip muted">To Do · 8</span><span class="chip muted">In Progress · 5</span><span class="chip muted">In Review · 3</span><span class="chip" style="background:var(--ok-bg);border-color:oklch(88% 0.05 150);color:oklch(40% 0.11 150)">Done · 7</span>
+              </div>
+              <div class="section-title" style="margin:6px 0 8px"><h2>Sprint goal</h2></div>
+              <div class="callout info" style="margin:0 0 6px"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span><b>Ship OAuth2 SSO</b> behind a feature flag and land the <b>immutable audit-log</b> store. Client-portal scaffolding visible but read-only.</span></div>
+            </div>
+          </div>
+
+          <!-- Milestones -->
+          <div class="card" data-od-id="plan-milestones">
+            <div class="panel-head"><h3>Milestones</h3><span class="muted">3 active</span></div>
+            <div class="panel-body">
+              <div class="ms-item">
+                <div class="ms-ic" style="background:var(--warn-bg);color:var(--warn)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V8l7-4 7 4v13"/></svg></div>
+                <div class="ms-body"><b>v2.0 Beta</b><small>Mar 28 · 18 / 25 tasks</small><div class="bar warn"><i style="width:72%"></i></div></div>
+                <span class="status warn"><span class="d"></span>At risk</span>
+              </div>
+              <div class="ms-item">
+                <div class="ms-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19l7-7 3 3-7 7-3-3z"/></svg></div>
+                <div class="ms-body"><b>Design System v1</b><small>Apr 12 · 11 / 20 tasks</small><div class="bar"><i style="width:55%"></i></div></div>
+                <span class="status neutral"><span class="d"></span>On track</span>
+              </div>
+              <div class="ms-item">
+                <div class="ms-ic" style="background:var(--ok-bg);color:var(--ok)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                <div class="ms-body"><b>Security hardening</b><small>Apr 30 · 6 / 20 tasks</small><div class="bar ok"><i style="width:30%"></i></div></div>
+                <span class="status ok"><span class="d"></span>On track</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Backlog + Velocity -->
+        <div class="grid g2" style="grid-template-columns:1.4fr 1fr;gap:14px;margin-top:14px">
+          <div class="card" data-od-id="backlog">
+            <div class="panel-head"><h3>Backlog</h3><span class="muted">Next up · 8 items</span><div class="right"><button class="btn ghost sm">Plan sprint</button></div></div>
+            <div class="panel-body flush">
+              <div class="backlog-item grab"><span class="tid">ATL-110</span><span class="tt">Client portal: read-only views</span><span class="tag v">Feature</span><span class="pts">5</span><span class="av sm a">AY</span></div>
+              <div class="backlog-item grab"><span class="tid">ATL-111</span><span class="tt">Document block model: table node</span><span class="tag">Task</span><span class="pts">3</span><span class="av sm f">JB</span></div>
+              <div class="backlog-item grab"><span class="tid">ATL-121</span><span class="tt">Webhook retries with exponential backoff</span><span class="tag b">Bug</span><span class="pts">5</span><span class="av sm c">LC</span></div>
+              <div class="backlog-item grab"><span class="tid">ATL-122</span><span class="tt">Bulk-edit tasks from list view</span><span class="tag">Task</span><span class="pts">3</span><span class="av sm d">DP</span></div>
+              <div class="backlog-item grab"><span class="tid">ATL-123</span><span class="tt">Reporting: burndown export to PDF</span><span class="tag v">Feature</span><span class="pts">5</span><span class="av sm e">SR</span></div>
+              <div class="backlog-item grab"><span class="tid">ATL-124</span><span class="tt">Notification preferences per module</span><span class="tag v">Feature</span><span class="pts">3</span><span class="av sm c">LC</span></div>
+              <div class="backlog-item grab"><span class="tid">ATL-125</span><span class="tt">SSO: SCIM user provisioning</span><span class="tag o">Epic</span><span class="pts">8</span><span class="av sm b">MK</span></div>
+              <div class="backlog-item grab"><span class="tid">ATL-126</span><span class="tt">Empty-state illustrations (set of 6)</span><span class="tag">Task</span><span class="pts">2</span><span class="av sm f">JB</span></div>
+            </div>
+          </div>
+
+          <div class="card" data-od-id="velocity">
+            <div class="panel-head"><h3>Velocity</h3><span class="muted">Last 6 sprints</span><div class="right"><span class="tiny mono muted">avg 45 pts</span></div></div>
+            <div class="panel-body">
+              <div class="vel-chart">
+                <div class="vel-group"><div class="vel-bar plan" style="height:78%"></div><div class="vel-bar act" style="height:74%"></div></div>
+                <div class="vel-group"><div class="vel-bar plan" style="height:82%"></div><div class="vel-bar act" style="height:72%"></div></div>
+                <div class="vel-group"><div class="vel-bar plan" style="height:85%"></div><div class="vel-bar act" style="height:80%"></div></div>
+                <div class="vel-group"><div class="vel-bar plan" style="height:88%"></div><div class="vel-bar act" style="height:83%"></div></div>
+                <div class="vel-group"><div class="vel-bar plan" style="height:92%"></div><div class="vel-bar act" style="height:87%"></div></div>
+                <div class="vel-group"><div class="vel-bar plan" style="height:92%"></div><div class="vel-bar act" style="height:83%"></div></div>
+              </div>
+              <div class="vel-x"><span class="vx">S8</span><span class="vx">S9</span><span class="vx">S10</span><span class="vx">S11</span><span class="vx">S12</span><span class="vx">S13</span></div>
+              <div class="row" style="gap:14px;margin-top:14px;justify-content:center"><span class="tiny mono" style="color:var(--muted)">▮ Committed</span><span class="tiny mono" style="color:var(--accent)">▮ Completed</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline / Gantt -->
+        <div class="card" style="margin-top:14px" id="timeline-card">
+          <div class="panel-head"><h3>Timeline</h3><span class="muted">Mar – Apr 2025</span></div>
+          <div class="gantt">
+            <div class="gantt-grid">
+              <div class="gantt-axis">
+                <div class="lbl">Work item</div>
+                <div class="gantt-weeks" id="gantt-weeks"></div>
+              </div>
+              <div id="gantt-rows"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= MEETINGS ================= -->
+      <section class="view" id="view-meetings" data-od-id="view-meetings">
+        <div class="toolbar">
+          <div class="seg" data-meet-seg>
+            <button class="on" data-meetview="upcoming">Upcoming</button>
+            <button data-meetview="past">Past</button>
+            <button data-meetview="all">All</button>
+          </div>
+          <div style="margin-left:auto" class="row">
+            <button class="btn subtle sm" data-od-id="meet-filter"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M7 12h10M10 18h4"/></svg>Types</button>
+            <button class="btn primary sm" data-od-id="meet-schedule"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Schedule meeting</button>
+          </div>
+        </div>
+        <div class="meet-grid" data-od-id="meet-split">
+          <div class="card" data-od-id="meet-list">
+            <div class="panel-head"><h3>Meetings</h3><span class="muted" id="meet-count">6 total</span></div>
+            <div class="panel-body flush" id="meet-list-body"></div>
+          </div>
+          <div id="meet-detail"></div>
+        </div>
+      </section>
+
+      <!-- ================= REPORTS ================= -->
+      <section class="view" id="view-reports" data-od-id="view-reports">
+        <div class="toolbar">
+          <div class="seg" data-rep-seg>
+            <button class="on" data-repview="overview">Overview</button>
+            <button data-repview="reports">Reports</button>
+          </div>
+          <div style="margin-left:auto" class="row">
+            <button class="btn subtle sm" data-repexport="pdf"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export PDF</button>
+            <button class="btn subtle sm" data-repexport="csv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Export CSV</button>
+          </div>
+        </div>
+        <div id="report-root"></div>
+      </section>
+
+      <!-- ================= AGREEMENTS ================= -->
+      <section class="view" id="view-agreements" data-od-id="view-agreements">
+        <div class="toolbar">
+          <div class="seg" data-agr-seg>
+            <button class="on" data-agrview="all">All</button>
+            <button data-agrview="active">Active</button>
+            <button data-agrview="pending">Pending</button>
+            <button data-agrview="expiring">Expiring</button>
+          </div>
+          <div style="margin-left:auto" class="row">
+            <button class="btn subtle sm" data-agrexport="csv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
+            <button class="btn primary sm" data-od-id="agr-new"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New agreement</button>
+          </div>
+        </div>
+        <div id="agr-kpis-root"></div>
+        <div class="agr-grid" data-od-id="agr-split">
+          <div class="card" data-od-id="agr-list">
+            <div class="panel-head"><h3>Agreements</h3><span class="muted" id="agr-count">7 total</span></div>
+            <div class="panel-body flush" id="agr-list-body"></div>
+          </div>
+          <div id="agr-detail"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- =================== DRAWER =================== -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" data-od-id="task-drawer">
+  <div class="dh">
+    <div style="flex:1">
+      <div class="tid" id="d-id">ATL-101</div>
+      <h3 id="d-title">Implement OAuth2 SSO flow</h3>
+    </div>
+    <button class="x" id="drawer-close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="db" id="drawer-body"></div>
+  <div class="df">
+    <button class="btn subtle sm" style="width:100%"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comment</button>
+    <button class="btn subtle sm" style="width:100%"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>Attach</button>
+    <button class="btn primary sm" style="width:100%">Save</button>
+  </div>
+</aside>
+
+<!-- =================== MODAL (create task) =================== -->
+<div class="modal" id="task-modal" data-od-id="create-task-modal">
+  <div class="mh"><h3>Create task</h3><button class="x" data-close-modal><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="mb">
+    <input class="input" id="modal-title" placeholder="Task title" style="width:100%;height:40px;border:1px solid var(--border-strong);border-radius:8px;padding:0 12px;font-size:14px;margin-bottom:14px">
+    <div class="meta-grid" style="grid-template-columns:1fr 1fr;gap:12px">
+      <label class="stack" style="gap:5px;font-size:12px;color:var(--muted);font-weight:600">Status<select style="height:34px;border:1px solid var(--border-strong);border-radius:7px;padding:0 9px;background:var(--surface);color:var(--fg)"><option>To Do</option><option>In Progress</option><option>In Review</option><option>Done</option></select></label>
+      <label class="stack" style="gap:5px;font-size:12px;color:var(--muted);font-weight:600">Priority<select style="height:34px;border:1px solid var(--border-strong);border-radius:7px;padding:0 9px;background:var(--surface);color:var(--fg)"><option>Low</option><option>Medium</option><option selected>High</option><option>Urgent</option></select></label>
+      <label class="stack" style="gap:5px;font-size:12px;color:var(--muted);font-weight:600">Type<select style="height:34px;border:1px solid var(--border-strong);border-radius:7px;padding:0 9px;background:var(--surface);color:var(--fg)"><option>Task</option><option>Bug</option><option selected>Feature</option><option>Epic</option></select></label>
+      <label class="stack" style="gap:5px;font-size:12px;color:var(--muted);font-weight:600">Assignee<select style="height:34px;border:1px solid var(--border-strong);border-radius:7px;padding:0 9px;background:var(--surface);color:var(--fg)"><option>Aisha Yusuf</option><option>Marco Keller</option><option>Lin Chen</option><option>Diego Pereira</option></select></label>
+    </div>
+  </div>
+  <div class="mf"><button class="btn ghost" data-close-modal>Cancel</button><button class="btn primary" id="modal-create">Create task</button></div>
+</div>
+
+<!-- =================== NEW AGREEMENT =================== -->
+<div class="modal" id="agr-modal" data-od-id="new-agreement-modal">
+  <div class="mh"><h3>New agreement</h3><span class="status neutral"><span class="d"></span>Draft</span><button class="x" data-close-agr><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="mb">
+    <span class="flab">Type / template</span>
+    <div class="tp" id="agr-tp" data-od-id="agr-type-picker"></div>
+    <span class="flab">Title</span>
+    <input class="fld" id="agr-title" placeholder="Statement of work title" style="margin-bottom:12px">
+    <div class="frow">
+      <div><span class="flab">Client / counterparty</span><input class="fld" id="agr-party" list="agr-clients" placeholder="Search or type a client"></div>
+      <div><span class="flab">Internal owner</span><select class="fld" id="agr-owner"></select></div>
+    </div>
+    <datalist id="agr-clients"><option>Acme Corporation</option><option>Contoso Ltd</option><option>Globex Industries</option><option>Initech</option><option>Hooli</option></datalist>
+    <div class="frow">
+      <div><span class="flab">Contract value</span><div class="val-in"><input class="fld" id="agr-val" type="number" min="0" step="1000" placeholder="0"><select class="fld" id="agr-cur"><option>USD</option><option>EUR</option><option>GBP</option></select></div></div>
+      <div><span class="flab">Term · effective → expires</span><div class="dates"><input class="fld" id="agr-start" type="date"><input class="fld" id="agr-end" type="date"></div></div>
+    </div>
+    <span class="flab">Terms summary</span>
+    <textarea class="fld" id="agr-terms" placeholder="Scope, milestones, payment terms, SLAs…"></textarea>
+  </div>
+  <div class="mf"><span class="left-meta">Saved as Draft · nothing is sent to the client yet</span><button class="btn ghost" data-close-agr>Cancel</button><button class="btn primary" id="agr-create">Create draft</button></div>
+</div>
+
+<!-- =================== COMMAND PALETTE =================== -->
+<div class="modal cmdk" id="cmdk" data-od-id="command-palette">
+  <div class="field"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--faint)"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="cmdk-input" placeholder="Type a command or search…"><span class="kbd" style="font:11px var(--mono);color:var(--faint);border:1px solid var(--border);background:var(--surface-2);border-radius:4px;padding:1px 5px">esc</span></div>
+  <div class="res" id="cmdk-res"></div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<div class="sign-page" id="sign-page" data-od-id="sign-page">
+  <header class="sp-bar">
+    <button class="sp-back" data-od-id="sp-exit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to agreements</button>
+    <span class="sp-sep">/</span>
+    <span class="sp-doc-title" id="sp-title">Agreement</span>
+    <span class="sp-id" id="sp-id">AGR-000</span>
+    <span class="status info" id="sp-status"><span class="d"></span>Awaiting</span>
+    <div class="sp-right">
+      <button class="btn ghost sm" data-od-id="sp-share"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7L12 19"/></svg>Copy share link</button>
+    </div>
+  </header>
+  <div class="sp-body">
+    <div class="sp-scroll"><article class="sp-doc" id="sp-doc" data-od-id="sp-doc"></article></div>
+    <aside class="sp-panel" data-od-id="sp-panel">
+      <div class="sp-pinner">
+        <div><div class="agr-sec">Signing order</div><div class="sp-order" id="sp-order"></div></div>
+        <div id="sp-panel-card"></div>
+        <p class="tiny muted" style="text-align:center;line-height:1.55;margin-top:auto">Counter-signatures are legally binding under the E-SIGN Act &amp; UETA. Both parties receive a signed PDF by email.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* ============================ DATA ============================ */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+
+const P={ay:['Aisha Yusuf','AY','a','Product Manager'],mk:['Marco Keller','MK','b','Tech Lead'],lc:['Lin Chen','LC','c','Engineer'],dp:['Diego Pereira','DP','d','Engineer'],sr:['Sara Reinhardt','SR','e','QA'],jb:['Jonas Berg','JB','f','Designer']};
+function avHtml(id,cls=''){const p=P[id];return `<span class="av ${p[2]} ${cls}">${p[1]}</span>`;}
+function who(id){return P[id][0];}
+
+const COLS=[
+  {id:'backlog',name:'Backlog',dot:'var(--faint)'},
+  {id:'todo',name:'To Do',dot:'var(--muted)'},
+  {id:'progress',name:'In Progress',dot:'var(--info)'},
+  {id:'review',name:'In Review',dot:'var(--violet)'},
+  {id:'done',name:'Done',dot:'var(--ok)'}
+];
+const ST={backlog:['Backlog','neutral'],todo:['To Do','neutral'],progress:['In Progress','info'],review:['In Review','violet'],done:['Done','ok']};
+const TY={bug:['b','Bug'],feat:['v','Feature'],task:['','Task'],epic:['o','Epic']};
+
+let TASKS=[
+  {id:101,t:'Implement OAuth2 SSO flow',s:'progress',a:'mk',p:'p2',ty:'feat',lb:['sso','security'],due:'Mar 24',pts:8,sub:[[1,'Spec out scopes & claims',1],[2,'Wire authorization-code grant',0],[3,'Token refresh rotation',0]],com:3},
+  {id:102,t:'Board drag-and-drop performance',s:'progress',a:'lc',p:'p3',ty:'feat',lb:['frontend'],due:'Mar 23',pts:5,sub:[[1,'Profile with 500 cards',1]],com:2},
+  {id:103,t:'Fix flaky CI test on billing webhook',s:'review',a:'dp',p:'p1',ty:'bug',lb:['ci','billing'],due:'Mar 22',pts:3,sub:[],com:4},
+  {id:104,t:'Design system: migrate tokens to OKLch',s:'todo',a:'jb',p:'p3',ty:'task',lb:['design'],due:'Mar 26',pts:5,sub:[[1,'Audit hex usages',0]],com:1},
+  {id:105,t:'Audit log: immutable event store',s:'todo',a:'mk',p:'p2',ty:'feat',lb:['security','backend'],due:'Mar 28',pts:8,sub:[],com:0},
+  {id:106,t:'Dashboard KPI sparkline component',s:'todo',a:'lc',p:'p4',ty:'task',lb:['frontend'],due:'Mar 27',pts:3,sub:[],com:0},
+  {id:107,t:'Role-based access at project level',s:'progress',a:'mk',p:'p2',ty:'epic',lb:['security'],due:'Apr 02',pts:13,sub:[[1,'Permission matrix',1],[2,'Middleware guards',1]],com:5},
+  {id:108,t:'Search index for documents (PG trigram)',s:'review',a:'dp',p:'p3',ty:'feat',lb:['search','backend'],due:'Mar 25',pts:5,sub:[],com:2},
+  {id:109,t:'Iteration planning: velocity chart',s:'todo',a:'lc',p:'p3',ty:'feat',lb:['planning'],due:'Mar 29',pts:3,sub:[],com:0},
+  {id:117,t:'API: pagination contract (cursor)',s:'review',a:'dp',p:'p2',ty:'task',lb:['api','backend'],due:'Mar 24',pts:3,sub:[],com:1},
+  {id:116,t:'Backlog grooming: triage queue',s:'todo',a:'ay',p:'p3',ty:'task',lb:['process'],due:'Mar 22',pts:2,sub:[],com:0},
+  {id:118,t:'Notification digest: daily email',s:'todo',a:'lc',p:'p4',ty:'feat',lb:['notifications'],due:'Apr 01',pts:3,sub:[],com:0},
+  {id:112,t:'Reset password rate limiting',s:'done',a:'sr',p:'p1',ty:'bug',lb:['security','auth'],due:'Mar 18',pts:3,sub:[[1,'Add sliding window',1]],com:2},
+  {id:113,t:'Meeting notes: attach tasks',s:'done',a:'lc',p:'p4',ty:'task',lb:['meetings'],due:'Mar 19',pts:2,sub:[],com:1},
+  {id:114,t:'MFA: TOTP enrollment UX',s:'done',a:'sr',p:'p2',ty:'feat',lb:['security','auth'],due:'Mar 20',pts:5,sub:[],com:3},
+  {id:115,t:'Empty states across modules',s:'done',a:'jb',p:'p4',ty:'task',lb:['design'],due:'Mar 21',pts:2,sub:[],com:0},
+  {id:119,t:'Write release notes for v2.0',s:'todo',a:'ay',p:'p3',ty:'task',lb:['docs'],due:'Mar 27',pts:2,sub:[],com:0},
+  {id:120,t:'Stakeholder demo prep',s:'todo',a:'ay',p:'p2',ty:'task',lb:['process'],due:'Mar 25',pts:2,sub:[],com:0}
+];
+const taskById=id=>TASKS.find(t=>t.id==id);
+
+/* ============================ NAVIGATION ============================ */
+const VIEWS={dashboard:'Dashboard',tasks:'Tasks',documents:'Documents',planning:'Planning',meetings:'Meetings',reports:'Reports',agreements:'Agreements'};
+function navigate(view){
+  const v=view.replace('view-','');
+  $$('.view').forEach(el=>el.classList.toggle('active',el.id===view));
+  $$('[data-nav]').forEach(n=>n.classList.toggle('active',n.dataset.nav===view));
+  $('#crumb-cur').textContent=VIEWS[v]||v;
+  try{localStorage.setItem('helix-view',view);}catch(e){}
+  if(v==='tasks')renderTasks();
+  if(v==='documents')renderDoc(currentPage);
+  if(v==='planning')renderTimeline();
+  if(v==='meetings')renderMeetings();
+  if(v==='reports')renderReports();
+  if(v==='agreements')renderAgreements();
+  $('.content').scrollTop=0;
+}
+$$('[data-nav]').forEach(n=>n.addEventListener('click',()=>navigate(n.dataset.nav)));
+
+/* ============================ TASKS: BOARD ============================ */
+const PRIO={p1:'Urgent',p2:'High',p3:'Medium',p4:'Low'};
+function card(t){
+  const ty=TY[t.ty];
+  const late=t.s!=='done'&&t.due==='Mar 22';
+  const subn=t.sub.length;
+  return `<div class="tcard" draggable="true" data-id="${t.id}">
+    <div class="ttop"><span class="tid">ATL-${t.id}</span><span class="tag ${ty[0]}">${ty[1]}</span></div>
+    <div class="tt">${t.t}</div>
+    <div class="trow">${t.lb.slice(0,2).map(l=>`<span class="tag">${l}</span>`).join('')}</div>
+    <div class="tmeta">
+      <span class="prio ${t.p}"><span class="bars"><i></i><i></i><i></i></span>${PRIO[t.p]}</span>
+      ${subn?`<span class="ic"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>${t.sub.filter(s=>s[2]).length}/${subn}</span>`:''}
+      ${t.com?`<span class="ic"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${t.com}</span>`:''}
+      <span class="due ${late?'late':''}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>${t.due}</span>
+      ${avHtml(t.a,'sm')}
+    </div>
+  </div>`;
+}
+function renderBoard(){
+  $('#board').innerHTML=COLS.map(c=>{
+    const items=TASKS.filter(t=>t.s===c.id);
+    const pts=items.reduce((n,t)=>n+t.pts,0);
+    return `<div class="col" data-col="${c.id}">
+      <div class="col-h"><span class="cd" style="background:${c.dot}"></span>${c.name}<span class="cnt">${items.length}</span><span class="pts">${pts}pts</span><button class="add" data-add="${c.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button></div>
+      <div class="col-body" data-drop="${c.id}">${items.map(card).join('')||'<div class="tiny faint" style="padding:8px 6px">Drop tasks here</div>'}</div>
+    </div>`;
+  }).join('');
+  wireBoard();
+}
+function wireBoard(){
+  $$('.tcard').forEach(el=>{
+    el.addEventListener('click',()=>openDrawer(el.dataset.id));
+    el.addEventListener('dragstart',e=>{el.classList.add('dragging');e.dataTransfer.setData('id',el.dataset.id);e.dataTransfer.effectAllowed='move';});
+    el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+  });
+  $$('.col-body').forEach(cb=>{
+    cb.addEventListener('dragover',e=>{e.preventDefault();cb.classList.add('drag-over');});
+    cb.addEventListener('dragleave',()=>cb.classList.remove('drag-over'));
+    cb.addEventListener('drop',e=>{
+      e.preventDefault();cb.classList.remove('drag-over');
+      const t=taskById(e.dataTransfer.getData('id'));if(!t)return;
+      const to=cb.dataset.drop;if(t.s===to)return;
+      t.s=to;renderBoard();
+      toast(`ATL-${t.id} → ${ST[to][0]}`);
+    });
+  });
+  $$('[data-add]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();openModal();}));
+}
+
+/* ============================ TASKS: TABLE ============================ */
+function row(t){
+  const st=ST[t.s],ty=TY[t.ty];
+  const late=t.s!=='done'&&t.due==='Mar 22';
+  return `<tr data-id="${t.id}"><td class="ck-col"><input type="checkbox" class="ck"></td>
+  <td class="id">ATL-${t.id}</td>
+  <td class="title">${t.t}</td>
+  <td><span class="status ${st[1]}"><span class="d"></span>${st[0]}</span></td>
+  <td><span class="prio ${t.p}"><span class="bars"><i></i><i></i><i></i></span>${PRIO[t.p]}</span></td>
+  <td><span class="tag ${ty[0]}">${ty[1]}</span></td>
+  <td><span class="row" style="gap:7px">${avHtml(t.a,'sm')}<span class="small truncate" style="max-width:80px">${P[t.a][0].split(' ')[0]}</span></span></td>
+  <td class="mono ${late?'due-over':'muted'}">${t.due}</td></tr>`;
+}
+function renderTable(){
+  $('#table-body').innerHTML=TASKS.map(row).join('');
+  $$('#table-body tr').forEach(r=>r.addEventListener('click',()=>openDrawer(r.dataset.id)));
+}
+function renderTasks(){renderBoard();renderTable();}
+
+$('#view-seg').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  $$('#view-seg button').forEach(x=>x.classList.toggle('on',x===b));
+  const v=b.dataset.taskview;
+  $('#task-board').style.display=v==='board'?'block':'none';
+  $('#task-table').style.display=v==='table'?'block':'none';
+});
+
+/* ============================ DRAWER ============================ */
+function openDrawer(id){
+  const t=taskById(id);if(!t)return;
+  const st=ST[t.s],ty=TY[t.ty],p=P[t.a];
+  $('#d-id').textContent='ATL-'+t.id;
+  $('#d-title').textContent=t.t;
+  $('#drawer-body').innerHTML=`
+    <div class="meta-grid" style="margin-bottom:18px">
+      <span class="k">Status</span><span class="v"><span class="status ${st[1]}"><span class="d"></span>${st[0]}</span></span>
+      <span class="k">Assignee</span><span class="v">${avHtml(t.a)} ${p[0]} · <span class="muted">${p[3]}</span></span>
+      <span class="k">Priority</span><span class="v"><span class="prio ${t.p}"><span class="bars"><i></i><i></i><i></i></span>${PRIO[t.p]}</span></span>
+      <span class="k">Type</span><span class="v"><span class="tag ${ty[0]}">${ty[1]}</span></span>
+      <span class="k">Due date</span><span class="v mono">${t.due}, 2025</span>
+      <span class="k">Estimate</span><span class="v mono">${t.pts} pts</span>
+      <span class="k">Labels</span><span class="v">${t.lb.map(l=>`<span class="tag">${l}</span>`).join('')}</span>
+    </div>
+    <div class="section-title" style="margin:6px 0 8px"><h2>Description</h2></div>
+    <p class="muted" style="font-size:12.5px;line-height:1.6">Implement the OAuth2 authorization-code flow with PKCE. Ship behind the <span class="mono" style="background:var(--surface-2);padding:0 4px;border-radius:3px">sso_v2</span> feature flag. Coordinate with Marco on token refresh rotation. Acceptance: a member of a synced IdP can sign in without a local password.</p>
+    ${t.sub.length?`<div class="section-title" style="margin:18px 0 4px"><h2>Subtasks</h2><span class="muted tiny" style="margin-left:auto">${t.sub.filter(s=>s[2]).length}/${t.sub.length}</span></div>
+    ${t.sub.map(s=>`<div class="sub-row"><input type="checkbox" class="ck" ${s[2]?'checked':''}><span style="flex:1;font-size:12.5px;${s[2]?'color:var(--muted);text-decoration:line-through':'color:var(--fg)'}">ATL-${t.id}.${s[0]} · ${s[1]}</span></div>`).join('')}`:''}
+    <div class="section-title" style="margin:18px 0 4px"><h2>Comments · ${t.com}</h2></div>
+    <div class="comment">${avHtml('mk')}<div><b>Marco</b><span class="when">2 hours ago</span><p>Blocked on the IdP sandbox credentials — chasing Ops. Unblocked scope: PKCE verifier generation is done.</p></div></div>
+    <div class="comment">${avHtml('sr')}<div><b>Sara</b><span class="when">yesterday</span><p>Added a regression test for expired refresh tokens. Looks clean on staging.</p></div></div>`;
+  openScrim();$('#drawer').classList.add('show');
+}
+function openScrim(){$('#scrim').classList.add('show');}
+function closeAll(){$('#drawer').classList.remove('show');$('#scrim').classList.remove('show');closeModal();closeAgrModal();closeCmdk();}
+$('#drawer-close').addEventListener('click',closeAll);
+$('#scrim').addEventListener('click',closeAll);
+
+/* ============================ MODAL ============================ */
+function openModal(){$('#task-modal').classList.add('show');openScrim();$('#modal-title').focus();}
+function closeModal(){$('#task-modal').classList.remove('show');if(!$('#drawer').classList.contains('show'))$('#scrim').classList.remove('show');}
+$('#new-task-btn').addEventListener('click',openModal);
+$$('[data-close-modal]').forEach(b=>b.addEventListener('click',closeModal));
+$('#modal-create').addEventListener('click',()=>{
+  const title=$('#modal-title').value.trim()||'New task';
+  const nextId=Math.max(...TASKS.map(t=>t.id))+1;
+  TASKS.unshift({id:nextId,t:title,s:'todo',a:'ay',p:'p2',ty:'task',lb:['new'],due:'Apr 05',pts:3,sub:[],com:0});
+  closeModal();$('#modal-title').value='';
+  if($('#view-tasks').classList.contains('active'))renderTasks();
+  toast(`Created ATL-${nextId}`);
+});
+$('#task-modal').addEventListener('click',e=>{if(e.target===$('#task-modal'))closeModal();});
+
+/* ============================ DOCUMENTS ============================ */
+const PAGES={
+  architecture:{title:'Architecture',icon:'🏛️',body:`
+    <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span><b>Source of truth.</b> This doc governs all module work. ADRs live under Engineering → ADRs; changes here require an ADR.</span></div>
+    <h2>Hierarchy</h2><p>Helix is strictly hierarchical: <b>User → Organization → Project → Modules</b>. Every business activity belongs to a Project — nothing floats free. Data is isolated per organization; multi-tenancy is enforced at the database layer, not the application layer.</p>
+    <h2>Foundation & modules</h2><p>A shared <b>Foundation</b> (Authentication, Organization, Project) underpins every module. Delivery modules (Task, Planning) and Knowledge modules (Documents) build on it directly.</p>
+    <div class="doc-check done"><input type="checkbox" class="ck" checked>Define the tenancy boundary at the org level</div>
+    <div class="doc-check done"><input type="checkbox" class="ck" checked>Scope every module to a project</div>
+    <div class="doc-check"><input type="checkbox" class="ck">Document the read-replica strategy for reporting</div>
+    <h2>Stack</h2>
+    <table class="doc-table"><thead><tr><th>Layer</th><th>Choice</th><th>Why</th></tr></thead><tbody>
+    <tr><td>Frontend</td><td>React · TypeScript</td><td>Large hiring pool, end-to-end type safety</td></tr>
+    <tr><td>Backend</td><td>Hono</td><td>Lightweight, edge-ready, fast</td></tr>
+    <tr><td>Database</td><td>PostgreSQL</td><td>Relational integrity for hierarchical multi-tenant data</td></tr>
+    <tr><td>ORM</td><td>Drizzle</td><td>SQL-first, predictable, type-safe</td></tr>
+    <tr><td>Auth</td><td>Better Auth</td><td>Sessions & organizations without a managed vendor</td></tr>
+    </tbody></table>
+    <div class="callout warn"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><span><b>Open decision.</b> Object storage & search providers are still TBD — see Pending Decisions in the README.</span></div>`},
+  dataModel:{title:'Data model',icon:'🗄️',body:`
+    <h2>Core entities</h2><p>Tasks, Documents, Planning, and Meetings each own their tables, scoped by <span class="mono" style="background:var(--surface-2);padding:0 4px;border-radius:3px">projectId</span>. There are no cross-project foreign keys.</p>
+    <div class="codeblock"><span class="c">-- task is the primary unit of execution</span>
+<span class="k">CREATE TABLE</span> task (
+  id          uuid <span class="k">PRIMARY KEY</span>,
+  project_id  uuid <span class="k">NOT NULL REFERENCES</span> project,
+  title       text <span class="k">NOT NULL</span>,
+  status_id   uuid <span class="k">NOT NULL REFERENCES</span> task_status,
+  assignee_id uuid,
+  priority    <span class="k">task_priority NOT NULL DEFAULT</span> <span class="s">'medium'</span>,
+  due_date    timestamptz,
+  <span class="k">CONSTRAINT</span> within_project <span class="k">CHECK</span> (...)
+);</div>
+    <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>Subtasks are self-referential via <b>parent_id</b>; progress rolls up to the parent.</span></div>
+    <p>See the full schema in <b>03-data-model.md</b>.</p>`},
+  api:{title:'API contract',icon:'🔌',body:`
+    <h2>Conventions</h2><p>RESTful, JSON, cursor-based pagination. Every route is scoped under an organization and project.</p>
+    <div class="codeblock"><span class="c"># list tasks in a project</span>
+<span class="k">GET</span> /orgs/<span class="s">{orgId}</span>/projects/<span class="s">{projectId}</span>/tasks
+     ?status=progress&amp;assignee=me&amp;cursor=<span class="s">{cursor}</span>
+
+<span class="c"># 200 OK</span>
+{ <span class="s">"data"</span>: [...], <span class="s">"nextCursor"</span>: <span class="s">"..."</span>, <span class="s">"hasMore"</span>: true }</div>
+    <h2>Permissions</h2><p>Every endpoint is guarded by a capability check: <span class="mono">task:view</span>, <span class="mono">task:create</span>, <span class="mono">document:update</span>, and so on. Capabilities are derived from the member's role in the org and project.</p>`},
+  vision:{title:'Vision & positioning',icon:'🎯',body:`
+    <h2>Vision</h2><p>A project management platform purpose-built for software delivery — simple enough for a two-person team, scalable enough for an enterprise. Most tools track tasks <i>or</i> store documents. Helix unifies delivery, documentation, planning, and client communication in one place.</p>
+    <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span><b>AI is an optional enhancement, never the core experience.</b> Every feature works without it.</span></div>
+    <h2>Differentiators</h2>
+    <div class="doc-check done"><input type="checkbox" class="ck" checked>Documentation is a first-class citizen</div>
+    <div class="doc-check done"><input type="checkbox" class="ck" checked>Built-in client transparency</div>
+    <div class="doc-check done"><input type="checkbox" class="ck" checked>Seat-free pricing — we charge for value</div>
+    <div class="doc-check"><input type="checkbox" class="ck">Refine ICP sizing assumptions</div>`},
+  conventions:{title:'Conventions',icon:'📜',body:`<h2>Coding standards</h2><p>TypeScript strict mode everywhere, no <span class="mono">any</span> without an inline justification. Naming is <span class="mono">camelCase</span> for code, <span class="mono">snake_case</span> for database columns.</p><div class="callout warn"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><span>Every architectural decision gets an ADR before the PR merges.</span></div>`},
+  roadmap:{title:'Roadmap',icon:'🗺️',body:`<h2>Phasing</h2><p><b>Phase 1</b> Foundation → <b>Phase 2</b> Task & Documents → <b>Phase 3</b> Planning & Meetings → <b>Phase 4</b> Client portal & Governance → <b>Phase 5</b> Notifications & Billing → <b>Phase 6</b> AI add-on.</p><div class="doc-check done"><input type="checkbox" class="ck" checked>Foundation shipped</div><div class="doc-check done"><input type="checkbox" class="ck" checked>Task & Documents in beta</div><div class="doc-check"><input type="checkbox" class="ck">Planning module — active sprint</div>`}
+};
+let currentPage='architecture';
+function renderDoc(page){
+  currentPage=page;
+  $$('.page-item').forEach(p=>p.classList.toggle('active',p.dataset.page===page));
+  const d=PAGES[page]||PAGES.architecture;
+  $('#doc-title-crumb').textContent=d.title;
+  $('#doc-content').innerHTML=`<h1><span>${d.icon}</span>${d.title}</h1>
+    <div class="byline">${avHtml('mk')}<span>Edited by <b style="color:var(--fg)">Marco Keller</b> · 2 hours ago</span><span class="sep">·</span><span class="mono">v 14</span><span class="sep">·</span><span>3 contributors</span></div>
+    ${d.body}`;
+}
+$$('.page-item').forEach(p=>p.addEventListener('click',()=>renderDoc(p.dataset.page)));
+$$('.space-h').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('collapsed')));
+$('#new-doc-btn').addEventListener('click',()=>toast('New page — pick a space'));
+
+/* ============================ PLANNING ============================ */
+$('.iter-tabs').addEventListener('click',e=>{
+  const t=e.target.closest('.iter-tab');if(!t)return;
+  $$('.iter-tab').forEach(x=>x.classList.toggle('on',x===t));
+});
+$('[data-planview]').closest('.seg').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  $$('[data-planview]').forEach(x=>x.classList.toggle('on',x===b));
+  const v=b.dataset.planview;
+  $('#iter-card-14').closest('.grid').style.display=v==='board'?'':'none';
+  $('[data-od-id="backlog"]').closest('.grid').style.display=v==='board'?'':'none';
+  $('#timeline-card').style.display=v==='timeline'?'':'none';
+  if(v==='timeline')renderTimeline();
+});
+function renderTimeline(){
+  const weeks=['W10','W11','W12','W13','W14','W15','W16','W17'];
+  const todayIdx=4;
+  $('#gantt-weeks').style.gridTemplateColumns=`repeat(${weeks.length},1fr)`;
+  $('#gantt-weeks').innerHTML=weeks.map((w,i)=>`<div class="gantt-week ${i===todayIdx?'today':''}">${w}</div>`).join('');
+  const rows=[
+    {l:'Sprint 13',s:'Done',cls:'done',start:0,len:2},
+    {l:'Sprint 14',s:'Active',cls:'iter',start:2,len:2},
+    {l:'Sprint 15',s:'Planned',cls:'task',start:4,len:2},
+    {l:'v2.0 Beta',s:'Mar 28',cls:'ms',start:1.4,len:2.6},
+    {l:'Design System v1',s:'Apr 12',cls:'ms',start:3,len:4},
+    {l:'Security hardening',s:'Apr 30',cls:'ms',start:5,len:3},
+    {l:'ATL-101 SSO flow',s:'8 pts',cls:'iter',start:2.2,len:1.4},
+    {l:'ATL-107 RBAC',s:'13 pts',cls:'task',start:2,len:3}
+  ];
+  const span=weeks.length;
+  $('#gantt-rows').innerHTML=rows.map(r=>`
+    <div class="gantt-row"><div class="gl"><b>${r.l}</b><small>${r.s}</small></div>
+      <div class="gantt-track">
+        <div class="gantt-today-line" style="left:${(todayIdx+.5)/span*100}%"></div>
+        <div class="gantt-bar ${r.cls}" style="left:${r.start/span*100}%;width:${r.len/span*100}%">${r.l}</div>
+      </div>
+    </div>`).join('');
+}
+$$('.backlog-item').forEach(b=>b.addEventListener('click',()=>openDrawer(b.querySelector('.tid').textContent.replace('ATL-',''))));
+
+/* ============================ MEETINGS ============================ */
+const MTYPE={standup:['Standup','i'],review:['Review','v'],planning:['Planning','b'],client:['Client','o'],other:['Other','']};
+const MEET_STATUS={scheduled:['Scheduled','info'],completed:['Completed','ok'],cancelled:['Cancelled','neutral']};
+const MEETINGS=[
+  {id:'m1',t:'SSO design sync',ty:'planning',st:'scheduled',when:'Mar 23 · 10:00',dur:45,loc:'Zoom · helix.demos/sso',org:'mk',people:['mk','lc','dp','ay'],
+    agenda:['Walk the SSO sign-in & sign-out flows (10m)','PKCE vs. client-secret decision (10m)','Audit-log write path and immutability (15m)','Feature-flag rollout plan (10m)'],
+    notes:`<p>Settled on <b>PKCE</b> for every public client; confidential server-side apps keep a client secret. The audit log will use an append-only table with a per-row hash chain — no in-place updates, ever.</p>
+      <div class="callout warn"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><span><b>Blocker.</b> IdP sandbox credentials are still with Ops — Marco chasing today. PKCE verifier generation is unblocked in the meantime.</span></div>`,
+    actions:[
+      {d:'Provision the IdP sandbox environment',who:'mk',due:'Mar 24',done:false,linked:'101'},
+      {d:'Draft the PKCE flow diagram for the wiki',who:'lc',due:'Mar 25',done:false},
+      {d:'Confirm the feature-flag name with stakeholders',who:'ay',due:'Mar 22',done:true}
+    ]},
+  {id:'m2',t:'Daily standup',ty:'standup',st:'scheduled',when:'Mar 23 · 09:15',dur:15,loc:'Recurring · #engineering',org:'lc',people:['ay','mk','lc','dp','sr'],
+    agenda:['Round-robin: yesterday · today · blockers (15m)'],
+    notes:`<p class="small muted">Notes are captured live during the standup and posted to <span class="mono">#engineering</span>.</p>`,actions:[]},
+  {id:'m3',t:'Client demo — v2.0 beta preview',ty:'client',st:'scheduled',when:'Mar 27 · 14:00',dur:60,loc:'Google Meet · shared with Northwind',org:'ay',people:['ay','mk','jb'],
+    agenda:['Sprint 13–14 recap (10m)','Live demo: SSO sign-in + audit log (25m)','Design System v1 components (10m)','Q&A and beta feedback (15m)'],
+    notes:`<p>Aisha drives the demo, Marco owns the audit-log deep-dive, Jonas walks the new component library. <b>Demo script is locked</b> — no ad-hoc features.</p>`,
+    actions:[
+      {d:'Polish the demo dataset on staging',who:'dp',due:'Mar 26',done:false},
+      {d:'Prepare the beta feedback intake form',who:'ay',due:'Mar 26',done:false}
+    ]},
+  {id:'m4',t:'Sprint 14 planning',ty:'planning',st:'completed',when:'Mar 11 · 13:00',dur:90,loc:'Conference room B',org:'ay',people:['ay','mk','lc','dp','sr','jb'],
+    agenda:['Review Sprint 13 outcomes (15m)','Capacity check (10m)','Pull SSO + audit-log scope into the sprint (45m)','Lock the sprint goal and exit criteria (20m)'],
+    notes:`<p>Goal locked: <b>ship OAuth2 SSO behind a feature flag and land the immutable audit-log store.</b> Client-portal scaffolding stays visible but read-only. 52 points committed across 23 issues.</p>`,
+    actions:[
+      {d:'Break ATL-101 into PKCE + token-refresh subtasks',who:'mk',due:'Mar 13',done:true,linked:'101'},
+      {d:'Write the audit-log ADR',who:'mk',due:'Mar 14',done:true}
+    ]},
+  {id:'m5',t:'Audit-log architecture review',ty:'review',st:'completed',when:'Mar 15 · 11:00',dur:60,loc:'Zoom',org:'mk',people:['mk','lc','dp'],
+    agenda:['Hash-chain vs. Merkle-tree trade-offs (20m)','Retention and partitioning (15m)','Read path for reporting (15m)','Decisions & follow-ups (10m)'],
+    notes:`<p>Settled on a simple forward hash-chain — cheaper to verify and good enough for the threat model. Partition by month; reporting reads from a nightly materialized view.</p>`,
+    actions:[{d:'Spike: hash-chain verification query',who:'lc',due:'Mar 19',done:true}]},
+  {id:'m6',t:'Backlog grooming',ty:'standup',st:'cancelled',when:'Mar 18 · 16:00',dur:30,loc:'Recurring · #engineering',org:'sr',people:['ay','mk','lc'],
+    agenda:['Triage the inbox queue'],notes:`<p class="small muted">Cancelled — merged into the Sprint 14 mid-sprint check-in.</p>`,actions:[]}
+];
+let meetView='upcoming',currentMeet='m1';
+function meetPasses(m){if(meetView==='all')return true;if(meetView==='upcoming')return m.st==='scheduled';return m.st!=='scheduled';}
+function renderMeetList(){
+  const list=$('#meet-list-body');if(!list)return;
+  const items=MEETINGS.filter(meetPasses);
+  $('#meet-count').textContent=items.length+' total';
+  list.innerHTML=items.map(m=>{
+    const ty=MTYPE[m.ty],st=MEET_STATUS[m.st];
+    const extra=m.people.length>4?`<span class="av more sm">+${m.people.length-4}</span>`:'';
+    return `<div class="meet-item ${m.id===currentMeet?'sel':''}" data-meet="${m.id}">
+      <div class="row between">
+        <span class="tag ${ty[1]}">${ty[0]}</span>
+        <span class="status ${st[1]}"><span class="d"></span>${st[0]}</span>
+      </div>
+      <div class="mt-title">${m.t}</div>
+      <div class="mt-meta">
+        <span class="ic"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>${m.when}</span>
+        <span class="ic"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${m.dur}m</span>
+      </div>
+      <div class="row between" style="margin-top:8px">
+        <span class="av-g">${m.people.slice(0,4).map(p=>avHtml(p,'sm')).join('')}${extra}</span>
+        <span class="tiny mono muted">${who(m.org).split(' ')[0]} leads</span>
+      </div>
+    </div>`;
+  }).join('')||`<div class="tiny faint" style="padding:16px 14px">No meetings here.</div>`;
+  $$('#meet-list-body .meet-item').forEach(el=>el.addEventListener('click',()=>{currentMeet=el.dataset.meet;renderMeetList();renderMeetDetail();}));
+}
+function renderMeetDetail(){
+  const m=MEETINGS.find(x=>x.id===currentMeet)||MEETINGS[0];
+  const ty=MTYPE[m.ty],st=MEET_STATUS[m.st];
+  const doneN=m.actions.filter(a=>a.done).length;
+  $('#meet-detail').innerHTML=`
+    <div class="card meet-detail">
+      <div class="meet-head">
+        <div class="row" style="gap:8px">
+          <span class="tag ${ty[1]}">${ty[0]}</span>
+          <span class="status ${st[1]}"><span class="d"></span>${st[0]}</span>
+        </div>
+        <h2>${m.t}</h2>
+        <div class="meet-facts">
+          <span class="fact"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>${m.when} · ${m.dur} min</span>
+          <span class="fact"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>${m.loc}</span>
+          <span class="fact">${avHtml(m.org)}Organized by <b style="color:var(--fg-strong);margin-left:3px">${who(m.org)}</b></span>
+        </div>
+      </div>
+      <div class="grid g2">
+        <div>
+          <div class="section-title"><h2>Agenda</h2></div>
+          <ol class="agenda">${m.agenda.map(a=>`<li>${a}</li>`).join('')}</ol>
+        </div>
+        <div>
+          <div class="row between"><div class="section-title" style="margin:0"><h2>Participants</h2></div><span class="muted tiny">${m.people.length} invited</span></div>
+          <div class="stack" style="gap:8px">${m.people.map(p=>`<div class="row" style="gap:9px;font-size:13px">${avHtml(p,'sm')}<span>${who(p)}</span>${p===m.org?'<span class="tiny muted">· organizer</span>':''}</div>`).join('')}</div>
+        </div>
+      </div>
+      <div class="section-title" style="margin:18px 0 8px"><h2>Notes</h2></div>
+      <div class="rpt-body">${m.notes}</div>
+      <div class="row between" style="margin:18px 0 8px"><div class="section-title" style="margin:0"><h2>Action items</h2></div><span class="muted tiny">${doneN}/${m.actions.length} done</span></div>
+      ${m.actions.length?m.actions.map(a=>`<div class="act-item ${a.done?'done':''}">
+        <input type="checkbox" class="ckbox ck" ${a.done?'checked':''}>
+        <div class="ai-body">
+          <div class="ai-top"><b>${a.d}</b>${a.linked?`<span class="tag i" data-jump="${a.linked}">ATL-${a.linked}</span>`:''}</div>
+          <div class="ai-meta">${avHtml(a.who,'sm')}<span>${who(a.who)}</span><span>·</span><span>Due ${a.due}</span>${a.done?'<span class="status ok"><span class="d"></span>Done</span>':''}</div>
+        </div>
+        ${!a.done?'<button class="btn ghost sm" data-convert>→ Task</button>':''}
+      </div>`).join(''):`<div class="tiny faint">No action items yet for this meeting.</div>`}
+      <div class="row" style="gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <button class="btn subtle sm">Edit notes</button>
+        <button class="btn subtle sm">Add action item</button>
+        <button class="btn ghost sm" style="margin-left:auto">Copy notes</button>
+      </div>
+    </div>`;
+  $$('#meet-detail [data-jump]').forEach(t=>t.addEventListener('click',()=>{navigate('view-tasks');const id=t.dataset.jump;setTimeout(()=>openDrawer(id),150);}));
+  $$('#meet-detail [data-convert]').forEach(b=>b.addEventListener('click',()=>toast('Action item converted to a task')));
+  $$('#meet-detail .ckbox').forEach(c=>c.addEventListener('change',()=>toast('Action item updated')));
+}
+function renderMeetings(){renderMeetList();renderMeetDetail();}
+$('[data-meet-seg]').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  meetView=b.dataset.meetview;
+  $$('[data-meetview]').forEach(x=>x.classList.toggle('on',x===b));
+  renderMeetList();
+});
+
+/* ============================ REPORTS ============================ */
+const VELO=[{l:'S10',plan:40,done:36},{l:'S11',plan:44,done:41},{l:'S12',plan:48,done:38},{l:'S13',plan:46,done:40},{l:'S14',plan:52,done:34,now:true}];
+const VMAX=58;
+const STATUS_BARS=[
+  {l:'Done',n:55,c:'var(--ok)'},{l:'In Progress',n:21,c:'oklch(58% 0.12 240)'},{l:'To Do',n:33,c:'oklch(60% 0.02 255)'},{l:'In Review',n:9,c:'oklch(54% 0.14 300)'},{l:'Backlog',n:18,c:'oklch(64% 0.01 255)'}
+];
+const WORK=[['mk','Marco K.',12,true],['lc','Lin C.',10,false],['dp','Diego P.',9,false],['sr','Sara R.',7,false],['jb','Jonas B.',6,false],['ay','Aisha Y.',5,false]];
+const REPORTS=[
+  {id:'status',t:'Status report',sub:'Weekly project snapshot · auto-generated',when:'Mar 22',tone:'info',ic:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13l2 2 4-4"/>'},
+  {id:'progress',t:'Progress report',sub:'Milestone & sprint progress',when:'Mar 21',tone:'ok',ic:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/>'},
+  {id:'activity',t:'Activity report',sub:'Team activity log',when:'Mar 20',tone:'violet',ic:'<path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 4-5"/>'}
+];
+let reportView='overview',currentReport='status';
+function reportBody(id){
+  if(id==='progress')return `
+    <table class="doc-table"><thead><tr><th>Milestone</th><th>Due</th><th>Progress</th><th>Status</th></tr></thead><tbody>
+      <tr><td>v2.0 Beta</td><td class="mono">Mar 28</td><td><div class="bar warn" style="margin:0;width:130px"><i style="width:72%"></i></div></td><td><span class="status warn"><span class="d"></span>At risk</span></td></tr>
+      <tr><td>Design System v1</td><td class="mono">Apr 12</td><td><div class="bar" style="margin:0;width:130px"><i style="width:55%"></i></div></td><td><span class="status neutral"><span class="d"></span>On track</span></td></tr>
+      <tr><td>Security hardening</td><td class="mono">Apr 30</td><td><div class="bar ok" style="margin:0;width:130px"><i style="width:30%"></i></div></td><td><span class="status ok"><span class="d"></span>On track</span></td></tr>
+    </tbody></table>
+    <h3>Sprint velocity</h3>
+    <p>Rolling 5-sprint average is <b>38.6 pts</b> completed against <b>46.0 pts</b> planned — an <b>84%</b> say/do ratio. Sprint 14 is mid-flight at 34 of 52 pts.</p>`;
+  if(id==='activity')return `
+    <h3>This week's activity</h3>
+    <ul>
+      <li><b>234</b> events across <b>6</b> contributors (Mar 16–22).</li>
+      <li><b>34</b> tasks completed · <b>41</b> comments · <b>12</b> documents updated.</li>
+      <li>Most active: <b>Marco K.</b> (61 events), <b>Lin C.</b> (48), <b>Diego P.</b> (39).</li>
+    </ul>
+    <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>Reporting aggregates read-only data from Task, Planning, and Meeting modules — nothing is duplicated.</span></div>`;
+  return `
+    <h3>Summary</h3>
+    <p>Sprint 14 (<b>SSO + Audit-log MVP</b>) is on day 10 of 14 at <b>65% completion</b> — 34 of 52 points done. The <b>v2.0 Beta</b> milestone remains <b>at risk</b> for the Mar 28 cutoff: 72% complete with 7 days remaining.</p>
+    <h3>This week</h3>
+    <ul>
+      <li><b>Shipped</b> — PKCE verifier generation, expired-refresh-token regression test, RBAC policy scaffolding.</li>
+      <li><b>In flight</b> — SSO sign-in / sign-out flows (ATL-101), immutable audit-log write path.</li>
+      <li><b>Blocked</b> — IdP sandbox credentials pending from Ops.</li>
+    </ul>
+    <h3>Risks</h3>
+    <div class="callout warn"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><span><b>v2.0 Beta at risk.</b> SSO is the critical path — any slip past Mar 26 pushes the release. Mitigation: keep client-portal write access read-only for beta.</span></div>
+    <h3>Next week</h3>
+    <ul>
+      <li>Complete the SSO sign-in flow + audit-log integration (target Mar 25).</li>
+      <li>Client demo on Mar 27 — beta preview for Northwind.</li>
+      <li>Sprint 15 planning on Mar 25.</li>
+    </ul>`;
+}
+function reportKpi(label,val,delta,sub,col,pts){
+  return `<div class="card kpi">
+    <div class="label">${label}</div>
+    <div class="val" ${col?`style="color:${col}"`:''}>${val}</div>
+    <div class="sub"><span class="${delta.startsWith('▼')?'dn':'up'}">${delta}</span> ${sub}</div>
+    <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="${col||'var(--accent)'}" stroke-width="2" points="${pts}"/></svg></div>
+  </div>`;
+}
+function renderReportOverview(){
+  $('#report-root').innerHTML=`
+    <div class="grid g4" style="margin-bottom:14px" data-od-id="report-kpis">
+      ${reportKpi('Velocity','38 pts','▲ 4','3-sprint avg','var(--accent)','0,20 25,16 50,18 75,12 100,14 125,9 150,11 175,7 200,8')}
+      ${reportKpi('Completion','65%','▲ 8%','of committed','var(--ok)','0,24 25,20 50,17 75,14 100,12 125,10 150,8 175,6 200,4')}
+      ${reportKpi('Open tasks','63','▲ 6','active now',null,'0,14 25,18 50,12 75,16 100,11 125,14 150,9 175,12 200,8')}
+      ${reportKpi('Cycle time','2.4d','▼ 0.3','median',null,'0,8 25,11 50,9 75,13 100,11 125,15 150,12 175,16 200,14')}
+    </div>
+    <div class="grid g2" data-od-id="report-charts">
+      <div class="card">
+        <div class="panel-head"><h3>Tasks by status</h3><span class="muted">136 total</span></div>
+        <div class="panel-body">
+          ${STATUS_BARS.map(s=>`<div class="stbar-row"><span class="lbl">${s.l}</span><span class="track"><i style="width:${Math.round(s.n/55*100)}%;background:${s.c}"></i></span><span class="n">${s.n}</span></div>`).join('')}
+        </div>
+      </div>
+      <div class="card">
+        <div class="panel-head"><h3>Velocity</h3><span class="muted">last 5 sprints</span></div>
+        <div class="panel-body">
+          <div class="velo">${VELO.map(v=>`<div class="vcol ${v.now?'vnow':''}"><div class="vbars"><div class="vbar plan" style="height:${Math.round(v.plan/VMAX*112)}px"></div><div class="vbar done" style="height:${Math.round(v.done/VMAX*112)}px"></div></div><span class="vlbl">${v.l}</span></div>`).join('')}</div>
+          <div class="row" style="gap:14px;margin-top:10px"><span class="tiny mono muted">▒ Committed</span><span class="tiny mono" style="color:var(--accent)">█ Completed</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px" data-od-id="report-workload">
+      <div class="panel-head"><h3>Throughput by assignee</h3><span class="muted">Sprint 14</span></div>
+      <div class="panel-body">${WORK.map(w=>`<div class="work-row">${avHtml(w[0],'sm')}<span class="nm">${w[1]}</span><div class="wbar"><i style="width:${Math.round(w[2]/12*100)}%" ${w[3]?'class="over"':''}></i></div><span class="n">${w[2]}</span></div>`).join('')}</div>
+    </div>`;
+}
+function renderReportList(){
+  const r=REPORTS.find(x=>x.id===currentReport)||REPORTS[0];
+  $('#report-root').innerHTML=`
+    <div class="grid g3" style="margin-bottom:14px" data-od-id="report-cards">
+      ${REPORTS.map(x=>`<div class="rpt-card ${x.id===currentReport?'sel':''}" data-rpt="${x.id}">
+        <div class="rc-top">
+          <div class="rc-ic" style="background:var(--${x.tone}-bg);color:var(--${x.tone})"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${x.ic}</svg></div>
+          <div><h4>${x.t}</h4><div class="rc-sub">${x.sub}</div></div>
+        </div>
+        <div class="row between"><span class="tiny mono muted">Last run · ${x.when}</span><span class="tiny" style="color:var(--accent)">${x.id===currentReport?'Viewing':'Open'} →</span></div>
+      </div>`).join('')}
+    </div>
+    <div class="card" data-od-id="report-viewer">
+      <div class="panel-head"><h3>${r.t}</h3><span class="muted">Generated ${r.when}</span>
+        <div class="right"><button class="btn subtle sm" data-exp="pdf">Export PDF</button><button class="btn subtle sm" data-exp="csv">Export CSV</button></div>
+      </div>
+      <div class="panel-body rpt-body">${reportBody(r.id)}</div>
+    </div>`;
+  $$('#report-root [data-rpt]').forEach(c=>c.addEventListener('click',()=>{currentReport=c.dataset.rpt;renderReportList();}));
+  $$('#report-root [data-exp]').forEach(b=>b.addEventListener('click',()=>toast('Exported '+r.t+' · '+b.dataset.exp.toUpperCase())));
+}
+function renderReports(){if(reportView==='overview')renderReportOverview();else renderReportList();}
+$('[data-rep-seg]').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  reportView=b.dataset.repview;
+  $$('[data-repview]').forEach(x=>x.classList.toggle('on',x===b));
+  renderReports();
+});
+$$('[data-repexport]').forEach(b=>b.addEventListener('click',()=>toast('Exported dashboard · '+b.dataset.repexport.toUpperCase())));
+$('[data-od-id="notif-markall"]').addEventListener('click',()=>{
+  $$('.notif-item.unread').forEach(n=>{n.classList.remove('unread');n.classList.add('read');});
+  const c=$('.card[data-od-id=dashboard-notifications] .panel-head .muted'); if(c)c.textContent='All caught up';
+  toast('Marked all as read');
+});
+
+/* ============================ AGREEMENTS ============================ */
+const AGR_TYPE={
+  sow:{l:'SOW',ic:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h4M8 17h6"/>',tone:'accent'},
+  nda:{l:'NDA',ic:'<path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6z"/>',tone:'violet'},
+  contract:{l:'Contract',ic:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13l2 2 4-4"/>',tone:'info'},
+  proposal:{l:'Proposal',ic:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 11h6M9 15h4"/>',tone:'warn'}
+};
+const AGR_ST={draft:['Draft','neutral'],sent:['Sent','info'],accepted:['Accepted','ok'],rejected:['Rejected','danger'],expired:['Expired','warn']};
+const NOW_AGR=+new Date('2025-03-24');
+let AGREEMENTS=[
+  {id:'AGR-301',t:'Master Services Agreement',ty:'contract',st:'accepted',party:'Acme Corporation',val:240000,cur:'USD',start:'2025-01-01',end:'2025-12-31',signed:'2024-12-15',sent:'2024-12-02',owner:'ay',docs:['Master services agreement','Northwind SOW'],terms:'Master terms governing all Atlas work \u2014 monthly net-15 billing, IP assignment on full payment, mutual indemnification capped at fees paid in the prior 12 months, and a 30-day cure period for material breach.'},
+  {id:'AGR-302',t:'Platform 2.0 Statement of Work',ty:'sow',st:'accepted',party:'Acme Corporation',val:180000,cur:'USD',start:'2025-03-01',end:'2025-08-31',signed:'2025-02-20',sent:'2025-02-18',owner:'ay',docs:['Sprint 14 SOW'],terms:'Fixed-fee SOW for the Atlas Platform 2.0 delivery across six monthly milestones. Acceptance criteria defined per epic; any scope change requires a written amendment. Beta cutoff Mar 28, GA Aug 31.'},
+  {id:'AGR-303',t:'Mutual Non-Disclosure Agreement',ty:'nda',st:'accepted',party:'Globex Industries',val:null,cur:null,start:'2025-02-10',end:'2027-02-09',signed:'2025-02-10',sent:'2025-02-05',owner:'mk',docs:[],terms:'Two-year mutual NDA covering evaluation of the analytics module for a potential Globex partnership. Standard carve-outs for residual knowledge and independently developed IP; confidential info marked in writing.'},
+  {id:'AGR-304',t:'Analytics Module Statement of Work',ty:'sow',st:'sent',party:'Contoso Ltd',val:96000,cur:'USD',start:null,end:null,signed:null,sent:'2025-03-18',owner:'ay',docs:['Sprint 14 SOW'],sigClient:null,sigOwner:null,terms:'Time-and-materials SOW for the reporting & analytics module \u2014 480 hours over 12 weeks at the standard rate card (Appendix A). Awaiting Contoso counter-signature; work blocked until accepted.'},
+  {id:'AGR-305',t:'Mobile Companion App Proposal',ty:'proposal',st:'draft',party:'Initech',val:54000,cur:'USD',start:null,end:null,signed:null,sent:null,owner:'jb',docs:[],terms:'Draft proposal for an iOS + Android companion app scoped off the Atlas API. Fixed price, 10-week build. Scope, timeline, and rate pending internal review before sending to Initech.'},
+  {id:'AGR-306',t:'Data Migration SOW',ty:'sow',st:'expired',party:'Hooli',val:32000,cur:'USD',start:'2024-12-01',end:'2025-02-28',signed:'2024-11-20',sent:'2024-11-15',owner:'mk',docs:[],terms:'One-off data migration from the Hooli legacy CRM \u2014 completed and accepted Feb 28. Retained for audit; no active obligations. Renewal not requested.'},
+  {id:'AGR-307',t:'Support & SLA Addendum',ty:'contract',st:'accepted',party:'Acme Corporation',val:48000,cur:'USD',start:'2024-09-01',end:'2025-04-15',signed:'2024-08-20',sent:'2024-08-15',owner:'mk',docs:[],terms:'Annual support addendum \u2014 99.9% uptime SLA, 4-hour P1 response, 50 support hours/month included. Expires Apr 15; renewal quote (AGR-304 analytics) in flight.'}
+];
+let agrFilter='all',currentAgr='AGR-301';
+const agrById=id=>AGREEMENTS.find(a=>a.id===id);
+function toneVars(t){return t==='accent'?['var(--accent-soft)','var(--accent)']:[`var(--${t}-bg)`,`var(--${t})`];}
+function fmtD(s){if(!s)return'\u2014';const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const d=new Date(s+'T00:00:00');return m[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();}
+function money(v,c){if(v==null)return'\u2014';const sym=c==='USD'?'$':c==='EUR'?'\u20ac':c==='GBP'?'\u00a3':(c?c+' ':'');return sym+v.toLocaleString('en');}
+function agrKpis(){return{value:AGREEMENTS.filter(a=>a.st==='accepted').reduce((n,a)=>n+(a.val||0),0),active:AGREEMENTS.filter(a=>a.st==='accepted').length,pending:AGREEMENTS.filter(a=>a.st==='sent'||a.st==='draft').length,soon:AGREEMENTS.filter(a=>a.end&&a.st!=='rejected'&&a.st!=='expired'&&(+new Date(a.end)-NOW_AGR)<=30*864e5&&(+new Date(a.end)-NOW_AGR)>=0).length};}
+function agrKpi(label,val,sub,col){return `<div class="card kpi"><div class="label">${label}</div><div class="val" ${col?`style="color:${col}"`:''}>${val}</div><div class="sub">${sub}</div></div>`;}
+function renderAgrKpis(){const k=agrKpis();$('#agr-kpis-root').innerHTML=`<div class="grid g4" style="margin-bottom:14px" data-od-id="agr-kpis">${agrKpi('Contract value',money(k.value,'USD'),k.active+' accepted','var(--accent)')}${agrKpi('Active',k.active,'accepted','var(--ok)')}${agrKpi('Pending signature',k.pending,'awaiting client',null)}${agrKpi('Expiring soon',k.soon,'\u2264 30 days','var(--warn)')}</div>`;}
+function renderAgrList(){let list=AGREEMENTS;if(agrFilter==='active')list=list.filter(a=>a.st==='accepted');else if(agrFilter==='pending')list=list.filter(a=>a.st==='sent'||a.st==='draft');else if(agrFilter==='expiring')list=list.filter(a=>a.end&&a.st!=='rejected'&&a.st!=='expired'&&(+new Date(a.end)-NOW_AGR)<=30*864e5&&(+new Date(a.end)-NOW_AGR)>=0);
+  $('#agr-count').textContent=`${list.length} ${agrFilter==='all'?'total':agrFilter}`;
+  $('#agr-list-body').innerHTML=list.map(a=>{const ty=AGR_TYPE[a.ty],st=AGR_ST[a.st],[bg,fg]=toneVars(ty.tone);return `<div class="agr-item ${a.id===currentAgr?'sel':''}" data-agr="${a.id}"><div class="ai-top"><span class="ai-ic" style="background:${bg};color:${fg}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${ty.ic}</svg></span><span class="ai-title">${a.t}</span></div><div class="ai-mid"><span class="tag">${ty.l}</span><span class="status ${st[1]}"><span class="d"></span>${st[0]}</span></div><div class="ai-foot"><span class="small muted truncate" style="max-width:150px">${a.party}</span><span class="small mono">${money(a.val,a.cur)}</span></div></div>`;}).join('')||`<div class="tiny faint" style="padding:20px;text-align:center">No agreements in this view</div>`;
+  $$('#agr-list-body .agr-item').forEach(el=>el.addEventListener('click',()=>{currentAgr=el.dataset.agr;renderAgrList();renderAgrDetail();}));
+}
+function renderAgrDetail(){const a=agrById(currentAgr)||AGREEMENTS[0];const ty=AGR_TYPE[a.ty],st=AGR_ST[a.st],[bg,fg]=toneVars(ty.tone);
+  const prog={draft:0,sent:1,accepted:2,rejected:2,expired:2}[a.st];
+  const finalLbl={accepted:'Accepted & counter-signed',rejected:'Rejected by client',expired:'Agreement expired'}[a.st]||'Counter-signed';
+  const actions=a.st==='draft'?`<button class="btn primary sm" data-agract="sent">Send to client</button>`:a.st==='sent'?`<button class="btn primary sm" data-od-id="agr-sign">Review &amp; sign</button><button class="btn subtle sm" data-agract="rejected">Decline</button>`:a.st==='accepted'?`<button class="btn ghost sm" data-od-id="agr-sign">View signed copy</button>`:'';
+  const steps=[
+    {t:'Draft created',d:who(a.owner)+' prepared the '+ty.l+(a.start?' \u00b7 effective '+fmtD(a.start):''),cls:prog>=0?'done':'future',cur:a.st==='draft'},
+    {t:'Sent to '+a.party,d:a.sent?'Sent '+fmtD(a.sent):'Not yet sent',cls:a.sent||(prog>=1)?'done':'future',cur:a.st==='sent'},
+    {t:finalLbl,d:a.st==='accepted'?(a.signed?'Counter-signed '+fmtD(a.signed):'Awaiting counter-signature'):a.st==='rejected'?'Declined '+(a.sent?fmtD(a.sent):''):a.st==='expired'?'Term ended '+(a.end?fmtD(a.end):''):'Awaiting outcome',cls:prog>=2?'done':'future',cur:prog===2,dot:a.st==='rejected'?'danger':a.st==='expired'?'warn':''}
+  ];
+  $('#agr-detail').innerHTML=`
+    <div class="card agr-detail" data-od-id="agr-detail">
+      <div class="agr-head">
+        <span class="agr-icbig" style="background:${bg};color:${fg}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">${ty.ic}</svg></span>
+        <div style="flex:1;min-width:0">
+          <div class="row" style="gap:7px;align-items:center;flex-wrap:wrap"><span class="tag">${ty.l}</span><span class="status ${st[1]}"><span class="d"></span>${st[0]}</span><span class="tid">${a.id}</span></div>
+          <h2>${a.t}</h2>
+          <div class="agr-sub">${a.party}</div>
+        </div>
+        ${actions?`<div class="agr-actions">${actions}</div>`:''}
+      </div>
+      <div class="agr-facts" data-od-id="agr-facts">
+        <div class="fact"><div class="fl">Contract value</div><div class="fv">${money(a.val,a.cur)}</div></div>
+        <div class="fact"><div class="fl">Effective</div><div class="fv">${a.start?fmtD(a.start):'\u2014'}</div></div>
+        <div class="fact"><div class="fl">Expires</div><div class="fv">${a.end?fmtD(a.end):'\u2014'}</div></div>
+        <div class="fact"><div class="fl">Counter-signed</div><div class="fv">${a.signed?fmtD(a.signed):'\u2014'}</div></div>
+      </div>
+      <div class="agr-parties">
+        <div class="agr-party"><span class="av a" style="width:34px;height:34px;font-size:12px">NW</span><div><div class="role">Provider</div><div class="nm">Northwind</div></div></div>
+        <div class="agr-party"><span class="av b" style="width:34px;height:34px;font-size:12px">${a.party.split(' ').map(w=>w[0]).slice(0,2).join('')}</span><div><div class="role">Client</div><div class="nm">${a.party}</div></div></div>
+      </div>
+      <div class="agr-sec">Lifecycle</div>
+      <div class="timeline" data-od-id="agr-lifecycle">${steps.map(s=>`<div class="tl-step ${s.cls} ${s.cur?'cur':''} ${s.dot||''}"><div class="tl-t">${s.t}</div><div class="tl-d">${s.d}</div></div>`).join('')}</div>
+      ${a.docs.length?`<div class="agr-sec">Attached documents</div><div class="agr-docs">${a.docs.map(d=>`<div class="agr-doc" data-doc="${d}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="color:var(--accent);flex:none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span class="dnm">${d}</span><span class="tiny muted" style="margin-left:auto">Open \u2192</span></div>`).join('')}</div>`:''}
+      <div class="agr-sec">Terms</div>
+      <div class="agr-terms">${a.terms}</div>
+    </div>`;
+  $$('#agr-detail [data-agract]').forEach(b=>b.addEventListener('click',()=>{const x=agrById(currentAgr);const to=b.dataset.agract;x.st=to;if(to==='sent')x.sent='2025-03-24';if(to==='accepted'){x.signed='2025-03-24';if(!x.start)x.start='2025-03-24';}toast(`${x.id} \u2192 ${AGR_ST[to][0]}`);renderAgreements();}));
+  $$('#agr-detail [data-doc]').forEach(d=>d.addEventListener('click',()=>{navigate('view-documents');toast('Opening '+d.dataset.doc);}));
+  const sbtn=$('#agr-detail [data-od-id="agr-sign"]');if(sbtn)sbtn.addEventListener('click',()=>openSignPage(currentAgr));
+}
+function renderAgreements(){renderAgrKpis();renderAgrList();renderAgrDetail();}
+$('[data-agr-seg]').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;agrFilter=b.dataset.agrview;$$('[data-agrview]').forEach(x=>x.classList.toggle('on',x===b));renderAgrList();});
+$$('[data-agrexport]').forEach(b=>b.addEventListener('click',()=>toast('Exported agreements \u00b7 '+b.dataset.agrexport.toUpperCase())));
+$('[data-od-id="agr-new"]').addEventListener('click',openAgrModal);
+/* ============================ NEW AGREEMENT MODAL ============================ */
+const AGR_TP_HINT={
+  sow:{ph:'Statement of work title',sub:'Deliverables · fixed fee or T&M',terms:'Scope, deliverables, milestones, acceptance criteria, and rate card.'},
+  nda:{ph:'Non-disclosure agreement title',sub:'Mutual confidentiality',terms:'Term length, confidential-info definition, carve-outs, and residual-knowledge clause.'},
+  contract:{ph:'Master contract title',sub:'Governing agreement',terms:'Billing terms, IP, indemnification, liability cap, and termination.'},
+  proposal:{ph:'Proposal title',sub:'Pre-contract estimate',terms:'Proposed scope, timeline, pricing, and validity period.'}
+};
+let agrFormTy='sow';
+function renderAgrTp(){$('#agr-tp').innerHTML=Object.entries(AGR_TYPE).map(([k,v])=>{const [bg,fg]=toneVars(v.tone);return `<button type="button" class="tp-card ${k===agrFormTy?'on':''}" data-ty="${k}"><span class="tp-ic" style="background:${bg};color:${fg}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${v.ic}</svg></span><span class="tp-l">${v.l}</span><span class="tp-s">${AGR_TP_HINT[k].sub}</span></button>`;}).join('');}
+function fillAgrOwner(){const sel=$('#agr-owner');sel.innerHTML=Object.entries(P).map(([id,p])=>`<option value="${id}">${p[0]} · ${p[3]}</option>`).join('');sel.value='ay';}
+function syncAgrTy(){$('#agr-title').placeholder=AGR_TP_HINT[agrFormTy].ph;}
+function openAgrModal(){fillAgrOwner();agrFormTy='sow';$('#agr-title').value='';$('#agr-party').value='';$('#agr-val').value='';$('#agr-cur').value='USD';$('#agr-start').value='';$('#agr-end').value='';$('#agr-terms').value='';renderAgrTp();syncAgrTy();$('#agr-modal').classList.add('show');openScrim();setTimeout(()=>$('#agr-title').focus(),40);}
+function closeAgrModal(){$('#agr-modal').classList.remove('show');if(!$('#drawer').classList.contains('show')&&!$('#task-modal').classList.contains('show')&&!$('#cmdk').classList.contains('show'))$('#scrim').classList.remove('show');}
+$('#agr-tp').addEventListener('click',e=>{const b=e.target.closest('[data-ty]');if(!b)return;agrFormTy=b.dataset.ty;renderAgrTp();syncAgrTy();});
+$$('[data-close-agr]').forEach(b=>b.addEventListener('click',closeAgrModal));
+$('#agr-modal').addEventListener('click',e=>{if(e.target===$('#agr-modal'))closeAgrModal();});
+$('#agr-create').addEventListener('click',()=>{
+  const title=$('#agr-title').value.trim()||AGR_TYPE[agrFormTy].l;
+  const nextId=Math.max(0,...AGREEMENTS.map(a=>+a.id.split('-')[1]))+1;
+  const id='AGR-'+nextId;
+  const rawv=$('#agr-val').value;
+  const a={id,t:title,ty:agrFormTy,st:'draft',party:$('#agr-party').value.trim()||'Unnamed client',val:rawv?+rawv:null,cur:rawv?$('#agr-cur').value:null,start:$('#agr-start').value||null,end:$('#agr-end').value||null,sent:null,signed:null,owner:$('#agr-owner').value,docs:[],terms:$('#agr-terms').value.trim()||AGR_TP_HINT[agrFormTy].terms};
+  AGREEMENTS.unshift(a);currentAgr=id;closeAgrModal();
+  if($('#view-agreements').classList.contains('active'))renderAgreements();
+  toast(`Created ${id} as draft`);
+});
+
+/* ============================ SIGN PAGE (e-signature) ============================ */
+let signAgr=null,signStep=0,signMode='draw';
+const sigPad={cv:null,ctx:null,ink:false,has:false,color:'#1a1d2e'};
+function escHtml(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function inkColor(){try{const v=getComputedStyle(document.documentElement).getPropertyValue('--fg-strong').trim();return v||'#1a1d2e';}catch(e){return '#1a1d2e';}}
+function synthSig(a,role){
+  const nm=role==='client'?(a.party||'Client'):(who(a.owner)+' Northwind');
+  return {mode:'type',data:nm.split(' ').slice(0,2).join(' '),name:nm,date:a.signed||a.sent||'2025-03-24'};
+}
+function clientSig(a){return a.sigClient||(a.st==='accepted'?synthSig(a,'client'):null);}
+function ownerSig(a){return a.sigOwner||(a.st==='accepted'?synthSig(a,'owner'):null);}
+function sigBlockHTML(role,name,sig,key,active){
+  const signed=!!sig;
+  return `<div class="sig-block ${signed?'signed':'pending'} ${active?'active':''}" data-od-id="sig-${key}">
+    <div class="sr"><span class="sd"></span>${role}</div>
+    <div class="sname">${escHtml(name)}</div>
+    <div class="sig-render">${signed?(sig.mode==='draw'?`<img class="ink" src="${sig.data}" alt="signature">`:`<span class="typed">${escHtml(sig.data)}</span>`):`<span class="unsigned">${active?'Sign in the panel →':'Awaiting signature'}</span>`}</div>
+    <div class="sig-foot"><span>${signed?'Signed':'Pending'}</span><span class="sdate">${sig?fmtD(sig.date):'\u2014'}</span></div>
+  </div>`;
+}
+function renderSign(){
+  const a=agrById(signAgr);if(!a){closeSign();return;}
+  const c=clientSig(a),o=ownerSig(a);
+  const done=!!(a.sigClient&&a.sigOwner)||a.st==='accepted'&&a.sigClient&&a.sigOwner;
+  const fully=!!(a.sigClient&&a.sigOwner);
+  const clientName=a.party,ownerName=who(a.owner);
+  $('#sp-status').className='status '+(fully?'ok':signStep===0?'info':'violet');
+  $('#sp-status').innerHTML=`<span class="d"></span>${fully?'Fully executed':signStep===0?'Awaiting client signature':'Awaiting owner counter-signature'}`;
+  $('#sp-title').textContent=a.t;
+  $('#sp-id').textContent=a.id;
+  const ty=AGR_TYPE[a.ty];
+  $('#sp-doc').innerHTML=`
+    <div class="doc-kicker">${ty.l} \u00b7 ${a.id}</div>
+    <h1>${escHtml(a.t)}</h1>
+    <div class="doc-parties">
+      <div class="dp"><span class="dr">Provider</span><span class="dn">Northwind Software House</span></div>
+      <div class="dp"><span class="dr">Client</span><span class="dn">${escHtml(a.party)}</span></div>
+    </div>
+    <div class="doc-meta">
+      <div class="mc"><div class="ml">Contract value</div><div class="mv">${money(a.val,a.cur)}</div></div>
+      <div class="mc"><div class="ml">Effective</div><div class="mv">${a.start?fmtD(a.start):'On signature'}</div></div>
+      <div class="mc"><div class="ml">Expires</div><div class="mv">${a.end?fmtD(a.end):'\u2014'}</div></div>
+    </div>
+    <h3>Terms</h3>
+    <p class="doc-terms">${escHtml(a.terms)}</p>
+    <div class="doc-sigs">
+      ${sigBlockHTML('Client',clientName,c,'client',!fully&&signStep===0&&a.st!=='accepted')}
+      ${sigBlockHTML('Provider \u00b7 authorised signatory',ownerName+' \u00b7 Northwind',o,'owner',!fully&&signStep===1&&a.st!=='accepted')}
+    </div>`;
+  // signing order
+  const steps=[{done:!!c,cur:!fully&&!c,title:'Client signature',sub:clientName},{done:!!o,cur:!fully&&!!a.sigClient&&!a.sigOwner,title:'Owner counter-signature',sub:ownerName+' \u00b7 Northwind'}];
+  $('#sp-order').innerHTML=steps.map(s=>{const ic=s.done?'<path d="M20 6 9 17l-5-5"/>':s.cur?'<path d="M12 19V5M5 12l7-7 7 7"/>':'';const inner=s.done||s.cur?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${s.done?3:2.2}" stroke-linecap="round" stroke-linejoin="round">${ic}</svg>`:'<svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>';return `<div class="so-step ${s.done?'done':''} ${s.cur?'cur':''}"><div class="so-ic">${inner}</div><div><div class="so-t">${s.title}</div><div class="so-d">${escHtml(s.sub)}</div></div></div>`;}).join('');
+  // panel card
+  if(fully||a.st==='accepted'&&(a.sigClient&&a.sigOwner)){renderSignDone(a);return;}
+  renderSignPanel(a,clientName,ownerName);
+}
+function renderSignPanel(a,clientName,ownerName){
+  const role=signStep===0?'client':'owner';
+  const roleLabel=signStep===0?'Client':'Provider signatory';
+  const signerName=signStep===0?clientName:(who(a.owner)+' Northwind');
+  const av=signStep===0?`<span class="av b" style="width:36px;height:36px;font-size:12px">${escHtml((clientName||'').split(' ').map(w=>w[0]).slice(0,2).join(''))}</span>`:`<span class="av a" style="width:36px;height:36px;font-size:12px">NW</span>`;
+  $('#sp-panel-card').innerHTML=`
+    <div class="sp-card">
+      <div class="sc-h">${av}<div><div class="sc-role">Signing as ${roleLabel}</div><div class="sc-name">${escHtml(signerName)}</div></div></div>
+      <div class="sp-tog" data-sigtog><button type="button" class="${signMode==='draw'?'on':''}" data-m="draw">Draw</button><button type="button" class="${signMode==='type'?'on':''}" data-m="type">Type</button></div>
+      <div id="sp-sig-field"></div>
+      <div class="sp-name-row"><span class="flab">Full legal name</span><input class="fld" id="sp-name" value="${escHtml(signerName)}" placeholder="Type your full legal name"></div>
+      <label class="sp-attest"><input type="checkbox" id="sp-attest"><span>I am ${escHtml(signerName)} and I agree to be bound by this ${AGR_TYPE[a.ty].l}. This is my electronic signature.</span></label>
+      <button class="btn primary sp-cta" id="sp-signbtn" disabled>Sign as ${signStep===0?'Client':'Owner'}</button>
+    </div>`;
+  renderSigField();
+  $$('[data-sigtog] button').forEach(b=>b.addEventListener('click',()=>{signMode=b.dataset.m;renderSignPanel(a,clientName,ownerName);}));
+  $('#sp-attest').addEventListener('change',refreshSignBtn);
+  $('#sp-name').addEventListener('input',()=>{updateTypePrev();refreshSignBtn();});
+  $('#sp-signbtn').addEventListener('click',()=>doSign(a,role));
+}
+function renderSigField(){
+  const f=$('#sp-sig-field');
+  if(signMode==='draw'){
+    f.innerHTML=`<div class="sig-field draw" id="sig-pad"><div class="x-mark"></div><div class="x-line"></div><canvas id="sig-canvas"></canvas><div class="x-hint">Draw your signature above the line</div></div><button class="btn ghost sm" id="sig-clear" style="margin-top:8px">Clear &amp; redraw</button>`;
+    setupPad();
+    $('#sig-clear').addEventListener('click',()=>{clearPad();refreshSignBtn();});
+  }else{
+    const nm=$('#sp-name')?($('#sp-name').value||''):'';
+    f.innerHTML=`<div class="sig-preview" id="sig-typeprev"><span class="x-line"></span>${nm.trim()?`<span class="typed">${escHtml(nm.trim())}</span>`:`<span class="ph">Type your name below — it appears here as your signature</span>`}</div>`;
+  }
+}
+function updateTypePrev(){const p=$('#sig-typeprev');if(!p)return;const n=($('#sp-name').value||'').trim();p.innerHTML=`<span class="x-line"></span>${n?`<span class="typed">${escHtml(n)}</span>`:`<span class="ph">Type your name below — it appears here as your signature</span>`}`;}
+function refreshSignBtn(){
+  const btn=$('#sp-signbtn');if(!btn)return;
+  const at=$('#sp-attest').checked;const n=($('#sp-name').value||'').trim();
+  const valid=signMode==='draw'?sigPad.has:(n.length>1);
+  btn.disabled=!(at&&valid&&n.length>1);
+}
+function setupPad(){
+  const cv=$('#sig-canvas');if(!cv)return;sigPad.cv=cv;sigPad.ctx=cv.getContext('2d');sigPad.has=false;sigPad.ink=false;
+  const dpr=window.devicePixelRatio||1;const r=cv.getBoundingClientRect();
+  cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(r.height*dpr));
+  const ctx=sigPad.ctx;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.lineWidth=2.4;ctx.lineCap='round';ctx.lineJoin='round';
+  sigPad.color=inkColor();ctx.strokeStyle=sigPad.color;
+  const pos=e=>{const rect=cv.getBoundingClientRect();return{x:e.clientX-rect.left,y:e.clientY-rect.top};};
+  const start=e=>{e.preventDefault();try{cv.setPointerCapture(e.pointerId);}catch(_){}sigPad.ink=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);};
+  const move=e=>{if(!sigPad.ink)return;e.preventDefault();const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();if(!sigPad.has){sigPad.has=true;refreshSignBtn();}};
+  const end=()=>{sigPad.ink=false;};
+  cv.addEventListener('pointerdown',start);cv.addEventListener('pointermove',move);cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+}
+function clearPad(){const cv=sigPad.cv,ctx=sigPad.ctx;if(!cv||!ctx)return;ctx.clearRect(0,0,cv.width,cv.height);sigPad.has=false;}
+function doSign(a,role){
+  const name=($('#sp-name').value||'').trim();if(name.length<2){toast('Enter your full legal name');return;}
+  if(!$('#sp-attest').checked){toast('Please confirm the attestation');return;}
+  const date='2025-03-24';
+  let data;
+  if(signMode==='draw'){if(!sigPad.has){toast('Draw your signature first');return;}data=sigPad.cv.toDataURL('image/png');}
+  else data=name;
+  const sig={mode:signMode,data,name,date};
+  if(role==='client'){a.sigClient=sig;toast('Client signature applied');signStep=1;signMode='draw';renderSign();}
+  else{a.sigOwner=sig;a.st='accepted';a.signed=a.signed||date;if(!a.start)a.start=date;toast('Fully executed \u00b7 '+a.id);renderSign();}
+}
+function renderSignDone(a){
+  $('#sp-panel-card').innerHTML=`
+    <div class="sp-done">
+      <div class="check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h4>Fully executed</h4>
+      <p>${a.id} was signed by both parties on ${fmtD(a.sigOwner?a.sigOwner.date:(a.signed||'2025-03-24'))}. A signed PDF has been emailed to ${escHtml(a.party)} and Northwind.</p>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:18px;flex-wrap:wrap">
+        <button class="btn ghost sm" data-od-id="sp-download">Download signed PDF</button>
+        <button class="btn primary sm" data-od-id="sp-back2">Back to agreements</button>
+      </div>
+    </div>`;
+  $('[data-od-id="sp-download"]').addEventListener('click',()=>toast('Generating signed PDF \u00b7 '+a.id));
+  $('[data-od-id="sp-back2"]').addEventListener('click',closeSign);
+}
+function openSignPage(id){
+  const a=agrById(id);if(!a){toast('Agreement not found');return;}
+  signAgr=id;
+  signStep=(a.sigClient&&!a.sigOwner)?1:0;
+  signMode='draw';
+  $('#sign-page').classList.add('open');
+  renderSign();
+}
+function closeSign(){
+  $('#sign-page').classList.remove('open');
+  signAgr=null;sigPad.cv=null;sigPad.ctx=null;sigPad.has=false;
+  if($('#view-agreements').classList.contains('active'))renderAgreements();
+}
+$('[data-od-id="sp-exit"]').addEventListener('click',closeSign);
+$('[data-od-id="sp-share"]').addEventListener('click',()=>toast('Share link copied \u00b7 helix.app/sign/'+(signAgr||'')));
+
+/* ============================ COMMAND PALETTE ============================ */
+const CMD=[
+  {g:'Navigate',items:[['Go to Dashboard','view-dashboard'],['Go to Tasks','view-tasks'],['Go to Documents','view-documents'],['Go to Planning','view-planning'],['Go to Meetings','view-meetings'],['Go to Reports','view-reports'],['Go to Agreements','view-agreements']]},
+  {g:'Create',items:[['New task','#new-task'],['New page','#new-doc'],['New iteration','#plan'],['Review pending agreement','sign:AGR-304']]},
+  {g:'Tasks',items:TASKS.slice(0,6).map(t=>[`ATL-${t.id} · ${t.t}`,'task:'+t.id])}
+];
+function renderCmdk(q=''){
+  const ql=q.toLowerCase();
+  $('#cmdk-res').innerHTML=CMD.map(grp=>{
+    const its=grp.items.filter(it=>it[0].toLowerCase().includes(ql));
+    if(!its.length)return '';
+    return `<div class="grp">${grp.g}</div>`+its.map((it,i)=>`<div class="ritem ${i===0?'sel':''}" data-cmd="${it[1]}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>${it[0]}</span><span class="hint">↵</span></div>`).join('');
+  }).join('')||`<div class="grp">No results</div>`;
+  $$('#cmdk-res .ritem').forEach(r=>r.addEventListener('click',()=>runCmd(r.dataset.cmd)));
+}
+function runCmd(c){
+  closeCmdk();
+  if(c.startsWith('view-'))navigate(c);
+  else if(c==='task:'+c.split(':')[1]){const id=c.split(':')[1];navigate('view-tasks');setTimeout(()=>openDrawer(id),120);}
+  else if(c==='#new-task')openModal();
+  else if(c==='#new-doc'){navigate('view-documents');toast('New page — pick a space');}
+  else if(c==='#plan')navigate('view-planning');
+  else if(c.startsWith('sign:')){const sid=c.split(':')[1];if(agrById(sid)){if(!$('#view-agreements').classList.contains('active'))navigate('view-agreements');openSignPage(sid);}else toast('Agreement not found');}
+}
+function openCmdk(){openScrim();$('#cmdk').classList.add('show');$('#cmdk-input').value='';renderCmdk();setTimeout(()=>$('#cmdk-input').focus(),40);}
+function closeCmdk(){$('#cmdk').classList.remove('show');if(!$('#drawer').classList.contains('show')&&!$('#task-modal').classList.contains('show'))$('#scrim').classList.remove('show');}
+$('#cmdk-input').addEventListener('input',e=>renderCmdk(e.target.value));
+$('#cmdk').addEventListener('click',e=>{if(e.target===$('#cmdk'))closeCmdk();});
+
+/* ============================ TOASTS ============================ */
+function toast(msg){
+  const t=document.createElement('div');t.className='toast';
+  t.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>${msg}`;
+  $('#toasts').appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .2s';t.style.opacity='0';setTimeout(()=>t.remove(),200);},2200);
+}
+
+/* ============================ KEYBOARD ============================ */
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openCmdk();}
+  if(e.key==='Escape'){if($('#sign-page').classList.contains('open')){closeSign();}else closeAll();}
+  if(e.key==='Enter'&&$('#cmdk').classList.contains('show')){const sel=$('.cmdk .ritem.sel');if(sel)runCmd(sel.dataset.cmd);}
+});
+
+/* ============================ MY TASKS + INIT ============================ */
+function renderMyTasks(){
+  $('#my-tasks-list').innerHTML=TASKS.filter(t=>t.a==='ay'&&t.s!=='done').map(t=>{
+    const st=ST[t.s];const late=t.due==='Mar 22';
+    return `<div class="mtask" data-id="${t.id}"><span class="tid">ATL-${t.id}</span><span class="tt">${t.t}</span><span class="status ${st[1]}"><span class="d"></span>${st[0]}</span><span class="mono tiny ${late?'':''}" style="color:${late?'var(--danger)':'var(--faint)'}">${t.due}</span></div>`;
+  }).join('');
+  $$('#my-tasks-list .mtask').forEach(m=>m.addEventListener('click',()=>{navigate('view-tasks');setTimeout(()=>openDrawer(m.dataset.id),120);}));
+}
+
+function init(){
+  renderMyTasks();
+  renderDoc('architecture');
+  renderTimeline();
+  renderMeetings();
+  renderReports();
+  renderAgreements();
+  let saved='view-dashboard';
+  try{saved=localStorage.getItem('helix-view')||'view-dashboard';}catch(e){}
+  if(saved!=='view-dashboard')navigate(saved);else navigate('view-dashboard');
+}
+init();
+</script>
+</body>
+</html>
