@@ -1,0 +1,41 @@
+# docker-compose — runs api, web, and postgres.
+#
+# The API ships an in-memory store seeded with the Helix demo data, so the stack
+# is fully usable without postgres. Point the API at postgres by setting
+# DATABASE_URL and swapping the repository implementation behind the service
+# layer (see packages/core/src/db/schema.ts — the Drizzle source of truth).
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      PORT: "8787"
+      # DATABASE_URL: postgres://helix:helix@postgres:5432/helix
+    ports:
+      - "8787:8787"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      VITE_API_URL: "http://api:8787"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+  # postgres:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: helix
+  #     POSTGRES_PASSWORD: helix
+  #     POSTGRES_DB: helix
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #
+  # volumes:
+  #   pgdata:

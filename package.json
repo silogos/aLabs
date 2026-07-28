@@ -1,0 +1,21 @@
+{
+  "name": "helix-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Helix — a documentation-first project management platform (Atlas Platform 2.0).",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "dev:api": "pnpm --filter @pmin/api dev",
+    "dev:web": "pnpm --filter @pmin/web dev",
+    "typecheck": "turbo run typecheck",
+    "clean": "rm -rf apps/*/dist packages/*/dist node_modules/.cache .turbo"
+  },
+  "devDependencies": {
+    "turbo": "^2",
+    "typescript": "^5"
+  },
+  "packageManager": "pnpm@10.25.0",
+  "engines": { "node": ">=18.0.0" }
+}
