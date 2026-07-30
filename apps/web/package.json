@@ -10,15 +10,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@blocknote/core": "^0.52.1",
+    "@blocknote/mantine": "^0.52.1",
+    "@blocknote/react": "^0.52.1",
+    "@mantine/core": "^8.3.18",
+    "@mantine/hooks": "^8.3.18",
     "@pmin/core": "workspace:*",
     "@tanstack/react-query": "^5",
     "react": "^19",
     "react-dom": "^19"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5",
     "typescript": "^5",
     "vite": "^7"
   }
