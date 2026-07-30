@@ -81,8 +81,8 @@ input,textarea,select{font:inherit;color:inherit}
 .brand b{font-size:14px;letter-spacing:-.01em;font-weight:650}
 .brand span{color:var(--rail-faint);font-size:11px;font-family:var(--mono);margin-left:auto}
 
-.ws-switch{margin:4px 8px 6px;border:1px solid rgba(255,255,255,.07);border-radius:var(--radius-sm);background:var(--rail-2);display:flex;align-items:center;gap:8px;padding:6px 8px;color:#e9eaf0}
-.ws-switch:hover{background:oklch(26% 0.014 255)}
+.ws-switch{margin:0;border:none;border-radius:0;background:transparent;display:flex;align-items:center;gap:9px;padding:9px 14px;color:#e9eaf0;width:100%}
+.ws-switch:hover{background:rgba(255,255,255,.05)}
 .ws-switch .dot{width:18px;height:18px;border-radius:5px;background:oklch(40% 0.06 280);flex:none;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
 .ws-switch .meta{line-height:1.2;flex:1;min-width:0}
 .ws-switch .meta b{display:block;font-size:12px;font-weight:600;color:#fff}
@@ -102,13 +102,43 @@ input,textarea,select{font:inherit;color:inherit}
 .nav-item.dim:hover{color:var(--rail-fg)}
 
 .sidebar .spacer{flex:1}
-.nav-foot{padding:6px 8px 10px;border-top:1px solid rgba(255,255,255,.06)}
+.nav-foot{position:relative;padding:6px 8px 10px;border-top:1px solid rgba(255,255,255,.06)}
 .user{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;width:100%}
 .user:hover{background:rgba(255,255,255,.05)}
 .user .av{width:26px;height:26px;border-radius:50%;flex:none;background:oklch(52% 0.14 290);color:#fff;display:grid;place-items:center;font-weight:700;font-size:11px}
 .user .meta{line-height:1.15;flex:1;min-width:0}
-.user .meta b{font-size:12.5px;color:#fff;font-weight:600}
+.user .meta b{display:block;font-size:12.5px;color:#fff;font-weight:600}
 .user .meta small{font-size:10.5px;color:var(--rail-faint)}
+.user{cursor:pointer;transition:background .12s}
+.user .av{position:relative}
+.user.on{background:rgba(255,255,255,.07)}
+.user .chev{transition:transform .14s,color .12s}
+.user.on .chev{transform:rotate(90deg);color:#fff!important}
+.user .av .pres{position:absolute;right:-2px;bottom:-2px;width:11px;height:11px;border-radius:50%;border:2px solid var(--rail);background:var(--ok);transition:background .12s}
+.me-pop{position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:var(--rail-2);border:1px solid rgba(255,255,255,.09);border-radius:var(--radius);box-shadow:var(--shadow-pop);z-index:120;padding:6px;opacity:0;pointer-events:none;transform:translateY(6px) scale(.98);transform-origin:bottom left;transition:opacity .13s,transform .13s}
+.me-pop.show{opacity:1;pointer-events:auto;transform:none}
+.me-id{display:flex;align-items:center;gap:10px;padding:8px 8px 6px}
+.me-id .av{width:38px;height:38px;font-size:14px;background:oklch(52% 0.14 290);border:none}
+.me-id .txt{min-width:0}
+.me-id .txt b{display:block;font-size:13px;color:#fff;font-weight:600;line-height:1.2}
+.me-id .txt small{display:block;font-size:11px;color:var(--rail-faint);margin-top:2px}
+.me-sep{height:1px;background:rgba(255,255,255,.07);margin:6px 2px}
+.me-grp{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--rail-faint);padding:6px 8px 3px;font-weight:600}
+.me-row{display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border-radius:6px;color:var(--rail-fg);font-size:12.5px;font-weight:500;text-align:left;background:transparent;border:none;cursor:pointer;font-family:inherit;transition:background .1s,color .1s}
+.me-row:hover{background:rgba(255,255,255,.06);color:#fff}
+.me-row svg{flex:none;opacity:.85}
+.me-row.danger{color:oklch(78% 0.16 25)}
+.me-row.danger:hover{background:oklch(30% 0.07 25);color:#fff}
+.ws-wrap{position:relative}
+.proj-pop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--rail-2);border:1px solid rgba(255,255,255,.09);border-radius:var(--radius);box-shadow:var(--shadow-pop);z-index:120;padding:6px;opacity:0;pointer-events:none;transform:translateY(-6px) scale(.98);transform-origin:top left;transition:opacity .13s,transform .13s}
+.proj-pop.show{opacity:1;pointer-events:auto;transform:none}
+.sw-item{display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border-radius:6px;color:var(--rail-fg);font-size:12.5px;font-weight:500;text-align:left;background:transparent;border:none;cursor:pointer;font-family:inherit;transition:background .1s,color .1s}
+.sw-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.sw-item .pdot{width:20px;height:20px;border-radius:5px;flex:none;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+.sw-item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--rail-fg)}
+.sw-item.cur .nm{color:#fff}
+.sw-item .chk{color:var(--accent);opacity:0;flex:none}
+.sw-item.cur .chk{opacity:1}
 
 /* Main */
 .main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
@@ -477,6 +507,45 @@ table.dt{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;m
 .backlog-item .pts{font:11px var(--mono);background:var(--surface-3);color:var(--muted);border-radius:5px;padding:1px 7px;flex:none}
 .grab{cursor:grab}
 
+/* ===== BLOCK EDITOR ===== */
+.doc-content{padding-left:46px}
+.be-doc{position:relative}
+.be-doc.preview .be-controls{display:none}
+.be-doc.preview [contenteditable]{caret-color:transparent}
+.be-row{position:relative;padding:1px 0}
+.be-body{position:relative}
+.be-controls{position:absolute;left:-40px;top:1px;display:flex;flex-direction:column;gap:1px;opacity:0;transition:opacity .12s}
+.be-row:hover .be-controls{opacity:1}
+.be-btn{width:21px;height:21px;border-radius:5px;display:grid;place-items:center;color:var(--faint);background:transparent;border:none;cursor:pointer;padding:0}
+.be-btn:hover{background:var(--surface-2);color:var(--fg-strong)}
+.be-grab{cursor:grab}.be-grab:active{cursor:grabbing}
+.be-row.dragging{opacity:.35}
+.be-row.drop-before>.be-body:before{content:"";position:absolute;left:0;right:0;top:-3px;height:2px;background:var(--accent);border-radius:2px;z-index:2}
+.be-p{font-size:13.5px;line-height:1.65;color:var(--fg);margin:0 0 11px;padding:1px 2px;outline:none;border-radius:4px;min-height:1.65em}
+.be-p:empty:before{content:attr(data-ph);color:var(--faint)}
+.be-doc h2[contenteditable],.be-doc h3[contenteditable]{outline:none;padding:1px 2px;border-radius:4px}
+.be-doc h1 [contenteditable]{outline:none}
+.be-co{outline:none;line-height:1.55}
+.be-cl{outline:none;flex:1;min-width:0}
+.be-cl:empty:before{content:attr(data-ph);color:var(--faint)}
+.codeblock[contenteditable]{outline:none;white-space:pre-wrap;word-break:normal}
+.be-code{position:relative;margin:14px 0}
+.be-lang{position:absolute;top:7px;right:10px;font:10px var(--mono);color:var(--rail-faint);text-transform:uppercase;letter-spacing:.06em;pointer-events:none;z-index:1}
+.be-div{border:none;border-top:1px solid var(--border);margin:18px 0}
+.be-end{margin-top:8px}
+.slash{position:fixed;z-index:80;background:var(--surface);border:1px solid var(--border-strong);border-radius:11px;box-shadow:0 14px 34px rgba(20,24,40,.2);width:252px;padding:6px;max-height:330px;overflow:auto;display:none}
+.slash-it{display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:8px;cursor:pointer}
+.slash-it.sel{background:var(--accent-soft)}
+.slash-it .si-ic{width:32px;height:32px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;flex:none;font:600 13px var(--mono);color:var(--muted)}
+.slash-it.sel .si-ic{background:var(--surface);color:var(--accent)}
+.slash-it .si-t{font-size:13px;font-weight:600;color:var(--fg-strong);line-height:1.1}
+.slash-it .si-d{font-size:11px;color:var(--muted);margin-top:2px}
+.be-table-wrap{margin:14px 0}
+.be-table-add{display:flex;gap:6px;margin-top:6px}
+.be-table-add button{font:11px var(--mono);color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:3px 9px;cursor:pointer}
+.be-table-add button:hover{color:var(--fg-strong);border-color:var(--border-strong)}
+.doc-table th[contenteditable],.doc-table td[contenteditable]{outline:none}
+
 /* ============ RESPONSIVE: collapse rail ============ */
 @media(max-width:880px){
   :root{--sidebar-w:62px}
@@ -484,6 +553,8 @@ table.dt{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;m
   .nav-item{justify-content:center} .user{justify-content:center}
   .ws-switch{justify-content:center;padding:6px} .ws-switch .dot{margin:0}
   .proj-name,.tb-right .status{display:none}
+  .me-pop{left:0;right:auto;width:240px}
+  .proj-pop{left:0;right:auto;width:240px}
 }
 @media(max-width:520px){
   .content .view{padding:13px}
@@ -704,14 +775,22 @@ textarea.fld{height:auto;min-height:76px;padding:9px 10px;line-height:1.55;resiz
       <span>v1.1</span>
     </div>
 
-    <button class="ws-switch" data-od-id="workspace-switch">
-      <span class="dot">N</span>
-      <span class="meta"><b>Northwind</b><small>Software House</small></span>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5 5 5-5"/></svg>
-    </button>
+    <div class="ws-wrap">
+      <button class="ws-switch" id="proj-switch" data-od-id="project-switch">
+        <span class="dot" id="ws-dot" style="background:oklch(48% .10 258)">A</span>
+        <span class="meta"><b id="ws-proj">Atlas Platform 2.0</b><small>Project</small></span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5 5 5-5"/></svg>
+      </button>
+      <div class="proj-pop" id="proj-pop" data-od-id="project-switcher">
+        <div class="me-grp">Projects</div>
+        <button class="sw-item cur" data-proj="atlas"><span class="pdot" style="background:oklch(48% .10 258)">A</span><span class="nm">Atlas Platform 2.0</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
+        <button class="sw-item" data-proj="mobile"><span class="pdot" style="background:oklch(48% .10 190)">M</span><span class="nm">Mobile App v1</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
+        <button class="sw-item" data-proj="dw"><span class="pdot" style="background:oklch(48% .10 145)">D</span><span class="nm">Data Warehouse</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
+        <button class="sw-item" data-proj="mktg"><span class="pdot" style="background:oklch(48% .10 340)">M</span><span class="nm">Marketing Site</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
+      </div>
+    </div>
 
     <div class="nav-group">
-      <div class="nav-label">Atlas Platform 2.0</div>
       <button class="nav-item active" data-nav="view-dashboard" data-od-id="nav-dashboard">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
         <span>Dashboard</span>
@@ -752,11 +831,29 @@ textarea.fld{height:auto;min-height:76px;padding:9px 10px;line-height:1.55;resiz
 
     <div class="spacer"></div>
     <div class="nav-foot">
-      <button class="user" data-od-id="user-menu">
-        <span class="av">AY</span>
+      <button class="user" id="me-trigger" data-od-id="user-menu">
+        <span class="av">AY<span class="pres"></span></span>
         <span class="meta"><b>Aisha Yusuf</b><small>Product Manager</small></span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--rail-faint)"><path d="M9 6l6 6-6 6"/></svg>
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--rail-faint)"><path d="M9 6l6 6-6 6"/></svg>
       </button>
+      <div class="me-pop" id="me-pop" data-od-id="user-menu-pop">
+        <div class="me-id">
+          <span class="av">AY</span>
+          <span class="txt"><b>Aisha Yusuf</b><small>aisha@northwind.io · Product Manager</small></span>
+        </div>
+        <div class="me-sep"></div>
+        <div class="me-grp">Organization</div>
+        <button class="sw-item cur" data-org="nw"><span class="pdot" style="background:oklch(48% .10 265)">N</span><span class="nm">Northwind Software House</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
+        <button class="sw-item" data-org="as"><span class="pdot" style="background:oklch(48% .10 195)">A</span><span class="nm">Amin Studio</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
+        <button class="sw-item" data-org="ai"><span class="pdot" style="background:oklch(48% .10 25)">A</span><span class="nm">Acme Internal</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
+        <div class="me-sep"></div>
+        <div class="me-grp">Account</div>
+        <button class="me-row" data-me="profile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Profile settings</button>
+        <button class="me-row" data-me="notif"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Notifications</button>
+        <button class="me-row" data-me="appearance"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Appearance</button>
+        <div class="me-sep"></div>
+        <button class="me-row danger" data-me="signout"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button>
+      </div>
     </div>
   </aside>
 
@@ -1073,7 +1170,7 @@ textarea.fld{height:auto;min-height:76px;padding:9px 10px;line-height:1.55;resiz
                 <button class="tbtn" title="Share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
                 <button class="tbtn" title="History"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v5h5M3.1 9a9 9 0 1 0 2.1-3.6L3 8"/><path d="M12 7v5l3 2"/></svg></button>
                 <span class="av-g" style="margin-left:6px"><span class="av sm b">MK</span><span class="av sm c">LC</span><span class="av sm d">DP</span></span>
-                <button class="btn sm" style="margin-left:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Edit</button>
+                <button class="btn sm" id="doc-mode-btn" style="margin-left:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Edit</button>
               </div>
             </div>
             <div class="doc-content" id="doc-content"></div>
@@ -1411,6 +1508,32 @@ function navigate(view){
 }
 $$('[data-nav]').forEach(n=>n.addEventListener('click',()=>navigate(n.dataset.nav)));
 
+/* ============================ USER / ACCOUNT MENU ============================ */
+function toggleUserMenu(){const p=$('#me-pop');const b=$('#me-trigger');p.classList.toggle('show');b.classList.toggle('on',p.classList.contains('show'));}
+function closeUserMenu(){$('#me-pop').classList.remove('show');$('#me-trigger').classList.remove('on');}
+$('#me-trigger').addEventListener('click',e=>{e.stopPropagation();toggleUserMenu();});
+$$('.me-row[data-me]').forEach(r=>r.addEventListener('click',()=>{
+  const a=r.dataset.me;
+  if(a==='signout'){closeUserMenu();toast('Signed out of Helix');return;}
+  closeUserMenu();
+  const labels={profile:'Profile settings',notif:'Notifications',appearance:'Appearance'};
+  toast((labels[a]||a)+' — coming soon');
+}));
+document.addEventListener('click',e=>{if(!$('#me-pop').classList.contains('show'))return;if(!e.target.closest('#me-pop')&&!e.target.closest('#me-trigger'))closeUserMenu();});
+
+/* ============================ ORG / PROJECT SWITCHERS ============================ */
+const ORGS=[{id:'nw',name:'Northwind Software House',dot:'N',hue:265},{id:'as',name:'Amin Studio',dot:'A',hue:195},{id:'ai',name:'Acme Internal',dot:'A',hue:25}];
+const PROJECTS=[{id:'atlas',name:'Atlas Platform 2.0',dot:'A',hue:258},{id:'mobile',name:'Mobile App v1',dot:'M',hue:190},{id:'dw',name:'Data Warehouse',dot:'D',hue:145},{id:'mktg',name:'Marketing Site',dot:'M',hue:340}];
+let curOrg='nw',curProj='atlas';
+function toggleProjPop(){const p=$('#proj-pop');const b=$('#proj-switch');p.classList.toggle('show');b.classList.toggle('on',p.classList.contains('show'));}
+function closeProjPop(){const p=$('#proj-pop'),b=$('#proj-switch');if(p)p.classList.remove('show');if(b)b.classList.remove('on');}
+function setProject(id){const p=PROJECTS.find(x=>x.id===id);if(!p)return;curProj=id;$('#ws-dot').textContent=p.dot;$('#ws-dot').style.background='oklch(48% .10 '+p.hue+')';$('#ws-proj').textContent=p.name;$$('.sw-item[data-proj]').forEach(r=>r.classList.toggle('cur',r.dataset.proj===id));const pn=document.querySelector('.proj-name');if(pn)pn.textContent=p.name;document.title='Helix \u00b7 '+p.name;closeProjPop();toast('Switched to '+p.name);}
+function setOrg(id){const o=ORGS.find(x=>x.id===id);if(!o)return;curOrg=id;$$('.sw-item[data-org]').forEach(r=>r.classList.toggle('cur',r.dataset.org===id));closeUserMenu();toast('Switched to '+o.name);}
+$('#proj-switch').addEventListener('click',e=>{e.stopPropagation();toggleProjPop();});
+$$('.sw-item[data-proj]').forEach(r=>r.addEventListener('click',()=>setProject(r.dataset.proj)));
+$$('.sw-item[data-org]').forEach(r=>r.addEventListener('click',()=>setOrg(r.dataset.org)));
+document.addEventListener('click',e=>{const p=$('#proj-pop');if(!p||!p.classList.contains('show'))return;if(!e.target.closest('#proj-pop')&&!e.target.closest('#proj-switch'))closeProjPop();});
+
 /* ============================ TASKS: BOARD ============================ */
 const PRIO={p1:'Urgent',p2:'High',p3:'Medium',p4:'Low'};
 function card(t){
@@ -1514,7 +1637,7 @@ function openDrawer(id){
   openScrim();$('#drawer').classList.add('show');
 }
 function openScrim(){$('#scrim').classList.add('show');}
-function closeAll(){$('#drawer').classList.remove('show');$('#scrim').classList.remove('show');closeModal();closeAgrModal();closeCmdk();}
+function closeAll(){$('#drawer').classList.remove('show');$('#scrim').classList.remove('show');closeModal();closeAgrModal();closeCmdk();closeProjPop();closeUserMenu();}
 $('#drawer-close').addEventListener('click',closeAll);
 $('#scrim').addEventListener('click',closeAll);
 
@@ -1533,72 +1656,277 @@ $('#modal-create').addEventListener('click',()=>{
 });
 $('#task-modal').addEventListener('click',e=>{if(e.target===$('#task-modal'))closeModal();});
 
-/* ============================ DOCUMENTS ============================ */
+/* ============================ DOCUMENTS (block editor) ============================ */
+const CAL_ICONS={info:'<svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',warn:'<svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>'};
+const BE_PLUS='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>';
+const BE_GRAB='<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>';
+const BE_TRASH='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+const SLASH=[
+  {k:'p',ic:'Aa',label:'Text',desc:'Plain paragraph'},
+  {k:'h2',ic:'H',label:'Heading',desc:'Section title'},
+  {k:'h3',ic:'h',label:'Subheading',desc:'Smaller heading'},
+  {k:'check',ic:'\u2713',label:'Checklist',desc:'Task with checkbox'},
+  {k:'callout-info',ic:'i',label:'Info callout',desc:'Highlighted note'},
+  {k:'callout-warn',ic:'!',label:'Warning callout',desc:'Cautious note'},
+  {k:'code',ic:'</>',label:'Code',desc:'Monospace block'},
+  {k:'table',ic:'\u25A3',label:'Table',desc:'Rows & columns'},
+  {k:'divider',ic:'\u2014',label:'Divider',desc:'Horizontal rule'}
+];
+let BE_ID=100;
 const PAGES={
-  architecture:{title:'Architecture',icon:'🏛️',body:`
-    <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span><b>Source of truth.</b> This doc governs all module work. ADRs live under Engineering → ADRs; changes here require an ADR.</span></div>
-    <h2>Hierarchy</h2><p>Helix is strictly hierarchical: <b>User → Organization → Project → Modules</b>. Every business activity belongs to a Project — nothing floats free. Data is isolated per organization; multi-tenancy is enforced at the database layer, not the application layer.</p>
-    <h2>Foundation & modules</h2><p>A shared <b>Foundation</b> (Authentication, Organization, Project) underpins every module. Delivery modules (Task, Planning) and Knowledge modules (Documents) build on it directly.</p>
-    <div class="doc-check done"><input type="checkbox" class="ck" checked>Define the tenancy boundary at the org level</div>
-    <div class="doc-check done"><input type="checkbox" class="ck" checked>Scope every module to a project</div>
-    <div class="doc-check"><input type="checkbox" class="ck">Document the read-replica strategy for reporting</div>
-    <h2>Stack</h2>
-    <table class="doc-table"><thead><tr><th>Layer</th><th>Choice</th><th>Why</th></tr></thead><tbody>
-    <tr><td>Frontend</td><td>React · TypeScript</td><td>Large hiring pool, end-to-end type safety</td></tr>
-    <tr><td>Backend</td><td>Hono</td><td>Lightweight, edge-ready, fast</td></tr>
-    <tr><td>Database</td><td>PostgreSQL</td><td>Relational integrity for hierarchical multi-tenant data</td></tr>
-    <tr><td>ORM</td><td>Drizzle</td><td>SQL-first, predictable, type-safe</td></tr>
-    <tr><td>Auth</td><td>Better Auth</td><td>Sessions & organizations without a managed vendor</td></tr>
-    </tbody></table>
-    <div class="callout warn"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><span><b>Open decision.</b> Object storage & search providers are still TBD — see Pending Decisions in the README.</span></div>`},
-  dataModel:{title:'Data model',icon:'🗄️',body:`
-    <h2>Core entities</h2><p>Tasks, Documents, Planning, and Meetings each own their tables, scoped by <span class="mono" style="background:var(--surface-2);padding:0 4px;border-radius:3px">projectId</span>. There are no cross-project foreign keys.</p>
-    <div class="codeblock"><span class="c">-- task is the primary unit of execution</span>
-<span class="k">CREATE TABLE</span> task (
-  id          uuid <span class="k">PRIMARY KEY</span>,
-  project_id  uuid <span class="k">NOT NULL REFERENCES</span> project,
-  title       text <span class="k">NOT NULL</span>,
-  status_id   uuid <span class="k">NOT NULL REFERENCES</span> task_status,
-  assignee_id uuid,
-  priority    <span class="k">task_priority NOT NULL DEFAULT</span> <span class="s">'medium'</span>,
-  due_date    timestamptz,
-  <span class="k">CONSTRAINT</span> within_project <span class="k">CHECK</span> (...)
-);</div>
-    <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>Subtasks are self-referential via <b>parent_id</b>; progress rolls up to the parent.</span></div>
-    <p>See the full schema in <b>03-data-model.md</b>.</p>`},
-  api:{title:'API contract',icon:'🔌',body:`
-    <h2>Conventions</h2><p>RESTful, JSON, cursor-based pagination. Every route is scoped under an organization and project.</p>
-    <div class="codeblock"><span class="c"># list tasks in a project</span>
-<span class="k">GET</span> /orgs/<span class="s">{orgId}</span>/projects/<span class="s">{projectId}</span>/tasks
-     ?status=progress&amp;assignee=me&amp;cursor=<span class="s">{cursor}</span>
-
-<span class="c"># 200 OK</span>
-{ <span class="s">"data"</span>: [...], <span class="s">"nextCursor"</span>: <span class="s">"..."</span>, <span class="s">"hasMore"</span>: true }</div>
-    <h2>Permissions</h2><p>Every endpoint is guarded by a capability check: <span class="mono">task:view</span>, <span class="mono">task:create</span>, <span class="mono">document:update</span>, and so on. Capabilities are derived from the member's role in the org and project.</p>`},
-  vision:{title:'Vision & positioning',icon:'🎯',body:`
-    <h2>Vision</h2><p>A project management platform purpose-built for software delivery — simple enough for a two-person team, scalable enough for an enterprise. Most tools track tasks <i>or</i> store documents. Helix unifies delivery, documentation, planning, and client communication in one place.</p>
-    <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span><b>AI is an optional enhancement, never the core experience.</b> Every feature works without it.</span></div>
-    <h2>Differentiators</h2>
-    <div class="doc-check done"><input type="checkbox" class="ck" checked>Documentation is a first-class citizen</div>
-    <div class="doc-check done"><input type="checkbox" class="ck" checked>Built-in client transparency</div>
-    <div class="doc-check done"><input type="checkbox" class="ck" checked>Seat-free pricing — we charge for value</div>
-    <div class="doc-check"><input type="checkbox" class="ck">Refine ICP sizing assumptions</div>`},
-  conventions:{title:'Conventions',icon:'📜',body:`<h2>Coding standards</h2><p>TypeScript strict mode everywhere, no <span class="mono">any</span> without an inline justification. Naming is <span class="mono">camelCase</span> for code, <span class="mono">snake_case</span> for database columns.</p><div class="callout warn"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><span>Every architectural decision gets an ADR before the PR merges.</span></div>`},
-  roadmap:{title:'Roadmap',icon:'🗺️',body:`<h2>Phasing</h2><p><b>Phase 1</b> Foundation → <b>Phase 2</b> Task & Documents → <b>Phase 3</b> Planning & Meetings → <b>Phase 4</b> Client portal & Governance → <b>Phase 5</b> Notifications & Billing → <b>Phase 6</b> AI add-on.</p><div class="doc-check done"><input type="checkbox" class="ck" checked>Foundation shipped</div><div class="doc-check done"><input type="checkbox" class="ck" checked>Task & Documents in beta</div><div class="doc-check"><input type="checkbox" class="ck">Planning module — active sprint</div>`}
+  architecture:{title:'Architecture',icon:'\u{1F3DB}\uFE0F',blocks:[
+    {id:'a1',t:'callout',tone:'info',h:'<b>Source of truth.</b> This doc governs all module work. ADRs live under Engineering \u2192 ADRs; changes here require an ADR.'},
+    {id:'a2',t:'h2',x:'Hierarchy'},
+    {id:'a3',t:'p',h:'Helix is strictly hierarchical: <b>User \u2192 Organization \u2192 Project \u2192 Modules</b>. Every business activity belongs to a Project \u2014 nothing floats free. Data is isolated per organization; multi-tenancy is enforced at the database layer, not the application layer.'},
+    {id:'a4',t:'h2',x:'Foundation & modules'},
+    {id:'a5',t:'p',h:'A shared <b>Foundation</b> (Authentication, Organization, Project) underpins every module. Delivery modules (Task, Planning) and Knowledge modules (Documents) build on it directly.'},
+    {id:'a6',t:'check',done:true,x:'Define the tenancy boundary at the org level'},
+    {id:'a7',t:'check',done:true,x:'Scope every module to a project'},
+    {id:'a8',t:'check',done:false,x:'Document the read-replica strategy for reporting'},
+    {id:'a9',t:'h2',x:'Stack'},
+    {id:'a10',t:'table',headers:['Layer','Choice','Why'],rows:[['Frontend','React \u00B7 TypeScript','Large hiring pool, end-to-end type safety'],['Backend','Hono','Lightweight, edge-ready, fast'],['Database','PostgreSQL','Relational integrity for hierarchical multi-tenant data'],['ORM','Drizzle','SQL-first, predictable, type-safe'],['Auth','Better Auth','Sessions & organizations without a managed vendor']]},
+    {id:'a11',t:'callout',tone:'warn',h:'<b>Open decision.</b> Object storage & search providers are still TBD \u2014 see Pending Decisions in the README.'}
+  ]},
+  dataModel:{title:'Data model',icon:'\u{1F5C4}\uFE0F',blocks:[
+    {id:'d1',t:'h2',x:'Core entities'},
+    {id:'d2',t:'p',h:'Tasks, Documents, Planning, and Meetings each own their tables, scoped by <span class="mono" style="background:var(--surface-2);padding:0 4px;border-radius:3px">projectId</span>. There are no cross-project foreign keys.'},
+    {id:'d3',t:'code',lang:'sql',x:'-- task is the primary unit of execution\nCREATE TABLE task (\n  id          uuid PRIMARY KEY,\n  project_id  uuid NOT NULL REFERENCES project,\n  title       text NOT NULL,\n  status_id   uuid NOT NULL REFERENCES task_status,\n  assignee_id uuid,\n  priority    task_priority NOT NULL DEFAULT \'medium\',\n  due_date    timestamptz,\n  CONSTRAINT within_project CHECK (...)\n);'},
+    {id:'d4',t:'callout',tone:'info',h:'Subtasks are self-referential via <b>parent_id</b>; progress rolls up to the parent.'},
+    {id:'d5',t:'p',h:'See the full schema in <b>03-data-model.md</b>.'}
+  ]},
+  api:{title:'API contract',icon:'\u{1F50C}',blocks:[
+    {id:'p1',t:'h2',x:'Conventions'},
+    {id:'p2',t:'p',h:'RESTful, JSON, cursor-based pagination. Every route is scoped under an organization and project.'},
+    {id:'p3',t:'code',lang:'http',x:'# list tasks in a project\nGET /orgs/{orgId}/projects/{projectId}/tasks\n     ?status=progress&assignee=me&cursor={cursor}\n\n# 200 OK\n{ "data": [...], "nextCursor": "...", "hasMore": true }'},
+    {id:'p4',t:'h2',x:'Permissions'},
+    {id:'p5',t:'p',h:'Every endpoint is guarded by a capability check: <span class="mono">task:view</span>, <span class="mono">task:create</span>, <span class="mono">document:update</span>, and so on. Capabilities are derived from the member\'s role in the org and project.'}
+  ]},
+  vision:{title:'Vision & positioning',icon:'\u{1F3AF}',blocks:[
+    {id:'v1',t:'h2',x:'Vision'},
+    {id:'v2',t:'p',h:'A project management platform purpose-built for software delivery \u2014 simple enough for a two-person team, scalable enough for an enterprise. Most tools track tasks <i>or</i> store documents. Helix unifies delivery, documentation, planning, and client communication in one place.'},
+    {id:'v3',t:'callout',tone:'info',h:'<b>AI is an optional enhancement, never the core experience.</b> Every feature works without it.'},
+    {id:'v4',t:'h2',x:'Differentiators'},
+    {id:'v5',t:'check',done:true,x:'Documentation is a first-class citizen'},
+    {id:'v6',t:'check',done:true,x:'Built-in client transparency'},
+    {id:'v7',t:'check',done:true,x:'Seat-free pricing \u2014 we charge for value'},
+    {id:'v8',t:'check',done:false,x:'Refine ICP sizing assumptions'}
+  ]},
+  conventions:{title:'Conventions',icon:'\u{1F4DC}',blocks:[
+    {id:'c1',t:'h2',x:'Coding standards'},
+    {id:'c2',t:'p',h:'TypeScript strict mode everywhere, no <span class="mono">any</span> without an inline justification. Naming is <span class="mono">camelCase</span> for code, <span class="mono">snake_case</span> for database columns.'},
+    {id:'c3',t:'callout',tone:'warn',h:'Every architectural decision gets an ADR before the PR merges.'}
+  ]},
+  roadmap:{title:'Roadmap',icon:'\u{1F5FA}\uFE0F',blocks:[
+    {id:'r1',t:'h2',x:'Phasing'},
+    {id:'r2',t:'p',h:'<b>Phase 1</b> Foundation \u2192 <b>Phase 2</b> Task & Documents \u2192 <b>Phase 3</b> Planning & Meetings \u2192 <b>Phase 4</b> Client portal & Governance \u2192 <b>Phase 5</b> Notifications & Billing \u2192 <b>Phase 6</b> AI add-on.'},
+    {id:'r3',t:'check',done:true,x:'Foundation shipped'},
+    {id:'r4',t:'check',done:true,x:'Task & Documents in beta'},
+    {id:'r5',t:'check',done:false,x:'Planning module \u2014 active sprint'}
+  ]}
 };
 let currentPage='architecture';
+let editMode=true;
+let dragId=null,dropBeforeId=null;
+let slashOpen=false,slashIdx=0,slashForId=null;
+
+function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function blocks(){return PAGES[currentPage].blocks;}
+function byId(id){return blocks().find(b=>b.id===id);}
+function findIdx(id){return blocks().findIndex(b=>b.id===id);}
+function newId(){return 'b'+(++BE_ID);}
+function after(fn){requestAnimationFrame(fn);}
+
+function blockHTML(b){
+  const id=b.id;
+  if(b.t==='h2')return `<h2 contenteditable="true" data-id="${id}" data-f="x">${esc(b.x)}</h2>`;
+  if(b.t==='h3')return `<h3 contenteditable="true" data-id="${id}" data-f="x">${esc(b.x)}</h3>`;
+  if(b.t==='p')return `<div class="be-p" contenteditable="true" data-id="${id}" data-f="h" data-ph="Type '/' for commands, or just write\u2026">${b.h||''}</div>`;
+  if(b.t==='callout')return `<div class="callout ${b.tone||'info'}">${CAL_ICONS[b.tone]||CAL_ICONS.info}<span class="be-co" contenteditable="true" data-id="${id}" data-f="h">${b.h||''}</span></div>`;
+  if(b.t==='check')return `<div class="doc-check ${b.done?'done':''}"><input type="checkbox" class="ck be-ck" data-id="${id}" ${b.done?'checked':''}><div class="be-cl" contenteditable="true" data-id="${id}" data-f="x" data-ph="To-do">${esc(b.x)}</div></div>`;
+  if(b.t==='code')return `<div class="be-code"><span class="be-lang">${esc(b.lang||'text')}</span><pre class="codeblock" contenteditable="true" data-id="${id}" data-f="x" spellcheck="false">${esc(b.x)}</pre></div>`;
+  if(b.t==='divider')return `<hr class="be-div">`;
+  if(b.t==='table'){
+    let html='<div class="be-table-wrap"><table class="doc-table"><thead><tr>'+b.headers.map((c,i)=>`<th contenteditable="true" data-id="${id}" data-f="th" data-i="${i}">${esc(c)}</th>`).join('')+'</tr></thead><tbody>';
+    b.rows.forEach((row,ri)=>{html+='<tr>'+row.map((c,ci)=>`<td contenteditable="true" data-id="${id}" data-f="td" data-r="${ri}" data-c="${ci}">${esc(c)}</td>`).join('')+'</tr>';});
+    html+='</tbody></table><div class="be-table-add"><button type="button" data-add="row" data-id="'+id+'">+ Row</button><button type="button" data-add="col" data-id="'+id+'">+ Column</button></div></div>';
+    return html;
+  }
+  return '';
+}
+function rowHTML(b){
+  return `<div class="be-row" data-id="${b.id}"><div class="be-controls"><button type="button" class="be-btn be-add" data-add-id="${b.id}" title="Add block below">${BE_PLUS}</button><button type="button" class="be-btn be-grab" draggable="true" data-grab="${b.id}" title="Drag to reorder">${BE_GRAB}</button><button type="button" class="be-btn be-del" data-del-id="${b.id}" title="Delete block">${BE_TRASH}</button></div><div class="be-body">${blockHTML(b)}</div></div>`;
+}
 function renderDoc(page){
   currentPage=page;
+  if(!PAGES[page]){
+    const item=$(`.page-item[data-page="${page}"]`);
+    const emo=item&&item.querySelector('.emo')?item.querySelector('.emo').textContent:'\u{1F4C4}';
+    PAGES[page]={title:item?item.textContent.trim():'Untitled',icon:emo,blocks:[{id:newId(),t:'p',h:''}]};
+  }
   $$('.page-item').forEach(p=>p.classList.toggle('active',p.dataset.page===page));
-  const d=PAGES[page]||PAGES.architecture;
-  $('#doc-title-crumb').textContent=d.title;
-  $('#doc-content').innerHTML=`<h1><span>${d.icon}</span>${d.title}</h1>
-    <div class="byline">${avHtml('mk')}<span>Edited by <b style="color:var(--fg)">Marco Keller</b> · 2 hours ago</span><span class="sep">·</span><span class="mono">v 14</span><span class="sep">·</span><span>3 contributors</span></div>
-    ${d.body}`;
+  const d=PAGES[page];
+  const tb=$('#doc-title-crumb');if(tb)tb.textContent=d.title;
+  $('#doc-content').innerHTML=
+    `<h1><span class="emo" contenteditable="false">${d.icon}</span><span contenteditable="true" data-f="title" data-ph="Untitled">${esc(d.title)}</span></h1>`+
+    `<div class="byline">${avHtml('mk')}<span>Edited by <b style="color:var(--fg)">Marco Keller</b> \u00B7 just now</span><span class="sep">\u00B7</span><span class="mono">${d.blocks.length} blocks</span><span class="sep">\u00B7</span><span id="be-mode-tag">${editMode?'Editing':'Preview'}</span></div>`+
+    `<div class="be-doc ${editMode?'edit':'preview'}">${d.blocks.map(rowHTML).join('')}<div class="be-end"><button type="button" class="btn ghost sm be-add-end">${BE_PLUS}Add block</button></div></div>`;
+  if(!editMode)$('#doc-content').querySelectorAll('[contenteditable="true"]').forEach(e=>e.contentEditable=false);
+  const mb=$('#doc-mode-btn');
+  if(mb)mb.innerHTML=(editMode?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Preview':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Edit');
+}
+function focusBlock(id){
+  const el=$('#doc-content [data-id="'+id+'"][contenteditable="true"]');
+  if(!el)return;
+  el.focus();
+  const r=document.createRange();r.selectNodeContents(el);r.collapse(false);
+  const s=window.getSelection();s.removeAllRanges();s.addRange(r);
+}
+function mkBlock(k){
+  if(k==='p')return {id:newId(),t:'p',h:''};
+  if(k==='h2')return {id:newId(),t:'h2',x:'Heading'};
+  if(k==='h3')return {id:newId(),t:'h3',x:'Subheading'};
+  if(k==='check')return {id:newId(),t:'check',done:false,x:''};
+  if(k.indexOf('callout')===0)return {id:newId(),t:'callout',tone:k.split('-')[1]||'info',h:''};
+  if(k==='code')return {id:newId(),t:'code',lang:'text',x:''};
+  if(k==='table')return {id:newId(),t:'table',headers:['Column 1','Column 2','Column 3'],rows:[['','',''],['','','']]};
+  if(k==='divider')return {id:newId(),t:'divider'};
+  return {id:newId(),t:'p',h:''};
+}
+function insertEmptyAfter(id,withMenu){
+  const i=id?findIdx(id):-1;
+  const nb={id:newId(),t:'p',h:''};
+  blocks().splice(i+1,0,nb);
+  renderDoc(currentPage);
+  after(()=>{focusBlock(nb.id);if(withMenu)openSlash(nb.id);});
+}
+function appendEmpty(){
+  const nb={id:newId(),t:'p',h:''};
+  blocks().push(nb);
+  renderDoc(currentPage);
+  after(()=>{focusBlock(nb.id);openSlash(nb.id);});
+}
+function deleteBlock(id){
+  const i=findIdx(id);if(i<0)return;
+  if(blocks().length<=1){blocks()[0]={id:newId(),t:'p',h:''};renderDoc(currentPage);return;}
+  blocks().splice(i,1);renderDoc(currentPage);
+}
+function addTableRow(id){const b=byId(id);if(!b)return;b.rows.push(b.headers.map(()=>''));renderDoc(currentPage);}
+function addTableCol(id){const b=byId(id);if(!b)return;b.headers.push('Column '+(b.headers.length+1));b.rows.forEach(r=>r.push(''));renderDoc(currentPage);}
+
+/* ---- slash menu ---- */
+function openSlash(id){
+  slashForId=id;slashIdx=0;slashOpen=true;
+  const el=(id&&id!=='title')?$('#doc-content [data-id="'+id+'"][contenteditable="true"]'):$('#doc-content [data-f="title"]');
+  let menu=$('#be-slash');
+  if(!menu){menu=document.createElement('div');menu.id='be-slash';menu.className='slash';document.body.appendChild(menu);}
+  menu.innerHTML=SLASH.map((s,i)=>`<div class="slash-it ${i===0?'sel':''}" data-i="${i}" data-k="${s.k}"><div class="si-ic">${s.ic}</div><div><div class="si-t">${s.label}</div><div class="si-d">${s.desc}</div></div></div>`).join('');
+  const r=el?el.getBoundingClientRect():{top:200,left:400,bottom:220};
+  let left=r.left;if(left+252>window.innerWidth)left=Math.max(8,window.innerWidth-258);
+  menu.style.top=(r.bottom+6)+'px';menu.style.left=left+'px';menu.style.display='block';
+  menu.onmousemove=ev=>{const it=ev.target.closest('.slash-it');if(!it)return;slashIdx=+it.dataset.i;markSlash();};
+  menu.onclick=ev=>{const it=ev.target.closest('.slash-it');if(!it)return;chooseSlash(it.dataset.k);};
+}
+function markSlash(){$$('#be-slash .slash-it').forEach((x,i)=>x.classList.toggle('sel',i===slashIdx));}
+function closeSlash(){slashOpen=false;const m=$('#be-slash');if(m)m.style.display='none';}
+function chooseSlash(k){
+  closeSlash();
+  const id=slashForId;const nb=mkBlock(k);let i;
+  if(id==='title'||!id){blocks().unshift(nb);i=0;}
+  else{i=findIdx(id);const target=blocks()[i];if(target&&target.t==='p'&&(target.h||'').trim()===''){blocks()[i]=nb;}else{blocks().splice(i+1,0,nb);}}
+  renderDoc(currentPage);
+  if(nb.t!=='divider'&&nb.t!=='table')after(()=>focusBlock(nb.id));
+}
+function handleSlashKey(e){
+  if(e.key==='ArrowDown'){e.preventDefault();slashIdx=(slashIdx+1)%SLASH.length;markSlash();return;}
+  if(e.key==='ArrowUp'){e.preventDefault();slashIdx=(slashIdx-1+SLASH.length)%SLASH.length;markSlash();return;}
+  if(e.key==='Enter'){e.preventDefault();chooseSlash(SLASH[slashIdx].k);return;}
+  if(e.key==='Escape'){e.preventDefault();closeSlash();return;}
+  if(e.key==='/'){e.preventDefault();closeSlash();return;}
+  closeSlash();
+}
+
+/* ---- doc event handlers (delegated, bound once) ---- */
+function onDocInput(e){
+  const el=e.target.closest('[contenteditable="true"]');if(!el)return;
+  const f=el.dataset.f,id=el.dataset.id;
+  if(f==='title'){
+    const t=el.textContent.trim()||'Untitled';PAGES[currentPage].title=t;
+    const tb=$('#doc-title-crumb');if(tb)tb.textContent=t;
+    const pi=$('.page-item.active');if(pi){const last=pi.lastChild;if(last&&last.nodeType===3)last.nodeValue=t;}
+    return;
+  }
+  if(!id)return;const b=byId(id);if(!b)return;
+  if(f==='h')b.h=el.innerHTML;
+  else if(f==='x')b.x=el.textContent;
+  else if(f==='th')b.headers[+el.dataset.i]=el.textContent;
+  else if(f==='td')b.rows[+el.dataset.r][+el.dataset.c]=el.textContent;
+}
+function onDocClick(e){
+  const add=e.target.closest('[data-add-id]');if(add){insertEmptyAfter(add.dataset.addId,true);return;}
+  const del=e.target.closest('[data-del-id]');if(del){deleteBlock(del.dataset.delId);return;}
+  const ar=e.target.closest('[data-add="row"]');if(ar){addTableRow(ar.dataset.id);return;}
+  const ac=e.target.closest('[data-add="col"]');if(ac){addTableCol(ac.dataset.id);return;}
+  const end=e.target.closest('.be-add-end');if(end){appendEmpty();return;}
+}
+function onDocKey(e){
+  if(slashOpen){handleSlashKey(e);return;}
+  const el=e.target.closest('[contenteditable="true"]');if(!el)return;
+  if(e.key==='/'&&el.textContent.trim()===''&&(el.classList.contains('be-p')||el.dataset.f==='title')){e.preventDefault();openSlash(el.dataset.id||'title');return;}
+  if(e.key==='Backspace'&&el.textContent.trim()===''){
+    if(el.dataset.f==='title'){e.preventDefault();return;}
+    if(el.dataset.id){e.preventDefault();const i=findIdx(el.dataset.id);if(i>-1){if(blocks().length>1)blocks().splice(i,1);else blocks()[0]={id:newId(),t:'p',h:''};renderDoc(currentPage);const p=blocks()[Math.max(0,i-1)];after(()=>focusBlock(p.id));}return;}
+  }
+  if(e.key==='Enter'){
+    if(el.tagName==='PRE')return;e.preventDefault();
+    if(el.dataset.f==='title'){insertEmptyAfter(null,false);return;}
+    const b=byId(el.dataset.id);
+    if(b&&b.t==='check'){const nb={id:newId(),t:'check',done:false,x:''};blocks().splice(findIdx(b.id)+1,0,nb);renderDoc(currentPage);after(()=>focusBlock(nb.id));return;}
+    insertEmptyAfter(el.dataset.id,false);
+  }
+}
+function onDocDragStart(e){
+  const g=e.target.closest('[data-grab]');if(!g)return;
+  dragId=g.dataset.grab;e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',dragId);}catch(_){}
+  const row=g.closest('.be-row');if(row)row.classList.add('dragging');
+}
+function onDocDragOver(e){
+  if(!dragId)return;const row=e.target.closest('.be-row');if(!row)return;
+  e.preventDefault();e.dataTransfer.dropEffect='move';
+  $$('.be-row').forEach(r=>r.classList.remove('drop-before'));
+  row.classList.add('drop-before');dropBeforeId=row.dataset.id;
+}
+function onDocDrop(e){
+  if(!dragId)return;e.preventDefault();
+  if(dropBeforeId){const from=findIdx(dragId),to=findIdx(dropBeforeId);if(from>-1&&to>-1&&from!==to){const m=blocks().splice(from,1);blocks().splice(to,0,m[0]);}}
+  renderDoc(currentPage);dragId=null;dropBeforeId=null;
+}
+function onDocDragEnd(){$$('.be-row').forEach(r=>r.classList.remove('dragging','drop-before'));dragId=null;dropBeforeId=null;}
+
+function newDoc(){
+  let n=1,key='new-page';while(PAGES[key])key='new-page-'+(++n);
+  PAGES[key]={title:'Untitled',icon:'\u{1F4C4}',blocks:[{id:newId(),t:'h2',x:'Untitled'},{id:newId(),t:'p',h:''}]};
+  const body=$('.space[data-space="eng"] .space-body');
+  if(body){const item=document.createElement('div');item.className='page-item';item.dataset.page=key;item.innerHTML='<span class="emo">\u{1F4C4}</span>Untitled';body.appendChild(item);item.addEventListener('click',()=>renderDoc(key));}
+  renderDoc(key);toast('New page created');
+  after(()=>{const t=$('#doc-content [data-f="title"]');if(t){t.focus();const r=document.createRange();r.selectNodeContents(t);r.collapse(false);const s=window.getSelection();s.removeAllRanges();s.addRange(r);}});
+}
+function initDocEditor(){
+  const dc=$('#doc-content');
+  dc.addEventListener('input',onDocInput);
+  dc.addEventListener('click',onDocClick);
+  dc.addEventListener('keydown',onDocKey);
+  dc.addEventListener('change',e=>{const ck=e.target.closest('.be-ck');if(!ck)return;const b=byId(ck.dataset.id);if(!b)return;b.done=ck.checked;ck.closest('.doc-check').classList.toggle('done',b.done);});
+  dc.addEventListener('dragstart',onDocDragStart);
+  dc.addEventListener('dragover',onDocDragOver);
+  dc.addEventListener('drop',onDocDrop);
+  dc.addEventListener('dragend',onDocDragEnd);
+  const mb=$('#doc-mode-btn');if(mb)mb.addEventListener('click',()=>{editMode=!editMode;renderDoc(currentPage);});
+  $('#new-doc-btn').addEventListener('click',newDoc);
+  document.addEventListener('mousedown',e=>{if(slashOpen&&!e.target.closest('#be-slash')&&!e.target.closest('#doc-content'))closeSlash();});
 }
 $$('.page-item').forEach(p=>p.addEventListener('click',()=>renderDoc(p.dataset.page)));
 $$('.space-h').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('collapsed')));
-$('#new-doc-btn').addEventListener('click',()=>toast('New page — pick a space'));
+
 
 /* ============================ PLANNING ============================ */
 $('.iter-tabs').addEventListener('click',e=>{
@@ -2190,6 +2518,7 @@ function init(){
   renderMeetings();
   renderReports();
   renderAgreements();
+  initDocEditor();
   let saved='view-dashboard';
   try{saved=localStorage.getItem('helix-view')||'view-dashboard';}catch(e){}
   if(saved!=='view-dashboard')navigate(saved);else navigate('view-dashboard');
