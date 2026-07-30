@@ -20,6 +20,12 @@ interface AppState {
   user: User | undefined;
   org: Organization | undefined;
   project: Project | undefined;
+  /** MVP display overrides for the sidebar switchers — labels + context only;
+   *  underlying data queries stay anchored to the real org/project. */
+  projLabel: { name: string; icon: string } | null;
+  setProjLabel: (p: { name: string; icon: string } | null) => void;
+  orgLabel: string | null;
+  setOrgLabel: (s: string | null) => void;
   view: View;
   taskId: string | null; // open drawer
   createOpen: boolean;
@@ -43,6 +49,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [cmdkOpen, setCmdkOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [projLabel, setProjLabel] = useState<{ name: string; icon: string } | null>(null);
+  const [orgLabel, setOrgLabel] = useState<string | null>(null);
 
   const { data: user } = useQuery({ queryKey: ["me"], queryFn: api.me });
   const { data: orgs } = useQuery({ queryKey: ["orgs"], queryFn: api.orgs });
@@ -76,6 +84,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     user,
     org,
     project,
+    projLabel,
+    setProjLabel,
+    orgLabel,
+    setOrgLabel,
     view,
     taskId,
     createOpen,
