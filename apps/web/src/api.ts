@@ -93,6 +93,14 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(body),
     }).then((x) => x.data),
+  createPage: (
+    pid: string,
+    body: { spaceId: string; title?: string; icon?: string | null; parentId?: string | null },
+  ) =>
+    req<{ data: Page }>(`/projects/${pid}/documents/pages`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
   files: (pid: string) => {
     // files live under documents/files (not in the catalog but provided)
     return req<{ data: FileRef[] } | FileRef[]>(`/projects/${pid}/documents/files`).then(

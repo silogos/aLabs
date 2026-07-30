@@ -1,25 +1,129 @@
-/** Documents view — space/page tree, rendered page content, files. */
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+/** Documents view — space/page tree + a BlockNote-powered block editor with persistence. */
+import { useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api.js";
 import { useApp } from "../store.js";
 import { initials, colorFor, timeAgo } from "../components/ui.js";
+import { RichTextEditor } from "../components/RichTextEditor.js";
 import type { Block, Page } from "@pmin/core";
 
+const IcPlus = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
+/* ------------------------------------------------------------------ *
+ * PageEditor — page title + a <RichTextEditor>, with debounced
+ * persistence of title + content via the API. The BlockNote engine,
+ * theming and core-block conversion live inside <RichTextEditor>.
+ * ------------------------------------------------------------------ */
+function PageEditor({ page, editMode }: { page: Page; editMode: boolean }) {
+  const { project, toast } = useApp();
+  const pid = project!.id;
+  const qc = useQueryClient();
+  const [title, setTitle] = useState(page.title);
+
+  const contentTimer = useRef<number | undefined>(undefined);
+  const handleContentChange = (blocks: Block[]) => {
+    window.clearTimeout(contentTimer.current);
+    contentTimer.current = window.setTimeout(async () => {
+      try {
+        await api.updatePage(pid, page.id, { content: blocks });
+        void qc.invalidateQueries({ queryKey: ["pages", pid] });
+      } catch (e) {
+        toast("Couldn't save page: " + (e as Error).message);
+      }
+    }, 700);
+  };
+
+  const titleTimer = useRef<number | undefined>(undefined);
+  const saveTitle = (t: string) => {
+    setTitle(t);
+    window.clearTimeout(titleTimer.current);
+    titleTimer.current = window.setTimeout(async () => {
+      try {
+        await api.updatePage(pid, page.id, { title: t.trim() || "Untitled" });
+        void qc.invalidateQueries({ queryKey: ["pages", pid] });
+      } catch (e) {
+        toast("Couldn't save title: " + (e as Error).message);
+      }
+    }, 500);
+  };
+
+  return (
+    <>
+      <h1 className="doc-h1">
+        <span className="emo">{page.icon ?? "📄"}</span>
+        <input
+          className="doc-title-input"
+          value={title}
+          placeholder="Untitled"
+          spellCheck={false}
+          onChange={(e) => saveTitle(e.target.value)}
+        />
+      </h1>
+      <div className="byline">
+        <span className={`av sm ${colorFor(page.editedBy?.id ?? "marco")}`}>
+          {initials(page.editedBy?.name ?? "Marco Keller")}
+        </span>
+        <span>
+          Edited by <b style={{ color: "var(--fg)" }}>{page.editedBy?.name ?? "Marco Keller"}</b> ·{" "}
+          {timeAgo(page.updatedAt)}
+        </span>
+        <span className="sep">·</span>
+        <span>{editMode ? "Editing" : "Preview"}</span>
+      </div>
+
+      <RichTextEditor
+        initialContent={page.content ?? []}
+        editable={editMode}
+        placeholder="Type '/' for commands, or just write…"
+        onChange={handleContentChange}
+      />
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * View
+ * ------------------------------------------------------------------ */
 export function Documents() {
   const { project, toast } = useApp();
   const pid = project!.id;
+  const qc = useQueryClient();
   const { data: spaces } = useQuery({ queryKey: ["spaces", pid], queryFn: () => api.spaces(pid) });
   const { data: pageData } = useQuery({ queryKey: ["pages", pid], queryFn: () => api.pages(pid) });
   const { data: files } = useQuery({ queryKey: ["files", pid], queryFn: () => api.files(pid) });
-  const { data: members } = useQuery({ queryKey: ["members", project?.organizationId], queryFn: () => api.members(project!.organizationId), enabled: !!project });
+  const { data: members } = useQuery({
+    queryKey: ["members", project?.organizationId],
+    queryFn: () => api.members(project!.organizationId),
+    enabled: !!project,
+  });
+
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [activePageId, setActivePageId] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState(true);
 
-  const pages = pageData?.items ?? [];
-  // group pages by space
-  const bySpace = (sid: string) => pages.filter((p) => p.spaceId === sid);
-  const active = pages.find((p) => p.id === activePageId) ?? pages.find((p) => p.title === "Architecture") ?? pages[0];
+  const apiPages: Page[] = pageData?.items ?? [];
+  const active = apiPages.find((p) => p.id === activePageId) ?? apiPages[0] ?? null;
+  const spaceName = (sid: string) => spaces?.find((s) => s.id === sid)?.name ?? "—";
+
+  const newPage = async () => {
+    const firstSpace = (spaces ?? [])[0]?.id;
+    if (!firstSpace) {
+      toast("Create a space first");
+      return;
+    }
+    try {
+      const p = await api.createPage(pid, { spaceId: firstSpace, title: "Untitled", icon: "📄" });
+      await qc.invalidateQueries({ queryKey: ["pages", pid] });
+      setActivePageId(p.id);
+      toast("New page created");
+    } catch (e) {
+      toast("Couldn't create page: " + (e as Error).message);
+    }
+  };
 
   return (
     <section className="view active">
@@ -29,12 +133,11 @@ export function Documents() {
         <button className="chip btn">Product</button>
         <button className="chip btn">Design</button>
         <div style={{ marginLeft: "auto" }} className="row">
-          <button className="btn ghost sm" onClick={() => toast("Import — pick a file")}>Import</button>
-          <button className="btn primary sm" onClick={() => toast("New page — pick a space")}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            New page
+          <button className="btn ghost sm" onClick={() => toast("Import — pick a file")}>
+            Import
+          </button>
+          <button className="btn primary sm" onClick={newPage}>
+            {IcPlus}New page
           </button>
         </div>
       </div>
@@ -51,10 +154,10 @@ export function Documents() {
             <input placeholder="Search documents…" />
           </div>
           {(spaces ?? []).map((s) => {
-            const isCollapsed = collapsed[s.id];
-            const sp = bySpace(s.id);
+            const isCol = collapsed[s.id];
+            const sp = apiPages.filter((p) => p.spaceId === s.id);
             return (
-              <div className={`space ${isCollapsed ? "collapsed" : ""}`} key={s.id}>
+              <div className={`space ${isCol ? "collapsed" : ""}`} key={s.id}>
                 <div className="space-h" onClick={() => setCollapsed((c) => ({ ...c, [s.id]: !c[s.id] }))}>
                   <span className="emo">{s.icon ?? "📄"}</span>
                   {s.name}
@@ -73,8 +176,10 @@ export function Documents() {
                       {p.title}
                     </div>
                   ))}
-                  {sp.length === 0 && !isCollapsed && (
-                    <div className="page-item" style={{ color: "var(--faint)" }}>— empty —</div>
+                  {sp.length === 0 && !isCol && (
+                    <div className="page-item" style={{ color: "var(--faint)" }}>
+                      — empty —
+                    </div>
                   )}
                 </div>
               </div>
@@ -85,7 +190,7 @@ export function Documents() {
         <div className="doc-main">
           <div className="doc-topbar">
             <div className="doc-crumbs">
-              <span>{spaces?.find((s) => s.id === active?.spaceId)?.name ?? "—"}</span>
+              <span>{active ? spaceName(active.spaceId) : "—"}</span>
               <span className="sep">/</span>
               <b>{active?.title ?? "—"}</b>
             </div>
@@ -97,13 +202,16 @@ export function Documents() {
               </button>
               <button className="tbtn" title="Share">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
                   <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
                 </svg>
               </button>
               <button className="tbtn" title="History">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M3 3v5h5M3.1 9a9 9 0 1 0 2.1-3.6L3 8" /><path d="M12 7v5l3 2" />
+                  <path d="M3 3v5h5M3.1 9a9 9 0 1 0 2.1-3.6L3 8" />
+                  <path d="M12 7v5l3 2" />
                 </svg>
               </button>
               {(members ?? []).slice(0, 3).map((m) => (
@@ -111,11 +219,34 @@ export function Documents() {
                   {initials(m.user.name)}
                 </span>
               ))}
-              <button className="btn sm" style={{ marginLeft: 6 }}>Edit</button>
+              <button
+                className="btn sm"
+                style={{ marginLeft: 6 }}
+                onClick={() => setEditMode((m) => !m)}
+                title="Toggle edit / preview"
+              >
+                {editMode ? (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                ) : (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z" />
+                  </svg>
+                )}
+                {editMode ? "Preview" : "Edit"}
+              </button>
             </div>
           </div>
+
           <div className="doc-content">
-            {active ? <PageView page={active} /> : <div className="muted">Select a page.</div>}
+            {active ? (
+              <PageEditor key={active.id} page={active} editMode={editMode} />
+            ) : (
+              <div className="muted">No pages yet — create one to start writing.</div>
+            )}
           </div>
         </div>
       </div>
@@ -124,7 +255,9 @@ export function Documents() {
       <div style={{ marginTop: 16 }}>
         <div className="section-title">
           <h2>Files & attachments</h2>
-          <span className="link" style={{ marginLeft: "auto" }} onClick={() => toast("Upload — pick a file")}>Upload</span>
+          <span className="link" style={{ marginLeft: "auto" }} onClick={() => toast("Upload — pick a file")}>
+            Upload
+          </span>
         </div>
         <div className="files-grid">
           {(files ?? []).map((f) => (
@@ -142,84 +275,7 @@ export function Documents() {
   );
 }
 
-function PageView({ page }: { page: Page }) {
-  return (
-    <>
-      <h1>
-        <span>{page.icon ?? "📄"}</span>
-        {page.title}
-      </h1>
-      <div className="byline">
-        Edited by <b style={{ color: "var(--fg)" }}>{page.editedBy?.name ?? "—"}</b> · {timeAgo(page.updatedAt)}
-      </div>
-      {(page.content ?? []).map((b) => (
-        <BlockView key={b.id} block={b} />
-      ))}
-    </>
-  );
-}
-
-function BlockView({ block }: { block: Block }) {
-  switch (block.type) {
-    case "heading1":
-    case "heading2":
-    case "heading3":
-      return <h2>{block.data.text}</h2>;
-    case "paragraph":
-      return <p>{block.data.text}</p>;
-    case "bulletList":
-      return (
-        <ul style={{ paddingLeft: 20, margin: "8px 0" }}>
-          {block.data.items.map((it, i) => (
-            <li key={i} style={{ fontSize: 13.5, color: "var(--fg)", marginBottom: 4 }}>{it}</li>
-          ))}
-        </ul>
-      );
-    case "orderedList":
-      return (
-        <ol style={{ paddingLeft: 20, margin: "8px 0" }}>
-          {block.data.items.map((it, i) => (
-            <li key={i} style={{ fontSize: 13.5, color: "var(--fg)", marginBottom: 4 }}>{it}</li>
-          ))}
-        </ol>
-      );
-    case "todo":
-      return (
-        <div className={`doc-check ${block.data.checked ? "done" : ""}`}>
-          <input type="checkbox" className="ck" defaultChecked={block.data.checked} />
-          {block.data.text}
-        </div>
-      );
-    case "quote":
-      return <blockquote className="callout info"><span>{block.data.text}</span></blockquote>;
-    case "code":
-      return <pre className="codeblock">{block.data.text}</pre>;
-    case "divider":
-      return <hr style={{ border: "none", borderTop: "1px solid var(--border)", margin: "14px 0" }} />;
-    case "callout": {
-      const variant = block.data.variant === "warning" ? "warn" : block.data.variant === "success" ? "info" : "info";
-      return (
-        <div className={`callout ${variant}`}>
-          <svg className="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 16v-4M12 8h.01" />
-          </svg>
-          <span>{block.data.text}</span>
-        </div>
-      );
-    }
-    case "image":
-      return (
-        <figure style={{ margin: "14px 0" }}>
-          <img src={block.data.fileId} alt={block.data.caption ?? ""} style={{ maxWidth: "100%", borderRadius: 8 }} />
-          {block.data.caption && <figcaption className="tiny muted">{block.data.caption}</figcaption>}
-        </figure>
-      );
-    default:
-      return null;
-  }
-}
-
+/* file helpers */
 function extKind(name: string): string {
   const ext = name.split(".").pop()?.toLowerCase() ?? "";
   if (["pdf"].includes(ext)) return "pdf";
