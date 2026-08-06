@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>aLabs — logo system · exploration</title>
+<style>
+  :root{
+    --accent:    oklch(54% 0.18 258);
+    --accent-2:  oklch(66% 0.16 258);   /* brighter accent for dark surfaces */
+    --ink:       oklch(14% 0.015 250);
+    --ink-2:     oklch(22% 0.013 250);
+    --muted:     oklch(52% 0.012 250);
+    --bg:        oklch(98.4% 0.002 250);
+    --surface:   oklch(100% 0 0);
+    --dark:      #1a1d2e;
+    --border:    oklch(91% 0.004 250);
+    --border-2:  oklch(96% 0.003 250);
+    --radius:    16px;
+    --word: "SF Pro Display","Avenir Next","Helvetica Neue",system-ui,sans-serif;
+    --sans: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font:15px/1.55 var(--sans);
+    -webkit-font-smoothing:antialiased;
+    padding:48px 24px 96px;
+  }
+  .wrap{max-width:1120px;margin:0 auto}
+
+  /* ---- header ---- */
+  header{margin-bottom:56px}
+  .eyebrow{
+    font:600 12px/1 var(--mono);
+    letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+    margin:0 0 18px;
+  }
+  .hero-lockup{display:flex;align-items:center;gap:18px;margin-bottom:22px}
+  .hero-lockup .mark{width:96px;height:96px}
+  .hero-lockup .wm{font:600 52px/1 var(--word);letter-spacing:-.025em;color:var(--ink)}
+  h1{font:600 30px/1.2 var(--word);letter-spacing:-.02em;margin:0 0 10px}
+  .lede{max-width:62ch;color:var(--ink-2);margin:0;font-size:16px}
+  .tokens{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+  .chip{
+    font:500 12px/1 var(--mono);color:var(--ink-2);
+    background:var(--surface);border:1px solid var(--border);
+    padding:7px 11px;border-radius:8px;display:inline-flex;align-items:center;gap:8px;
+  }
+  .sw{width:13px;height:13px;border-radius:4px;border:1px solid oklch(80% 0.004 250)}
+
+  /* ---- concept cards ---- */
+  main{display:flex;flex-direction:column;gap:22px}
+  section.card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:26px 26px 30px;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  section.card:hover{transform:translateY(-2px);box-shadow:0 10px 30px -18px oklch(30% 0.05 258 / .35);border-color:oklch(84% 0.01 258)}
+  .card-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .num{font:600 13px/1 var(--mono);color:var(--muted)}
+  .name{font:600 22px/1.2 var(--word);letter-spacing:-.015em;margin:0}
+  .rec{
+    font:600 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+    color:#fff;background:var(--accent);padding:5px 9px;border-radius:999px;
+  }
+  .why{color:var(--ink-2);margin:0 0 22px;max-width:74ch}
+
+  .label{
+    font:600 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 10px;
+  }
+  .block{margin-top:20px}
+
+  /* size rows */
+  .sizes{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap}
+  .swatch{display:flex;flex-direction:column;align-items:center;gap:7px}
+  .tile{display:grid;place-items:center;border-radius:12px;padding:14px}
+  .sz{font:500 11px/1 var(--mono);color:var(--muted)}
+
+  /* color treatments */
+  .treat{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .treat .swatch{align-items:center}
+
+  /* tiles / color channels */
+  .tile-light{--m1:var(--ink);--m2:var(--accent);--m3:oklch(99% 0 0);background:var(--surface);border:1px solid var(--border-2);color:var(--ink)}
+  .tile-dark{--m1:oklch(99% 0.002 250);--m2:var(--accent-2);--m3:oklch(99% 0 0);background:var(--dark);color:#fff}
+  .tile-mono{--m1:currentColor;--m2:currentColor;--m3:var(--surface);color:var(--ink);background:var(--bg);border:1px solid var(--border-2)}
+
+  .lockup{display:inline-flex;align-items:center;gap:11px;padding:14px 20px;border-radius:12px}
+  .lockup .wm{font:600 23px/1 var(--word);letter-spacing:-.02em}
+
+  .mark{display:block}
+
+  /* sizes */
+  .s128{width:128px;height:128px}
+  .s64{width:64px;height:64px}
+  .s40{width:40px;height:40px}
+  .s24{width:24px;height:24px}
+  .s16{width:16px;height:16px}
+  .s32{width:32px;height:32px}
+  .s28{width:28px;height:28px}
+
+  /* batch divider */
+  .batch{display:flex;gap:18px;align-items:flex-start;background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:20px 24px}
+  .batch-num{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);background:var(--surface);border:1px solid var(--border);padding:9px 11px;border-radius:8px;white-space:nowrap;align-self:flex-start}
+  .batch-title{font:600 19px/1.25 var(--word);letter-spacing:-.015em;margin:0 0 6px}
+  .batch-sub{margin:0;color:var(--ink-2);max-width:80ch;font-size:14.5px}
+
+  /* footer */
+  footer{margin-top:56px;padding-top:28px;border-top:1px solid var(--border);
+    display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+  footer b{color:var(--ink-2);font-weight:600}
+  .next{display:flex;flex-direction:column;gap:6px}
+
+  @media (max-width:640px){
+    body{padding:32px 16px 64px}
+    .hero-lockup .mark{width:72px;height:72px}
+    .hero-lockup .wm{font-size:40px}
+    h1{font-size:24px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== symbol library (define once, reuse at any size) ===== -->
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <!--
+        Shared lowercase-a body (double-story, geometric).
+        Construction on a 64 grid: bowl ø26 centered (26,32);
+        stem 36→44 × 14→52; counter ø10 at (27,32).
+        Nonzero fill: bowl+stem clockwise, counter counter-clockwise => cutout.
+        Colors via CSS channels so one symbol works light / dark / mono:
+          --m1 letter  --m2 accent  --m3 on-accent
+      -->
+      <symbol id="mk-orbit" viewBox="0 0 64 64">
+        <ellipse cx="32" cy="32" rx="28" ry="10.5" transform="rotate(-22 32 32)"
+                 fill="none" stroke-width="3.4" style="stroke:var(--m2)"/>
+        <path style="fill:var(--m1)"
+          d="M36 14 H44 V52 H36 Z M13 32 A13 13 0 0 1 39 32 A13 13 0 0 1 13 32 Z M32 32 A5 5 0 0 0 22 32 A5 5 0 0 0 32 32 Z"/>
+      </symbol>
+
+      <symbol id="mk-beam" viewBox="0 0 64 64">
+        <g transform="rotate(-32 32 32)">
+          <rect x="3" y="28.5" width="58" height="7" rx="3.5" style="fill:var(--m2)"/>
+        </g>
+        <path style="fill:var(--m1)"
+          d="M36 14 H44 V52 H36 Z M13 32 A13 13 0 0 1 39 32 A13 13 0 0 1 13 32 Z M32 32 A5 5 0 0 0 22 32 A5 5 0 0 0 32 32 Z"/>
+      </symbol>
+
+      <symbol id="mk-pulse" viewBox="0 0 64 64">
+        <path style="fill:var(--m1)"
+          d="M36 14 H44 V52 H36 Z M13 32 A13 13 0 0 1 39 32 A13 13 0 0 1 13 32 Z M32 32 A5 5 0 0 0 22 32 A5 5 0 0 0 32 32 Z"/>
+        <circle cx="27" cy="32" r="2.7" style="fill:var(--m2)"/>
+      </symbol>
+
+      <symbol id="mk-stack" viewBox="0 0 64 64">
+        <rect x="36" y="14" width="8" height="38" style="fill:var(--m1)"/>
+        <rect x="17" y="20.5" width="18" height="6.5" rx="3.25" style="fill:var(--m1)"/>
+        <rect x="13" y="30"   width="26" height="6.5" rx="3.25" style="fill:var(--m1)"/>
+        <rect x="15" y="39.5" width="22" height="6.5" rx="3.25" style="fill:var(--m1)"/>
+      </symbol>
+
+      <symbol id="mk-seal" viewBox="0 0 64 64">
+        <rect x="2" y="2" width="60" height="60" rx="14" style="fill:var(--m2)"/>
+        <path style="fill:var(--m3)"
+          d="M36 14 H44 V52 H36 Z M13 32 A13 13 0 0 1 39 32 A13 13 0 0 1 13 32 Z M32 32 A5 5 0 0 0 22 32 A5 5 0 0 0 32 32 Z"/>
+      </symbol>
+
+      <!-- ===== Batch 02 symbols ===== -->
+
+      <!-- 06 Aperture: 3 arc-blades (120° apart) + accent core -->
+      <symbol id="mk-aperture" viewBox="0 0 64 64">
+        <g fill="none" stroke-width="5.5" stroke-linecap="round">
+          <path d="M36.5 6.4 A26 26 0 0 1 45 54.5" style="stroke:var(--m1)"/>
+          <path d="M51.9 48.7 A26 26 0 0 1 6 32"   style="stroke:var(--m1)"/>
+          <path d="M7.6 40.9 A26 26 0 0 1 45 9.5"  style="stroke:var(--m1)"/>
+        </g>
+        <circle cx="32" cy="32" r="5.5" style="fill:var(--m2)"/>
+      </symbol>
+
+      <!-- 07 Lattice: 1→1→3 node tree -->
+      <symbol id="mk-lattice" viewBox="0 0 64 64">
+        <path d="M32 13 L32 31 M32 31 L15 51 M32 31 L32 52 M32 31 L49 51"
+              fill="none" stroke-width="2.6" stroke-linecap="round" style="stroke:var(--m2)"/>
+        <circle cx="32" cy="13" r="4.6" style="fill:var(--m2)"/>
+        <circle cx="32" cy="31" r="4"   style="fill:var(--m1)"/>
+        <circle cx="15" cy="51" r="3.6" style="fill:var(--m1)"/>
+        <circle cx="32" cy="52" r="3.6" style="fill:var(--m1)"/>
+        <circle cx="49" cy="51" r="3.6" style="fill:var(--m1)"/>
+      </symbol>
+
+      <!-- 08 Apex: upward triangle outline + accent centroid -->
+      <symbol id="mk-apex" viewBox="0 0 64 64">
+        <path d="M32 8 L55 51 L9 51 Z" fill="none" stroke-width="5.5"
+              stroke-linejoin="round" style="stroke:var(--m1)"/>
+        <circle cx="32" cy="37" r="5.5" style="fill:var(--m2)"/>
+      </symbol>
+
+      <!-- 09 Bloom: 4 converging capsules, 2-tone pinwheel -->
+      <symbol id="mk-bloom" viewBox="0 0 64 64">
+        <rect x="28.5" y="8" width="7" height="22" rx="3.5" style="fill:var(--m1)"/>
+        <rect x="28.5" y="8" width="7" height="22" rx="3.5" transform="rotate(90 32 32)"  style="fill:var(--m2)"/>
+        <rect x="28.5" y="8" width="7" height="22" rx="3.5" transform="rotate(180 32 32)" style="fill:var(--m1)"/>
+        <rect x="28.5" y="8" width="7" height="22" rx="3.5" transform="rotate(270 32 32)" style="fill:var(--m2)"/>
+      </symbol>
+
+      <!-- 10 Monogram: a + L fused (shared stem, bowl left, accent foot right) -->
+      <symbol id="mk-monogram" viewBox="0 0 64 64">
+        <rect x="36" y="13" width="8.5" height="39" rx="1.5" style="fill:var(--m1)"/>
+        <path style="fill:var(--m1)"
+          d="M13 32 A13 13 0 0 1 39 32 A13 13 0 0 1 13 32 Z M27 32 A5 5 0 0 0 17 32 A5 5 0 0 0 27 32 Z"/>
+        <rect x="44.5" y="44" width="13" height="8" rx="2" style="fill:var(--m2)"/>
+      </symbol>
+
+      <!-- ===== Batch 03 symbols ===== -->
+
+      <!-- global knockout mask for Prisma: white = keep tile, black = cut letter out -->
+      <mask id="prisma-mask">
+        <rect x="0" y="0" width="64" height="64" fill="#fff"/>
+        <path fill="#000"
+          d="M36 14 H44 V52 H36 Z M13 32 A13 13 0 0 1 39 32 A13 13 0 0 1 13 32 Z M32 32 A5 5 0 0 0 22 32 A5 5 0 0 0 32 32 Z"/>
+      </mask>
+
+      <!-- 11 Prisma: knockout a in a solid tile + accent core (negative space) -->
+      <symbol id="mk-prisma" viewBox="0 0 64 64">
+        <rect x="2" y="2" width="60" height="60" rx="14" style="fill:var(--m1)" mask="url(#prisma-mask)"/>
+        <circle cx="27" cy="32" r="2.7" style="fill:var(--m2)"/>
+      </symbol>
+
+      <!-- 12 Continuum: single-stroke infinity loop + accent knot -->
+      <symbol id="mk-continuum" viewBox="0 0 64 64">
+        <path d="M14 32 C14 21 30 21 32 32 C34 43 50 43 50 32 C50 21 34 21 32 32 C30 43 14 43 14 32 Z"
+              fill="none" stroke-width="5.5" stroke-linejoin="round" style="stroke:var(--m1)"/>
+        <circle cx="32" cy="32" r="3.6" style="fill:var(--m2)"/>
+      </symbol>
+
+      <!-- 13 Fold: two-facet folded chevron (shadow face + lit face) -->
+      <symbol id="mk-fold" viewBox="0 0 64 64">
+        <path d="M10 32 L32 14 L32 50 Z" style="fill:var(--m1)"/>
+        <path d="M32 14 L54 32 L32 50 Z" style="fill:var(--m2)"/>
+      </symbol>
+
+      <!-- 14 Signal — REFINED (winner): flat baselines in m1, the heartbeat
+           spike itself rendered in accent m2, so the line reads as a signal
+           even at 16px with no separate node. Stroke 4.5 -> 6; peak dot gone. -->
+      <symbol id="mk-signal" viewBox="0 0 64 64">
+        <path d="M3 40 H27 M45 40 H61"
+              fill="none" stroke-width="6" stroke-linecap="round" style="stroke:var(--m1)"/>
+        <path d="M27 40 L31 43 L36 13 L40 47 L45 40"
+              fill="none" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--m2)"/>
+      </symbol>
+
+      <!-- Signal as an app-icon / favicon: white spike on the accent tile,
+           baselines softened to 50% so the spike carries the read on a tab. -->
+      <symbol id="mk-signal-seal" viewBox="0 0 64 64">
+        <rect x="2" y="2" width="60" height="60" rx="15" style="fill:var(--m2)"/>
+        <path d="M12 40 H24 M40 40 H52"
+              fill="none" stroke-width="5" stroke-linecap="round" style="stroke:#fff;opacity:.5"/>
+        <path d="M24 40 L28 43 L32 15 L36 47 L40 40"
+              fill="none" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round" style="stroke:#fff"/>
+      </symbol>
+
+      <!-- 15 Matrix: 2×2 module grid, one active accent cell -->
+      <symbol id="mk-matrix" viewBox="0 0 64 64">
+        <rect x="8"  y="8"  width="22" height="22" rx="5" style="fill:var(--m1)"/>
+        <rect x="34" y="8"  width="22" height="22" rx="5" style="fill:var(--m2)"/>
+        <rect x="8"  y="34" width="22" height="22" rx="5" style="fill:var(--m1)"/>
+        <rect x="34" y="34" width="22" height="22" rx="5" style="fill:var(--m1)"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <header>
+    <p class="eyebrow">aLabs · logo system</p>
+    <div class="hero-lockup">
+      <span class="tile tile-light" style="padding:18px;border-radius:16px">
+        <svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-signal"/></svg>
+      </span>
+      <span class="wm">aLabs</span>
+    </div>
+    <h1>Fifteen directions for the aLabs mark</h1>
+    <p class="lede">
+      Three batches. 01–05 wrap an idea around the same geometric lowercase
+      <b>a</b>. 06–10 leave the letter behind — pure geometry and one fused
+      monogram. 11–15 reach for the execution cues a tech brand actually ships:
+      negative space, a continuous line, a folded plane, a live signal, a
+      module grid. Every concept is shown at the sizes that matter: from a
+      128&thinsp;px hero down to a 16&thinsp;px favicon, on light, dark, and
+      pure monochrome.
+    </p>
+    <div class="tokens">
+      <span class="chip"><span class="sw" style="background:var(--accent)"></span>accent · oklch(54% .18 258)</span>
+      <span class="chip"><span class="sw" style="background:var(--ink)"></span>ink · oklch(14% .015 250)</span>
+      <span class="chip"><span class="sw" style="background:var(--dark)"></span>surface · #1a1d2e</span>
+      <span class="chip">grid · 64 · stroke scales with mark</span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ============ 01 ORBIT (recommended) ============ -->
+    <section class="card" data-od-id="concept-orbit">
+      <div class="card-head">
+        <span class="num">01</span>
+        <h2 class="name">Orbit</h2>
+        <span class="rec">Recommended</span>
+      </div>
+      <p class="why">
+        A tilted atom-ring around the letter — the strongest read on the “labs”
+        idea (energy, particles, momentum) without sacrificing legibility. The
+        ring is drawn behind the <i>a</i>, so the letter stays whole at every
+        size. A back/front split can be added later for a 3-D finish.
+      </p>
+
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-orbit"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-orbit"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-orbit"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-orbit"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-orbit"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-orbit"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-orbit"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-orbit"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-orbit"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 02 BEAM ============ -->
+    <section class="card" data-od-id="concept-beam">
+      <div class="card-head">
+        <span class="num">02</span>
+        <h2 class="name">Beam</h2>
+      </div>
+      <p class="why">
+        A single diagonal streak cutting behind the <i>a</i> — laser / light-beam
+        energy, leaning into precision and forward motion. Because the beam sits
+        behind the letter, the silhouette of the <i>a</i> is never broken.
+      </p>
+
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-beam"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-beam"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-beam"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-beam"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-beam"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-beam"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-beam"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-beam"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-beam"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 03 PULSE ============ -->
+    <section class="card" data-od-id="concept-pulse">
+      <div class="card-head">
+        <span class="num">03</span>
+        <h2 class="name">Pulse</h2>
+      </div>
+      <p class="why">
+        The cleanest of the five: the stock <i>a</i> with a single accent dot
+        floating in its counter — an “active core.” At small sizes the dot
+        vanishes and you’re left with a crisp classic <i>a</i>; at larger sizes
+        the dot gives it a pulse of brand color. Quiet, mature, very ownable.
+      </p>
+
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-pulse"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-pulse"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-pulse"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-pulse"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-pulse"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-pulse"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-pulse"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-pulse"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-pulse"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 04 STACK ============ -->
+    <section class="card" data-od-id="concept-stack">
+      <div class="card-head">
+        <span class="num">04</span>
+        <h2 class="name">Stack</h2>
+      </div>
+      <p class="why">
+        The <i>a</i>’s bowl is built from three layered bars — narrow at top and
+        bottom, wide in the middle — so the silhouette still reads as a circle.
+        This one literally depicts the product: User → Org → Project → Modules.
+        The most concept-driven of the five, and the most distinctive at a glance.
+      </p>
+
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-stack"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-stack"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-stack"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-stack"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-stack"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-stack"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-stack"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-stack"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-stack"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 05 SEAL ============ -->
+    <section class="card" data-od-id="concept-seal">
+      <div class="card-head">
+        <span class="num">05</span>
+        <h2 class="name">Seal</h2>
+      </div>
+      <p class="why">
+        Not a new letterform — a container. The <i>a</i> set in white on a
+        rounded accent tile: the app-icon and favicon treatment you’ll need
+        regardless of which primary mark you pick. Shown here as a candidate
+        because some brands lead with the badge itself.
+      </p>
+
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-seal"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-seal"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-seal"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-seal"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-seal"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-seal"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-seal"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-seal"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-seal"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================== BATCH 02 ================== -->
+    <div class="batch" data-od-id="batch-02-abstract">
+      <span class="batch-num">Batch 02</span>
+      <div>
+        <h2 class="batch-title">Abstract &amp; structural directions</h2>
+        <p class="batch-sub">
+          Batch 01 (above) wraps ideas around the letter <b>a</b>. This batch
+          leaves the letter behind — pure geometry and one fused monogram —
+          for a mark that reads as a <i>system</i>, not a wordmark.
+          <b>Aperture</b> (06) is the strongest here and a genuine alternative
+          to <b>Orbit</b> (01).
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ 06 APERTURE (recommended · abstract lane) ============ -->
+    <section class="card" data-od-id="concept-aperture">
+      <div class="card-head">
+        <span class="num">06</span>
+        <h2 class="name">Aperture</h2>
+        <span class="rec">Recommended</span>
+      </div>
+      <p class="why">
+        No letter — three thick arc-blades offset 120° around a glowing accent
+        core, reading as a camera iris or scientific aperture. It owns the
+        “labs / precision instrument” idea more directly than any letterform
+        can, and the rotational silhouette stays unmistakable down to
+        16&thinsp;px. The strongest mark in this batch and a real alternative
+        to Orbit (01).
+      </p>
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-aperture"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-aperture"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-aperture"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-aperture"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-aperture"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-aperture"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-aperture"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-aperture"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-aperture"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 07 LATTICE ============ -->
+    <section class="card" data-od-id="concept-lattice">
+      <div class="card-head">
+        <span class="num">07</span>
+        <h2 class="name">Lattice</h2>
+      </div>
+      <p class="why">
+        A 1&rarr;1&rarr;3 node tree — literally the product's shape: one user,
+        one org, many projects and modules. Accent connector lines tie the
+        structure together and the originating node glows at the top. The most
+        concept-honest mark on the page, and the only one that <i>diagrams</i>
+        what aLabs actually is.
+      </p>
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-lattice"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-lattice"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-lattice"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-lattice"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-lattice"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-lattice"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-lattice"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-lattice"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-lattice"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 08 APEX ============ -->
+    <section class="card" data-od-id="concept-apex">
+      <div class="card-head">
+        <span class="num">08</span>
+        <h2 class="name">Apex</h2>
+      </div>
+      <p class="why">
+        An upward triangle with an accent core at its centroid — summit,
+        leadership, the thing every delivery aims for. Outline construction
+        keeps it clear of “play button”; the accent dot gives it a goal at its
+        heart. Bold, geometric, scales without effort.
+      </p>
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-apex"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-apex"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-apex"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-apex"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-apex"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-apex"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-apex"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-apex"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-apex"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 09 BLOOM ============ -->
+    <section class="card" data-od-id="concept-bloom">
+      <div class="card-head">
+        <span class="num">09</span>
+        <h2 class="name">Bloom</h2>
+      </div>
+      <p class="why">
+        Four converging capsules in a two-tone pinwheel — the organic
+        counterpoint to the rest of the system. Reads as units coming together
+        around a shared center: collaboration, convergence. Softens the brand
+        without going consumer; the two-tone rotation is what makes it ownable.
+      </p>
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-bloom"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-bloom"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-bloom"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-bloom"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-bloom"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-bloom"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-bloom"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-bloom"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-bloom"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10 MONOGRAM ============ -->
+    <section class="card" data-od-id="concept-monogram">
+      <div class="card-head">
+        <span class="num">10</span>
+        <h2 class="name">Monogram</h2>
+      </div>
+      <p class="why">
+        The only letterform in this batch, but a different kind: <b>a</b> and
+        <b>L</b> fused into a single mark — a shared vertical stem, the
+        <i>a</i>'s bowl to its left, and an accent foot extending right to form
+        the <b>L</b>. One glyph that is also the brand's initials — the most
+        ownable option if you want the mark to <i>be</i> the name.
+      </p>
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-monogram"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-monogram"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-monogram"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-monogram"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-monogram"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-monogram"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-monogram"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-monogram"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-monogram"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================== BATCH 03 ================== -->
+    <div class="batch" data-od-id="batch-03-craft-motion">
+      <span class="batch-num">Batch 03</span>
+      <div>
+        <h2 class="batch-title">Craft &amp; motion directions</h2>
+        <p class="batch-sub">
+          Batch 01 wrapped ideas around the letter <b>a</b>; Batch 02 went
+          abstract. This batch reaches for the <i>execution cues</i> a tech
+          brand actually ships — negative space, a single continuous line, a
+          folded plane, a live signal, a module grid. <b>Prisma</b> (11) is the
+          most premium mark in the whole set and the strongest app-icon.
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ 11 PRISMA (recommended · negative-space lane) ============ -->
+    <section class="card" data-od-id="concept-prisma">
+      <div class="card-head">
+        <span class="num">11</span>
+        <h2 class="name">Prisma</h2>
+        <span class="rec">Recommended</span>
+      </div>
+      <p class="why">
+        Not a new letterform — a new <i>technique</i>. The <b>a</b> is knocked
+        out of a solid rounded tile so the surface shows through the letter,
+        with a single accent dot glowing in the counter. Negative-space marks
+        read as the most premium tier of branding (Adobe, Beats, the Guild of
+        Food Writers fork-tongue) and this is the strongest app-icon in the
+        whole set — its solid mass holds weight at 16&thinsp;px where every
+        thin-stroke mark on this page starts to collapse.
+      </p>
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-prisma"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-prisma"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-prisma"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-prisma"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-prisma"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-prisma"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-prisma"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-prisma"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-prisma"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 12 CONTINUUM ============ -->
+    <section class="card" data-od-id="concept-continuum">
+      <div class="card-head">
+        <span class="num">12</span>
+        <h2 class="name">Continuum</h2>
+      </div>
+      <p class="why">
+        A single continuous stroke forming an infinity loop, knotted at an
+        accent center — flow, feedback, always-on delivery. One unbroken line
+        is the most elegant construction on the page: no fills, no joints to
+        misalign, and it scales by stroke alone. It also never competes with
+        the wordmark, which is why it pairs cleanest in the lockups.
+      </p>
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-continuum"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-continuum"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-continuum"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-continuum"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-continuum"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-continuum"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-continuum"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-continuum"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-continuum"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 13 FOLD ============ -->
+    <section class="card" data-od-id="concept-fold">
+      <div class="card-head">
+        <span class="num">13</span>
+        <h2 class="name">Fold</h2>
+      </div>
+      <p class="why">
+        Two flat facets meeting at a ridge — a single plane folded into a
+        chevron, one face inked and one lit in accent. Origami energy:
+        precision, one material shaped into form. The two-tone split is what
+        rescues it from reading as a generic “play” triangle, and because both
+        halves are solid masses it holds up perfectly at 16&thinsp;px.
+      </p>
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-fold"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-fold"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-fold"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-fold"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-fold"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-fold"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-fold"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-fold"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-fold"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 14 SIGNAL ============ -->
+    <section class="card" data-od-id="concept-signal">
+      <div class="card-head">
+        <span class="num">14</span>
+        <h2 class="name">Signal</h2>
+      </div>
+      <p class="why">
+        A heartbeat line climbing to a peak marked with an accent node — live
+        data, momentum, the pulse of active delivery. The most literal “this
+        product is alive and shipping” read of any mark on the page, and the
+        ascending silhouette doubles as a growth cue without stooping to a bar
+        chart. <b>Chosen &amp; refined</b> — see the Winner card below: the spike is
+        now the accent colour, solving the 16&thinsp;px risk.
+      </p>
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-signal"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-signal"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 15 MATRIX ============ -->
+    <section class="card" data-od-id="concept-matrix">
+      <div class="card-head">
+        <span class="num">15</span>
+        <h2 class="name">Matrix</h2>
+      </div>
+      <p class="why">
+        Four rounded module tiles in a 2×2 grid, one cell lit accent — the
+        modular platform made literal: discrete capabilities (tasks, planning,
+        docs, agreements, comms) held in one frame, with the active module
+        highlighted. The most conventional silhouette on the page, kept honest
+        by the single accent cell that ties it back into the system rather than
+        reading as a generic window-pane.
+      </p>
+      <div class="block">
+        <p class="label">On light · scale test</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-matrix"/></svg></div><span class="sz">128</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-matrix"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-matrix"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-matrix"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-matrix"/></svg></div><span class="sz">16</span></div>
+        </div>
+      </div>
+      <div class="block">
+        <p class="label">Treatments &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-matrix"/></svg></div><span class="sz">dark</span></div>
+          <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-matrix"/></svg></div><span class="sz">mono</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-matrix"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s28" viewBox="0 0 64 64"><use href="#mk-matrix"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ WINNER · SIGNAL, REFINED ============ -->
+    <section class="card" data-od-id="winner-signal">
+      <div class="card-head">
+        <span class="badge">Winner</span>
+        <h2 class="name">Signal — refined</h2>
+      </div>
+      <p class="why">
+        The heartbeat spike itself is now the accent (two-tone), so the mark
+        reads as a signal even at 16&thinsp;px with no separate node. Stroke
+        bumped 4.5&nbsp;&rarr;&nbsp;6; the old peak dot is removed — the peak
+        <em>is</em> the colour now. Baselines sit flat in ink; the QRS complex
+        glows accent.
+      </p>
+      <div class="block">
+        <p class="label">Hero &amp; lockups</p>
+        <div class="treat">
+          <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">hero &middot; light</span></div>
+          <div class="swatch"><div class="tile tile-dark"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">hero &middot; dark</span></div>
+          <div class="swatch"><div class="lockup tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-signal"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup &middot; light</span></div>
+          <div class="swatch"><div class="lockup tile-dark"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-signal"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup &middot; dark</span></div>
+        </div>
+      </div>
+      <div class="block">
+        <p class="label">App-icon &amp; favicon — white spike on the accent tile, baselines softened to 50%</p>
+        <div class="sizes">
+          <div class="swatch"><div class="tile tile-light" style="padding:8px"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-signal-seal"/></svg></div><span class="sz">64</span></div>
+          <div class="swatch"><div class="tile tile-light" style="padding:7px"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-signal-seal"/></svg></div><span class="sz">40</span></div>
+          <div class="swatch"><div class="tile tile-light" style="padding:6px"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-signal-seal"/></svg></div><span class="sz">24</span></div>
+          <div class="swatch"><div class="tile tile-light" style="padding:5px"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-signal-seal"/></svg></div><span class="sz">favicon 16</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="next">
+      <span><b>Decision.</b> <b>Signal</b> (14) is the chosen mark — refined in place: the heartbeat spike is now the accent colour (two-tone), stroke 4.5 &rarr; 6, peak dot removed. See the <b>Winner</b> card for the hero, app-icon, and the 16&thinsp;px read.</span>
+      <span>Next — drop it into the real app sidebar (<code>helix-app.html</code>) and generate a favicon from the seal. On your go.</span>
+    </div>
+    <div>Built on the active aLabs tokens · oklch palette · pure SVG</div>
+  </footer>
+
+</div>
+</body>
+</html>

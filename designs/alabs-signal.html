@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>aLabs · Signal mark</title>
+<style>
+  :root{
+    --accent:   oklch(54% 0.18 258);
+    --accent-2: oklch(66% 0.16 258);   /* brighter accent for dark surfaces */
+    --ink:      oklch(14% 0.015 250);
+    --ink-2:    oklch(22% 0.013 250);
+    --muted:    oklch(52% 0.012 250);
+    --bg:       oklch(98.4% 0.002 250);
+    --surface:  oklch(100% 0 0);
+    --dark:     #1a1d2e;
+    --border:   oklch(91% 0.004 250);
+    --border-2: oklch(96% 0.003 250);
+    --radius:   16px;
+    --word: "SF Pro Display","Avenir Next","Helvetica Neue",system-ui,sans-serif;
+    --sans: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font:15px/1.55 var(--sans);
+    -webkit-font-smoothing:antialiased;
+    padding:56px 24px 96px;
+  }
+  .wrap{max-width:1040px;margin:0 auto}
+
+  /* ---- header / hero ---- */
+  header{margin-bottom:64px}
+  .eyebrow{
+    font:600 12px/1 var(--mono);
+    letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+    margin:0 0 20px;
+  }
+  .hero-lockup{display:flex;align-items:center;gap:22px;margin-bottom:24px}
+  .hero-tile{
+    display:grid;place-items:center;border-radius:20px;padding:28px;
+    background:var(--surface);border:1px solid var(--border-2);
+  }
+  .hero-lockup .mark{width:128px;height:128px}
+  .hero-lockup .wm{font:600 64px/1 var(--word);letter-spacing:-.028em;color:var(--ink)}
+  h1{font:600 30px/1.2 var(--word);letter-spacing:-.02em;margin:0 0 10px}
+  .lede{max-width:62ch;color:var(--ink-2);margin:0;font-size:16px}
+  .tokens{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+  .chip{
+    font:500 12px/1 var(--mono);color:var(--ink-2);
+    background:var(--surface);border:1px solid var(--border);
+    padding:7px 11px;border-radius:8px;display:inline-flex;align-items:center;gap:8px;
+  }
+  .sw{width:13px;height:13px;border-radius:4px;border:1px solid oklch(80% 0.004 250)}
+
+  /* ---- sections ---- */
+  main{display:flex;flex-direction:column;gap:22px}
+  section.card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:28px 28px 32px;
+  }
+  .label{
+    font:600 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 16px;
+  }
+  .sizes{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap}
+  .swatch{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .tile{display:grid;place-items:center;border-radius:12px;padding:16px}
+  .sz{font:500 11px/1 var(--mono);color:var(--muted)}
+
+  /* color channels */
+  .tile-light{--m1:var(--ink);--m2:var(--accent);background:var(--surface);border:1px solid var(--border-2);color:var(--ink)}
+  .tile-dark{--m1:oklch(99% 0.002 250);--m2:var(--accent-2);background:var(--dark);color:#fff}
+  .tile-mono{--m1:currentColor;--m2:currentColor;color:var(--ink);background:var(--bg);border:1px solid var(--border-2)}
+
+  .lockup{display:inline-flex;align-items:center;gap:12px;padding:16px 22px;border-radius:12px}
+  .lockup .wm{font:600 26px/1 var(--word);letter-spacing:-.02em}
+
+  .treat{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}
+
+  .mark{display:block}
+
+  /* sizes */
+  .s128{width:128px;height:128px}
+  .s64{width:64px;height:64px}
+  .s40{width:40px;height:40px}
+  .s32{width:32px;height:32px}
+  .s24{width:24px;height:24px}
+  .s16{width:16px;height:16px}
+
+  footer{
+    margin-top:56px;padding-top:24px;border-top:1px solid var(--border);
+    color:var(--muted);font-size:13px;
+  }
+
+  @media (max-width:640px){
+    body{padding:36px 16px 64px}
+    .hero-lockup .mark{width:88px;height:88px}
+    .hero-lockup .wm{font-size:44px}
+    h1{font-size:23px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== symbol library ===== -->
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <!-- Signal — flat baselines in m1 (ink), the heartbeat spike in m2 (accent).
+           Two-tone so the line reads as a signal by color even at 16px. -->
+      <symbol id="mk-signal" viewBox="0 0 64 64">
+        <path d="M3 40 H27 M45 40 H61"
+              fill="none" stroke-width="6" stroke-linecap="round" style="stroke:var(--m1)"/>
+        <path d="M27 40 L31 43 L36 13 L40 47 L45 40"
+              fill="none" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--m2)"/>
+      </symbol>
+
+      <!-- Signal as app-icon / favicon: white spike on accent tile,
+           baselines softened so the spike carries the read on a tab. -->
+      <symbol id="mk-signal-seal" viewBox="0 0 64 64">
+        <rect x="2" y="2" width="60" height="60" rx="15" style="fill:var(--m2)"/>
+        <path d="M12 40 H24 M40 40 H52"
+              fill="none" stroke-width="5" stroke-linecap="round" style="stroke:#fff;opacity:.5"/>
+        <path d="M24 40 L28 43 L32 15 L36 47 L40 40"
+              fill="none" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round" style="stroke:#fff"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <header data-od-id="hero">
+    <p class="eyebrow">aLabs · logo</p>
+    <div class="hero-lockup">
+      <span class="hero-tile">
+        <svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-signal"/></svg>
+      </span>
+      <span class="wm">aLabs</span>
+    </div>
+    <h1>The aLabs Signal mark</h1>
+    <p class="lede">A heartbeat line that climbs to a single accent peak — momentum, live data, the signal of a thing shipped. Flat baselines in ink, the spike in accent, so it reads as a signal by color even at favicon size.</p>
+    <div class="tokens">
+      <span class="chip"><span class="sw" style="background:var(--accent)"></span>accent · oklch(54% .18 258)</span>
+      <span class="chip"><span class="sw" style="background:var(--ink)"></span>ink · oklch(14% .015 250)</span>
+      <span class="chip"><span class="sw" style="background:var(--dark)"></span>surface · #1a1d2e</span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- size scale -->
+    <section class="card" data-od-id="scale">
+      <p class="label">Scale — light surface</p>
+      <div class="sizes">
+        <div class="swatch"><div class="tile tile-light"><svg class="mark s128" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">128</span></div>
+        <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">64</span></div>
+        <div class="swatch"><div class="tile tile-light"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">40</span></div>
+        <div class="swatch"><div class="tile tile-light"><svg class="mark s32" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">32</span></div>
+        <div class="swatch"><div class="tile tile-light"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">24</span></div>
+        <div class="swatch"><div class="tile tile-light"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">16</span></div>
+      </div>
+    </section>
+
+    <!-- treatments + lockups -->
+    <section class="card" data-od-id="treatments">
+      <p class="label">Treatments &amp; lockups</p>
+      <div class="treat">
+        <div class="swatch"><div class="tile tile-light"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">light</span></div>
+        <div class="swatch"><div class="tile tile-dark"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">dark</span></div>
+        <div class="swatch"><div class="tile tile-mono"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-signal"/></svg></div><span class="sz">mono</span></div>
+        <div class="swatch"><div class="lockup tile-light"><svg class="mark s32" viewBox="0 0 64 64"><use href="#mk-signal"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · light</span></div>
+        <div class="swatch"><div class="lockup tile-dark"><svg class="mark s32" viewBox="0 0 64 64"><use href="#mk-signal"/></svg><span class="wm">aLabs</span></div><span class="sz">lockup · dark</span></div>
+      </div>
+    </section>
+
+    <!-- favicon / app-icon -->
+    <section class="card" data-od-id="favicon">
+      <p class="label">App-icon / favicon seal</p>
+      <div class="treat">
+        <div class="swatch"><div class="tile tile-light" style="padding:8px"><svg class="mark s64" viewBox="0 0 64 64"><use href="#mk-signal-seal"/></svg></div><span class="sz">64</span></div>
+        <div class="swatch"><div class="tile tile-light" style="padding:8px"><svg class="mark s40" viewBox="0 0 64 64"><use href="#mk-signal-seal"/></svg></div><span class="sz">40</span></div>
+        <div class="swatch"><div class="tile tile-light" style="padding:8px"><svg class="mark s32" viewBox="0 0 64 64"><use href="#mk-signal-seal"/></svg></div><span class="sz">32</span></div>
+        <div class="swatch"><div class="tile tile-light" style="padding:8px"><svg class="mark s24" viewBox="0 0 64 64"><use href="#mk-signal-seal"/></svg></div><span class="sz">24</span></div>
+        <div class="swatch"><div class="tile tile-light" style="padding:8px"><svg class="mark s16" viewBox="0 0 64 64"><use href="#mk-signal-seal"/></svg></div><span class="sz">favicon 16</span></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    aLabs Signal · one mark, two channels (ink + accent), one 64-grid. Eyeball the 16px rows.
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "alabs-logo-preview.html",
+  "entry": "alabs-logo-preview.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-08-05T09:40:43.215Z",
+  "updatedAt": "2026-08-05T09:40:43.215Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

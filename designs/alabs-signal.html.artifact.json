@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "alabs-signal.html",
+  "entry": "alabs-signal.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-08-05T10:14:43.477Z",
+  "updatedAt": "2026-08-05T10:14:43.477Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}
