@@ -1,8 +1,8 @@
 {
   "version": 1,
   "kind": "html",
-  "title": "Helix · Workspace",
-  "entry": "helix-app.html",
+  "title": "aLabs · Workspace",
+  "entry": "alabs-app.html",
   "renderer": "html",
   "status": "complete",
   "exports": [
@@ -15,7 +15,7 @@
   "updatedAt": "2026-07-25T19:28:37.856Z",
   "sourceSkillId": "agent-browser",
   "metadata": {
-    "identifier": "helix-app",
+    "identifier": "alabs-app",
     "artifactType": "text/html",
     "inferred": false
   }
