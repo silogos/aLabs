@@ -59,9 +59,10 @@ const PROJECTS = [
 ] as const;
 
 const ORGS = [
-  { id: "nw", dot: "N", hue: 265, name: "Northwind Software House" },
-  { id: "as", dot: "A", hue: 195, name: "Amin Studio" },
-  { id: "ai", dot: "A", hue: 25, name: "Acme Internal" },
+  { id: "personal", dot: "A", hue: 320, name: "Personal", kind: "personal" },
+  { id: "nw", dot: "N", hue: 265, name: "Northwind Software House", kind: "team" },
+  { id: "as", dot: "A", hue: 195, name: "Amin Studio", kind: "team" },
+  { id: "ai", dot: "A", hue: 25, name: "Acme Internal", kind: "team" },
 ] as const;
 
 const CheckIcon = (
@@ -283,7 +284,18 @@ export function Sidebar() {
             </div>
             <div className="me-sep"></div>
             <div className="me-grp">Organization</div>
-            {ORGS.map((o) => (
+            {ORGS.filter((o) => o.kind === "personal").map((o) => (
+              <button key={o.id} className={`sw-item ${o.id === selOrgId ? "cur" : ""}`} onClick={() => switchOrg(o)}>
+                <span className="pdot" style={{ background: `oklch(48% .10 ${o.hue})` }}>
+                  {o.dot}
+                </span>
+                <span className="nm">{o.name}</span>
+                {o.id === selOrgId && CheckIcon}
+              </button>
+            ))}
+            <div className="me-sep"></div>
+            <div className="me-grp">Team workspaces</div>
+            {ORGS.filter((o) => o.kind === "team").map((o) => (
               <button key={o.id} className={`sw-item ${o.id === selOrgId ? "cur" : ""}`} onClick={() => switchOrg(o)}>
                 <span className="pdot" style={{ background: `oklch(48% .10 ${o.hue})` }}>
                   {o.dot}

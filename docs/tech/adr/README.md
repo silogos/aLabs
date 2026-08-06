@@ -44,3 +44,4 @@ What else was considered and rejected.
 | 0004| Drizzle as the ORM                             |
 | 0005| Better Auth for authentication                 |
 | 0006| AI is an isolated, optional add-on             |
+| 0007| Personal workspaces as single-member orgs       |

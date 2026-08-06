@@ -153,7 +153,7 @@ Seed the `plans` table.
 
 | name          | price | currency | project_limit | features                                                       |
 | ------------- | ----- | -------- | ------------- | -------------------------------------------------------------- |
-| free          | 0     | USD      | _TBD_         | core modules                                                   |
+| free          | 0     | USD      | 2             | core modules                                                   |
 | professional  | _TBD_ | USD      | null          | core modules, client_portal, advanced_reporting                |
 | enterprise    | _TBD_ | USD      | null          | everything, self_hosted, sso, audit_logs, advanced_permissions |
 

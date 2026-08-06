@@ -9,7 +9,7 @@ import {
   DEFAULT_TASK_STATUSES,
   DEFAULT_TASK_TYPES,
 } from "@pmin/core";
-import { PROJECT_TRANSITIONS, canTransition } from "@pmin/core";
+import { PROJECT_TRANSITIONS, canTransition, PERSONAL_PROJECT_LIMIT } from "@pmin/core";
 import { badRequest, conflict, notFound } from "../../lib/errors.js";
 import { created, data, noContent } from "../../lib/responses.js";
 import { parseBody } from "../../lib/validate.js";
@@ -34,6 +34,20 @@ project.post("/", orgContext, requirePermission("project:create"), async (c) => 
     throw badRequest("Slug already taken in this organization");
   if (store.projects.some((p) => p.organizationId === orgId && p.key === input.key))
     throw badRequest("Key already taken in this organization");
+
+  // Personal workspaces are capped at PERSONAL_PROJECT_LIMIT active projects.
+  // Active = not archived and not soft-deleted (archiving frees the slot).
+  // See docs/foundation/04-plans-workspaces.md and ADR 0007.
+  const org = store.organizations.find((o) => o.id === orgId);
+  if (org?.type === "personal") {
+    const active = store.projects.filter(
+      (p) => p.organizationId === orgId && !p.deletedAt && p.status !== "archived",
+    ).length;
+    if (active >= PERSONAL_PROJECT_LIMIT)
+      throw badRequest(
+        `Personal workspaces are limited to ${PERSONAL_PROJECT_LIMIT} active projects`,
+      );
+  }
 
   const proj = {
     id: uuidv7(),

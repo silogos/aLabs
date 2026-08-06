@@ -46,6 +46,7 @@ Better Auth owns `users`, `sessions`, `accounts`, `verifications`. Domain code r
 | id           | uuid          | pk                         |
 | name         | varchar(100)  | not null                   |
 | slug         | varchar(60)   | not null, unique           |
+| type         | organization_type | not null default 'team'    |
 | logo         | text          | null                       |
 | description  | text          | null                       |
 | timezone     | varchar(50)   | not null default 'UTC'     |
@@ -53,6 +54,11 @@ Better Auth owns `users`, `sessions`, `accounts`, `verifications`. Domain code r
 | website      | text          | null                       |
 | created_at   | timestamptz   | not null default now       |
 | updated_at   | timestamptz   | not null default now       |
+
+`organization_type` enum: `personal`, `team`. A personal workspace is an org
+with a single member (the owner); see `docs/foundation/04-plans-workspaces.md`
+and ADR 0007. Free/paid is an **org** property — there is no `plan` column on
+`users`; paid plans live on `subscriptions.organization_id`.
 
 ## organization_members
 

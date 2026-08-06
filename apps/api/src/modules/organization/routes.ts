@@ -40,6 +40,7 @@ organization.post("/", async (c) => {
     id: uuidv7(),
     name: input.name,
     slug: input.slug,
+    type: "team" as const,
     logo: null,
     description: input.description ?? null,
     timezone: "UTC",
@@ -83,6 +84,10 @@ organization.get("/:organizationId/members", orgContext, requirePermission("memb
 organization.post("/:organizationId/members", orgContext, requirePermission("member:create"), async (c) => {
   const input = parseBody(await c.req.json(), invitationInput);
   const org = currentOrg(c);
+  // Personal workspaces are single-member by design — invites are blocked at
+  // the org level so cross-user assignment is impossible by construction.
+  if (org.type === "personal")
+    throw badRequest("Personal workspaces cannot invite members");
   const role =
     store.roles.find((r) => r.name === input.roleName && r.scope === "workspace") ??
     store.roles.find((r) => r.name === "Member" && r.scope === "workspace")!;

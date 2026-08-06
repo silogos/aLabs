@@ -77,6 +77,7 @@ export function seed(): void {
     id: uuidv7(),
     name: "Northwind",
     slug: "northwind",
+    type: "team" as const,
     logo: null,
     description: "Software House",
     timezone: "UTC",

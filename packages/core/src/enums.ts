@@ -13,6 +13,7 @@ import { pgEnum } from "drizzle-orm/pg-core";
 export type MemberStatus = "pending" | "active" | "suspended";
 export type InvitationStatus = "pending" | "accepted" | "expired" | "cancelled";
 export type RoleScope = "workspace" | "project";
+export type OrganizationType = "personal" | "team";
 export type ProjectStatus = "active" | "on_hold" | "archived";
 export type ProjectVisibility = "organization" | "private";
 export type TaskPriority = "low" | "medium" | "high" | "urgent";
@@ -39,6 +40,7 @@ export const invitationStatusEnum = pgEnum("invitation_status", [
   "cancelled",
 ]);
 export const roleScopeEnum = pgEnum("role_scope", ["workspace", "project"]);
+export const organizationTypeEnum = pgEnum("organization_type", ["personal", "team"]);
 export const projectStatusEnum = pgEnum("project_status", ["active", "on_hold", "archived"]);
 export const projectVisibilityEnum = pgEnum("project_visibility", ["organization", "private"]);
 export const taskPriorityEnum = pgEnum("task_priority", ["low", "medium", "high", "urgent"]);
@@ -89,6 +91,7 @@ import { z } from "zod";
 export const MemberStatus = z.enum(["pending", "active", "suspended"]);
 export const InvitationStatus = z.enum(["pending", "accepted", "expired", "cancelled"]);
 export const RoleScope = z.enum(["workspace", "project"]);
+export const OrganizationType = z.enum(["personal", "team"]);
 export const ProjectStatus = z.enum(["active", "on_hold", "archived"]);
 export const ProjectVisibility = z.enum(["organization", "private"]);
 export const TaskPriority = z.enum(["low", "medium", "high", "urgent"]);

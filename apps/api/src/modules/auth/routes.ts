@@ -24,9 +24,40 @@ auth.post("/register", async (c) => {
     updatedAt: new Date().toISOString(),
   };
   store.users.push(user);
+
+  // Every user gets a personal workspace (an org of one) on signup — see
+  // docs/foundation/04-plans-workspaces.md and ADR 0007. Personal orgs block
+  // invites and cap projects; the routing/permission spine is unchanged.
+  const ownerRole = store.roles.find((r) => r.name === "Owner" && r.scope === "workspace")!;
+  const personalOrg = {
+    id: uuidv7(),
+    name: `${input.name}'s Workspace`,
+    slug: `personal-${user.id.slice(-8)}`,
+    type: "personal" as const,
+    logo: null,
+    description: null,
+    timezone: "UTC",
+    language: "en",
+    website: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  store.organizations.push(personalOrg);
+  store.members.push({
+    id: uuidv7(),
+    organizationId: personalOrg.id,
+    userId: user.id,
+    role: ownerRole,
+    status: "active" as const,
+    joinedAt: new Date().toISOString(),
+    user,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
   const token = "sess-" + uuidv7();
   store.sessions.push({ token, userId: user.id, createdAt: new Date().toISOString() });
-  setCookie(c, "helix_session", token, { httpOnly: true, sameSite: "Lax", path: "/" });
+  setCookie(c, "alabs_session", token, { httpOnly: true, sameSite: "Lax", path: "/" });
   return data(c, { user, token }, 201);
 });
 
@@ -36,7 +67,7 @@ auth.post("/login", async (c) => {
   if (!user) throw unauthorized("Invalid credentials");
   const token = "sess-" + uuidv7();
   store.sessions.push({ token, userId: user.id, createdAt: new Date().toISOString() });
-  setCookie(c, "helix_session", token, { httpOnly: true, sameSite: "Lax", path: "/" });
+  setCookie(c, "alabs_session", token, { httpOnly: true, sameSite: "Lax", path: "/" });
   return data(c, { user, token });
 });
 

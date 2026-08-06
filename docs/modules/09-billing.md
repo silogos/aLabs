@@ -66,6 +66,12 @@ Entities
 | projectLimit | Integer? | No       | Max projects (null = unlimited)        |
 | features     | JSON     | Yes      | Enabled feature flags                  |
 
+> The **personal workspace** is the manifestation of the free tier — every
+> user gets one org of their own with no invites and a 2-project cap
+> (`PERSONAL_PROJECT_LIMIT`). There is no `plan` column on `users`; paid plans
+> attach to an organization via `subscriptions`. See
+> `docs/foundation/04-plans-workspaces.md` and ADR 0007.
+
 ---
 
 # Subscription

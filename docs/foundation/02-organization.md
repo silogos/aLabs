@@ -60,6 +60,7 @@ Fields
 - id
 - name
 - slug
+- type (personal | team)
 - logo
 - description
 - timezone
@@ -67,6 +68,13 @@ Fields
 - website
 - createdAt
 - updatedAt
+
+Type
+
+- personal — single-member workspace, auto-created at signup, no invites,
+  capped at PERSONAL_PROJECT_LIMIT active projects (see Plans & Workspaces).
+- team — multi-member workspace, created on demand, invites allowed, governed
+  by the org's subscription plan.
 
 ---
 
@@ -180,9 +188,13 @@ Audit Logs (Future)
 
 # User Stories
 
+As a new user
+
+I get a personal workspace automatically on signup.
+
 As an Owner
 
-I can create an organization.
+I can create an organization (team workspace).
 
 ---
 
