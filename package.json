@@ -1,9 +1,9 @@
 {
-  "name": "helix-monorepo",
+  "name": "alabs",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Helix — a documentation-first project management platform (Atlas Platform 2.0).",
+  "description": "aLabs — a documentation-first project management platform (Atlas Platform 2.0).",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",

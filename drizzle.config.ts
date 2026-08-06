@@ -15,6 +15,6 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "postgres://helix:helix@localhost:5432/helix",
+    url: process.env.DATABASE_URL ?? "postgres://alabs:alabs@localhost:5432/alabs",
   },
 });

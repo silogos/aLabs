@@ -1,9 +1,9 @@
-# Helix
+# aLabs
 
 A documentation-first project management platform — **Atlas Platform 2.0**.
 
 Unifies delivery (tasks, planning), knowledge (documents), and client
-communication in one place. Built on the design in [`helix-app.html`](./helix-app.html)
+communication in one place. Built on the design in [`designs/alabs-app.html`](./designs/alabs-app.html)
 and the specs in [`docs/`](./docs).
 
 > Status: prototype — the four primary views (Dashboard, Tasks, Documents,
@@ -65,7 +65,7 @@ All internal packages use the `@pmin/*` namespace.
 - **Source of truth for validation** — `packages/core/src/schemas` (zod,
   consumed by both the API and the web app).
 - **Runtime store** — the API runs against an in-memory repository seeded with
-  the Helix demo data (no Postgres required). A Drizzle repository can drop in
+  the aLabs demo data (no Postgres required). A Drizzle repository can drop in
   behind the same service layer; set `DATABASE_URL` and run Drizzle Kit.
 
 ### Request lifecycle
@@ -105,4 +105,4 @@ leaking existence. See `docs/tech/`.
 
 ## License
 
-Proprietary. © Helix.
+Proprietary. © aLabs.

@@ -8,7 +8,7 @@ function extractToken(req: Request): string | null {
   const auth = req.headers.get("authorization");
   if (auth?.toLowerCase().startsWith("bearer ")) return auth.slice(7).trim();
   const cookie = req.headers.get("cookie") ?? "";
-  const m = cookie.match(/(?:^|;\s*)helix_session=([^;]+)/);
+  const m = cookie.match(/(?:^|;\s*)alabs_session=([^;]+)/);
   if (m) return m[1]!;
   return null;
 }

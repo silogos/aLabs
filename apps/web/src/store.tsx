@@ -43,7 +43,7 @@ const Ctx = createContext<AppState | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [view, setViewState] = useState<View>(
-    () => (typeof localStorage !== "undefined" && (localStorage.getItem("helix-view") as View)) || "dashboard",
+    () => (typeof localStorage !== "undefined" && (localStorage.getItem("alabs-view") as View)) || "dashboard",
   );
   const [taskId, setTaskId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -65,7 +65,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setView = useCallback((v: View) => {
     setViewState(v);
     try {
-      localStorage.setItem("helix-view", v);
+      localStorage.setItem("alabs-view", v);
     } catch {
       /* ignore */
     }

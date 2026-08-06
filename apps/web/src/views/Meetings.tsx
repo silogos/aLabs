@@ -55,7 +55,7 @@ const CAL = "M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 
 const MEETINGS: Meeting[] = [
   {
     id: "m1", t: "SSO design sync", ty: "planning", st: "scheduled",
-    when: "Mar 23 · 10:00", dur: 45, loc: "Zoom · helix.demos/sso", org: "mk",
+    when: "Mar 23 · 10:00", dur: 45, loc: "Zoom · alabs.demos/sso", org: "mk",
     people: ["mk", "lc", "dp", "ay"],
     agenda: [
       "Walk the SSO sign-in & sign-out flows (10m)",

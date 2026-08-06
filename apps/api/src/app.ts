@@ -45,7 +45,7 @@ app.use("*", async (c, next) => {
 
 app.get("/", (c) =>
   c.json({
-    name: "Helix API",
+    name: "aLabs API",
     product: "Atlas Platform 2.0",
     version: "0.1.0",
     ok: true,
