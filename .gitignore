@@ -6,3 +6,7 @@ dist
 .env
 .env.*
 !.env.example
+
+# Runtime uploads + tooling metadata
+apps/api/uploads/
+apps/web/index.html.artifact.json
