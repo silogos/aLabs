@@ -1,45 +1,79 @@
-/** Planning view — iterations, milestones, backlog, velocity, timeline. */
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "../api.js";
+/** Planning view — interactive two-pane sprint board + timeline + velocity.
+ *  Reads the shared tasks-store (SPRINTS/TASKS/MILESTONES) so it stays in sync
+ *  with the Tasks board/list/backlog via the `task.sp` field. */
+import { useState, useRef, useMemo, useEffect, type CSSProperties } from "react";
 import { useApp } from "../store.js";
-import { Avatar, TypeTag, colorFor, dueLabel, initials, taskSerial } from "../components/ui.js";
-import type { Iteration, Milestone, Task } from "@pmin/core";
+import {
+  useTasksVersion,
+  SPRINTS,
+  MILESTONES,
+  VELOCITY,
+  NOW_D,
+  shortMD,
+  daysBetween,
+  fmtISO,
+  pD,
+  spStatusClass,
+  sprintStatusLabel,
+  iterTasks,
+  committedPts,
+  donePts,
+  isPlannable,
+  PRIO_ORDER,
+  allTasks,
+  taskById,
+  startIter,
+  completeIter,
+  revertToPlanned,
+  reopenToActive,
+  commitToSprint,
+  uncommitFromSprint,
+  planSprintAuto,
+  createSprint,
+  updateSprint,
+  addMilestone,
+  updateMilestone,
+  deleteMilestone,
+} from "./tasks-store.js";
+import { TyIcon, StatusBadge, PrioBadge, AvKey } from "./tasks-ui.js";
+
+type PlanView = "board" | "timeline" | "velocity";
+type Zoom = "day" | "week" | "month";
+const DAY_MS = 86400000;
+
+function fitWindow(zoom: Zoom): [Date, Date] {
+  const span = zoom === "day" ? 28 : zoom === "week" ? 70 : 180;
+  const start = new Date(NOW_D.getTime() - Math.floor(span / 3) * DAY_MS);
+  const end = new Date(start.getTime() + span * DAY_MS);
+  return [start, end];
+}
+function colLabel(d: Date, zoom: Zoom): string {
+  if (zoom === "month") return d.toLocaleDateString("en-US", { month: "short" });
+  if (zoom === "day")
+    return d.getDate() === 1 ? d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : String(d.getDate());
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 export function Planning() {
-  const { project, openTask, toast } = useApp();
-  const pid = project!.id;
-  const [mode, setMode] = useState<"iterations" | "timeline">("iterations");
-  const { data: iterations } = useQuery({ queryKey: ["iterations", pid], queryFn: () => api.iterations(pid) });
-  const { data: milestones } = useQuery({ queryKey: ["milestones", pid], queryFn: () => api.milestones(pid) });
-  const { data: page } = useQuery({ queryKey: ["tasks", pid], queryFn: () => api.tasks(pid) });
-  const [activeIter, setActiveIter] = useState<string | null>(null);
-
-  const tasks = page?.items ?? [];
-  const its = iterations ?? [];
-  const ms = milestones ?? [];
-  const current = its.find((i) => i.id === (activeIter ?? its.find((x) => x.status === "active")?.id ?? its[0]?.id));
-  const backlog = tasks.filter((t) => !t.iterationId);
+  const { toast } = useApp();
+  useTasksVersion(); // subscribe to store mutations
+  const [planView, setPlanView] = useState<PlanView>("board");
+  const [curSprint, setCurSprint] = useState<string>("s14");
+  const [sprintModal, setSprintModal] = useState<{ editId?: string } | null>(null);
+  const [msModal, setMsModal] = useState<{ editId?: string } | null>(null);
 
   return (
-    <section className="view active">
+    <section className="view active" id="view-planning" data-od-id="view-planning">
       <div className="toolbar">
         <div className="seg">
-          <button className={mode === "iterations" ? "on" : ""} onClick={() => setMode("iterations")}>
-            Iterations
-          </button>
-          <button className={mode === "timeline" ? "on" : ""} onClick={() => setMode("timeline")}>
-            Timeline
-          </button>
+          {(["board", "timeline", "velocity"] as PlanView[]).map((m) => (
+            <button key={m} className={planView === m ? "on" : ""} onClick={() => setPlanView(m)}>
+              {m === "board" ? "Iterations" : m === "timeline" ? "Timeline" : "Velocity"}
+            </button>
+          ))}
         </div>
         <div style={{ marginLeft: "auto" }} className="row">
-          <button className="btn subtle sm" onClick={() => toast("Velocity report")}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M3 3v18h18M7 14l3-3 3 2 4-5" />
-            </svg>
-            Velocity
-          </button>
-          <button className="btn primary sm" onClick={() => toast("New iteration")}>
+          <button className="btn primary sm" onClick={() => setSprintModal({})}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 5v14M5 12h14" />
             </svg>
@@ -48,238 +82,879 @@ export function Planning() {
         </div>
       </div>
 
-      {mode === "iterations" ? (
-        <>
-          <div className="iter-tabs">
-            {its.map((it) => (
-              <div
-                key={it.id}
-                className={`iter-tab ${current?.id === it.id ? "on" : ""}`}
-                onClick={() => setActiveIter(it.id)}
-              >
-                <div className="it-name">
-                  <span className={`status ${iterTone(it)}`}>
-                    <span className="d"></span>
-                    {it.name.split("—")[0]?.trim()}
-                  </span>
-                </div>
-                <div className="it-meta">
-                  {dueLabel(it.startDate)}–{dueLabel(it.endDate)} · {cap(it.status)}
-                </div>
-              </div>
-            ))}
-          </div>
+      {planView === "board" && (
+        <BoardView curSprint={curSprint} setCurSprint={setCurSprint} toast={toast} />
+      )}
+      {planView === "timeline" && (
+        <TimelineView
+          onOpenSprint={(id) => setSprintModal({ editId: id })}
+          onOpenMilestone={(editId) => setMsModal(editId ? { editId } : {})}
+        />
+      )}
+      {planView === "velocity" && <VelocityView />}
 
-          <div className="grid g2" style={{ gridTemplateColumns: "1.4fr 1fr", gap: 14 }}>
-            {current && <ActiveIteration iter={current} tasks={tasks} />}
-            <MilestonesCard milestones={ms} />
-          </div>
-
-          <div className="grid g2" style={{ gridTemplateColumns: "1.4fr 1fr", gap: 14, marginTop: 14 }}>
-            <Backlog tasks={backlog} onOpen={openTask} />
-            <Velocity />
-          </div>
-        </>
-      ) : (
-        <Timeline iterations={its} milestones={ms} />
+      {sprintModal && (
+        <SprintModal
+          editId={sprintModal.editId}
+          onClose={() => setSprintModal(null)}
+          onCreated={(id) => {
+            setCurSprint(id);
+            setPlanView("board");
+          }}
+        />
+      )}
+      {msModal && (
+        <MilestoneModal editId={msModal.editId} onClose={() => setMsModal(null)} toast={toast} />
       )}
     </section>
   );
 }
 
-function iterTone(i: Iteration): string {
-  return i.status === "active" ? "info" : i.status === "completed" ? "ok" : "neutral";
-}
-function cap(s: string) {
-  return s[0]!.toUpperCase() + s.slice(1);
-}
+/* ---------------- Board (two-pane: backlog ↔ sprint) ---------------- */
 
-function ActiveIteration({ iter, tasks }: { iter: Iteration; tasks: Task[] }) {
-  const inIter = tasks.filter((t) => t.iterationId === iter.id);
-  const byBucket = (names: string[]) =>
-    inIter.filter((t) => names.some(/* statusName unknown */ () => true)).length;
-  // buckets derived from status id counts are not available without statuses;
-  // show counts by a simple split for the demo.
-  const todo = inIter.length;
-  return (
-    <div className="card">
-      <div className="panel-head">
-        <h3>{iter.name}</h3>
-        <div className="right">
-          <span className="status info"><span className="d"></span>Active</span>
-        </div>
-      </div>
-      <div className="panel-body">
-        <div className="row between" style={{ marginBottom: 6 }}>
-          <span className="small muted">Progress · {iter.completedPoints} of {iter.committedPoints} pts</span>
-          <span className="mono small" style={{ color: "var(--accent)", fontWeight: 600 }}>
-            {iter.progress}%
-          </span>
-        </div>
-        <div className="bar" style={{ height: 8, marginBottom: 14 }}>
-          <i style={{ width: `${iter.progress}%` }}></i>
-        </div>
-        <div className="row wrap" style={{ gap: 8, marginBottom: 14 }}>
-          <span className="chip muted">{todo} tasks</span>
-          <span className="chip" style={{ background: "var(--ok-bg)", borderColor: "oklch(88% 0.05 150)", color: "oklch(40% 0.11 150)" }}>
-            {iter.completedPoints} pts done
-          </span>
-        </div>
-        <div className="section-title" style={{ margin: "6px 0 8px" }}>
-          <h2>Sprint goal</h2>
-        </div>
-        <div className="callout info" style={{ margin: 0 }}>
-          <svg className="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 16v-4M12 8h.01" />
-          </svg>
-          <span>{iter.goal ?? "No goal set for this iteration."}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
+function BoardView({
+  curSprint,
+  setCurSprint,
+  toast,
+}: {
+  curSprint: string;
+  setCurSprint: (s: string) => void;
+  toast: (s: string) => void;
+}) {
+  const sprintIds = Object.keys(SPRINTS);
+  const sp = SPRINTS[curSprint];
+  const plannable = isPlannable(curSprint);
 
-function MilestonesCard({ milestones }: { milestones: Milestone[] }) {
   return (
-    <div className="card">
-      <div className="panel-head">
-        <h3>Milestones</h3>
-        <span className="muted">{milestones.length} active</span>
-      </div>
-      <div className="panel-body">
-        {milestones.map((m) => {
-          const tone = m.progress >= 70 ? "warn" : m.progress >= 40 ? "neutral" : "ok";
+    <div id="plan-iter">
+      <div className="iter-tabs">
+        {sprintIds.map((k) => {
+          const s = SPRINTS[k];
           return (
-            <div className="ms-item" key={m.id}>
-              <div className="ms-ic" style={tone === "warn" ? { background: "var(--warn-bg)", color: "var(--warn)" } : tone === "ok" ? { background: "var(--ok-bg)", color: "var(--ok)" } : undefined}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M3 21h18M5 21V8l7-4 7 4v13" />
-                </svg>
+            <div
+              key={k}
+              className={`iter-tab ${k === curSprint ? "on" : ""}`}
+              onClick={() => setCurSprint(k)}
+            >
+              <div className="it-name">
+                <span className={`status ${spStatusClass(s.st)}`}>
+                  <span className="d"></span>
+                  {s.name}
+                </span>
               </div>
-              <div className="ms-body">
-                <b>{m.name}</b>
-                <small>Due {dueLabel(m.dueDate)} · {m.doneTasks}/{m.totalTasks} tasks</small>
-                <div className={`bar ${tone === "ok" ? "ok" : tone === "warn" ? "warn" : ""}`}>
-                  <i style={{ width: `${m.progress}%` }}></i>
-                </div>
+              <div className="it-meta">
+                {s.start} – {s.end} · {sprintStatusLabel(k)}
               </div>
-              <span className={`status ${tone}`}>
-                <span className="d"></span>
-                {tone === "warn" ? "At risk" : "On track"}
-              </span>
             </div>
           );
         })}
       </div>
+
+      <div className="plan-split">
+        <BacklogPane curSprint={curSprint} plannable={plannable} toast={toast} />
+        <SprintPane curSprint={curSprint} plannable={plannable} toast={toast} />
+      </div>
     </div>
   );
 }
 
-function Backlog({ tasks, onOpen }: { tasks: Task[]; onOpen: (id: string) => void }) {
+function SprintPane({
+  curSprint,
+  plannable,
+  toast,
+}: {
+  curSprint: string;
+  plannable: boolean;
+  toast: (s: string) => void;
+}) {
+  const s = SPRINTS[curSprint];
+  const tasks = iterTasks(curSprint);
+  const committed = committedPts(curSprint);
+  const cap = s.capacity;
+  const pct = cap ? Math.min(100, Math.round((committed / cap) * 100)) : 0;
+  const over = !!(cap && committed > cap);
+  const avg = Math.round(VELOCITY.reduce((n, d) => n + d.completed, 0) / Math.max(1, VELOCITY.length));
+
+  let action: React.ReactNode = null;
+  if (s.st === "planned")
+    action = (
+      <button
+        className="btn primary sm"
+        onClick={() => {
+          startIter(curSprint);
+          toast(s.name + " started");
+        }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+        Start sprint
+      </button>
+    );
+  else if (s.st === "active")
+    action = (
+      <>
+        <button
+          className="btn ghost sm"
+          onClick={() => {
+            toast(completeIter(curSprint));
+          }}
+        >
+          Complete sprint
+        </button>
+        <button
+          className="btn subtle xs"
+          title="Move this sprint back to Planned"
+          onClick={() => {
+            revertToPlanned(curSprint);
+            toast(s.name + " moved back to Planned");
+          }}
+        >
+          Back to Planned
+        </button>
+      </>
+    );
+  else
+    action = (
+      <button
+        className="btn ghost sm"
+        title="Reopen this sprint"
+        onClick={() => {
+          toast(reopenToActive(curSprint));
+        }}
+      >
+        Reopen
+      </button>
+    );
+
   return (
-    <div className="card">
-      <div className="panel-head">
-        <h3>Backlog</h3>
-        <span className="muted">{tasks.length} items</span>
-      </div>
-      <div className="panel-body flush">
-        {tasks.map((t) => (
-          <div className="backlog-item grab" key={t.id} onClick={() => onOpen(t.id)}>
-            <span className="tid">{taskSerial(t.order)}</span>
-            <span className="tt">{t.title}</span>
-            <TypeTag name="Task" />
-            {t.estimate != null && <span className="pts">{t.estimate}</span>}
-            <span className={`av sm ${colorFor(t.assigneeId ?? t.id)}`}>{initials("?")}</span>
+    <div id="plan-sprint">
+      <div
+        className="card plan-pane"
+        onDragOver={(e) => {
+          if (plannable) e.preventDefault();
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          const id = e.dataTransfer.getData("text/plain");
+          if (id && plannable) {
+            commitToSprint(+id, curSprint);
+            toast("ATL-" + id + " → " + SPRINTS[curSprint].name);
+          }
+        }}
+      >
+        <div className="panel-head">
+          <h3>{s.name}</h3>
+          <span className={`status ${spStatusClass(s.st)}`}>
+            <span className="d"></span>
+            {sprintStatusLabel(curSprint)}
+          </span>
+          <div className="right">{action}</div>
+        </div>
+        <div className="sp-meta">
+          <div className="sp-goal">
+            <svg className="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+            <span>{s.goal}</span>
           </div>
-        ))}
-        {tasks.length === 0 && <div className="tiny faint" style={{ padding: 12 }}>Backlog is empty.</div>}
-      </div>
-    </div>
-  );
-}
-
-function Velocity() {
-  const plan = [78, 82, 85, 88, 92, 92];
-  const act = [74, 72, 80, 83, 87, 83];
-  return (
-    <div className="card">
-      <div className="panel-head">
-        <h3>Velocity</h3>
-        <span className="muted">Last 6 sprints</span>
-        <div className="right"><span className="tiny mono muted">avg 45 pts</span></div>
-      </div>
-      <div className="panel-body">
-        <div className="vel-chart">
-          {plan.map((p, i) => (
-            <div className="vel-group" key={i}>
-              <div className="vel-bar plan" style={{ height: `${p}%` }}></div>
-              <div className="vel-bar act" style={{ height: `${act[i]}%` }}></div>
+          {cap ? (
+            <div className="sp-cap">
+              <div className="row between" style={{ marginBottom: 5 }}>
+                <span className="tiny mono muted">
+                  Committed · {committed} / {cap} pts · avg velocity {avg}
+                </span>
+                <span className="tiny mono" style={{ color: `var(--${over ? "warn" : "ok"})`, fontWeight: 600 }}>
+                  {over ? `over by ${committed - cap} pts` : committed === cap ? "at capacity" : `room for ${cap - committed}`}
+                </span>
+              </div>
+              <div className={`bar ${over ? "warn" : "ok"}`} style={{ height: 8 }}>
+                <i style={{ width: `${pct}%` }} />
+              </div>
             </div>
-          ))}
+          ) : (
+            <div className="row between">
+              <span className="tiny mono muted">
+                {committed} pts committed · {tasks.length} issues
+              </span>
+              <span className="tiny mono muted">avg velocity {avg} pts</span>
+            </div>
+          )}
         </div>
-        <div className="vel-x">
-          {["S8", "S9", "S10", "S11", "S12", "S13"].map((l) => (
-            <span className="vx" key={l}>{l}</span>
-          ))}
-        </div>
-        <div className="row" style={{ gap: 14, marginTop: 14, justifyContent: "center" }}>
-          <span className="tiny mono" style={{ color: "var(--muted)" }}>▮ Committed</span>
-          <span className="tiny mono" style={{ color: "var(--accent)" }}>▮ Completed</span>
+        <div className="panel-body flush sp-list">
+          {tasks.length ? (
+            tasks.map((t) => (
+              <SprintItem key={t.id} id={t.id} plannable={plannable} sprintName={s.name} toast={toast} />
+            ))
+          ) : (
+            <div className="empty-plan">
+              {plannable
+                ? "No items committed yet — pull work in from the backlog on the left, or use Plan sprint."
+                : "No issues in this sprint."}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function Timeline({ iterations, milestones }: { iterations: Iteration[]; milestones: Milestone[] }) {
-  const weeks = ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8"];
-  const todayIdx = 3;
-  const rows: { l: string; s: string; cls: string; start: number; len: number }[] = [];
-  iterations.forEach((it, i) => {
-    rows.push({
-      l: it.name.split("—")[0]?.trim() ?? it.name,
-      s: cap(it.status),
-      cls: it.status === "completed" ? "done" : it.status === "active" ? "iter" : "task",
-      start: i * 2,
-      len: 2,
-    });
-  });
-  milestones.forEach((m, i) => {
-    rows.push({ l: m.name, s: dueLabel(m.dueDate), cls: "ms", start: 1 + i * 1.5, len: 2 });
-  });
-  const span = weeks.length;
+function SprintItem({
+  id,
+  plannable,
+  sprintName,
+  toast,
+}: {
+  id: number;
+  plannable: boolean;
+  sprintName: string;
+  toast: (s: string) => void;
+}) {
+  const t = taskById(id)!;
+  const { openTask } = useApp();
+  return (
+    <div
+      className="sprint-item"
+      draggable={plannable}
+      onDragStart={(e) => {
+        e.dataTransfer.setData("text/plain", String(id));
+        e.dataTransfer.effectAllowed = "move";
+      }}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("button")) return;
+        openTask(String(id));
+      }}
+    >
+      {plannable ? (
+        <button
+          className="btn subtle xs"
+          data-uncommit={id}
+          title="Return to backlog"
+          onClick={(e) => {
+            e.stopPropagation();
+            uncommitFromSprint(id);
+            toast("ATL-" + id + " returned to backlog");
+          }}
+        >
+          ◀
+        </button>
+      ) : (
+        <span className="plan-spacer" />
+      )}
+      <TyIcon ty={t.ty} />
+      <span className="tid">ATL-{t.id}</span>
+      <span className="tt">{t.t}</span>
+      <StatusBadge s={t.s} />
+      <span className="pts">{t.pts || 0}</span>
+      <AvKey id={t.a} size="sm" />
+    </div>
+  );
+}
+
+function BacklogPane({
+  curSprint,
+  plannable,
+  toast,
+}: {
+  curSprint: string;
+  plannable: boolean;
+  toast: (s: string) => void;
+}) {
+  const { openTask } = useApp();
+  const items = useMemo(
+    () =>
+      allTasks()
+        .filter((t) => !t.parent && t.ty !== "epic" && !t.sp)
+        .sort((a, b) => PRIO_ORDER.indexOf(a.p) - PRIO_ORDER.indexOf(b.p)),
+    [],
+  );
+  useTasksVersion();
+  const unpointed = items.filter((t) => !t.pts).length;
+
+  return (
+    <div id="plan-backlog">
+      <div
+        className="card plan-pane"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const id = e.dataTransfer.getData("text/plain");
+          if (id) {
+            uncommitFromSprint(+id);
+            toast("ATL-" + id + " returned to backlog");
+          }
+        }}
+      >
+        <div className="panel-head">
+          <h3>Backlog</h3>
+          <span className="muted tiny">
+            {items.length} items{unpointed ? ` · ${unpointed} unpointed` : ""}
+          </span>
+          <div className="right">
+            <button
+              className="btn ghost sm"
+              disabled={!plannable}
+              title={plannable ? "" : "Select a Planned or Active sprint to plan"}
+              onClick={() => toast(planSprintAuto(curSprint))}
+            >
+              Plan sprint
+            </button>
+          </div>
+        </div>
+        <div className="panel-body flush">
+          {items.length ? (
+            items.map((t) => (
+              <div
+                key={t.id}
+                className="backlog-item"
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("text/plain", String(t.id));
+                  e.dataTransfer.effectAllowed = "move";
+                }}
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest("button")) return;
+                  openTask(String(t.id));
+                }}
+              >
+                <TyIcon ty={t.ty} />
+                <span className="tid">ATL-{t.id}</span>
+                <span className="tt">{t.t}</span>
+                <span className={`pts ${t.pts ? "" : "unpointed"}`}>{t.pts || "?"}</span>
+                <PrioBadge p={t.p} />
+                {plannable ? (
+                  <button
+                    className="btn subtle xs"
+                    data-commit={t.id}
+                    title={`Move into ${SPRINTS[curSprint].name}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      commitToSprint(t.id, curSprint);
+                      toast("ATL-" + t.id + " → " + SPRINTS[curSprint].name);
+                    }}
+                  >
+                    →
+                  </button>
+                ) : (
+                  <span style={{ width: 26 }} />
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="empty-plan">Backlog is empty — every work item is committed to a sprint.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Velocity ---------------- */
+
+function VelocityView() {
+  useTasksVersion();
+  const cur = { name: SPRINTS.s14.name.replace("Sprint ", "S"), committed: committedPts("s14"), completed: donePts("s14") };
+  const data = [...VELOCITY, cur];
+  const max = Math.max(1, ...data.map((d) => d.committed));
+  const avg = Math.round(data.slice(0, -1).reduce((n, d) => n + d.completed, 0) / Math.max(1, data.length - 1));
+  const [tipIdx, setTipIdx] = useState<number | null>(null);
+  const groupRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [tipPos, setTipPos] = useState<{ left: number; top: number } | null>(null);
+
+  const d = tipIdx != null ? data[tipIdx] : null;
+  const isCur = d === cur;
+  const pct = d && d.committed ? Math.round((d.completed / d.committed) * 100) : 0;
+  const delta = d ? d.completed - d.committed : 0;
+  const note = d ? (isCur ? "In progress · not final" : delta >= 0 ? delta > 0 ? `Exceeded by ${delta}` : "Met commitment" : `${Math.abs(delta)} pts short`) : "";
+  const col = d ? (isCur ? "var(--info)" : delta >= 0 ? "var(--ok)" : "var(--warn)") : "var(--muted)";
+
+  return (
+    <div id="plan-velocity">
+      <div className="card">
+        <div className="panel-head">
+          <h3>Velocity</h3>
+          <span className="muted">Hover a sprint for detail</span>
+          <div className="right">
+            <span className="tiny mono muted">avg {avg} pts · last {data.length}</span>
+          </div>
+        </div>
+        <div className="panel-body">
+          <div className="vel-chart">
+            {data.map((dd, i) => (
+              <div
+                key={i}
+                className="vel-group"
+                ref={(el) => {
+                  groupRefs.current[i] = el;
+                }}
+                onMouseEnter={() => {
+                  setTipIdx(i);
+                  const r = groupRefs.current[i]?.getBoundingClientRect();
+                  if (r) setTipPos({ left: r.left + r.width / 2, top: r.top });
+                }}
+                onMouseLeave={() => setTipIdx(null)}
+              >
+                <div className="vel-bar plan" style={{ height: `${Math.round((dd.committed / max) * 100)}%` }} />
+                <div className="vel-bar act" style={{ height: `${Math.round((dd.completed / max) * 100)}%` }} />
+              </div>
+            ))}
+          </div>
+          <div className="vel-x">
+            {data.map((dd) => (
+              <span className="vx" key={dd.name}>
+                {dd.name}
+              </span>
+            ))}
+          </div>
+          <div className="row" style={{ gap: 14, marginTop: 14, justifyContent: "center" }}>
+            <span className="tiny mono" style={{ color: "var(--muted)" }}>▮ Committed</span>
+            <span className="tiny mono" style={{ color: "var(--accent)" }}>▮ Completed</span>
+          </div>
+        </div>
+      </div>
+      {d && tipPos && (
+        <VelTip
+          d={d}
+          isCur={isCur}
+          pct={pct}
+          note={note}
+          col={col}
+          anchor={tipPos}
+        />
+      )}
+    </div>
+  );
+}
+
+function VelTip({
+  d,
+  isCur,
+  pct,
+  note,
+  col,
+  anchor,
+}: {
+  d: { name: string; committed: number; completed: number };
+  isCur: boolean;
+  pct: number;
+  note: string;
+  col: string;
+  anchor: { left: number; top: number };
+}) {
+  const tw = 176;
+  const th = 116;
+  let left = anchor.left - tw / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+  let top = anchor.top - th - 10;
+  if (top < 8) top = anchor.top + 34 + 10;
+  return (
+    <div className="vel-tip show" style={{ left, top, minWidth: 160 }}>
+      <div className="vt-head">
+        <b>{d.name}</b>
+        {isCur && <span className="vt-tag">Active</span>}
+      </div>
+      <div className="vt-row">
+        <span className="vt-sw plan" />
+        Committed<b>{d.committed}</b>
+      </div>
+      <div className="vt-row">
+        <span className="vt-sw act" />
+        Completed<b>{d.completed}</b>
+      </div>
+      <div className="vt-foot" style={{ color: col }}>
+        {pct}% · {note}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Timeline (Gantt) ---------------- */
+
+function TimelineView({
+  onOpenSprint,
+  onOpenMilestone,
+}: {
+  onOpenSprint: (id: string) => void;
+  onOpenMilestone: (editId?: string) => void;
+}) {
+  const [zoom, setZoom] = useState<Zoom>("week");
+  const [win, setWin] = useState<[Date, Date]>(() => fitWindow("week"));
+  useTasksVersion();
+
+  const applyZoom = (z: Zoom) => {
+    setZoom(z);
+    setWin(fitWindow(z));
+  };
+  const shift = (dir: number) => {
+    const span = Math.round((win[1].getTime() - win[0].getTime()) / DAY_MS);
+    setWin([new Date(win[0].getTime() + dir * span * DAY_MS), new Date(win[1].getTime() + dir * span * DAY_MS)]);
+  };
+
+  const [winStart, winEnd] = win;
+  const spanDays = Math.round((winEnd.getTime() - winStart.getTime()) / DAY_MS);
+  const step = zoom === "day" ? 1 : zoom === "week" ? 7 : 30;
+  const cols: Date[] = useMemo(() => {
+    const out: Date[] = [];
+    let d = zoom === "month" ? new Date(winStart.getFullYear(), winStart.getMonth(), 1) : new Date(winStart);
+    let guard = 0;
+    while (d <= winEnd && guard++ < 400) {
+      out.push(new Date(d));
+      d = zoom === "month" ? new Date(d.getFullYear(), d.getMonth() + 1, 1) : new Date(d.getTime() + step * DAY_MS);
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [winStart.getTime(), winEnd.getTime(), zoom]);
+
+  const todayPct = Math.max(0, Math.min(100, (daysBetween(fmtISO(winStart), fmtISO(NOW_D)) / spanDays) * 100));
+
+  const rows: (
+    | { kind: "sprint"; k: string; l: string; sub: string; a: string; b: string; cls: string }
+    | { kind: "ms"; id: string; l: string; sub: string; date: string; risk: string }
+  )[] = [
+    ...Object.keys(SPRINTS).map((k) => {
+      const s = SPRINTS[k];
+      return {
+        kind: "sprint" as const,
+        k,
+        l: s.name,
+        sub: sprintStatusLabel(k),
+        a: s.from,
+        b: s.to,
+        cls: s.st === "active" ? "iter" : s.st === "completed" ? "done" : "task",
+      };
+    }),
+    ...MILESTONES.map((m) => ({ kind: "ms" as const, id: m.id, l: m.t, sub: shortMD(m.date), date: m.date, risk: m.risk })),
+  ];
 
   return (
     <div className="card">
-      <div className="panel-head"><h3>Timeline</h3><span className="muted">Iterations & milestones</span></div>
+      <div className="panel-head" id="gantt-head">
+        <h3>Timeline</h3>
+        <div className="gantt-tools">
+          <div className="zoom">
+            {(["day", "week", "month"] as Zoom[]).map((z) => (
+              <button key={z} className={zoom === z ? "on" : ""} onClick={() => applyZoom(z)}>
+                {z[0].toUpperCase() + z.slice(1)}
+              </button>
+            ))}
+          </div>
+          <span className="range-lbl">
+            {shortMD(winStart)} – {shortMD(winEnd)}
+          </span>
+          <button className="btn ghost xs" onClick={() => shift(-1)}>‹</button>
+          <button className="btn ghost xs" onClick={() => setWin(fitWindow(zoom))}>Today</button>
+          <button className="btn ghost xs" onClick={() => shift(1)}>›</button>
+          <button className="btn primary xs" title="Add a milestone" onClick={() => onOpenMilestone()}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Milestone
+          </button>
+        </div>
+      </div>
       <div className="gantt">
         <div className="gantt-grid">
           <div className="gantt-axis">
             <div className="lbl">Work item</div>
-            <div className="gantt-weeks" style={{ gridTemplateColumns: `repeat(${span}, 1fr)` }}>
-              {weeks.map((w, i) => (
-                <div key={w} className={`gantt-week ${i === todayIdx ? "today" : ""}`}>{w}</div>
-              ))}
+            <div className="gantt-weeks" style={{ gridTemplateColumns: `repeat(${cols.length},1fr)` }}>
+              {cols.map((c, i) => {
+                const isToday =
+                  zoom === "month"
+                    ? c.getMonth() === NOW_D.getMonth() && c.getFullYear() === NOW_D.getFullYear()
+                    : Math.abs(c.getTime() - NOW_D.getTime()) < (step * DAY_MS) / 2;
+                return (
+                  <div key={i} className={`gantt-week ${isToday ? "today" : ""}`}>
+                    {colLabel(c, zoom)}
+                  </div>
+                );
+              })}
             </div>
           </div>
           {rows.map((r, idx) => (
             <div className="gantt-row" key={idx}>
               <div className="gl">
                 <b>{r.l}</b>
-                <small>{r.s}</small>
+                <small>{r.sub}</small>
               </div>
               <div className="gantt-track">
-                <div className="gantt-today-line" style={{ left: `${((todayIdx + 0.5) / span) * 100}%` }}></div>
-                <div
-                  className={`gantt-bar ${r.cls}`}
-                  style={{ left: `${(r.start / span) * 100}%`, width: `${(r.len / span) * 100}%` }}
-                >
-                  {r.l}
-                </div>
+                <div className="gantt-today-line" style={{ left: `${todayPct}%` }} />
+                {r.kind === "ms" ? (
+                  <div
+                    className={`gantt-ms ${r.risk === "at_risk" ? "warn" : "ms"}`}
+                    style={{ left: `${Math.max(0, Math.min(100, (daysBetween(fmtISO(winStart), r.date) / spanDays) * 100))}%` }}
+                    title={`${r.l} · ${r.sub} · click to edit`}
+                    onClick={() => onOpenMilestone(r.id)}
+                  />
+                ) : (
+                  <GanttBar r={r} winStart={winStart} spanDays={spanDays} onClick={() => onOpenSprint(r.k)} />
+                )}
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GanttBar({
+  r,
+  winStart,
+  spanDays,
+  onClick,
+}: {
+  r: { k: string; l: string; a: string; b: string };
+  winStart: Date;
+  spanDays: number;
+  onClick: () => void;
+}) {
+  const leftDays = daysBetween(fmtISO(winStart), r.a);
+  const rightDays = daysBetween(fmtISO(winStart), r.b);
+  const l = Math.max(0, (leftDays / spanDays) * 100);
+  const rr = Math.min(100, (rightDays / spanDays) * 100);
+  return (
+    <div
+      className="gantt-bar"
+      style={{ left: `${l}%`, width: `${Math.max(3, rr - l)}%` }}
+      title={`${r.l} · click for details`}
+      onClick={onClick}
+    >
+      {r.l}
+    </div>
+  );
+}
+
+/* ---------------- Create sprint modal ---------------- */
+
+function SprintModal({ editId, onClose, onCreated }: { editId?: string; onClose: () => void; onCreated: (id: string) => void }) {
+  const { toast } = useApp();
+  const [win] = useState<[Date, Date]>(() => fitWindow("week"));
+  const [minD, maxD] = [fmtISO(win[0]), fmtISO(win[1])];
+  const edit = editId ? SPRINTS[editId] : undefined;
+  const isEdit = !!edit;
+  const [name, setName] = useState(edit?.name ?? "");
+  const [goal, setGoal] = useState(edit && edit.goal && edit.goal !== "No goal set" ? edit.goal : "");
+  const [start, setStart] = useState(edit?.from ?? "");
+  const [end, setEnd] = useState(edit?.to ?? "");
+  const [cap, setCap] = useState(edit?.capacity ? String(edit.capacity) : "");
+  const [nameErr, setNameErr] = useState(false);
+  const [dateErr, setDateErr] = useState<{ msg: string; which: "start" | "end" | null }>({ msg: "", which: null });
+
+  // default dates — create mode only
+  useEffect(() => {
+    if (isEdit) return;
+    const ws = win[0].getTime();
+    const we = win[1].getTime();
+    let ds = new Date(NOW_D.getTime() + 21 * DAY_MS);
+    let de = new Date(NOW_D.getTime() + 35 * DAY_MS);
+    if (ds.getTime() < ws) ds = new Date(ws + 7 * DAY_MS);
+    if (de.getTime() > we) de = new Date(we - DAY_MS);
+    if (de.getTime() <= ds.getTime()) {
+      const span = Math.max(7, Math.round((we - ws) / DAY_MS / 3));
+      ds = new Date(ws + span * DAY_MS);
+      de = new Date(ds.getTime() + 7 * DAY_MS);
+      if (de.getTime() > we) de = new Date(we);
+    }
+    setStart(fmtISO(ds));
+    setEnd(fmtISO(de));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const submit = () => {
+    setNameErr(false);
+    setDateErr({ msg: "", which: null });
+    if (!name.trim()) {
+      setNameErr(true);
+      return;
+    }
+    const startV = start || fmtISO(new Date(NOW_D.getTime() + 7 * DAY_MS));
+    const endV = end || fmtISO(new Date(NOW_D.getTime() + 21 * DAY_MS));
+    if (startV < minD || endV > maxD) {
+      setDateErr({
+        msg: `Dates must fall within the timeline (${shortMD(win[0])} – ${shortMD(win[1])}).`,
+        which: startV < minD ? "start" : "end",
+      });
+      return;
+    }
+    if (startV >= endV) {
+      setDateErr({ msg: "End date must be after the start date.", which: "end" });
+      return;
+    }
+    const capacity = parseInt(cap, 10) || null;
+    const payload = { name: name.trim(), goal: goal.trim(), fromISO: startV, toISO: endV, capacity };
+    if (isEdit && editId) {
+      updateSprint(editId, payload);
+      onClose();
+      toast(name.trim() + " updated · " + shortMD(startV) + " – " + shortMD(endV));
+    } else {
+      const id = createSprint(payload);
+      onClose();
+      toast(name.trim() + " created · Planned");
+      onCreated(id);
+    }
+  };
+
+  const statusCls = edit ? spStatusClass(edit.st) : "neutral";
+  const statusLbl = edit && editId ? sprintStatusLabel(editId) : "Planned";
+
+  return (
+    <div className="scrim show" onClick={onClose} data-od-id="new-sprint-modal">
+      <div className="modal show" onClick={(e) => e.stopPropagation()}>
+        <div className="mh">
+          <h3>{isEdit ? "Iteration details" : "New iteration"}</h3>
+          <span className={`status ${statusCls}`}>
+            <span className="d"></span>
+            {statusLbl}
+          </span>
+          <button className="mh-x" onClick={onClose} title="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="mb">
+          <label className="flab">Sprint name</label>
+          <input className={`fld ${nameErr ? "err" : ""}`} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Sprint 16" autoFocus />
+          {nameErr && <div className="fld-err show">Please enter a name.</div>}
+
+          <label className="flab" style={{ marginTop: 12 }}>Goal</label>
+          <textarea className="fld" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="One-sentence outcome for this sprint" rows={2} />
+
+          <div className="frow" style={{ marginTop: 12 }}>
+            <div>
+              <label className="flab">Start date</label>
+              <input type="date" className={`fld ${dateErr.which === "start" ? "err" : ""}`} value={start} min={minD} max={maxD} onChange={(e) => setStart(e.target.value)} />
+            </div>
+            <div>
+              <label className="flab">End date</label>
+              <input type="date" className={`fld ${dateErr.which === "end" ? "err" : ""}`} value={end} min={minD} max={maxD} onChange={(e) => setEnd(e.target.value)} />
+            </div>
+          </div>
+          {dateErr.msg && <div className="fld-err show" style={{ marginBottom: 0 }}>{dateErr.msg}</div>}
+          <div className="sp-range-hint">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+            </svg>
+            Within timeline · {shortMD(win[0])} – {shortMD(win[1])}
+          </div>
+
+          <label className="flab">Capacity (story points, optional)</label>
+          <input type="number" className="fld" value={cap} onChange={(e) => setCap(e.target.value)} placeholder="e.g. 40" min={0} />
+        </div>
+        <div className="mf">
+          <span className="left-meta">{isEdit && edit ? `${edit.start} – ${edit.end}${edit.capacity ? " · " + edit.capacity + " pts cap" : ""}` : "Created as Planned · nothing is committed yet"}</span>
+          <button className="btn ghost" onClick={onClose}>Cancel</button>
+          <button className="btn primary" onClick={submit}>{isEdit ? "Save changes" : "Create as Planned"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Milestone modal (add/edit/delete) ---------------- */
+
+function MilestoneModal({ editId, onClose, toast }: { editId?: string; onClose: () => void; toast: (s: string) => void }) {
+  const [win] = useState<[Date, Date]>(() => fitWindow("week"));
+  const [minD, maxD] = [fmtISO(win[0]), fmtISO(win[1])];
+  const edit = editId ? MILESTONES.find((m) => m.id === editId) : undefined;
+  const isEdit = !!edit;
+  const [name, setName] = useState(edit?.t ?? "");
+  const [date, setDate] = useState(edit?.date ?? "");
+  const [risk, setRisk] = useState<"on_track" | "at_risk">(edit?.risk ?? "on_track");
+  const [nameErr, setNameErr] = useState(false);
+  const [dateErr, setDateErr] = useState("");
+
+  // default date — create mode only
+  useEffect(() => {
+    if (isEdit) return;
+    const ws = win[0].getTime();
+    const we = win[1].getTime();
+    let d = new Date(NOW_D.getTime() + 21 * DAY_MS);
+    if (d.getTime() < ws) d = new Date(ws + 7 * DAY_MS);
+    if (d.getTime() > we) d = new Date(we - DAY_MS);
+    setDate(fmtISO(d));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const submit = () => {
+    setNameErr(false);
+    setDateErr("");
+    if (!name.trim()) {
+      setNameErr(true);
+      return;
+    }
+    const dv = date || fmtISO(new Date(NOW_D.getTime() + 14 * DAY_MS));
+    if (dv < minD || dv > maxD) {
+      setDateErr(`Date must fall within the timeline (${shortMD(win[0])} – ${shortMD(win[1])}).`);
+      return;
+    }
+    const payload = { t: name.trim(), date: dv, risk };
+    if (isEdit && editId) {
+      updateMilestone(editId, payload);
+      onClose();
+      toast(payload.t + " updated · " + shortMD(dv));
+    } else {
+      addMilestone(payload);
+      onClose();
+      toast(payload.t + " added · " + shortMD(dv));
+    }
+  };
+
+  const remove = () => {
+    if (!isEdit || !editId) return;
+    const m = MILESTONES.find((x) => x.id === editId);
+    deleteMilestone(editId);
+    onClose();
+    toast((m?.t ?? "Milestone") + " deleted");
+  };
+
+  return (
+    <div className="scrim show" onClick={onClose} data-od-id="milestone-modal">
+      <div className="modal show" onClick={(e) => e.stopPropagation()}>
+        <div className="mh">
+          <h3>{isEdit ? "Milestone details" : "New milestone"}</h3>
+          <span className={`status ${risk === "at_risk" ? "warn" : "ok"}`}>
+            <span className="d"></span>
+            {risk === "at_risk" ? "At risk" : "On track"}
+          </span>
+          <button className="mh-x" onClick={onClose} title="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="mb">
+          <label className="flab">Name</label>
+          <input className={`fld ${nameErr ? "err" : ""}`} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Security hardening" autoFocus />
+          {nameErr && <div className="fld-err show">Please enter a name.</div>}
+
+          <label className="flab" style={{ marginTop: 12 }}>Target date</label>
+          <input type="date" className={`fld ${dateErr ? "err" : ""}`} value={date} min={minD} max={maxD} onChange={(e) => setDate(e.target.value)} />
+          {dateErr ? (
+            <div className="fld-err show" style={{ marginBottom: 0 }}>{dateErr}</div>
+          ) : (
+            <div className="sp-range-hint">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+              </svg>
+              Within timeline · {shortMD(win[0])} – {shortMD(win[1])}
+            </div>
+          )}
+
+          <label className="flab">Status</label>
+          <div className="seg">
+            <button type="button" className={risk === "on_track" ? "on" : ""} onClick={() => setRisk("on_track")}>On track</button>
+            <button type="button" className={risk === "at_risk" ? "on" : ""} onClick={() => setRisk("at_risk")}>At risk</button>
+          </div>
+        </div>
+        <div className="mf">
+          <span className="left-meta">{isEdit && edit ? `${shortMD(edit.date)}${edit.risk === "at_risk" ? " · At risk" : " · On track"}` : "A point in time on the timeline"}</span>
+          {isEdit && (
+            <button className="btn ghost" style={{ color: "var(--danger)" }} onClick={remove}>Delete</button>
+          )}
+          <button className="btn ghost" onClick={onClose}>Cancel</button>
+          <button className="btn primary" onClick={submit}>{isEdit ? "Save changes" : "Create milestone"}</button>
         </div>
       </div>
     </div>

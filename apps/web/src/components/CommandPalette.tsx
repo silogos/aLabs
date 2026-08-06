@@ -1,15 +1,13 @@
 /** Command palette — navigate, create, jump to a task. */
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "../api.js";
 import { useApp, type View } from "../store.js";
+import { useTasksVersion, allTasks } from "../views/tasks-store.js";
 
 export function CommandPalette() {
+  useTasksVersion();
   const { project, setCmdkOpen, setView, setCreateOpen, openTask } = useApp();
-  const pid = project!.id;
   const [q, setQ] = useState("");
-  const { data: page } = useQuery({ queryKey: ["tasks", pid], queryFn: () => api.tasks(pid) });
-  const tasks = page?.items ?? [];
+  const tasks = allTasks().filter((t) => t.ty !== "epic" && t.ty !== "subtask");
 
   const groups = useMemo(() => {
     const ql = q.toLowerCase();
@@ -24,9 +22,9 @@ export function CommandPalette() {
     ];
     const filteredNav = nav.filter(([l]) => l.toLowerCase().includes(ql));
     const filteredTasks = tasks
-      .filter((t) => t.title.toLowerCase().includes(ql))
+      .filter((t) => (`ATL-${t.id}`).toLowerCase().includes(ql) || t.t.toLowerCase().includes(ql))
       .slice(0, 6)
-      .map((t) => [t.title, t.id] as [string, string]);
+      .map((t) => [`ATL-${t.id} · ${t.t}`, String(t.id)] as [string, string]);
     return [
       { g: "Navigate", items: filteredNav.map(([l, v]) => ({ label: l, action: () => go(v, null) })) },
       { g: "Create", items: [{ label: "New task", action: () => { setCreateOpen(true); setCmdkOpen(false); } }] },
@@ -40,6 +38,10 @@ export function CommandPalette() {
     setView(v);
     if (taskId) setTimeout(() => openTask(taskId), 80);
   }
+
+  // project still drives the workspace context; keep the reference so the hook
+  // dependency stays honest without re-querying the API for the task list.
+  void project;
 
   return (
     <div className="modal cmdk show" onClick={(e) => e.target === e.currentTarget && setCmdkOpen(false)}>

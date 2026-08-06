@@ -12,6 +12,7 @@ import { Reports } from "./views/Reports.js";
 import { Agreements } from "./views/Agreements.js";
 import { TaskDrawer } from "./components/TaskDrawer.js";
 import { TaskModal } from "./components/TaskModal.js";
+import { RelModal } from "./components/RelModal.js";
 import { CommandPalette } from "./components/CommandPalette.js";
 import { Toasts } from "./components/Toasts.js";
 
@@ -26,7 +27,7 @@ const TITLES: Record<View, string> = {
 };
 
 export default function App() {
-  const { view, taskId, createOpen, cmdkOpen, closeTask, setCreateOpen, setCmdkOpen, project } =
+  const { view, taskId, createOpen, cmdkOpen, closeTask, setCreateOpen, setCmdkOpen, closeRelPicker, relPickerId, project, collapsed } =
     useApp();
 
   // global keyboard: ⌘K command palette, Esc closes overlays
@@ -38,13 +39,14 @@ export default function App() {
       }
       if (e.key === "Escape") {
         setCmdkOpen(false);
+        closeRelPicker();
         closeTask();
         setCreateOpen(false);
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [setCmdkOpen, closeTask, setCreateOpen]);
+  }, [setCmdkOpen, closeTask, setCreateOpen, closeRelPicker]);
 
   if (!project) {
     return (
@@ -56,10 +58,10 @@ export default function App() {
     );
   }
 
-  const overlayOpen = taskId || createOpen || cmdkOpen;
+  const overlayOpen = taskId || createOpen || cmdkOpen || relPickerId;
 
   return (
-    <div className="app">
+    <div className={`app ${collapsed ? "collapsed" : ""}`}>
       <Sidebar />
       <div className="main">
         <Topbar title={TITLES[view]} />
@@ -75,8 +77,9 @@ export default function App() {
       </div>
 
       {/* overlays */}
-      <div className={`scrim ${overlayOpen ? "show" : ""}`} onClick={() => { closeTask(); setCreateOpen(false); setCmdkOpen(false); }} />
+      <div className={`scrim ${overlayOpen ? "show" : ""}`} onClick={() => { if (relPickerId) { closeRelPicker(); return; } closeTask(); setCreateOpen(false); setCmdkOpen(false); }} />
       {taskId && <TaskDrawer id={taskId} />}
+      {relPickerId && <RelModal />}
       {createOpen && <TaskModal />}
       {cmdkOpen && <CommandPalette />}
       <Toasts />

@@ -72,7 +72,7 @@ const CheckIcon = (
 );
 
 export function Sidebar() {
-  const { view, setView, org, project, user, projLabel, setProjLabel, orgLabel, setOrgLabel, toast } =
+  const { view, setView, org, project, user, projLabel, setProjLabel, orgLabel, setOrgLabel, toast, collapsed, setCollapsed } =
     useApp();
   const pid = project?.id;
   const tasksQ = useQuery({ queryKey: ["count", "tasks", pid], queryFn: () => api.tasks(pid!), enabled: !!pid });
@@ -131,10 +131,34 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="brand">
-        <span className="logo">H</span>
-        <b>Helix</b>
-        <span>v1.1</span>
+      <div className="brand-row">
+        <div
+          className="brand"
+          onClick={collapsed ? () => setCollapsed(false) : undefined}
+          title={collapsed ? "Expand sidebar" : undefined}
+        >
+          <span className="logo" aria-label="aLabs">
+            <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+              <path d="M3 40 H27 M45 40 H61" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
+              <path d="M27 40 L31 43 L36 13 L40 47 L45 40" stroke="var(--accent)" strokeWidth="6" strokeLinejoin="round" strokeLinecap="round" />
+            </svg>
+          </span>
+          <b>aLabs</b>
+          <span className="badge">Beta</span>
+        </div>
+        <div className="rail-toggle-wrap">
+          <button
+            className="rail-toggle"
+            data-od-id="rail-toggle"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            onClick={() => setCollapsed(!collapsed)}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d={collapsed ? "M9 6l6 6-6 6" : "M15 6l-6 6 6 6"} />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Project switcher */}
@@ -319,7 +343,7 @@ export function Sidebar() {
               Appearance
             </button>
             <div className="me-sep"></div>
-            <button className="me-row danger" onClick={() => { setMeOpen(false); toast("Signed out of Helix"); }}>
+            <button className="me-row danger" onClick={() => { setMeOpen(false); toast("Signed out of aLabs"); }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
               Sign out
             </button>

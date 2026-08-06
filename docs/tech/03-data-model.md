@@ -1,6 +1,6 @@
 # Data Model
 
-Version: 1.0.0
+Version: 1.1.0
 Status: Draft
 Priority: Critical
 Depends On:
@@ -16,6 +16,14 @@ The precise database schema. Use this when generating Drizzle table definitions,
 Column types follow `02-conventions.md`: `uuid` PKs (UUID v7), `timestamptz`, snake_case plural tables.
 
 Audit columns `created_by` / `updated_by` are omitted below for brevity but apply to every user-mutated entity.
+
+> **Schema sync status (v1.1):** this doc is the *spec* — it now includes story-point
+> estimates, the epic-grouping column, cross-issue links, and iteration point caches
+> that the product already surfaces in the UI. The Drizzle implementation in
+> `packages/core/src/db/schema.ts` currently **lags** by the four additions marked
+> `[NEW v1.1]` below (`tasks.epic_id`, `tasks.story_points`, `task_links`, and
+> `iterations.committed_points` / `completed_points`). Sync `schema.ts` to match
+> before wiring the UI to real persisted data.
 
 ---
 
@@ -41,12 +49,13 @@ Better Auth owns `users`, `sessions`, `accounts`, `verifications`. Domain code r
 
 ## organizations
 
-| Column       | Type          | Constraints                |
-| ------------ | ------------- | -------------------------- |
-| id           | uuid          | pk                         |
-| name         | varchar(100)  | not null                   |
-| slug         | varchar(60)   | not null, unique           |
-| type         | organization_type | not null default 'team'    |
+| Column       | Type          | Constraints                          |
+| ------------ | ------------- | ------------------------------------ |
+| id           | uuid          | pk                                   |
+| name         | varchar(100)  | not null                             |
+| slug         | varchar(60)   | not null, unique                     |
+| type         | organization_type | not null default 'team'          |
+| logo         | text          | null                                 |
 | logo         | text          | null                       |
 | description  | text          | null                       |
 | timezone     | varchar(50)   | not null default 'UTC'     |
@@ -175,16 +184,23 @@ Unique `(project_id, user_id)`.
 | reporter_id  | uuid          | fk users, null                           |
 | priority     | task_priority | not null default 'medium'                |
 | type_id      | uuid          | fk task_types, null                      |
-| parent_id    | uuid          | fk tasks, null (self-reference)          |
-| iteration_id | uuid          | fk iterations, null                      |
+| parent_id    | uuid          | fk tasks, null (self-reference, subtasks) |
+| epic_id      | uuid          | fk tasks, null `[NEW v1.1]` (epic grouping) |
+| iteration_id | uuid          | fk iterations, null (null = Backlog)     |
 | milestone_id | uuid          | fk milestones, null                      |
+| story_points | integer       | null `[NEW v1.1]` (story-point estimate) |
 | due_date     | timestamptz   | null                                     |
 | order        | integer       | not null default 0                       |
 | created_at   | timestamptz   | not null default now                     |
 | updated_at   | timestamptz   | not null default now                     |
 | deleted_at   | timestamptz   | null                                     |
 
-Index `(project_id, status_id)`, `(project_id, assignee_id)`, `(project_id, iteration_id)`.
+Index `(project_id, status_id)`, `(project_id, assignee_id)`, `(project_id, iteration_id)`, `(project_id, epic_id)`.
+
+> **Hierarchy fields:** `parent_id` is the subtask relationship (a Subtask's
+> parent is a Story/Task/Bug); `epic_id` is the epic-grouping relationship (a
+> Story/Task/Bug's epic is a task of type Epic). Epics have no `epic_id`.
+> Subtasks inherit their parent's `iteration_id` / `milestone_id`.
 
 ## task_statuses
 
@@ -218,6 +234,28 @@ Unique `(project_id, name)`.
 | label_id | uuid | fk task_labels   |
 
 Composite pk `(task_id, label_id)`.
+
+## task_links `[NEW v1.1]`
+
+Cross-issue relationships between two tasks (excludes the subtask/epic
+hierarchies, which use `parent_id` / `epic_id`). Models blocks / blocked by /
+relates to.
+
+| Column     | Type            | Constraints                              |
+| ---------- | --------------- | ---------------------------------------- |
+| id         | uuid            | pk                                       |
+| project_id | uuid            | fk projects, indexed, not null           |
+| source_id  | uuid            | fk tasks, not null                       |
+| target_id  | uuid            | fk tasks, not null                       |
+| type       | task_link_type  | not null                                 |
+| created_at | timestamptz     | not null default now                     |
+
+Unique `(source_id, target_id, type)`. Index `(project_id, source_id)`,
+`(project_id, target_id)`.
+
+`task_link_type` enum: `blocks`, `blocked_by`, `relates_to`. `blocks` and
+`blocked_by` are reciprocal — store one directed row and compute the inverse,
+or store both; pick one convention per implementation.
 
 ## task_types
 
@@ -292,17 +330,25 @@ Index `(project_id, space_id)`.
 
 ## iterations
 
-| Column     | Type             | Constraints                  |
-| ---------- | ---------------- | ---------------------------- |
-| id         | uuid             | pk                           |
-| project_id | uuid             | fk projects, indexed, not null |
-| name       | varchar(120)     | not null                     |
-| goal       | text             | null                         |
-| start_date | date             | not null                     |
-| end_date   | date             | not null                     |
-| status     | iteration_status | not null default 'planned'   |
-| created_at | timestamptz      | not null default now         |
-| updated_at | timestamptz      | not null default now         |
+| Column            | Type             | Constraints                              |
+| ----------------- | ---------------- | ---------------------------------------- |
+| id                | uuid             | pk                                       |
+| project_id        | uuid             | fk projects, indexed, not null           |
+| name              | varchar(120)     | not null                                 |
+| goal              | text             | null                                     |
+| start_date        | date             | not null                                 |
+| end_date          | date             | not null                                 |
+| status            | iteration_status | not null default 'planned'               |
+| committed_points  | integer          | null `[NEW v1.1]` (denormalized cache)   |
+| completed_points  | integer          | null `[NEW v1.1]` (denormalized cache)   |
+| created_at        | timestamptz      | not null default now                     |
+| updated_at        | timestamptz      | not null default now                     |
+
+> **Lifecycle:** `planned → active → completed`, and **only one `active`
+> iteration per project** (starting a new one auto-completes the current).
+> `committed_points` / `completed_points` are caches of the story-point sums over
+> the iteration's tasks (committed = all non-subtask points; completed = those
+> with a 'Done' status); they can be recomputed from `tasks`.
 
 ## milestones
 
@@ -508,6 +554,7 @@ Unique `(user_id, channel, type)`.
 | project_status        | active, on_hold, archived                           |
 | project_visibility    | organization, private                               |
 | task_priority         | low, medium, high, urgent                           |
+| task_link_type        | blocks, blocked_by, relates_to                      |
 | iteration_status      | planned, active, completed                          |
 | milestone_status      | planned, reached                                    |
 | meeting_type          | standup, review, planning, client, other            |
