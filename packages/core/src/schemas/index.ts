@@ -22,7 +22,7 @@ import {
   ClientUserStatus,
   PlanName,
 } from "../enums.js";
-import { contentSchema } from "../blocks.js";
+import { contentSchema } from "../content.js";
 
 const iso = z.string();
 const id = z.string().uuid();

@@ -184,7 +184,7 @@ export interface RichTextEditorProps {
   onChange?: (doc: Content) => void;
   /** Placeholder for empty documents. */
   placeholder?: string;
-  /** Extra class on the `.helix-editor` wrapper. */
+  /** Extra class on the `.alabs-editor` wrapper. */
   className?: string;
   /** Called when a user clicks a task pill — open the task in-app. */
   onOpenTask?: (taskId: number) => void;
@@ -270,7 +270,7 @@ export function RichTextEditor({
   if (!editor) return null;
 
   return (
-    <div className={"helix-editor" + (className ? " " + className : "")} ref={wrapperRef}>
+    <div className={"alabs-editor" + (className ? " " + className : "")} ref={wrapperRef}>
       {editable && (
         <div className="al-toolbar" onMouseDown={(e) => e.preventDefault()}>
           <TBtn title="Bold" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}><IcBold /></TBtn>

@@ -14,7 +14,7 @@
  * --surface-2, --border, --radius, --mono.
  *
  * Contextual density (e.g. a compact drawer) is an opt-in `className` extension
- * point — pass e.g. `className="dw-desc"` and style `.helix-editor.dw-desc …`
+ * point — pass e.g. `className="dw-desc"` and style `.alabs-editor.dw-desc …`
  * in your app; those rules win by specificity over the package base.
  */
 export { RichTextEditor, TaskLink } from "./editor.js";

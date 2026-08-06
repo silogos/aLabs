@@ -4,12 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App.js";
 import { AppProvider } from "./store.js";
 
-// BlockNote editor styles — imported before styles.css so the Helix token
-// overrides (.bn-*) in styles.css win the cascade.
-import "@blocknote/mantine/style.css";
-import "@blocknote/mantine/blocknoteStyles.css";
-
 import "./styles.css";
+import "@pmin/editor/editor.css";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 10_000, retry: 1 } },

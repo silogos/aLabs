@@ -1,6 +1,6 @@
 /**
- * Seed the in-memory store with the Helix demo data — mirrors the
- * `helix-app.html` prototype 1:1 so the web app renders identically.
+ * Seed the in-memory store with the aLabs demo data — mirrors the
+ * `designs/alabs-app.html` prototype 1:1 so the web app renders identically.
  *
  * Idempotent: `store.seeded` guards re-runs.
  */
@@ -9,7 +9,7 @@ import {
   SYSTEM_WORKSPACE_ROLES,
   SYSTEM_PROJECT_ROLES,
 } from "@pmin/core";
-import type { TaskPriority, Block } from "@pmin/core";
+import type { TaskPriority, Content } from "@pmin/core";
 import { store, type ActivityEntry } from "./store.js";
 
 const now = () => new Date();
@@ -248,7 +248,7 @@ export function seed(): void {
     store.milestones.push(m);
     return m;
   };
-  const v2Beta = ms("v2.0 Beta release", "Public beta of Helix 2.0", dayIso(6), "planned", 25, 18);
+  const v2Beta = ms("v2.0 Beta release", "Public beta of aLabs 2.0", dayIso(6), "planned", 25, 18);
   const designSystem = ms("Design System v1", "Component library + tokens", dayIso(21), "planned", 20, 11);
   const security = ms("Security hardening", "Audit log, SSO, rate limiting", dayIso(39), "planned", 20, 6);
 
@@ -377,7 +377,7 @@ export function seed(): void {
   const client = spaces("Client", "🤝", 3);
   const legal = spaces("Legal", "⚖️", 4);
 
-  const page = (space: ReturnType<typeof spaces>, title: string, icon: string, content: Block[]) => {
+  const page = (space: ReturnType<typeof spaces>, title: string, icon: string, content: Content) => {
     const p = {
       id: uuidv7(),
       projectId: atlas.id,
@@ -395,166 +395,87 @@ export function seed(): void {
     return p;
   };
 
-  page(product, "Vision & positioning", "🎯", [
-    { id: "1", type: "heading2", data: { text: "Vision" } },
-    {
-      id: "2",
-      type: "paragraph",
-      data: {
-        text: "A project management platform purpose-built for software delivery — simple enough for a two-person team, scalable enough for an enterprise. Most tools track tasks or store documents. Helix unifies delivery, documentation, planning, and client communication in one place.",
-      },
-    },
-    {
-      id: "3",
-      type: "callout",
-      data: { variant: "info", text: "AI is an optional enhancement, never the core experience. Every feature works without it." },
-    },
-    { id: "4", type: "heading2", data: { text: "Differentiators" } },
-    { id: "5", type: "todo", data: { text: "Documentation is a first-class citizen", checked: true } },
-    { id: "6", type: "todo", data: { text: "Built-in client transparency", checked: true } },
-    { id: "7", type: "todo", data: { text: "Seat-free pricing — we charge for value", checked: true } },
-    { id: "8", type: "todo", data: { text: "Refine ICP sizing assumptions", checked: false } },
-  ]);
+  /* ProseMirror doc builders for seed page content (native JSON — no adapter). */
+  const txt = (t: string): Content => ({ type: "text", text: t });
+  const para = (t: string): Content => ({ type: "paragraph", content: [txt(t)] });
+  const hd = (level: number, t: string): Content => ({ type: "heading", attrs: { level }, content: [txt(t)] });
+  const bq = (t: string): Content => ({ type: "blockquote", content: [para(t)] });
+  const cblk = (language: string, t: string): Content => ({ type: "codeBlock", attrs: { language }, content: [txt(t)] });
+  const ul = (...items: string[]): Content => ({ type: "bulletList", content: items.map((i) => ({ type: "listItem", content: [para(i)] })) });
+  const doc = (...blocks: Content[]): Content => ({ type: "doc", content: blocks });
 
-  page(engineering, "Architecture", "🏛️", [
-    {
-      id: "1",
-      type: "callout",
-      data: { variant: "info", text: "Source of truth. This doc governs all module work. ADRs live under Engineering → ADRs; changes here require an ADR." },
-    },
-    { id: "2", type: "heading2", data: { text: "Hierarchy" } },
-    {
-      id: "3",
-      type: "paragraph",
-      data: {
-        text: "Helix is strictly hierarchical: User → Organization → Project → Modules. Every business activity belongs to a Project — nothing floats free. Data is isolated per organization; multi-tenancy is enforced at the database layer, not the application layer.",
-      },
-    },
-    { id: "4", type: "heading2", data: { text: "Foundation & modules" } },
-    {
-      id: "5",
-      type: "paragraph",
-      data: {
-        text: "A shared Foundation (Authentication, Organization, Project) underpins every module. Delivery modules (Task, Planning) and Knowledge modules (Documents) build on it directly.",
-      },
-    },
-    { id: "6", type: "todo", data: { text: "Define the tenancy boundary at the org level", checked: true } },
-    { id: "7", type: "todo", data: { text: "Scope every module to a project", checked: true } },
-    { id: "8", type: "todo", data: { text: "Document the read-replica strategy for reporting", checked: false } },
-    { id: "9", type: "heading2", data: { text: "Stack" } },
-    {
-      id: "10",
-      type: "bulletList",
-      data: {
-        items: [
-          "Frontend · React · TypeScript — large hiring pool, end-to-end type safety",
-          "Backend · Hono — lightweight, edge-ready, fast",
-          "Database · PostgreSQL — relational integrity for hierarchical multi-tenant data",
-          "ORM · Drizzle — SQL-first, predictable, type-safe",
-          "Auth · Better Auth — sessions & organizations without a managed vendor",
-        ],
-      },
-    },
-    {
-      id: "16",
-      type: "callout",
-      data: { variant: "warning", text: "Open decision. Object storage & search providers are still TBD — see Pending Decisions in the README." },
-    },
-  ]);
+  page(product, "Vision & positioning", "🎯", doc(
+    hd(2, "Vision"),
+    para("A project management platform purpose-built for software delivery — simple enough for a two-person team, scalable enough for an enterprise. Most tools track tasks or store documents. aLabs unifies delivery, documentation, planning, and client communication in one place."),
+    bq("AI is an optional enhancement, never the core experience. Every feature works without it."),
+    hd(2, "Differentiators"),
+    ul(
+      "Documentation is a first-class citizen",
+      "Built-in client transparency",
+      "Seat-free pricing — we charge for value",
+      "Refine ICP sizing assumptions",
+    ),
+  ));
 
-  page(engineering, "Data model", "🗄️", [
-    { id: "1", type: "heading2", data: { text: "Core entities" } },
-    {
-      id: "2",
-      type: "paragraph",
-      data: { text: "Tasks, Documents, Planning, and Meetings each own their tables, scoped by projectId. There are no cross-project foreign keys." },
-    },
-    {
-      id: "3",
-      type: "code",
-      data: {
-        language: "sql",
-        text: "-- task is the primary unit of execution\nCREATE TABLE task (\n  id          uuid PRIMARY KEY,\n  project_id  uuid NOT NULL REFERENCES project,\n  title       text NOT NULL,\n  status_id   uuid NOT NULL REFERENCES task_status,\n  assignee_id uuid,\n  priority    task_priority NOT NULL DEFAULT 'medium',\n  due_date    timestamptz,\n  CONSTRAINT within_project CHECK (...)\n);",
-      },
-    },
-    {
-      id: "4",
-      type: "callout",
-      data: { variant: "info", text: "Subtasks are self-referential via parent_id; progress rolls up to the parent." },
-    },
-    { id: "5", type: "paragraph", data: { text: "See the full schema in 03-data-model.md." } },
-  ]);
+  page(engineering, "Architecture", "🏛️", doc(
+    bq("Source of truth. This doc governs all module work. ADRs live under Engineering → ADRs; changes here require an ADR."),
+    hd(2, "Hierarchy"),
+    para("aLabs is strictly hierarchical: User → Organization → Project → Modules. Every business activity belongs to a Project — nothing floats free. Data is isolated per organization; multi-tenancy is enforced at the database layer, not the application layer."),
+    hd(2, "Foundation & modules"),
+    para("A shared Foundation (Authentication, Organization, Project) underpins every module. Delivery modules (Task, Planning) and Knowledge modules (Documents) build on it directly."),
+    ul(
+      "Define the tenancy boundary at the org level",
+      "Scope every module to a project",
+      "Document the read-replica strategy for reporting",
+    ),
+    hd(2, "Stack"),
+    ul(
+      "Frontend · React · TypeScript — large hiring pool, end-to-end type safety",
+      "Backend · Hono — lightweight, edge-ready, fast",
+      "Database · PostgreSQL — relational integrity for hierarchical multi-tenant data",
+      "ORM · Drizzle — SQL-first, predictable, type-safe",
+      "Auth · Better Auth — sessions & organizations without a managed vendor",
+    ),
+    bq("Open decision. Object storage & search providers are still TBD — see Pending Decisions in the README."),
+  ));
 
-  page(engineering, "API contract", "🔌", [
-    { id: "1", type: "heading2", data: { text: "Conventions" } },
-    {
-      id: "2",
-      type: "paragraph",
-      data: { text: "RESTful, JSON, cursor-based pagination. Every route is scoped under an organization and project." },
-    },
-    {
-      id: "3",
-      type: "code",
-      data: {
-        language: "http",
-        text: "# list tasks in a project\nGET /orgs/{orgId}/projects/{projectId}/tasks\n     ?status=progress&assignee=me&cursor={cursor}\n\n# 200 OK\n{ \"data\": [...], \"nextCursor\": \"...\", \"hasMore\": true }",
-      },
-    },
-    {
-      id: "4",
-      type: "paragraph",
-      data: { text: "Every endpoint is guarded by a capability check: task:view, task:create, document:update, and so on. Capabilities are derived from the member's role in the org and project." },
-    },
-  ]);
+  page(engineering, "Data model", "🗄️", doc(
+    hd(2, "Core entities"),
+    para("Tasks, Documents, Planning, and Meetings each own their tables, scoped by projectId. There are no cross-project foreign keys."),
+    cblk("sql", "-- task is the primary unit of execution\nCREATE TABLE task (\n  id          uuid PRIMARY KEY,\n  project_id  uuid NOT NULL REFERENCES project,\n  title       text NOT NULL,\n  status_id   uuid NOT NULL REFERENCES task_status,\n  assignee_id uuid,\n  priority    task_priority NOT NULL DEFAULT 'medium',\n  due_date    timestamptz,\n  CONSTRAINT within_project CHECK (...)\n);"),
+    bq("Subtasks are self-referential via parent_id; progress rolls up to the parent."),
+    para("See the full schema in 03-data-model.md."),
+  ));
 
-  page(product, "Roadmap", "🗺️", [
-    { id: "1", type: "heading2", data: { text: "Phasing" } },
-    {
-      id: "2",
-      type: "paragraph",
-      data: { text: "Phase 1 Foundation → Phase 2 Task & Documents → Phase 3 Planning & Meetings → Phase 4 Client portal & Governance → Phase 5 Notifications & Billing → Phase 6 AI add-on." },
-    },
-    { id: "3", type: "todo", data: { text: "Foundation shipped", checked: true } },
-    { id: "4", type: "todo", data: { text: "Task & Documents in beta", checked: true } },
-    { id: "5", type: "todo", data: { text: "Planning module — active sprint", checked: false } },
-  ]);
-  page(product, "Pricing model", "💲", [
-    { id: "1", type: "paragraph", data: { text: "Seat-free. We charge for projects and features, not people." } },
-  ]);
-  page(product, "Personas", "👥", [
-    { id: "1", type: "paragraph", data: { text: "Product Manager, Project Manager, Business Analyst, Software Engineer, QA Engineer, UI/UX Designer." } },
-  ]);
-  page(engineering, "ADRs", "📋", [
-    { id: "1", type: "paragraph", data: { text: "Architecture Decision Records live here." } },
-  ]);
-  page(engineering, "Conventions", "📜", [
-    { id: "1", type: "heading2", data: { text: "Coding standards" } },
-    {
-      id: "2",
-      type: "paragraph",
-      data: { text: "TypeScript strict mode everywhere, no any without an inline justification. Naming is camelCase for code, snake_case for database columns." },
-    },
-    {
-      id: "3",
-      type: "callout",
-      data: { variant: "warning", text: "Every architectural decision gets an ADR before the PR merges." },
-    },
-  ]);
-  page(design, "Design system", "🎨", [
-    { id: "1", type: "paragraph", data: { text: "Tokens, type scale, and component primitives." } },
-  ]);
-  page(design, "Component library", "🧩", [
-    { id: "1", type: "paragraph", data: { text: "React component library shared across the app." } },
-  ]);
-  page(client, "Northwind SOW", "📄", [
-    { id: "1", type: "paragraph", data: { text: "Statement of work for the Atlas Platform 2.0 engagement." } },
-  ]);
-  page(client, "Status report — Mar", "📊", [
-    { id: "1", type: "paragraph", data: { text: "March status report shared with the client." } },
-  ]);
-  page(legal, "Master services agreement", "📑", [
-    { id: "1", type: "paragraph", data: { text: "MSA between Northwind and the client." } },
-  ]);
+  page(engineering, "API contract", "🔌", doc(
+    hd(2, "Conventions"),
+    para("RESTful, JSON, cursor-based pagination. Every route is scoped under an organization and project."),
+    cblk("http", "# list tasks in a project\nGET /orgs/{orgId}/projects/{projectId}/tasks\n     ?status=progress&assignee=me&cursor={cursor}\n\n# 200 OK\n{ \"data\": [...], \"nextCursor\": \"...\", \"hasMore\": true }"),
+    para("Every endpoint is guarded by a capability check: task:view, task:create, document:update, and so on. Capabilities are derived from the member's role in the org and project."),
+  ));
+
+  page(product, "Roadmap", "🗺️", doc(
+    hd(2, "Phasing"),
+    para("Phase 1 Foundation → Phase 2 Task & Documents → Phase 3 Planning & Meetings → Phase 4 Client portal & Governance → Phase 5 Notifications & Billing → Phase 6 AI add-on."),
+    ul(
+      "Foundation shipped",
+      "Task & Documents in beta",
+      "Planning module — active sprint",
+    ),
+  ));
+  page(product, "Pricing model", "💲", doc(para("Seat-free. We charge for projects and features, not people.")));
+  page(product, "Personas", "👥", doc(para("Product Manager, Project Manager, Business Analyst, Software Engineer, QA Engineer, UI/UX Designer.")));
+  page(engineering, "ADRs", "📋", doc(para("Architecture Decision Records live here.")));
+  page(engineering, "Conventions", "📜", doc(
+    hd(2, "Coding standards"),
+    para("TypeScript strict mode everywhere, no any without an inline justification. Naming is camelCase for code, snake_case for database columns."),
+    bq("Every architectural decision gets an ADR before the PR merges."),
+  ));
+  page(design, "Design system", "🎨", doc(para("Tokens, type scale, and component primitives.")));
+  page(design, "Component library", "🧩", doc(para("React component library shared across the app.")));
+  page(client, "Northwind SOW", "📄", doc(para("Statement of work for the Atlas Platform 2.0 engagement.")));
+  page(client, "Status report — Mar", "📊", doc(para("March status report shared with the client.")));
+  page(legal, "Master services agreement", "📑", doc(para("MSA between Northwind and the client.")));
 
   /* ---------------- Files ---------------- */
   const file = (name: string, mimeType: string, size: number, icon: string, uploadedBy: typeof aisha) => {

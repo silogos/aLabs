@@ -5,6 +5,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { ApiError } from "./lib/errors.js";
 import { resolveUser } from "./lib/auth.js";
 import { seed } from "./db/seed.js";
@@ -42,6 +43,10 @@ app.use("*", async (c, next) => {
   if (user) c.set("user", user);
   await next();
 });
+
+// Serve uploaded files (images written by the documents/files upload route)
+// from local disk under <cwd>/uploads/*.
+app.use("/uploads/*", serveStatic({ root: process.cwd() }));
 
 app.get("/", (c) =>
   c.json({

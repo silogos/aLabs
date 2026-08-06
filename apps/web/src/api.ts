@@ -107,6 +107,26 @@ export const api = {
       (x) => ((x as { data?: FileRef[] }).data ?? (x as FileRef[])),
     );
   },
+  /** Upload an image via multipart; returns the served URL (`/uploads/<id>`). */
+  uploadFile: async (pid: string, file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    // NOTE: do not set Content-Type — the browser sets the multipart boundary.
+    const res = await fetch(`${BASE}/projects/${pid}/documents/files`, {
+      method: "POST",
+      body: fd,
+      credentials: "include",
+    });
+    const body = (await res.json().catch(() => ({}))) as {
+      data?: FileRef;
+      error?: { message?: string };
+    };
+    if (!res.ok) {
+      const msg = body?.error?.message ?? `Upload failed (${res.status})`;
+      throw new Error(msg);
+    }
+    return body.data!.url;
+  },
 
   /* ---- planning ---- */
   iterations: (pid: string) =>

@@ -1,6 +1,7 @@
 /** Documents routes — spaces, pages (with revisions), files, search. */
 import { Hono } from "hono";
-import { z } from "zod";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { store } from "../../db/store.js";
 import {
   uuidv7,
@@ -22,6 +23,24 @@ export const documents = new Hono<{ Variables: Vars }>();
 documents.use("*", projectContext);
 
 const pidOf = (c: Ctx) => currentTenant(c).projectId!;
+
+// ---- file uploads (images) ----
+const UPLOADS_DIR = join(process.cwd(), "uploads");
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
+const IMAGE_EXT: Record<string, string> = {
+  "image/png": ".png",
+  "image/jpeg": ".jpg",
+  "image/gif": ".gif",
+  "image/webp": ".webp",
+  "image/avif": ".avif",
+  "image/svg+xml": ".svg",
+  "image/bmp": ".bmp",
+  "image/x-icon": ".ico",
+};
+function extFromName(name: string): string | undefined {
+  const m = name.match(/\.([a-z0-9]+)$/i);
+  return m ? `.${m[1].toLowerCase()}` : undefined;
+}
 
 // ---- spaces ----
 documents.get("/documents/spaces", requirePermission("document:view"), (c) =>
@@ -62,7 +81,7 @@ documents.post("/documents/pages", requirePermission("document:create"), async (
     spaceId: input.spaceId,
     parentId: input.parentId ?? null,
     title: input.title,
-    content: [],
+    content: { type: "doc", content: [{ type: "paragraph" }] },
     icon: input.icon ?? null,
     order: 0,
     createdAt: new Date().toISOString(),
@@ -102,20 +121,28 @@ documents.get("/documents/pages/:id/revisions", requirePermission("document:view
   data(c, []),
 );
 
-// ---- files ----
+// ---- files (multipart image upload → local disk + files catalog) ----
 documents.post("/documents/files", requirePermission("file:upload"), async (c) => {
   const user = c.get("user")!;
-  const body = parseBody(
-    await c.req.json(),
-    z.object({ name: z.string(), mimeType: z.string(), size: z.number(), url: z.string() }),
-  );
+  const pid = pidOf(c);
+  const body = await c.req.parseBody();
+  const file = body["file"];
+  if (!(file instanceof File)) throw badRequest("Missing 'file' part");
+  if (!file.type.startsWith("image/")) throw badRequest("Only image uploads are supported");
+  if (file.size > MAX_UPLOAD_BYTES) throw badRequest("File too large (5 MB max)");
+
+  const ext = IMAGE_EXT[file.type] ?? extFromName(file.name) ?? "";
+  const id = uuidv7();
+  const fname = `${id}${ext}`;
+  await mkdir(UPLOADS_DIR, { recursive: true });
+  await writeFile(join(UPLOADS_DIR, fname), Buffer.from(await file.arrayBuffer()));
   const f = {
-    id: uuidv7(),
-    projectId: pidOf(c),
-    name: body.name,
-    mimeType: body.mimeType,
-    size: body.size,
-    url: body.url,
+    id,
+    projectId: pid,
+    name: file.name,
+    mimeType: file.type,
+    size: file.size,
+    url: `/uploads/${fname}`,
     uploadedBy: user,
     createdAt: new Date().toISOString(),
     deletedAt: null as string | null,

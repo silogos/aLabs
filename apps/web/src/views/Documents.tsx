@@ -4,8 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api.js";
 import { useApp } from "../store.js";
 import { initials, colorFor, timeAgo } from "../components/ui.js";
-import { RichTextEditor } from "../components/RichTextEditor.js";
-import type { Block, Page } from "@pmin/core";
+import { RichTextEditor } from "@pmin/editor";
+import type { Content, Page } from "@pmin/core";
 
 const IcPlus = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -19,17 +19,17 @@ const IcPlus = (
  * theming and core-block conversion live inside <RichTextEditor>.
  * ------------------------------------------------------------------ */
 function PageEditor({ page, editMode }: { page: Page; editMode: boolean }) {
-  const { project, toast } = useApp();
+  const { project, toast, openTask } = useApp();
   const pid = project!.id;
   const qc = useQueryClient();
   const [title, setTitle] = useState(page.title);
 
   const contentTimer = useRef<number | undefined>(undefined);
-  const handleContentChange = (blocks: Block[]) => {
+  const handleContentChange = (doc: Content) => {
     window.clearTimeout(contentTimer.current);
     contentTimer.current = window.setTimeout(async () => {
       try {
-        await api.updatePage(pid, page.id, { content: blocks });
+        await api.updatePage(pid, page.id, { content: doc });
         void qc.invalidateQueries({ queryKey: ["pages", pid] });
       } catch (e) {
         toast("Couldn't save page: " + (e as Error).message);
@@ -76,10 +76,12 @@ function PageEditor({ page, editMode }: { page: Page; editMode: boolean }) {
       </div>
 
       <RichTextEditor
-        initialContent={page.content ?? []}
+        initialContent={page.content}
         editable={editMode}
-        placeholder="Type '/' for commands, or just write…"
+        placeholder="Write something…"
         onChange={handleContentChange}
+        onOpenTask={(id) => openTask(String(id))}
+        uploadFile={(file) => api.uploadFile(pid, file)}
       />
     </>
   );
