@@ -2,7 +2,7 @@
   "version": 1,
   "kind": "html",
   "title": "aLabs · Workspace",
-  "entry": "alabs-app.html",
+  "entry": "app/alabs-app.html",
   "renderer": "html",
   "status": "complete",
   "exports": [

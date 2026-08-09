@@ -267,7 +267,7 @@ Committing a task to a sprint is a Task update (`PATCH .../tasks/:id` with
 - Timeline visualizes scheduled work with zoom + date-range controls
 - Velocity reflects committed vs. completed story points
 
-> **Sync note:** the Planning screen in the current UI mock (`designs/alabs-app.html`)
+> **Sync note:** the Planning screen in the current UI mock (`designs/app/alabs-app.html`)
 > still renders hardcoded rows and is **not yet wired** to the real
 > `iterations`/`tasks` data — its buttons (New iteration, Plan sprint, Start/
 > Complete, Gantt drag) are placeholders. The data model and state machine above

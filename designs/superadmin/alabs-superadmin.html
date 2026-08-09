@@ -1,0 +1,1806 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>aLabs Console · Superadmin</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<style>
+/* ============================================================
+   aLabs Console — Superadmin
+   A sibling product to the aLabs workspace app.
+   Tokens mirror designs/app/alabs-app.html VERBATIM so it reads as the
+   same product line. Component classes reused from the aLabs app shell.
+   ============================================================ */
+:root{
+  --bg:        oklch(98.4% 0.002 250);
+  --surface:   oklch(100% 0 0);
+  --surface-2: oklch(96.6% 0.003 250);
+  --surface-3: oklch(94% 0.004 250);
+  --overlay:   oklch(14% 0.014 250 / 72%);
+
+  --fg:        oklch(22% 0.013 250);
+  --fg-strong: oklch(14% 0.015 250);
+  --muted:     oklch(52% 0.012 250);
+  --faint:     oklch(64% 0.010 250);
+
+  --border:        oklch(91% 0.004 250);
+  --border-strong: oklch(85% 0.007 250);
+
+  --rail:        oklch(19% 0.013 255);
+  --rail-2:      oklch(23% 0.014 255);
+  --rail-fg:     oklch(74% 0.012 255);
+  --rail-faint:  oklch(46% 0.012 255);
+
+  --accent:        oklch(54% 0.18 258);
+  --accent-hover:  oklch(48% 0.19 258);
+  --accent-soft:   oklch(96% 0.03 258);
+  --accent-fg:     oklch(99% 0.01 258);
+
+  --ok:oklch(58% 0.13 150); --ok-bg:oklch(96% 0.04 150);
+  --warn:oklch(66% 0.14 70); --warn-bg:oklch(96% 0.05 70);
+  --danger:oklch(56% 0.19 25); --danger-bg:oklch(96% 0.04 25);
+  --info:oklch(58% 0.12 240); --info-bg:oklch(96% 0.04 240);
+  --violet:oklch(54% 0.14 300); --violet-bg:oklch(96% 0.04 300);
+
+  --radius:8px; --radius-sm:6px; --radius-lg:12px;
+  --sidebar-w:240px; --topbar-h:52px;
+
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,'Helvetica Neue',Arial,sans-serif;
+  --mono:ui-monospace,'SF Mono','JetBrains Mono','IBM Plex Mono',Menlo,Consolas,monospace;
+
+  --shadow-pop:0 8px 30px rgba(20,24,40,.14),0 2px 8px rgba(20,24,40,.08);
+  --shadow-card:0 1px 2px rgba(20,24,40,.05);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--fg);
+  font:13.5px/1.45 var(--font);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+::selection{background:var(--accent-soft)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mono{font-family:var(--mono);font-feature-settings:"tnum" 1}
+.tnum{font-variant-numeric:tabular-nums}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.muted{color:var(--muted)} .faint{color:var(--faint)}
+.small{font-size:12px} .tiny{font-size:11px}
+
+/* ---------- App shell ---------- */
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;grid-template-rows:minmax(0,1fr);height:100vh;overflow:hidden}
+
+/* ---------- Sidebar rail (aLabs lineage, "Console" badge) ---------- */
+.sidebar{background:var(--rail);color:var(--rail-fg);display:flex;flex-direction:column;border-right:1px solid oklch(12% 0.01 255);min-width:0}
+.brand-row{display:flex;gap:10px;margin:11px;align-items:stretch}
+.brand{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:12px 13px;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px}
+.brand .logo{width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:7px;background:color-mix(in oklch,var(--accent) 22%,transparent);border:1px solid color-mix(in oklch,var(--accent) 40%,transparent)}
+.brand .logo svg{width:17px;height:17px;display:block}
+.brand .meta{min-width:0;line-height:1.15}
+.brand .meta b{display:block;font-size:12.5px;letter-spacing:-.01em;font-weight:650;color:#fff}
+.brand .meta small{display:block;font-size:10px;color:var(--rail-faint);text-transform:uppercase;letter-spacing:.09em;font-weight:600}
+.nav-group{padding:4px 8px}
+.nav-label{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--rail-faint);padding:10px 8px 4px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:9px;width:100%;padding:7px 8px;border-radius:6px;color:var(--rail-fg);font-size:13px;font-weight:500;position:relative;transition:background .12s,color .12s}
+.nav-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.nav-item.active{background:rgba(120,130,255,.16);color:#fff}
+.nav-item.active::before{content:"";position:absolute;left:-8px;top:6px;bottom:6px;width:2px;background:var(--accent);border-radius:2px}
+.nav-item svg{flex:none;opacity:.9}
+.nav-item .count{margin-left:auto;font:11px var(--mono);color:var(--rail-faint)}
+.nav-item.active .count{color:oklch(80% 0.08 280)}
+.nav-spacer{flex:1}
+.nav-foot{position:relative;padding:6px 8px 10px;border-top:1px solid rgba(255,255,255,.06)}
+.user{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:6px;width:100%;cursor:pointer;transition:background .12s}
+.user:hover{background:rgba(255,255,255,.05)}
+.user .av{width:26px;height:26px;border-radius:50%;flex:none;background:oklch(52% 0.14 290);color:#fff;display:grid;place-items:center;font-weight:700;font-size:11px}
+.user .meta{line-height:1.15;flex:1;min-width:0}
+.user .meta b{display:block;font-size:12.5px;color:#fff;font-weight:600}
+.user .meta small{display:block;font-size:10.5px;color:var(--rail-faint)}
+.user .tag-adm{font:700 9px var(--mono);letter-spacing:.05em;color:var(--accent);background:color-mix(in oklch,var(--accent) 15%,transparent);border:1px solid color-mix(in oklch,var(--accent) 30%,transparent);padding:1.5px 5px;border-radius:4px;flex:none}
+
+/* ---------- Main / topbar ---------- */
+.main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg);position:relative}
+.topbar{height:var(--topbar-h);flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--border);background:var(--surface);position:relative;z-index:30}
+.crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-width:0}
+.crumb .seed{color:var(--fg-strong);font-weight:650}
+.crumb .sep{color:var(--faint);font-size:11px}
+.crumb .cur{color:var(--fg-strong);font-weight:600;white-space:nowrap}
+.tb-spacer{flex:1}
+.tb-search{display:flex;align-items:center;gap:8px;height:32px;width:260px;max-width:30vw;padding:0 10px 0 9px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface-2);color:var(--faint);font-size:12.5px;cursor:pointer;transition:border-color .12s,background .12s}
+.tb-search:hover{border-color:var(--border-strong);background:var(--surface);color:var(--muted)}
+.tb-search .ts-label{flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-search svg{flex:none}
+.tb-search kbd{font:600 10px var(--mono);color:var(--faint);border:1px solid var(--border);background:var(--surface);padding:1px 5px;border-radius:4px;flex:none}
+.env-pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font:600 11px var(--mono);letter-spacing:.04em;background:oklch(96% 0.05 25);color:oklch(42% 0.16 25);border:1px solid oklch(88% 0.06 25)}
+.env-pill .d{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px color-mix(in oklch,currentColor 22%,transparent)}
+.tbtn{width:32px;height:32px;border-radius:var(--radius);display:grid;place-items:center;color:var(--muted);border:1px solid transparent;position:relative}
+.tbtn:hover{background:var(--surface-2);color:var(--fg)}
+.tbtn .count{position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;border-radius:999px;background:var(--danger);color:#fff;font:700 9px var(--mono);display:grid;place-items:center;border:1.5px solid var(--surface)}
+
+/* ---------- Popover / dropdown menus (toolbar + account) ---------- */
+.popover{position:fixed;z-index:95;width:340px;max-width:94vw;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-pop);opacity:0;transform:translateY(-4px) scale(.985);pointer-events:none;transition:opacity .13s ease,transform .13s ease;overflow:hidden}
+.popover.show{opacity:1;transform:none;pointer-events:auto}
+.pop-head{display:flex;align-items:center;gap:8px;padding:11px 13px;border-bottom:1px solid var(--border)}
+.pop-head h4{font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.pop-head .c{margin-left:auto;font:700 10px var(--mono);color:#fff;background:var(--danger);border-radius:999px;padding:1px 7px;min-width:18px;text-align:center}
+.pop-head .badge-ok{margin-left:auto;font:600 10.5px var(--font);color:oklch(40% 0.11 150);background:var(--ok-bg);border:1px solid oklch(86% 0.07 150);border-radius:999px;padding:2px 9px}
+.pop-body{max-height:330px;overflow:auto}
+.pop-foot{padding:9px 13px;border-top:1px solid var(--border);background:var(--surface-2);font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.pop-foot .link{color:var(--accent);font-weight:600;cursor:pointer}
+.pop-foot .link:hover{text-decoration:underline}
+.pop-divider{height:1px;background:var(--border)}
+.pop-empty{padding:20px 16px;text-align:center;color:var(--muted);font-size:12.5px}
+.ap-row{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;cursor:pointer;border-bottom:1px solid var(--surface-2)}
+.ap-row:last-child{border-bottom:none}
+.ap-row:hover{background:var(--surface-2)}
+.ap-row .ic{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none}
+.ap-row .ic.danger{background:var(--danger-bg);color:oklch(48% 0.18 25)}
+.ap-row .ic.warn{background:var(--warn-bg);color:oklch(48% 0.13 70)}
+.ap-row .tx{min-width:0;flex:1;line-height:1.35}
+.ap-row .tx b{display:block;font-size:12.5px;font-weight:600;color:var(--fg-strong)}
+.ap-row .tx small{display:block;font-size:11px;color:var(--muted)}
+.hp-row{display:flex;align-items:center;gap:10px;padding:10px 13px;border-bottom:1px solid var(--surface-2)}
+.hp-row:last-child{border-bottom:none}
+.hp-row .tx{min-width:0;flex:1;line-height:1.3}
+.hp-row .tx b{display:block;font-size:12.5px;font-weight:600;color:var(--fg)}
+.hp-row .tx small{display:block;font-size:11px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.dot.ok{background:var(--ok);box-shadow:0 0 0 3px oklch(96% 0.04 150)}
+.dot.warn{background:var(--warn);box-shadow:0 0 0 3px oklch(96% 0.05 70)}
+.dot.down{background:var(--danger);box-shadow:0 0 0 3px oklch(96% 0.04 25)}
+.dot.neutral{background:var(--faint);box-shadow:0 0 0 3px var(--surface-2)}
+.mi{display:flex;align-items:center;gap:10px;width:100%;padding:9px 13px;text-align:left;color:var(--fg);font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;transition:background .1s}
+.mi:hover{background:var(--surface-2)}
+.mi .ic{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;flex:none;background:var(--surface-2);color:var(--muted)}
+.mi .ic.dng{background:var(--danger-bg);color:oklch(50% 0.18 25)}
+.mi.danger{color:oklch(46% 0.16 25)}
+.mi.danger:hover{background:var(--danger-bg)}
+.mi .kbd{margin-left:auto;font:600 10px var(--mono);color:var(--faint);border:1px solid var(--border);background:var(--surface);padding:1px 6px;border-radius:4px}
+.mi .sub{margin-left:auto;display:inline-flex}
+.acc-head{display:flex;align-items:center;gap:10px;padding:13px;border-bottom:1px solid var(--border)}
+.acc-head .av{width:36px;height:36px;border-radius:9px;background:oklch(52% 0.14 290);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.acc-head .tx{min-width:0;flex:1;line-height:1.25}
+.acc-head .tx b{display:block;font-size:13.5px;font-weight:650;color:var(--fg-strong)}
+.acc-head .tx small{display:block;font-size:11.5px;color:var(--muted)}
+.kbd-grid{display:flex;flex-direction:column}
+.kbd-grid .kr{display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:1px solid var(--surface-2)}
+.kbd-grid .kr:last-child{border-bottom:none}
+.kbd-grid .kr span{font-size:13px;color:var(--fg)}
+.kbd-grid .kr kbd{font:600 11px var(--mono);color:var(--fg);border:1px solid var(--border);background:var(--surface-2);padding:2px 7px;border-radius:5px}
+.env-pill{cursor:pointer;transition:background .12s,color .12s,border-color .12s}
+.env-pill:hover{filter:brightness(.97)}
+.ep-chev{transition:transform .15s;color:oklch(54% 0.14 25);flex:none}
+.env-pill.active .ep-chev{transform:rotate(180deg)}
+.env-pill[data-env="staging"]{background:oklch(96% 0.06 70);color:oklch(44% 0.14 70);border-color:oklch(88% 0.08 70)}
+.env-pill[data-env="staging"] .ep-chev{color:oklch(50% 0.14 70)}
+.env-pill[data-env="sandbox"]{background:oklch(96% 0.02 255);color:oklch(44% 0.03 255);border-color:oklch(90% 0.03 255)}
+.env-pill[data-env="sandbox"] .ep-chev{color:oklch(50% 0.03 255)}
+.user .chev{flex:none;color:var(--rail-faint);transition:transform .15s}
+.user.open .chev{transform:rotate(180deg);color:#fff}
+.user.open{background:rgba(255,255,255,.08)}
+/* account menu popup (mirrors alabs-app.html me-pop) */
+.me-pop{position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:var(--rail-2);border:1px solid rgba(255,255,255,.09);border-radius:var(--radius);box-shadow:var(--shadow-pop);z-index:120;padding:6px;opacity:0;pointer-events:none;transform:translateY(6px) scale(.98);transform-origin:bottom left;transition:opacity .13s,transform .13s}
+.me-pop.show{opacity:1;pointer-events:auto;transform:none}
+.me-id{display:flex;align-items:center;gap:10px;padding:8px 8px 6px}
+.me-id .av{width:38px;height:38px;font-size:14px;background:oklch(52% 0.14 290);border:none}
+.me-id .txt{min-width:0}
+.me-id .txt b{display:block;font-size:13px;color:#fff;font-weight:600;line-height:1.2}
+.me-id .txt small{display:block;font-size:11px;color:var(--rail-faint);margin-top:2px}
+.me-sep{height:1px;background:rgba(255,255,255,.07);margin:6px 2px}
+.me-grp{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--rail-faint);padding:6px 8px 3px;font-weight:600}
+.me-row{display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border-radius:6px;color:var(--rail-fg);font-size:12.5px;font-weight:500;text-align:left;background:transparent;border:none;cursor:pointer;font-family:inherit;transition:background .1s,color .1s}
+.me-row:hover{background:rgba(255,255,255,.06);color:#fff}
+.me-row svg{flex:none;opacity:.85}
+.me-row.danger{color:oklch(78% 0.16 25)}
+.me-row.danger:hover{background:oklch(30% 0.07 25);color:#fff}
+@media(max-width:560px){.me-pop{left:0;right:auto;width:240px}}
+.tbtn.active{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in oklch,var(--accent) 30%,transparent)}
+
+.content{flex:1;overflow:auto;position:relative;min-height:0}
+.view{display:none;padding:18px;max-width:1600px;margin:0 auto;width:100%}
+.view.active{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+
+/* ---------- Layout helpers ---------- */
+.row{display:flex;align-items:center;gap:10px}
+.row.between{justify-content:space-between}
+.row.wrap{flex-wrap:wrap}
+.stack{display:flex;flex-direction:column}
+.section-title{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.section-title h2{font-size:13px;font-weight:650;color:var(--fg-strong)}
+.section-title .link{margin-left:auto}
+.link{color:var(--accent);font-weight:500;cursor:pointer} .link:hover{text-decoration:underline}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+.span2{grid-column:span 2} .span3{grid-column:span 3}
+@media(max-width:1180px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr}.span3{grid-column:span 1}}
+@media(max-width:760px){.g4{grid-template-columns:1fr}.g2{grid-template-columns:1fr}.span2{grid-column:span 1}}
+
+/* ---------- Cards / panels ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+.panel-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.panel-head h3{font-size:12.5px;font-weight:650;color:var(--fg-strong)}
+.panel-head .muted{font-size:11.5px}
+.panel-head .right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.panel-body{padding:14px}
+.panel-body.flush{padding:0}
+
+/* ---------- KPI ---------- */
+.kpi{padding:15px 16px}
+.kpi .label{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:500}
+.kpi .label svg{color:var(--faint)}
+.kpi .val{font:600 27px/1.1 var(--font);letter-spacing:-.02em;margin-top:8px;color:var(--fg-strong);font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:5px}
+.kpi .sub .up{color:oklch(42% 0.12 150);font-weight:600}
+.kpi .sub .dn{color:oklch(46% 0.15 25);font-weight:600}
+.kpi.clickable{cursor:pointer;transition:border-color .12s,box-shadow .12s}
+.kpi.clickable:hover{border-color:var(--border-strong);box-shadow:var(--shadow-pop)}
+
+/* ---------- Bars / meters ---------- */
+.bar{height:6px;border-radius:999px;background:var(--surface-3);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.bar.ok>i{background:var(--ok)} .bar.warn>i{background:var(--warn)} .bar.danger>i{background:var(--danger)}
+.meter-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.meter-row .nm{width:120px;font-size:12px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meter-row .bar{flex:1}
+.meter-row .vv{width:84px;text-align:right;font:600 12px var(--mono);color:var(--fg-strong);font-variant-numeric:tabular-nums}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:30px;padding:0 12px;border-radius:var(--radius);font-size:12.5px;font-weight:600;border:1px solid var(--border-strong);background:var(--surface);color:var(--fg-strong);transition:background .12s,border-color .12s}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.ghost{border-color:transparent;background:transparent} .btn.ghost:hover{background:var(--surface-2)}
+.btn.subtle{background:var(--surface-2);border-color:transparent}
+.btn.sm{height:26px;padding:0 9px;font-size:11.5px}
+.btn.icon{width:30px;padding:0}
+.btn.danger{color:oklch(44% 0.18 25);border-color:oklch(86% 0.05 25);background:var(--surface)}
+.btn.danger:hover{background:oklch(96% 0.05 25)}
+.btn.danger.solid{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn svg{flex:none}
+
+/* ---------- Chips / tags / status ---------- */
+.chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:999px;font-size:11.5px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--fg)}
+.chip.muted{color:var(--muted);background:var(--surface-2)}
+.chip.btn{cursor:pointer;transition:background .1s,border-color .1s} .chip.btn:hover{background:var(--surface-2)}
+.chip.btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.tag{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:5px;font-size:10.5px;font-weight:600;background:var(--surface-3);color:var(--fg)}
+.tag.b{background:oklch(95% 0.04 258);color:oklch(42% 0.13 258)}
+.tag.g{background:oklch(95% 0.05 150);color:oklch(42% 0.12 150)}
+.tag.v{background:oklch(95% 0.05 300);color:oklch(42% 0.13 300)}
+.tag.o{background:oklch(95% 0.06 70);color:oklch(44% 0.13 70)}
+.tag.r{background:oklch(95% 0.05 25);color:oklch(44% 0.14 25)}
+.tag.i{background:oklch(95% 0.04 240);color:oklch(42% 0.12 240)}
+.status{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:0 8px;height:21px;border-radius:999px}
+.status .d{width:6px;height:6px;border-radius:50%;background:currentColor}
+.status.ok{color:oklch(40% 0.11 150);background:var(--ok-bg)}
+.status.warn{color:oklch(46% 0.12 70);background:var(--warn-bg)}
+.status.danger{color:oklch(46% 0.15 25);background:var(--danger-bg)}
+.status.info{color:oklch(42% 0.11 240);background:var(--info-bg)}
+.status.violet{color:oklch(42% 0.12 300);background:var(--violet-bg)}
+.status.neutral{color:var(--muted);background:var(--surface-2)}
+
+/* ---------- Avatars ---------- */
+.av{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:10px;color:#fff;flex:none}
+.av.sm{width:20px;height:20px;font-size:9px} .av.lg{width:36px;height:36px;font-size:13px} .av.xl{width:56px;height:56px;font-size:19px;border-radius:14px}
+.av.a{background:oklch(52% 0.13 25)} .av.b{background:oklch(52% 0.13 290)} .av.c{background:oklch(54% 0.12 175)}
+.av.d{background:oklch(58% 0.14 70)} .av.e{background:oklch(52% 0.13 240)} .av.f{background:oklch(56% 0.12 330)}
+.av.sq{border-radius:8px}
+.av-g{display:inline-flex} .av-g .av{margin-left:-7px;border:1.5px solid var(--surface)} .av-g .av:first-child{margin-left:0}
+.av-g .more{background:var(--surface-3);color:var(--muted)}
+
+/* ---------- Segmented control / toolbar / search ---------- */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:13px}
+.seg{display:inline-flex;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);overflow:hidden;height:30px}
+.seg button{padding:0 12px;font-size:12.5px;font-weight:500;color:var(--muted);display:flex;align-items:center;gap:6px;height:100%}
+.seg button:hover{color:var(--fg)}
+.seg button.on{background:var(--surface-2);color:var(--fg-strong);font-weight:600}
+.seg button+button{border-left:1px solid var(--border)}
+.seg .n{font:11px var(--mono);color:var(--faint)}
+.search{position:relative}
+.search input{width:230px;max-width:42vw;height:30px;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--surface);padding:0 11px 0 30px;font-size:12.5px}
+.search input:focus{outline:none;border-color:var(--accent)}
+.search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--faint)}
+
+/* ---------- Data table ---------- */
+.dtbl{width:100%;border-collapse:collapse;font-size:13px}
+.dtbl thead th{position:sticky;top:0;background:var(--surface-2);color:var(--muted);font-weight:600;font-family:var(--font);font-size:11px;letter-spacing:.04em;text-transform:uppercase;text-align:left;padding:9px 14px;border-bottom:1px solid var(--border);white-space:nowrap;z-index:1}
+.dtbl thead th.num{text-align:right}
+.dtbl tbody td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.dtbl tbody tr{cursor:pointer;transition:background .1s}
+.dtbl tbody tr:hover{background:var(--surface-2)}
+.dtbl tbody tr.sel{background:var(--accent-soft)}
+.dtbl .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.dtbl .c-cell{display:flex;align-items:center;gap:10px;min-width:0}
+.dtbl .c-cell .av{flex:none}
+.dtbl .c-cell .ct{min-width:0;line-height:1.25}
+.dtbl .c-cell .ct b{display:block;font-size:12.5px;font-weight:600;color:var(--fg-strong);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dtbl .c-cell .ct small{display:block;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dtbl .ck-cell{width:34px}
+.tbl-wrap{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:auto;max-height:calc(100vh - 250px);background:var(--surface)}
+
+/* ---------- Checkbox ---------- */
+.ck{appearance:none;width:15px;height:15px;border:1.5px solid var(--border-strong);border-radius:4px;background:var(--surface);display:inline-grid;place-items:center;cursor:pointer;flex:none}
+.ck:checked{background:var(--accent);border-color:var(--accent)}
+.ck:checked::after{content:"";width:8px;height:5px;border:1.8px solid #fff;border-top:0;border-right:0;transform:rotate(-45deg) translate(.5px,-.5px)}
+
+/* ---------- Drawer ---------- */
+.scrim{position:fixed;inset:0;background:var(--overlay);z-index:90;opacity:0;pointer-events:none;transition:opacity .18s}
+.scrim.show{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:520px;max-width:94vw;background:var(--surface);border-left:1px solid var(--border);z-index:100;transform:translateX(100%);transition:transform .22s cubic-bezier(.23,1,.32,1);display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(20,24,40,.12)}
+.drawer.show{transform:translateX(0)}
+.drawer .dh{display:flex;align-items:flex-start;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)}
+.drawer .dh h3{font-size:16px;font-weight:650;letter-spacing:-.01em;color:var(--fg-strong)}
+.drawer .dh .sub{font-size:12px;color:var(--muted);margin-top:3px}
+.drawer .dh .x{margin-left:auto;width:30px;height:30px;border-radius:7px;display:grid;place-items:center;color:var(--muted);flex:none}
+.drawer .dh .x:hover{background:var(--surface-2);color:var(--fg)}
+.drawer .db{flex:1;overflow:auto;padding:18px}
+.drawer .df{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--surface-2)}
+.drawer .df .spacer{flex:1}
+
+/* ---------- Modal ---------- */
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.97);z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-pop);width:540px;max-width:92vw;max-height:86vh;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .14s,transform .14s}
+.modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.modal .mh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.modal .mh h3{font-size:14px;font-weight:650}
+.modal .mh .x{margin-left:auto;width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--muted)}
+.modal .mh .x:hover{background:var(--surface-2);color:var(--fg)}
+.modal .mb{padding:16px;overflow:auto}
+.modal .mf{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;justify-content:flex-end;background:var(--surface-2)}
+/* ---------- Command palette ---------- */
+.palette{position:fixed;inset:0;z-index:110;display:flex;justify-content:center;align-items:flex-start;padding:11vh 16px 0;opacity:0;pointer-events:none;transition:opacity .14s}
+.palette.show{opacity:1;pointer-events:auto}
+.pal-box{width:580px;max-width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-pop);overflow:hidden;display:flex;flex-direction:column;max-height:74vh;transform:translateY(-6px);transition:transform .14s}
+.palette.show .pal-box{transform:none}
+.pal-input{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--border)}
+.pal-input svg{flex:none;color:var(--faint)}
+.pal-input input{flex:1;border:none;background:none;font-size:15px;color:var(--fg-strong);font-weight:500;min-width:0}
+.pal-input input:focus{outline:none}
+.pal-input input::placeholder{color:var(--faint);font-weight:400}
+.pal-input kbd{font:600 10px var(--mono);color:var(--faint);border:1px solid var(--border);background:var(--surface-2);padding:2px 6px;border-radius:5px;flex:none}
+.pal-results{overflow:auto;padding:6px 0}
+.pal-group:not(:last-child){border-bottom:1px solid var(--surface-2)}
+.pal-gh{font:600 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:9px 16px 5px}
+.pal-item{display:flex;align-items:center;gap:11px;padding:8px 16px;cursor:pointer;border-left:2px solid transparent}
+.pal-item:hover,.pal-item.on{background:var(--surface-2);border-left-color:var(--accent)}
+.pal-item .pi-ic{width:28px;height:28px;flex:none;border-radius:7px;display:grid;place-items:center;background:var(--surface-2);color:var(--muted);border:1px solid var(--border)}
+.pal-item.on .pi-ic{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in oklch,var(--accent) 30%,transparent)}
+.pal-item .pi-main{min-width:0;flex:1}
+.pal-item .pi-t{font-size:13px;font-weight:550;color:var(--fg-strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pal-item .pi-s{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pal-item .pi-tag{font:600 10px var(--mono);color:var(--faint);border:1px solid var(--border);background:var(--surface-2);padding:2px 6px;border-radius:5px;flex:none;text-transform:capitalize}
+.pal-empty{padding:30px 16px;text-align:center;color:var(--muted);font-size:13px}
+.pal-foot{display:flex;align-items:center;gap:16px;padding:9px 16px;border-top:1px solid var(--border);background:var(--surface-2);font-size:11px;color:var(--muted)}
+.pal-foot kbd{font:600 10px var(--mono);color:var(--fg);border:1px solid var(--border);background:var(--surface);padding:1px 5px;border-radius:4px;margin-right:3px}
+.pal-foot .link{margin-left:auto}
+
+/* ---------- Form fields ---------- */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px}
+.field label{font-size:12px;color:var(--muted);font-weight:500}
+.field .hint{font-size:11px;color:var(--faint)}
+.input,.textarea,select.input{width:100%;height:34px;padding:0 11px;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);color:var(--fg);font-size:13px}
+.textarea{height:auto;padding:9px 11px;min-height:74px;resize:vertical;line-height:1.5}
+.input:focus,.textarea:focus,select.input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.grid-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media(max-width:560px){.grid-fields{grid-template-columns:1fr}}
+
+/* ---------- Setting rows / toggles ---------- */
+.set-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--border)}
+.set-row:last-child{border-bottom:none}
+.set-row .info{flex:1;min-width:0}
+.set-row .info b{display:block;font-size:13px;font-weight:600;color:var(--fg-strong)}
+.set-row .info small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.45}
+.sw{position:relative;width:38px;height:22px;flex:none;border-radius:999px;background:var(--surface-3);border:1px solid var(--border-strong);transition:background .14s,border-color .14s;cursor:pointer}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .16s}
+.sw.on{background:var(--accent);border-color:var(--accent)}
+.sw.on::after{transform:translateX(16px)}
+
+/* ---------- Description list ---------- */
+.dl{display:grid;grid-template-columns:132px 1fr;gap:9px 14px;font-size:12.5px}
+.dl dt{color:var(--muted)}
+.dl dd{color:var(--fg-strong);font-weight:500;min-width:0}
+.dl dd .mono{font-weight:600}
+
+/* ---------- Plan cards ---------- */
+.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:920px){.plans-grid{grid-template-columns:1fr}}
+.plan-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;display:flex;flex-direction:column;position:relative}
+.plan-card.featured{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.plan-card .pn{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:650;color:var(--fg-strong)}
+.plan-card .pp{margin-top:12px;display:flex;align-items:baseline;gap:4px}
+.plan-card .pp .amt{font:650 30px/1 var(--font);letter-spacing:-.02em;color:var(--fg-strong)}
+.plan-card .pp .per{font-size:12px;color:var(--muted)}
+.plan-card .pdesc{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+.plan-card .pstat{display:flex;gap:14px;margin:14px 0;padding:11px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.plan-card .pstat .s b{display:block;font:600 17px var(--font);color:var(--fg-strong);font-variant-numeric:tabular-nums}
+.plan-card .pstat .s small{font-size:10.5px;color:var(--muted)}
+.plan-card .pfeat{list-style:none;display:flex;flex-direction:column;gap:8px;margin:4px 0 16px}
+.plan-card .pfeat li{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg)}
+.plan-card .pfeat li svg{flex:none;color:var(--ok)}
+.plan-card .pfeat li.off{color:var(--faint)}
+.plan-card .pfeat li.off svg{color:var(--faint)}
+
+/* ---------- Feature matrix ---------- */
+.matrix{width:100%;border-collapse:collapse;font-size:12.5px}
+.matrix th,.matrix td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:center}
+.matrix th:first-child,.matrix td:first-child{text-align:left;font-weight:500;color:var(--fg)}
+.matrix thead th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;background:var(--surface-2)}
+.matrix .yes{color:var(--ok);font-weight:700}
+.matrix .no{color:var(--faint)}
+
+/* ---------- Chart bits ---------- */
+.rea-chart{width:100%;height:200px;display:block}
+.donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.legend{display:flex;flex-direction:column;gap:8px;min-width:130px}
+.legend .li{display:flex;align-items:center;gap:8px;font-size:12px}
+.legend .li .sw{width:10px;height:10px;border-radius:3px;flex:none}
+.legend .li .nm{color:var(--muted)}
+.legend .li .vv{margin-left:auto;font:600 12px var(--mono);color:var(--fg-strong)}
+
+/* ---------- Alert rows ---------- */
+.alert-row{display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid var(--border)}
+.alert-row:last-child{border-bottom:none}
+.alert-row .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none}
+.alert-row .ic.danger{background:var(--danger-bg);color:oklch(48% 0.18 25)}
+.alert-row .ic.warn{background:var(--warn-bg);color:oklch(48% 0.13 70)}
+.alert-row .info{flex:1;min-width:0;line-height:1.35}
+.alert-row .info b{display:block;font-size:12.5px;font-weight:600;color:var(--fg-strong)}
+.alert-row .info small{display:block;font-size:11px;color:var(--muted)}
+.alert-row .amt{font:600 13px var(--mono);color:var(--fg-strong)}
+
+/* ---------- Activity feed ---------- */
+.act-item{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid var(--border)}
+.act-item:last-child{border-bottom:none}
+.act-item .av{margin-top:1px}
+.act-item .t{font-size:12.5px;line-height:1.4}
+.act-item .t b{font-weight:600;color:var(--fg-strong)}
+.act-item .t .mut{color:var(--muted)}
+.act-item .when{font-size:11px;color:var(--faint);margin-top:2px;font-family:var(--mono)}
+
+/* ---------- Toasts ---------- */
+.toasts{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:140;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{display:flex;align-items:center;gap:9px;padding:9px 14px;border-radius:999px;background:var(--rail);color:#fff;font-size:12.5px;font-weight:500;box-shadow:var(--shadow-pop);animation:tin .25s ease}
+.toast svg{color:oklch(74% 0.10 150)}
+.toast.warn svg{color:oklch(76% 0.14 70)}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- Empty ---------- */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:42px 20px;gap:6px}
+.empty-ic{width:42px;height:42px;border-radius:12px;background:var(--surface-2);color:var(--faint);display:grid;place-items:center;margin-bottom:4px}
+.empty b{font-size:14px;color:var(--fg-strong)}
+.empty p{font-size:12.5px;color:var(--muted);max-width:320px;line-height:1.5;margin:0}
+
+/* ---------- Tabs (settings) ---------- */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto}
+.tab{padding:9px 12px;font-size:13px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tab:hover{color:var(--fg)}
+.tab.on{color:var(--fg-strong);font-weight:600;border-bottom-color:var(--accent)}
+.tab-pane{display:none}
+.tab-pane.on{display:block}
+
+/* ---------- Misc ---------- */
+.statbar{display:flex;align-items:center;gap:10px}
+.statbar .bar{flex:1}
+.divider{height:1px;background:var(--border);margin:14px 0}
+.callout{display:flex;gap:11px;padding:12px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface-2);font-size:12.5px;line-height:1.5;color:var(--muted)}
+.callout svg{flex:none;color:var(--accent);margin-top:1px}
+.callout b{color:var(--fg-strong)}
+.kv-inline{display:flex;align-items:center;gap:7px;font-size:12px}
+.scroll-x{overflow-x:auto}
+.dash-split{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:14px}
+.dash-half{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:820px){.dash-split,.dash-half{grid-template-columns:1fr}}
+
+/* ---------- Mobile ---------- */
+@media(max-width:860px){
+  :root{--sidebar-w:0px}
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;top:0;left:0;bottom:0;width:240px;z-index:80;transform:translateX(-100%);transition:transform .2s}
+  .sidebar.show{transform:none}
+  .crumb .seed-detail{display:none}
+  .tb-search{width:140px}
+  .mobile-bars{display:grid !important}
+}
+@media(max-width:560px){
+  .env-pill,.tb-only{display:none}
+  .tb-search{width:110px}
+  .view{padding:13px}
+}
+.mobile-bars{display:none;width:32px;height:32px;place-items:center;color:var(--fg);border-radius:var(--radius)}
+.mobile-bars:hover{background:var(--surface-2)}
+</style>
+</head>
+<body>
+<div class="app" data-od-id="console-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar" data-od-id="primary-nav">
+    <div class="brand-row">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none"><path d="M3 40 H27 M45 40 H61" stroke="#fff" stroke-width="6" stroke-linecap="round"/><path d="M27 40 L31 43 L36 13 L40 47 L45 40" stroke="var(--accent)" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        </span>
+        <span class="meta"><b>aLabs</b><small>Console</small></span>
+      </div>
+    </div>
+
+    <nav class="nav-group" style="flex:1;padding-top:6px">
+      <div class="nav-label">Overview</div>
+      <button class="nav-item active" data-nav="v-dash" data-od-id="nav-dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </button>
+
+      <div class="nav-label">Tenants</div>
+      <button class="nav-item" data-nav="v-orgs" data-od-id="nav-orgs">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>
+        <span>Organizations</span><span class="count" data-count="orgs"></span>
+      </button>
+      <button class="nav-item" data-nav="v-members" data-od-id="nav-members">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg>
+        <span>Members</span><span class="count" data-count="members"></span>
+      </button>
+      <button class="nav-item" data-nav="v-projects" data-od-id="nav-projects">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span>Projects</span><span class="count" data-count="projects"></span>
+      </button>
+
+      <div class="nav-label">Revenue</div>
+      <button class="nav-item" data-nav="v-subs" data-od-id="nav-subscriptions">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21.5 2.5 12 12l-3-3"/><path d="M16 4.5a8 8 0 0 1 3.5 3.5"/></svg>
+        <span>Subscriptions</span><span class="count" data-count="subs"></span>
+      </button>
+      <button class="nav-item" data-nav="v-plans" data-od-id="nav-plans">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.4"/></svg>
+        <span>Plans &amp; pricing</span>
+      </button>
+      <button class="nav-item" data-nav="v-billing" data-od-id="nav-billing">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>
+        <span>Billing</span>
+        <span class="count" data-count="billing"></span>
+      </button>
+
+      <div class="nav-label">System</div>
+      <button class="nav-item" data-nav="v-settings" data-od-id="nav-settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>System settings</span>
+      </button>
+    </nav>
+
+    <div class="nav-foot">
+      <button class="user" id="btn-user" onclick="toggleUserMenu(event)" data-od-id="admin-user">
+        <span class="av">AY</span>
+        <span class="meta"><b>Amin Yusuf</b><small>Platform owner</small></span>
+        <span class="tag-adm">ROOT</span>
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="me-pop" id="me-pop" data-od-id="admin-user-pop">
+        <div class="me-id">
+          <span class="av">AY</span>
+          <span class="txt"><b>Amin Yusuf</b><small>amin@alabs.io · Platform owner</small></span>
+        </div>
+        <div class="me-sep"></div>
+        <div class="me-grp">Account</div>
+        <button class="me-row" data-me="profile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Profile settings</button>
+        <button class="me-row" data-me="notif"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Notifications</button>
+        <button class="me-row" data-me="appearance"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Appearance</button>
+        <div class="me-sep"></div>
+        <button class="me-row danger" data-me="signout"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <button class="mobile-bars" id="bars" aria-label="Menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div class="crumb">
+        <span class="seed">aLabs Console</span>
+        <span class="sep">/</span>
+        <span class="cur" id="crumb-cur">Dashboard</span>
+        <span class="sep seed-detail">·</span>
+        <span class="muted small seed-detail">governs all aLabs tenants</span>
+      </div>
+      <div class="tb-spacer"></div>
+      <button class="tb-search" id="btn-search" data-od-id="global-search" title="Search (⌘K)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <span class="ts-label">Search orgs, members, projects…</span>
+        <kbd>⌘K</kbd>
+      </button>
+      <button class="env-pill" id="btn-env" data-pop="env" data-popw="208" data-env="production" data-od-id="env-switch" title="Switch environment"><span class="d"></span><span id="env-name">PRODUCTION</span><svg class="ep-chev" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <button class="tbtn" id="btn-alerts" data-pop="alerts" data-popw="340" data-od-id="alerts" title="Revenue alerts"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg><span class="count" id="alert-count">5</span></button>
+      <button class="tbtn tb-only" id="btn-health" data-pop="health" data-popw="296" data-od-id="health" title="System health"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
+    </header>
+
+    <div class="content" id="content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <section class="view active" id="v-dash" data-od-id="view-dashboard">
+        <div class="row between wrap" style="margin-bottom:14px">
+          <div>
+            <h1 style="font-size:20px;font-weight:650;letter-spacing:-.02em;color:var(--fg-strong)">Platform overview</h1>
+            <p class="muted small" style="margin-top:3px">Across all aLabs organizations · synced 2 min ago</p>
+          </div>
+          <div class="row">
+            <div class="seg"><button class="on">30d</button><button>90d</button><button>12m</button></div>
+            <button class="btn subtle sm" onclick="toast('Export queued — CSV will email to you')">Export report</button>
+          </div>
+        </div>
+
+        <div class="grid g4" style="margin-bottom:14px" data-od-id="kpi-row">
+          <div class="card kpi clickable" data-go="v-subs" data-od-id="kpi-mrr">
+            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Monthly recurring revenue</div>
+            <div class="val">$48,290</div>
+            <div class="sub"><span class="up">▲ 6.2%</span> vs last month</div>
+          </div>
+          <div class="card kpi clickable" data-go="v-orgs" data-od-id="kpi-orgs">
+            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Active organizations</div>
+            <div class="val" id="kpi-orgs-val">0</div>
+            <div class="sub"><span class="up">▲ 4</span> new this month</div>
+          </div>
+          <div class="card kpi clickable" data-go="v-members" data-od-id="kpi-members">
+            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Total members</div>
+            <div class="val" id="kpi-members-val">0</div>
+            <div class="sub"><span class="up">▲ 212</span> net growth</div>
+          </div>
+          <div class="card kpi clickable" data-go="v-projects" data-od-id="kpi-projects">
+            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Active projects</div>
+            <div class="val" id="kpi-projects-val">0</div>
+            <div class="sub"><span class="up">▲ 88</span> launched</div>
+          </div>
+        </div>
+
+        <div class="dash-split" id="dash-main-grid">
+          <div class="card" data-od-id="revenue-chart">
+            <div class="panel-head"><h3>Recurring revenue</h3><span class="muted small">last 12 months</span><div class="right"><span class="tag b mono">MRR</span></div></div>
+            <div class="panel-body">
+              <svg class="rea-chart" id="reaChart" viewBox="0 0 640 200" preserveAspectRatio="none"></svg>
+            </div>
+          </div>
+          <div class="card" data-od-id="plan-distribution">
+            <div class="panel-head"><h3>Plan distribution</h3><div class="right"><span class="muted small" id="plan-total">0 orgs</span></div></div>
+            <div class="panel-body">
+              <div class="donut-wrap">
+                <svg width="120" height="120" viewBox="0 0 120 120" id="donut"></svg>
+                <div class="legend" id="planLegend"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-half">
+          <div class="card" data-od-id="revenue-alerts">
+            <div class="panel-head"><h3>Revenue alerts</h3><span class="status danger"><span class="d"></span>5 open</span><div class="right"><button class="link small" data-go="v-billing">View all →</button></div></div>
+            <div class="panel-body flush">
+              <div class="alert-row"><span class="ic danger"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></span><div class="info"><b>Subscription past due</b><small>Northwind Studio · Pro · 9 days overdue</small></div><span class="amt">$588</span><button class="btn ghost sm" onclick="toast('Reminder sent to Northwind Studio')">Remind</button></div>
+              <div class="alert-row"><span class="ic danger"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></span><div class="info"><b>Payment failed</b><small>Atelier Mörs · card declined · INV-2048</small></div><span class="amt">$490</span><button class="btn ghost sm" onclick="toast('Invoice INV-2048 queued for retry')">Retry</button></div>
+              <div class="alert-row"><span class="ic warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></span><div class="info"><b>Subscription past due</b><small>Vantage Labs · Pro · 2 days overdue</small></div><span class="amt">$294</span><button class="btn ghost sm" onclick="toast('Reminder sent to Vantage Labs')">Remind</button></div>
+              <div class="alert-row"><span class="ic warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></span><div class="info"><b>Trial expiring</b><small>Cobalt &amp; Co. · 1 day left on Pro trial</small></div><span class="amt">—</span><button class="btn ghost sm" onclick="toast('Conversion nudge sent')">Nudge</button></div>
+            </div>
+          </div>
+          <div class="card" data-od-id="top-orgs">
+            <div class="panel-head"><h3>Top organizations by MRR</h3><div class="right"><span class="muted small">this month</span></div></div>
+            <div class="panel-body" id="topOrgs"></div>
+          </div>
+        </div>
+
+        <div class="dash-half tight">
+          <div class="card" data-od-id="recent-signups">
+            <div class="panel-head"><h3>Recent signups</h3><div class="right"><button class="link small" data-go="v-orgs">All organizations →</button></div></div>
+            <div class="panel-body flush" id="recentSignups"></div>
+          </div>
+          <div class="card" data-od-id="activity-feed">
+            <div class="panel-head"><h3>Platform activity</h3></div>
+            <div class="panel-body" id="activityFeed"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ORGANIZATIONS ============ -->
+      <section class="view" id="v-orgs" data-od-id="view-organizations">
+        <div class="row between wrap" style="margin-bottom:14px">
+          <div><h1 style="font-size:20px;font-weight:650;letter-spacing:-.02em">Organizations</h1><p class="muted small" style="margin-top:3px">Every aLabs tenant — manage plans, members, and lifecycle</p></div>
+          <div class="row"><button class="btn subtle sm" onclick="toast('Exporting organizations…')">Export</button><button class="btn primary sm" data-modal="org-new"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>New organization</button></div>
+        </div>
+        <div class="toolbar">
+          <div class="seg" data-filter-group="orgs-status"><button class="on" data-f="all">All <span class="n" data-n="all"></span></button><button data-f="active">Active <span class="n" data-n="active"></span></button><button data-f="trial">Trial <span class="n" data-n="trial"></span></button><button data-f="suspended">Suspended <span class="n" data-n="suspended"></span></button></div>
+          <div class="search" style="margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input data-q="orgs" placeholder="Search organizations…" /></div>
+        </div>
+        <div class="tbl-wrap"><table class="dtbl"><thead><tr>
+          <th class="ck-cell"></th><th>Organization</th><th>Type</th><th>Plan</th><th class="num">Members</th><th class="num">MRR</th><th>Status</th><th>Created</th></tr></thead>
+          <tbody id="tb-orgs"></tbody></table></div>
+      </section>
+
+      <!-- ============ MEMBERS ============ -->
+      <section class="view" id="v-members" data-od-id="view-members">
+        <div class="row between wrap" style="margin-bottom:14px">
+          <div><h1 style="font-size:20px;font-weight:650;letter-spacing:-.02em">Members &amp; users</h1><p class="muted small" style="margin-top:3px">Every user across all organizations</p></div>
+          <div class="row"><button class="btn primary sm" data-modal="member-new"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Invite user</button></div>
+        </div>
+        <div class="toolbar">
+          <div class="seg" data-filter-group="members-status"><button class="on" data-f="all">All <span class="n" data-n="all"></span></button><button data-f="active">Active <span class="n" data-n="active"></span></button><button data-f="pending">Pending <span class="n" data-n="pending"></span></button><button data-f="suspended">Suspended <span class="n" data-n="suspended"></span></button></div>
+          <div class="search" style="margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input data-q="members" placeholder="Search by name or email…" /></div>
+        </div>
+        <div class="tbl-wrap"><table class="dtbl"><thead><tr>
+          <th class="ck-cell"></th><th>User</th><th>Organization</th><th>Role</th><th>Status</th><th>Last active</th><th>Joined</th></tr></thead>
+          <tbody id="tb-members"></tbody></table></div>
+      </section>
+
+      <!-- ============ PROJECTS ============ -->
+      <section class="view" id="v-projects" data-od-id="view-projects">
+        <div class="row between wrap" style="margin-bottom:14px">
+          <div><h1 style="font-size:20px;font-weight:650;letter-spacing:-.02em">Projects &amp; workspaces</h1><p class="muted small" style="margin-top:3px">All workspaces across every organization</p></div>
+        </div>
+        <div class="toolbar">
+          <div class="seg" data-filter-group="projects-status"><button class="on" data-f="all">All <span class="n" data-n="all"></span></button><button data-f="active">Active <span class="n" data-n="active"></span></button><button data-f="on_hold">On hold</button><button data-f="archived">Archived</button></div>
+          <div class="search" style="margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input data-q="projects" placeholder="Search projects…" /></div>
+        </div>
+        <div class="tbl-wrap"><table class="dtbl"><thead><tr>
+          <th>Project</th><th>Organization</th><th>Visibility</th><th>Status</th><th>Lead</th><th class="num">Tasks</th><th>Progress</th></tr></thead>
+          <tbody id="tb-projects"></tbody></table></div>
+      </section>
+
+      <!-- ============ SUBSCRIPTIONS ============ -->
+      <section class="view" id="v-subs" data-od-id="view-subscriptions">
+        <div class="row between wrap" style="margin-bottom:14px">
+          <div><h1 style="font-size:20px;font-weight:650;letter-spacing:-.02em">Subscriptions</h1><p class="muted small" style="margin-top:3px">Plan, billing cycle, and renewal for every tenant</p></div>
+        </div>
+        <div class="grid g4" style="margin-bottom:14px">
+          <div class="card kpi"><div class="label">Active subscriptions</div><div class="val" id="sub-active">0</div></div>
+          <div class="card kpi"><div class="label">Past due</div><div class="val" style="color:oklch(48% 0.16 25)" id="sub-due">0</div></div>
+          <div class="card kpi"><div class="label">Trialing</div><div class="val" id="sub-trial">0</div></div>
+          <div class="card kpi"><div class="label">Annual run-rate</div><div class="val" id="sub-arr">$0</div></div>
+        </div>
+        <div class="toolbar">
+          <div class="seg" data-filter-group="subs-status"><button class="on" data-f="all">All</button><button data-f="active">Active</button><button data-f="past_due">Past due</button><button data-f="trialing">Trialing</button><button data-f="canceled">Canceled</button></div>
+          <div class="search" style="margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input data-q="subs" placeholder="Search subscriptions…" /></div>
+        </div>
+        <div class="tbl-wrap"><table class="dtbl"><thead><tr>
+          <th>Organization</th><th>Plan</th><th>Status</th><th class="num">Seats</th><th class="num">MRR</th><th>Cycle</th><th>Renewal</th></tr></thead>
+          <tbody id="tb-subs"></tbody></table></div>
+      </section>
+
+      <!-- ============ PLANS ============ -->
+      <section class="view" id="v-plans" data-od-id="view-plans">
+        <div class="row between wrap" style="margin-bottom:14px">
+          <div><h1 style="font-size:20px;font-weight:650;letter-spacing:-.02em">Plans &amp; pricing</h1><p class="muted small" style="margin-top:3px">What every tenant can subscribe to — edit limits and features</p></div>
+        </div>
+        <div class="plans-grid" id="plansGrid" data-od-id="plan-cards"></div>
+
+        <div class="card" style="margin-top:16px" data-od-id="feature-matrix">
+          <div class="panel-head"><h3>Feature matrix</h3><span class="muted small">source of truth: packages/core/src/constants/plans.ts</span></div>
+          <div class="panel-body flush scroll-x">
+            <table class="matrix" id="matrix"></table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ BILLING ============ -->
+      <section class="view" id="v-billing" data-od-id="view-billing">
+        <div class="row between wrap" style="margin-bottom:14px">
+          <div><h1 style="font-size:20px;font-weight:650;letter-spacing:-.02em">Billing &amp; invoices</h1><p class="muted small" style="margin-top:3px">Every invoice issued across the platform</p></div>
+          <div class="row"><button class="btn subtle sm" onclick="toast('Exporting invoices…')">Export</button></div>
+        </div>
+        <div class="grid g4" style="margin-bottom:14px">
+          <div class="card kpi"><div class="label">Collected (30d)</div><div class="val">$47,392</div><div class="sub"><span class="up">▲ 5.8%</span> vs prev</div></div>
+          <div class="card kpi"><div class="label">Outstanding</div><div class="val" style="color:oklch(48% 0.14 70)">$2,842</div></div>
+          <div class="card kpi"><div class="label">Failed</div><div class="val" style="color:oklch(48% 0.16 25)">$490</div></div>
+          <div class="card kpi"><div class="label">Avg invoice</div><div class="val">$372</div></div>
+        </div>
+        <div class="toolbar">
+          <div class="seg" data-filter-group="inv-status"><button class="on" data-f="all">All</button><button data-f="paid">Paid</button><button data-f="pending">Pending</button><button data-f="failed">Failed</button></div>
+          <div class="search" style="margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input data-q="inv" placeholder="Search invoice # or org…" /></div>
+        </div>
+        <div class="tbl-wrap"><table class="dtbl"><thead><tr>
+          <th>Invoice</th><th>Organization</th><th class="num">Amount</th><th>Status</th><th>Plan</th><th>Period</th><th>Issued</th><th>Due</th></tr></thead>
+          <tbody id="tb-inv"></tbody></table></div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="view" id="v-settings" data-od-id="view-settings">
+        <div style="margin-bottom:14px"><h1 style="font-size:20px;font-weight:650;letter-spacing:-.02em">System settings</h1><p class="muted small" style="margin-top:3px">Platform-wide configuration — affects every aLabs tenant</p></div>
+
+        <div class="callout" style="margin-bottom:16px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <div><b>How the console and workspace connect.</b> aLabs Console is the control plane above the aLabs workspace app — it owns tenants, members, billing, and feature flags. Each organization row has a <span class="mono">Login as org</span> action that opens the aLabs workspace in that tenant's context (impersonation). Changes here propagate instantly to every organization's workspace.</div>
+        </div>
+
+        <div class="tabs" id="settingsTabs">
+          <button class="tab on" data-tab="general">General</button>
+          <button class="tab" data-tab="branding">Branding</button>
+          <button class="tab" data-tab="email">Email &amp; SMTP</button>
+          <button class="tab" data-tab="security">Security</button>
+          <button class="tab" data-tab="integrations">Integrations</button>
+          <button class="tab" data-tab="flags">Feature flags</button>
+        </div>
+
+        <div class="tab-pane on" data-pane="general">
+          <div class="card"><div class="panel-body">
+            <div class="field"><label>Platform name</label><input class="input" value="aLabs" /></div>
+            <div class="field"><label>Support email</label><input class="input" value="support@alabs.io" /></div>
+            <div class="grid-fields">
+              <div class="field"><label>Default plan for new orgs</label><select class="input"><option>Free</option><option selected>Professional</option><option>Enterprise</option></select></div>
+              <div class="field"><label>Signup mode</label><select class="input"><option>Open — anyone can sign up</option><option selected>Invite — requires invite link</option><option>Closed — admin-created only</option></select></div>
+            </div>
+            <div class="set-row"><div class="info"><b>Allow new organization signups</b><small>When off, the public signup page is disabled and only admins can create tenants.</small></div><span class="sw on" data-toggle></span></div>
+            <div class="set-row"><div class="info"><b>Auto-verify new organizations</b><small>Skip manual review and activate new tenants immediately.</small></div><span class="sw" data-toggle></span></div>
+          </div></div>
+        </div>
+
+        <div class="tab-pane" data-pane="branding">
+          <div class="card"><div class="panel-body">
+            <div class="field"><label>Product name</label><input class="input" value="aLabs workspace" /></div>
+            <div class="field"><label>Accent color (OKLch)</label><input class="input mono" value="oklch(54% 0.18 258)" /></div>
+            <div class="row" style="gap:14px;margin:6px 0 14px"><span style="width:46px;height:46px;border-radius:10px;background:var(--accent);border:1px solid var(--border)"></span><div class="stack"><b class="small">Current accent</b><small class="muted tiny">Indigo · hue 258</small></div></div>
+            <div class="field"><label>Logo</label>
+              <div class="row" style="gap:10px"><span class="av xl sq" style="background:var(--accent)"><svg width="30" height="30" viewBox="0 0 64 64" fill="none"><path d="M3 40 H27 M45 40 H61" stroke="#fff" stroke-width="6" stroke-linecap="round"/><path d="M27 40 L31 43 L36 13 L40 47 L45 40" stroke="#fff" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></svg></span><button class="btn subtle sm">Upload SVG</button><button class="btn ghost sm">Reset</button></div>
+            </div>
+          </div></div>
+        </div>
+
+        <div class="tab-pane" data-pane="email">
+          <div class="card"><div class="panel-body">
+            <div class="grid-fields">
+              <div class="field"><label>SMTP host</label><input class="input mono" value="smtp.postmarkapp.com" /></div>
+              <div class="field"><label>SMTP port</label><input class="input mono" value="587" /></div>
+              <div class="field"><label>Username</label><input class="input mono" value="alabs-server-token" /></div>
+              <div class="field"><label>From address</label><input class="input" value="aLabs <noreply@alabs.io>" /></div>
+            </div>
+            <div class="set-row"><div class="info"><b>Transactional email</b><small>Invitations, receipts, digests. Delivery is healthy.</small></div><span class="status ok"><span class="d"></span>Connected</span></div>
+            <div class="row" style="gap:8px;margin-top:6px"><button class="btn subtle sm" onclick="toast('Test email sent to support@alabs.io')">Send test email</button></div>
+          </div></div>
+        </div>
+
+        <div class="tab-pane" data-pane="security">
+          <div class="card"><div class="panel-body">
+            <div class="set-row"><div class="info"><b>Enforce two-factor for admins</b><small>Every console operator must enable 2FA on next login.</small></div><span class="sw on" data-toggle></span></div>
+            <div class="set-row"><div class="info"><b>Session length</b><small>How long a console session stays valid before re-auth.</small></div><select class="input" style="width:160px"><option>4 hours</option><option selected>8 hours</option><option>24 hours</option></select></div>
+            <div class="set-row"><div class="info"><b>Minimum password length</b><small>Applied at signup and password reset for all aLabs users.</small></div><input class="input mono" style="width:90px" value="12" /></div>
+            <div class="set-row"><div class="info"><b>IP allowlist</b><small>Restrict console access to listed CIDR ranges. Empty = allow all.</small></div></div>
+            <input class="input mono" value="10.0.0.0/8, 192.168.0.0/16" />
+          </div></div>
+        </div>
+
+        <div class="tab-pane" data-pane="integrations">
+          <div class="card"><div class="panel-body">
+            <div class="set-row"><div class="info"><b>Stripe</b><small>Powers subscriptions, invoices, and dunning. Account: acme_alabs_prod.</small></div><span class="status ok"><span class="d"></span>Connected</span></div>
+            <div class="set-row"><div class="info"><b>Postmark</b><small>Transactional email delivery for invitations and receipts.</small></div><span class="status ok"><span class="d"></span>Connected</span></div>
+            <div class="set-row"><div class="info"><b>Object storage (S3)</b><small>Stores uploads and document attachments.</small></div><span class="status ok"><span class="d"></span>Connected</span></div>
+            <div class="set-row"><div class="info"><b>Slack</b><small>Receive platform alerts and revenue digests in a channel.</small></div><button class="btn subtle sm">Connect</button></div>
+            <div class="set-row"><div class="info"><b>Sentry</b><small>Error monitoring across API and web.</small></div><span class="status neutral"><span class="d"></span>Not configured</span></div>
+          </div></div>
+        </div>
+
+        <div class="tab-pane" data-pane="flags">
+          <div class="card"><div class="panel-body">
+            <p class="muted small" style="margin-bottom:14px">Global defaults. Each plan gates which features its tenants can use — see Plans &amp; pricing.</p>
+            <div class="set-row"><div class="info"><b>core_modules</b><small>Tasks, documents, planning, meetings, reports, agreements.</small></div><span class="sw on" data-toggle></span></div>
+            <div class="set-row"><div class="info"><b>client_portal</b><small>External client collaboration on shared resources.</small></div><span class="sw on" data-toggle></span></div>
+            <div class="set-row"><div class="info"><b>advanced_reporting</b><small>Burndown, velocity, and custom cross-project reports.</small></div><span class="sw on" data-toggle></span></div>
+            <div class="set-row"><div class="info"><b>sso</b><small>SAML / OIDC single sign-on for enterprise tenants.</small></div><span class="sw on" data-toggle></span></div>
+            <div class="set-row"><div class="info"><b>audit_logs</b><small>Tamper-evident audit trail for sensitive actions.</small></div><span class="sw on" data-toggle></span></div>
+            <div class="set-row"><div class="info"><b>advanced_permissions</b><small>Granular role and scope controls.</small></div><span class="sw on" data-toggle></span></div>
+            <div class="set-row"><div class="info"><b>self_hosted</b><small>Allow enterprise tenants to deploy the aLabs workspace on their infrastructure.</small></div><span class="sw" data-toggle></span></div>
+          </div></div>
+        </div>
+      </section>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ============ DRAWER ============ -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true">
+  <div class="dh">
+    <span class="av lg sq" id="dr-av" style="background:var(--accent)"></span>
+    <div style="min-width:0;flex:1">
+      <h3 id="dr-title">—</h3>
+      <div class="sub" id="dr-sub">—</div>
+    </div>
+    <button class="x" id="dr-close" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="db" id="dr-body"></div>
+  <div class="df" id="dr-foot"></div>
+</aside>
+
+<!-- ============ MODALS ============ -->
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="mh"><h3 id="modal-title">—</h3><button class="x" id="modal-close" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="mb" id="modal-body"></div>
+  <div class="mf" id="modal-foot"></div>
+</div>
+
+<!-- ============ COMMAND PALETTE ============ -->
+<div class="palette" id="palette" role="dialog" aria-modal="true" aria-label="Search">
+  <div class="pal-box">
+    <div class="pal-input">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="pal-q" placeholder="Search organizations, members, projects, invoices…" autocomplete="off" spellcheck="false" />
+      <kbd>Esc</kbd>
+    </div>
+    <div class="pal-results" id="pal-results"></div>
+    <div class="pal-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd>navigate</span>
+      <span><kbd>↵</kbd>open</span>
+      <span class="link" onclick="closePalette()">Dismiss</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOASTS ============ -->
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* =====================================================================
+   aLabs Console — data + interactions
+   Single-file prototype. Tables render from the in-memory DB so that
+   filtering, search, and CRUD feel live.
+   ===================================================================== */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const money = n => '$'+Number(n).toLocaleString('en-US');
+const initials = s => s.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const AV_CLASS = ['a','b','c','d','e','f'];
+const avFor = s => 'av '+(AV_CLASS[(s.charCodeAt(0)+s.length)%AV_CLASS.length]);
+
+/* ---------- Plans (mirrors packages/core/src/constants/plans.ts) ---------- */
+const PLANS = {
+  free:        { name:'Free',        price:0,  per:'/ mo', projectLimit:2,   desc:'For individuals exploring aLabs.', color:'var(--muted)', feats:{core_modules:true} },
+  professional:{ name:'Professional',price:49, per:'/ mo', projectLimit:null,desc:'For growing teams that need the client portal and reporting.', color:'var(--accent)', featured:true, feats:{core_modules:true,client_portal:true,advanced_reporting:true} },
+  enterprise:  { name:'Enterprise',  price:0,  per:'custom',projectLimit:null,desc:'Self-hosting, SSO, audit logs, and granular permissions.', color:'oklch(54% 0.14 300)', feats:{core_modules:true,client_portal:true,advanced_reporting:true,self_hosted:true,sso:true,audit_logs:true,advanced_permissions:true} }
+};
+const PLAN_ORDER = ['free','professional','enterprise'];
+const ALL_FEATS = ['core_modules','client_portal','advanced_reporting','self_hosted','sso','audit_logs','advanced_permissions'];
+const FEAT_LABEL = { core_modules:'Core modules', client_portal:'Client portal', advanced_reporting:'Advanced reporting', self_hosted:'Self-hosting', sso:'SSO (SAML/OIDC)', audit_logs:'Audit logs', advanced_permissions:'Advanced permissions' };
+const planKey = label => ({'Free':'free','Professional':'professional','Enterprise':'enterprise'})[label] || 'free';
+
+/* ---------- Organizations (tenants) ---------- */
+const ORGS = [
+  { id:'o1', name:'Northwind Studio', type:'team', plan:'Professional', members:34, projects:8, mrr:1666, status:'active', created:'2024-03-12', domain:'northwind.co', owner:'Maya Okonkwo', country:'United States' },
+  { id:'o2', name:'Helix Collective', type:'team', plan:'Enterprise', members:120, projects:21, mrr:4200, status:'active', created:'2023-11-02', domain:'helix.design', owner:'Diego Marin', country:'Spain' },
+  { id:'o3', name:'Atelier Mörs', type:'team', plan:'Professional', members:10, projects:4, mrr:490, status:'active', created:'2024-06-21', domain:'atelier-mors.de', owner:'Lena Vogt', country:'Germany' },
+  { id:'o4', name:'Vantage Labs', type:'team', plan:'Professional', members:6, projects:3, mrr:294, status:'active', created:'2024-08-09', domain:'vantage.io', owner:'Sam Whitfield', country:'United Kingdom' },
+  { id:'o5', name:'Cobalt & Co.', type:'team', plan:'Professional', members:14, projects:6, mrr:0, status:'trial', created:'2025-01-14', domain:'cobalt.studio', owner:'Priya Nair', country:'India' },
+  { id:'o6', name:'Marrow Type', type:'personal', plan:'Free', members:1, projects:2, mrr:0, status:'active', created:'2024-12-01', domain:'marrow.type', owner:'Tomas Reyes', country:'Argentina' },
+  { id:'o7', name:'Saltmarsh Ltd', type:'team', plan:'Enterprise', members:64, projects:15, mrr:3100, status:'active', created:'2023-07-19', domain:'saltmarsh.uk', owner:'Owen Pierce', country:'United Kingdom' },
+  { id:'o8', name:'Foldspace', type:'team', plan:'Professional', members:22, projects:9, mrr:1078, status:'suspended', created:'2024-02-27', domain:'foldspace.app', owner:'Nadia Cole', country:'Canada' },
+  { id:'o9', name:'Greyspace Studio', type:'team', plan:'Professional', members:8, projects:5, mrr:392, status:'active', created:'2024-09-30', domain:'greyspace.co', owner:'Hiro Tanaka', country:'Japan' },
+  { id:'o10', name:'Ledger Peak', type:'personal', plan:'Free', members:1, projects:1, mrr:0, status:'active', created:'2025-02-03', domain:'ledgerpeak.io', owner:'Ava Lindqvist', country:'Sweden' },
+  { id:'o11', name:'Quartz Field', type:'team', plan:'Enterprise', members:45, projects:12, mrr:2400, status:'active', created:'2023-05-22', domain:'quartzfield.com', owner:'Marco Bianchi', country:'Italy' },
+  { id:'o12', name:'Northbeam Digital', type:'team', plan:'Professional', members:18, projects:7, mrr:882, status:'active', created:'2024-04-11', domain:'northbeam.io', owner:'Ruth Adeyemi', country:'Nigeria' }
+];
+const org = id => ORGS.find(o=>o.id===id);
+
+/* ---------- Members ---------- */
+const MEMBERS = [
+  { id:'m1', name:'Maya Okonkwo', email:'maya@northwind.co', orgId:'o1', role:'Owner', status:'active', last:'2 min ago', joined:'2024-03-12' },
+  { id:'m2', name:'Diego Marin', email:'diego@helix.design', orgId:'o2', role:'Owner', status:'active', last:'14 min ago', joined:'2023-11-02' },
+  { id:'m3', name:'Lena Vogt', email:'lena@atelier-mors.de', orgId:'o3', role:'Owner', status:'active', last:'1 hr ago', joined:'2024-06-21' },
+  { id:'m4', name:'Sam Whitfield', email:'sam@vantage.io', orgId:'o4', role:'Owner', status:'active', last:'3 hr ago', joined:'2024-08-09' },
+  { id:'m5', name:'Priya Nair', email:'priya@cobalt.studio', orgId:'o5', role:'Owner', status:'pending', last:'—', joined:'2025-01-14' },
+  { id:'m6', name:'Owen Pierce', email:'owen@saltmarsh.uk', orgId:'o7', role:'Owner', status:'active', last:'just now', joined:'2023-07-19' },
+  { id:'m7', name:'Nadia Cole', email:'nadia@foldspace.app', orgId:'o8', role:'Owner', status:'suspended', last:'12 days ago', joined:'2024-02-27' },
+  { id:'m8', name:'Hiro Tanaka', email:'hiro@greyspace.co', orgId:'o9', role:'Owner', status:'active', last:'yesterday', joined:'2024-09-30' },
+  { id:'m9', name:'Marco Bianchi', email:'marco@quartzfield.com', orgId:'o11', role:'Admin', status:'active', last:'30 min ago', joined:'2023-05-22' },
+  { id:'m10', name:'Ruth Adeyemi', email:'ruth@northbeam.io', orgId:'o12', role:'Owner', status:'active', last:'1 day ago', joined:'2024-04-11' },
+  { id:'m11', name:'Aiko Sato', email:'aiko@helix.design', orgId:'o2', role:'Admin', status:'active', last:'4 hr ago', joined:'2023-12-05' },
+  { id:'m12', name:'Theo Lambert', email:'theo@saltmarsh.uk', orgId:'o7', role:'Member', status:'active', last:'6 hr ago', joined:'2023-09-10' },
+  { id:'m13', name:'Sara El-Amin', email:'sara@northwind.co', orgId:'o1', role:'Member', status:'pending', last:'—', joined:'2025-02-10' },
+  { id:'m14', name:'Jonas Frye', email:'jonas@foldspace.app', orgId:'o8', role:'Member', status:'suspended', last:'9 days ago', joined:'2024-03-15' }
+];
+
+/* ---------- Projects ---------- */
+const PROJECTS = [
+  { id:'p1', name:'Brand Refresh 2025', orgId:'o1', visibility:'organization', status:'active', lead:'Maya Okonkwo', tasks:142, progress:68 },
+  { id:'p2', name:'Platform Migration', orgId:'o2', visibility:'private', status:'active', lead:'Diego Marin', tasks:88, progress:41 },
+  { id:'p3', name:'Q1 Product Launch', orgId:'o2', visibility:'organization', status:'active', lead:'Aiko Sato', tasks:204, progress:72 },
+  { id:'p4', name:'Studio Website', orgId:'o3', visibility:'organization', status:'on_hold', lead:'Lena Vogt', tasks:56, progress:33 },
+  { id:'p5', name:'Mobile App v2', orgId:'o4', visibility:'private', status:'active', lead:'Sam Whitfield', tasks:97, progress:55 },
+  { id:'p6', name:'Onboarding Redesign', orgId:'o5', visibility:'organization', status:'active', lead:'Priya Nair', tasks:34, progress:12 },
+  { id:'p7', name:'Internal Tooling', orgId:'o7', visibility:'private', status:'active', lead:'Theo Lambert', tasks:120, progress:80 },
+  { id:'p8', name:'Compliance Audit', orgId:'o7', visibility:'private', status:'archived', lead:'Owen Pierce', tasks:60, progress:100 },
+  { id:'p9', name:'Marketing Site', orgId:'o9', visibility:'organization', status:'active', lead:'Hiro Tanaka', tasks:45, progress:60 },
+  { id:'p10', name:'Data Pipeline', orgId:'o11', visibility:'private', status:'active', lead:'Marco Bianchi', tasks:73, progress:48 },
+  { id:'p11', name:'API Platform', orgId:'o11', visibility:'organization', status:'active', lead:'Marco Bianchi', tasks:158, progress:63 },
+  { id:'p12', name:'Growth Experiments', orgId:'o12', visibility:'organization', status:'on_hold', lead:'Ruth Adeyemi', tasks:29, progress:20 },
+  { id:'p13', name:'Type System', orgId:'o6', visibility:'private', status:'active', lead:'Tomas Reyes', tasks:18, progress:90 },
+  { id:'p14', name:'Client Portal Beta', orgId:'o2', visibility:'organization', status:'archived', lead:'Diego Marin', tasks:51, progress:100 }
+];
+
+/* ---------- Subscriptions ---------- */
+const SUBS = [
+  { id:'s1', orgId:'o1', plan:'Professional', status:'past_due', seats:34, mrr:1666, cycle:'Monthly', renewal:'2025-02-01' },
+  { id:'s2', orgId:'o2', plan:'Enterprise', status:'active', seats:120, mrr:4200, cycle:'Annual', renewal:'2025-11-02' },
+  { id:'s3', orgId:'o3', plan:'Professional', status:'active', seats:10, mrr:490, cycle:'Monthly', renewal:'2025-02-21' },
+  { id:'s4', orgId:'o4', plan:'Professional', status:'past_due', seats:6, mrr:294, cycle:'Monthly', renewal:'2025-01-28' },
+  { id:'s5', orgId:'o5', plan:'Professional', status:'trialing', seats:14, mrr:0, cycle:'Monthly', renewal:'2025-02-15' },
+  { id:'s6', orgId:'o7', plan:'Enterprise', status:'active', seats:64, mrr:3100, cycle:'Annual', renewal:'2025-07-19' },
+  { id:'s7', orgId:'o8', plan:'Professional', status:'canceled', seats:22, mrr:0, cycle:'Monthly', renewal:'2025-01-12' },
+  { id:'s8', orgId:'o9', plan:'Professional', status:'active', seats:8, mrr:392, cycle:'Monthly', renewal:'2025-03-01' },
+  { id:'s9', orgId:'o11', plan:'Enterprise', status:'active', seats:45, mrr:2400, cycle:'Annual', renewal:'2025-05-22' },
+  { id:'s10', orgId:'o12', plan:'Professional', status:'active', seats:18, mrr:882, cycle:'Monthly', renewal:'2025-02-20' }
+];
+
+/* ---------- Invoices ---------- */
+const INVOICES = [
+  { id:'INV-2051', orgId:'o1', amount:1666, status:'pending', plan:'Professional', period:'Feb 2025', issued:'2025-02-01', due:'2025-02-08' },
+  { id:'INV-2048', orgId:'o3', amount:490, status:'failed', plan:'Professional', period:'Feb 2025', issued:'2025-02-01', due:'2025-02-08' },
+  { id:'INV-2045', orgId:'o2', amount:50400, status:'paid', plan:'Enterprise', period:'Annual', issued:'2024-11-02', due:'2024-11-09' },
+  { id:'INV-2043', orgId:'o7', amount:37200, status:'paid', plan:'Enterprise', period:'Annual', issued:'2024-07-19', due:'2024-07-26' },
+  { id:'INV-2041', orgId:'o4', amount:294, status:'pending', plan:'Professional', period:'Feb 2025', issued:'2025-02-01', due:'2025-02-08' },
+  { id:'INV-2039', orgId:'o11', amount:28800, status:'paid', plan:'Enterprise', period:'Annual', issued:'2024-05-22', due:'2024-05-29' },
+  { id:'INV-2037', orgId:'o9', amount:392, status:'paid', plan:'Professional', period:'Jan 2025', issued:'2025-01-03', due:'2025-01-10' },
+  { id:'INV-2035', orgId:'o12', amount:882, status:'paid', plan:'Professional', period:'Jan 2025', issued:'2025-01-04', due:'2025-01-11' },
+  { id:'INV-2033', orgId:'o1', amount:1666, status:'paid', plan:'Professional', period:'Jan 2025', issued:'2025-01-02', due:'2025-01-09' },
+  { id:'INV-2031', orgId:'o8', amount:1078, status:'failed', plan:'Professional', period:'Jan 2025', issued:'2025-01-03', due:'2025-01-10' },
+  { id:'INV-2029', orgId:'o3', amount:490, status:'paid', plan:'Professional', period:'Jan 2025', issued:'2025-01-04', due:'2025-01-11' },
+  { id:'INV-2027', orgId:'o2', amount:4200, status:'paid', plan:'Enterprise', period:'Nov 2024', issued:'2024-11-03', due:'2024-11-10' }
+];
+
+/* ---------- Activity (dashboard) ---------- */
+const ACTIVITY = [
+  { who:'Maya Okonkwo', cls:'a', what:'created project', tgt:'Brand Refresh 2025', in:'Northwind Studio', when:'2m' },
+  { who:'System', cls:'d', what:'upgraded', tgt:'Cobalt & Co.', in:'to Professional (trial)', when:'1h' },
+  { who:'Diego Marin', cls:'b', what:'invited 12 members to', tgt:'Helix Collective', in:'', when:'3h' },
+  { who:'System', cls:'r', what:'suspended', tgt:'Foldspace', in:'payment failure', when:'5h' },
+  { who:'Ruth Adeyemi', cls:'f', what:'archived', tgt:'Growth Experiments', in:'Northbeam Digital', when:'8h' },
+  { who:'Ava Lindqvist', cls:'e', what:'signed up', tgt:'Ledger Peak', in:'Free plan', when:'1d' }
+];
+
+/* =====================================================================
+   Status helpers
+   ===================================================================== */
+const orgStatusTag = s => ({active:'<span class="status ok"><span class="d"></span>Active</span>', trial:'<span class="status violet"><span class="d"></span>Trial</span>', suspended:'<span class="status danger"><span class="d"></span>Suspended</span>'})[s];
+const memberStatusTag = s => ({active:'<span class="status ok"><span class="d"></span>Active</span>', pending:'<span class="status warn"><span class="d"></span>Pending</span>', suspended:'<span class="status danger"><span class="d"></span>Suspended</span>'})[s];
+const projStatusTag = s => ({active:'<span class="status ok"><span class="d"></span>Active</span>', on_hold:'<span class="status warn"><span class="d"></span>On hold</span>', archived:'<span class="status neutral"><span class="d"></span>Archived</span>'})[s];
+const subStatusTag = s => ({active:'<span class="status ok"><span class="d"></span>Active</span>', past_due:'<span class="status danger"><span class="d"></span>Past due</span>', trialing:'<span class="status violet"><span class="d"></span>Trial</span>', canceled:'<span class="status neutral"><span class="d"></span>Canceled</span>'})[s];
+const invStatusTag = s => ({paid:'<span class="status ok"><span class="d"></span>Paid</span>', pending:'<span class="status warn"><span class="d"></span>Pending</span>', failed:'<span class="status danger"><span class="d"></span>Failed</span>'})[s];
+const planTag = p => ({'Free':'<span class="tag">Free</span>','Professional':'<span class="tag b">Professional</span>','Enterprise':'<span class="tag v">Enterprise</span>'})[p] || `<span class="tag">${p}</span>`;
+const typeTag = t => t==='team'?'<span class="tag g">Team</span>':'<span class="tag">Personal</span>';
+const visTag = v => v==='private'?'<span class="tag r">Private</span>':'<span class="tag i">Org</span>';
+
+/* =====================================================================
+   Nav / views
+   ===================================================================== */
+const TITLES = { 'v-dash':'Dashboard','v-orgs':'Organizations','v-members':'Members','v-projects':'Projects','v-subs':'Subscriptions','v-plans':'Plans & pricing','v-billing':'Billing','v-settings':'System settings' };
+function go(view){
+  $$('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.nav===view));
+  $$('.view').forEach(v=>v.classList.toggle('active', v.id===view));
+  $('#crumb-cur').textContent = TITLES[view] || '';
+  $('#content').scrollTop = 0;
+  if(window.innerWidth<=860) $('#sidebar').classList.remove('show');
+}
+$$('.nav-item').forEach(n=>n.addEventListener('click',()=>go(n.dataset.nav)));
+document.addEventListener('click',e=>{ const t=e.target.closest('[data-go]'); if(t){ go(t.dataset.go); } });
+$('#bars').addEventListener('click',()=>$('#sidebar').classList.toggle('show'));
+
+/* =====================================================================
+   Counts in nav
+   ===================================================================== */
+function setCounts(){
+  $('[data-count="orgs"]').textContent = ORGS.length;
+  $('[data-count="members"]').textContent = MEMBERS.length;
+  $('[data-count="projects"]').textContent = PROJECTS.length;
+  $('[data-count="subs"]').textContent = SUBS.length;
+  $('[data-count="billing"]').textContent = INVOICES.filter(i=>i.status!=='paid').length;
+  setAlertCount();
+}
+
+/* =====================================================================
+   Dashboard
+   ===================================================================== */
+function renderDashboard(){
+  $('#kpi-orgs-val').textContent = ORGS.length;
+  $('#kpi-members-val').textContent = MEMBERS.length.toLocaleString();
+  $('#kpi-projects-val').textContent = PROJECTS.length;
+
+  // Revenue area chart
+  const vals=[28100,29800,31200,33400,35200,36800,38400,40100,41900,44200,46200,48290];
+  drawAreaChart($('#reaChart'), vals);
+
+  // Plan distribution donut
+  const planCount = { free:0, professional:0, enterprise:0 };
+  ORGS.forEach(o=>{ const k=planKey(o.plan); planCount[k]++; });
+  const segs=[
+    { name:'Free', value:planCount.free, color:'var(--faint)' },
+    { name:'Professional', value:planCount.professional, color:'var(--accent)' },
+    { name:'Enterprise', value:planCount.enterprise, color:'oklch(54% 0.14 300)' }
+  ];
+  drawDonut($('#donut'), segs, 54);
+  $('#planLegend').innerHTML = segs.map(s=>`<div class="li"><span class="sw" style="background:${s.color}"></span><span class="nm">${s.name}</span><span class="vv">${s.value}</span></div>`).join('');
+  $('#plan-total').textContent = ORGS.length+' orgs';
+
+  // Top orgs by MRR
+  const top=[...ORGS].filter(o=>o.mrr>0).sort((a,b)=>b.mrr-a.mrr).slice(0,5);
+  const maxM=Math.max(...top.map(o=>o.mrr));
+  $('#topOrgs').innerHTML = top.map(o=>`
+    <div class="meter-row">
+      <span class="nm">${esc(o.name)}</span>
+      <span class="bar"><i style="width:${(o.mrr/maxM*100).toFixed(0)}%"></i></span>
+      <span class="vv">${money(o.mrr)}</span>
+    </div>`).join('');
+
+  // Recent signups
+  const recent=[...ORGS].sort((a,b)=>b.created.localeCompare(a.created)).slice(0,4);
+  $('#recentSignups').innerHTML = recent.map(o=>`
+    <div class="alert-row" style="cursor:pointer" onclick="openOrg('${o.id}')">
+      <span class="av ${avFor(o.name)} sq">${initials(o.name)}</span>
+      <div class="info"><b>${esc(o.name)}</b><small>${o.type==='team'?'Team':'Personal'} · ${planTag(o.plan)} · ${o.country}</small></div>
+      <span class="tiny mono muted">${o.created}</span>
+    </div>`).join('');
+
+  // Activity
+  $('#activityFeed').innerHTML = ACTIVITY.map(a=>`
+    <div class="act-item">
+      <span class="av ${a.cls==='r'?'a av':('av '+a.cls)}">${a.who==='System'?'★':initials(a.who)}</span>
+      <div style="flex:1;min-width:0"><div class="t">${a.who==='System'?'<b>System</b>':'<b>'+esc(a.who)+'</b>'} <span class="mut">${esc(a.what)} <b style="font-weight:600">${esc(a.tgt)}</b>${a.in?' <span class="mut">'+esc(a.in)+'</span>':''}</span></div><div class="when">${a.when} ago</div></div>
+    </div>`).join('');
+}
+
+/* ----- charts ----- */
+function drawAreaChart(svg, values){
+  const W=640,H=200,pad=22;
+  const max=Math.max(...values),min=Math.min(...values)*0.92;
+  const n=values.length, stepX=(W-pad*2)/(n-1);
+  const pts=values.map((v,i)=>[pad+i*stepX, H-pad-((v-min)/(max-min||1))*(H-pad*2)]);
+  const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area=line+` L ${pts[n-1][0].toFixed(1)} ${H-pad} L ${pts[0][0].toFixed(1)} ${H-pad} Z`;
+  const months=['Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb'];
+  const gid='reaGrad';
+  svg.innerHTML=`
+    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${[0.25,0.5,0.75].map(f=>`<line x1="${pad}" x2="${W-pad}" y1="${pad+(H-pad*2)*f}" y2="${pad+(H-pad*2)*f}" stroke="var(--border)" stroke-dasharray="2 4"/>`).join('')}
+    <path d="${area}" fill="url(#${gid})"/>
+    <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${pts[n-1][0]}" cy="${pts[n-1][1]}" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>
+    ${months.map((m,i)=>`<text x="${pts[i][0]}" y="${H-6}" text-anchor="middle" font-size="9.5" fill="var(--faint)" font-family="var(--mono)">${m}</text>`).join('')}
+    <text x="${pad}" y="14" font-size="10" fill="var(--muted)" font-family="var(--mono)">$${(max/1000).toFixed(1)}k</text>
+  `;
+}
+function drawDonut(svg, segs, r){
+  const cx=60,cy=60,R=r, C=2*Math.PI*R;
+  const total=segs.reduce((s,x)=>s+x.value,0)||1;
+  let acc=0; let circles='';
+  segs.forEach(s=>{
+    const frac=s.value/total;
+    if(frac<=0) return;
+    const dash=frac*C;
+    circles+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${s.color}" stroke-width="16" stroke-dasharray="${dash.toFixed(2)} ${(C-dash).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})" stroke-linecap="butt"/>`;
+    acc+=dash;
+  });
+  svg.innerHTML=`${circles}<text x="${cx}" y="${cy-2}" text-anchor="middle" font-size="20" font-weight="650" fill="var(--fg-strong)" font-family="var(--font)">${total}</text><text x="${cx}" y="${cy+14}" text-anchor="middle" font-size="9.5" fill="var(--muted)" letter-spacing="0.06em" font-family="var(--mono)">ORGANIZATIONS</text>`;
+}
+
+/* =====================================================================
+   Generic table renderer with filter + search state
+   ===================================================================== */
+const STATE = {
+  'orgs-status':'all','members-status':'all','projects-status':'all','subs-status':'all','inv-status':'all',
+  q:{ orgs:'', members:'', projects:'', subs:'', inv:'' }
+};
+
+function bindFilter(group, render){
+  $$(`[data-filter-group="${group}"] button`).forEach(b=>b.addEventListener('click',()=>{
+    $$(`[data-filter-group="${group}"] button`).forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); STATE[group]=b.dataset.f; render();
+  }));
+}
+function bindSearch(key, render){
+  const inp=$(`[data-q="${key}"]`);
+  if(inp) inp.addEventListener('input',()=>{ STATE.q[key]=inp.value.toLowerCase(); render(); });
+}
+function filterCounts(group, map){
+  $$(`[data-filter-group="${group}"] .n`).forEach(el=>{
+    const k=el.dataset.n; const c = k==='all' ? map.__all : (map[k]||0);
+    el.textContent = c;
+  });
+}
+
+/* ---------- Organizations table ---------- */
+function renderOrgs(){
+  const f=STATE['orgs-status'], q=STATE.q.orgs;
+  let rows=ORGS.filter(o=> f==='all'||o.status===f);
+  if(q) rows=rows.filter(o=>(o.name+' '+o.domain+' '+o.owner).toLowerCase().includes(q));
+  const counts={ __all:ORGS.length, active:ORGS.filter(o=>o.status==='active').length, trial:ORGS.filter(o=>o.status==='trial').length, suspended:ORGS.filter(o=>o.status==='suspended').length };
+  filterCounts('orgs-status', counts);
+  $('#tb-orgs').innerHTML = rows.length? rows.map(o=>`
+    <tr onclick="openOrg('${o.id}')">
+      <td class="ck-cell"><input type="checkbox" class="ck" onclick="event.stopPropagation()"></td>
+      <td><div class="c-cell"><span class="av ${avFor(o.name)} sq">${initials(o.name)}</span><div class="ct"><b>${esc(o.name)}</b><small>${esc(o.domain)}</small></div></div></td>
+      <td>${typeTag(o.type)}</td>
+      <td>${planTag(o.plan)}</td>
+      <td class="num">${o.members}</td>
+      <td class="num">${o.mrr?money(o.mrr):'<span class="muted">—</span>'}</td>
+      <td>${orgStatusTag(o.status)}</td>
+      <td class="tiny mono muted">${o.created}</td>
+    </tr>`).join('') : emptyRow(8,'No organizations match these filters');
+}
+
+/* ---------- Members table ---------- */
+function renderMembers(){
+  const f=STATE['members-status'], q=STATE.q.members;
+  let rows=MEMBERS.filter(m=> f==='all'||m.status===f);
+  if(q) rows=rows.filter(m=>(m.name+' '+m.email+' '+org(m.orgId).name).toLowerCase().includes(q));
+  const counts={ __all:MEMBERS.length, active:MEMBERS.filter(m=>m.status==='active').length, pending:MEMBERS.filter(m=>m.status==='pending').length, suspended:MEMBERS.filter(m=>m.status==='suspended').length };
+  filterCounts('members-status', counts);
+  const roleTag = r => ({Owner:'<span class="tag v">Owner</span>',Admin:'<span class="tag b">Admin</span>',Member:'<span class="tag">Member</span>'})[r];
+  $('#tb-members').innerHTML = rows.length? rows.map(m=>{ const o=org(m.orgId); return `
+    <tr onclick="openMember('${m.id}')">
+      <td class="ck-cell"><input type="checkbox" class="ck" onclick="event.stopPropagation()"></td>
+      <td><div class="c-cell"><span class="av ${avFor(m.name)}">${initials(m.name)}</span><div class="ct"><b>${esc(m.name)}</b><small>${esc(m.email)}</small></div></div></td>
+      <td><div class="c-cell"><span class="av ${avFor(o.name)} sq" style="width:20px;height:20px;font-size:8px">${initials(o.name)}</span><span class="small">${esc(o.name)}</span></div></td>
+      <td>${roleTag(m.role)}</td>
+      <td>${memberStatusTag(m.status)}</td>
+      <td class="tiny muted">${m.last}</td>
+      <td class="tiny mono muted">${m.joined}</td>
+    </tr>`; }).join('') : emptyRow(7,'No members match these filters');
+}
+
+/* ---------- Projects table ---------- */
+function renderProjects(){
+  const f=STATE['projects-status'], q=STATE.q.projects;
+  let rows=PROJECTS.filter(p=> f==='all'||p.status===f);
+  if(q) rows=rows.filter(p=>(p.name+' '+org(p.orgId).name+' '+p.lead).toLowerCase().includes(q));
+  $('#tb-projects').innerHTML = rows.length? rows.map(p=>{ const o=org(p.orgId); return `
+    <tr onclick="openProject('${p.id}')">
+      <td><div class="c-cell"><span class="av ${avFor(p.name)} sq">${initials(p.name)}</span><div class="ct"><b>${esc(p.name)}</b><small>${esc(o.name)}</small></div></div></td>
+      <td class="small">${esc(o.name)}</td>
+      <td>${visTag(p.visibility)}</td>
+      <td>${projStatusTag(p.status)}</td>
+      <td><div class="c-cell"><span class="av sm ${avFor(p.lead)}">${initials(p.lead)}</span><span class="small">${esc(p.lead)}</span></div></td>
+      <td class="num">${p.tasks}</td>
+      <td><div class="statbar"><span class="bar ${p.progress===100?'ok':p.progress<35?'warn':''}" style="flex:1"><i style="width:${p.progress}%"></i></span><span class="tiny mono" style="width:34px;text-align:right">${p.progress}%</span></div></td>
+    </tr>`; }).join('') : emptyRow(7,'No projects match these filters');
+}
+
+/* ---------- Subscriptions table ---------- */
+function renderSubs(){
+  const f=STATE['subs-status'], q=STATE.q.subs;
+  let rows=SUBS.filter(s=> f==='all'||s.status===f);
+  if(q) rows=rows.filter(s=>(org(s.orgId).name+' '+s.plan).toLowerCase().includes(q));
+  // KPIs
+  $('#sub-active').textContent = SUBS.filter(s=>s.status==='active').length;
+  $('#sub-due').textContent = SUBS.filter(s=>s.status==='past_due').length;
+  $('#sub-trial').textContent = SUBS.filter(s=>s.status==='trialing').length;
+  const arr = SUBS.reduce((a,s)=>a+(s.cycle==='Annual'?s.mrr:s.mrr*12),0);
+  $('#sub-arr').textContent = money(arr);
+  $('#tb-subs').innerHTML = rows.length? rows.map(s=>{ const o=org(s.orgId); return `
+    <tr onclick="openSub('${s.id}')">
+      <td><div class="c-cell"><span class="av ${avFor(o.name)} sq">${initials(o.name)}</span><div class="ct"><b>${esc(o.name)}</b><small>${esc(o.domain)}</small></div></div></td>
+      <td>${planTag(s.plan)}</td>
+      <td>${subStatusTag(s.status)}</td>
+      <td class="num">${s.seats}</td>
+      <td class="num">${s.mrr?money(s.mrr):'<span class="muted">—</span>'}</td>
+      <td class="small">${s.cycle}</td>
+      <td class="tiny mono muted">${s.renewal}</td>
+    </tr>`; }).join('') : emptyRow(7,'No subscriptions match these filters');
+}
+
+/* ---------- Invoices table ---------- */
+function renderInvoices(){
+  const f=STATE['inv-status'], q=STATE.q.inv;
+  let rows=INVOICES.filter(i=> f==='all'||i.status===f);
+  if(q) rows=rows.filter(i=>(i.id+' '+org(i.orgId).name).toLowerCase().includes(q));
+  $('#tb-inv').innerHTML = rows.length? rows.map(i=>{ const o=org(i.orgId); return `
+    <tr onclick="openInvoice('${i.id}')">
+      <td><b class="mono small">${i.id}</b></td>
+      <td><div class="c-cell"><span class="av ${avFor(o.name)} sq" style="width:20px;height:20px;font-size:8px">${initials(o.name)}</span><span class="small">${esc(o.name)}</span></div></td>
+      <td class="num">${money(i.amount)}</td>
+      <td>${invStatusTag(i.status)}</td>
+      <td>${planTag(i.plan)}</td>
+      <td class="tiny muted">${i.period}</td>
+      <td class="tiny mono muted">${i.issued}</td>
+      <td class="tiny mono muted">${i.due}</td>
+    </tr>`; }).join('') : emptyRow(8,'No invoices match these filters');
+}
+
+function emptyRow(colspan, msg){
+  return `<tr style="cursor:default"><td colspan="${colspan}" style="padding:0"><div class="empty"><span class="empty-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span><b>Nothing here</b><p>${msg}.</p></div></td></tr>`;
+}
+
+/* =====================================================================
+   Plans
+   ===================================================================== */
+function renderPlans(){
+  $('#plansGrid').innerHTML = PLAN_ORDER.map(key=>{
+    const p=PLANS[key]; const subs=SUBS.filter(s=>planKey(s.plan)===key).length;
+    const seats=SUBS.filter(s=>planKey(s.plan)===key).reduce((a,s)=>a+s.seats,0);
+    const featList = ALL_FEATS.map(f=>({f,on:!!p.feats[f]}));
+    return `<div class="plan-card ${p.featured?'featured':''}" data-od-id="plan-${key}">
+      <div class="pn">${p.name} ${p.featured?'<span class="tag b" style="margin-left:auto">Most popular</span>':''}</div>
+      <div class="pp"><span class="amt">${key==='enterprise'?'Custom':(p.price===0?'$0':'$'+p.price)}</span><span class="per">${key==='enterprise'?'· annual contract':p.per}</span></div>
+      <div class="pdesc">${p.desc}</div>
+      <div class="pstat"><div class="s"><b>${subs}</b><small>subscribers</small></div><div class="s"><b>${seats}</b><small>seats</small></div><div class="s"><b>${p.projectLimit===null?'∞':p.projectLimit}</b><small>projects</small></div></div>
+      <ul class="pfeat">${featList.map(x=>`<li class="${x.on?'':'off'}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="${x.on?'M20 6 9 17l-5-5':'M18 6 6 18M6 6l12 12'}"/></svg>${FEAT_LABEL[x.f]}</li>`).join('')}</ul>
+      <div style="margin-top:auto"><button class="btn subtle sm" style="width:100%" onclick="openPlanEdit('${key}')">Edit plan</button></div>
+    </div>`;
+  }).join('');
+
+  // matrix
+  let html='<thead><tr><th>Feature</th>'+PLAN_ORDER.map(k=>`<th>${PLANS[k].name}</th>`).join('')+'</tr></thead><tbody>';
+  html+='<tr><td>Project limit</td>'+PLAN_ORDER.map(k=>`<td class="mono">${PLANS[k].projectLimit===null?'∞':PLANS[k].projectLimit}</td>`).join('')+'</tr>';
+  ALL_FEATS.forEach(f=>{
+    html+='<tr><td>'+FEAT_LABEL[f]+'</td>'+PLAN_ORDER.map(k=>PLANS[k].feats[f]?'<td class="yes">✓</td>':'<td class="no">—</td>').join('')+'</tr>';
+  });
+  html+='</tbody>';
+  $('#matrix').innerHTML=html;
+}
+
+/* =====================================================================
+   Drawers
+   ===================================================================== */
+function openDrawer({title,sub,av,avText,avColor,body,foot}){
+  hidePop();
+  $('#dr-title').textContent=title;
+  $('#dr-sub').innerHTML=sub;
+  const avEl=$('#dr-av'); avEl.className='av lg sq '+(av||''); avEl.textContent=avText||'';
+  if(avColor) avEl.style.background=avColor; else avEl.style.background='';
+  $('#dr-body').innerHTML=body;
+  $('#dr-foot').innerHTML=foot||'';
+  $('#drawer').classList.add('show'); $('#scrim').classList.add('show');
+}
+function closeDrawer(){ $('#drawer').classList.remove('show'); $('#scrim').classList.remove('show'); }
+$('#dr-close').addEventListener('click',closeDrawer);
+
+function dl(rows){ return rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join(''); }
+
+function openOrg(id){
+  const o=org(id);
+  const members=MEMBERS.filter(m=>m.orgId===id);
+  const projects=PROJECTS.filter(p=>p.orgId===id);
+  const sub=SUBS.find(s=>s.orgId===id);
+  openDrawer({
+    title:o.name, sub:`<span class="mono">${esc(o.domain)}</span> · ${o.type==='team'?'Team org':'Personal org'} · ${o.country}`,
+    av:avFor(o.name), avText:initials(o.name),
+    body:`
+      <dl class="dl">${dl([
+        ['Status', orgStatusTag(o.status)],
+        ['Plan', planTag(o.plan)],
+        ['Owner', esc(o.owner)],
+        ['Members', o.members+' active'],
+        ['Projects', o.projects],
+        ['MRR', o.mrr?money(o.mrr):'<span class="muted">—</span>'],
+        ['Created', '<span class="mono">'+o.created+'</span>'],
+        ['Subscription', sub?subStatusTag(sub.status):'<span class="muted">None</span>']
+      ])}</dl>
+      <div class="divider"></div>
+      <div class="section-title"><h3>Members</h3><span class="link small" onclick="go('v-members')">All →</span></div>
+      <div class="stack" style="gap:8px">${members.slice(0,4).map(m=>`<div class="c-cell"><span class="av sm ${avFor(m.name)}">${initials(m.name)}</span><div class="ct"><b style="font-size:12px">${esc(m.name)}</b><small>${esc(m.email)}</small></div>${memberStatusTag(m.status)}</div>`).join('')||'<p class="muted small">No members</p>'}</div>
+      <div class="divider"></div>
+      <div class="section-title"><h3>Projects</h3></div>
+      <div class="stack" style="gap:8px">${projects.slice(0,4).map(p=>`<div class="row between"><span class="small">${esc(p.name)}</span>${projStatusTag(p.status)}</div>`).join('')||'<p class="muted small">No projects</p>'}</div>
+    `,
+    foot:`
+      <button class="btn subtle sm" onclick="toast('Opening aLabs as ${esc(o.name)}…')">Login as org</button>
+      <span class="spacer"></span>
+      ${o.status==='suspended'
+        ? '<button class="btn sm" onclick="reactivate(\'org\',\''+id+'\')">Reactivate</button>'
+        : '<button class="btn danger sm" onclick="suspend(\'org\',\''+id+'\')">Suspend</button>'}
+      <button class="btn primary sm" onclick="closeDrawer();toast('Opening billing for ${esc(o.name)}');go('v-billing')">View billing</button>
+    `
+  });
+}
+function openMember(id){
+  const m=MEMBERS.find(x=>x.id===id); const o=org(m.orgId);
+  openDrawer({
+    title:m.name, sub:`<span class="mono">${esc(m.email)}</span>`,
+    av:avFor(m.name), avText:initials(m.name),
+    body:`
+      <dl class="dl">${dl([
+        ['Status', memberStatusTag(m.status)],
+        ['Role', `<span class="tag v">${m.role}</span>`],
+        ['Organization', '<span class="small">'+esc(o.name)+'</span>'],
+        ['Last active', m.last],
+        ['Joined', '<span class="mono">'+m.joined+'</span>'],
+        ['User ID', '<span class="mono">'+m.id.toUpperCase()+'</span>']
+      ])}</dl>
+      <div class="divider"></div>
+      <div class="section-title"><h3>Access</h3></div>
+      <div class="callout"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg><div>Scoped to <b>${esc(o.name)}</b> with <b>${m.role}</b> permissions across ${o.projects} projects.</div></div>
+    `,
+    foot:`
+      <button class="btn subtle sm" onclick="toast('Password reset email sent')">Reset password</button>
+      <span class="spacer"></span>
+      ${m.status==='suspended'
+        ? '<button class="btn sm" onclick="reactivate(\'member\',\''+id+'\')">Reactivate</button>'
+        : '<button class="btn danger sm" onclick="suspend(\'member\',\''+id+'\')">Suspend</button>'}
+    `
+  });
+}
+function openProject(id){
+  const p=PROJECTS.find(x=>x.id===id); const o=org(p.orgId);
+  openDrawer({
+    title:p.name, sub:`In <b>${esc(o.name)}</b> · ${visTag(p.visibility)}`,
+    av:avFor(p.name), avText:initials(p.name),
+    body:`
+      <dl class="dl">${dl([
+        ['Status', projStatusTag(p.status)],
+        ['Lead', '<span class="small">'+esc(p.lead)+'</span>'],
+        ['Tasks', '<span class="mono">'+p.tasks+'</span>'],
+        ['Visibility', p.visibility==='private'?'Private to members':'Organization-wide']
+      ])}</dl>
+      <div class="divider"></div>
+      <div class="section-title"><h3>Progress</h3><span class="mono tiny">${p.progress}%</span></div>
+      <div class="bar ${p.progress===100?'ok':p.progress<35?'warn':''}"><i style="width:${p.progress}%"></i></div>
+    `,
+    foot:`<button class="btn subtle sm" onclick="toast('Opening aLabs as ${esc(o.name)} at ${esc(p.name)}')">Open in aLabs</button><span class="spacer"></span>${p.status!=='archived'?'<button class="btn danger sm" onclick="archive(\''+id+'\')">Archive</button>':'<button class="btn sm" onclick="toast(\'Restored\')">Restore</button>'}`
+  });
+}
+function openSub(id){
+  const s=SUBS.find(x=>x.id===id); const o=org(s.orgId); const plan=PLANS[planKey(s.plan)];
+  const invoices=INVOICES.filter(i=>i.orgId===o.id).slice(0,4);
+  openDrawer({
+    title:s.plan+' subscription', sub:`<b>${esc(o.name)}</b> · ${s.cycle} billing`,
+    av:avFor(o.name), avText:initials(o.name),
+    body:`
+      <dl class="dl">${dl([
+        ['Status', subStatusTag(s.status)],
+        ['Plan', planTag(s.plan)],
+        ['Seats', '<span class="mono">'+s.seats+'</span>'],
+        ['MRR', s.mrr?money(s.mrr):'<span class="muted">—</span>'],
+        ['Cycle', s.cycle],
+        ['Renewal', '<span class="mono">'+s.renewal+'</span>'],
+        ['Project limit', plan.projectLimit===null?'∞':plan.projectLimit]
+      ])}</dl>
+      <div class="divider"></div>
+      <div class="section-title"><h3>Recent invoices</h3></div>
+      <div class="stack" style="gap:7px">${invoices.map(i=>`<div class="row between"><span class="mono small">${i.id}</span>${invStatusTag(i.status)}<span class="mono small">${money(i.amount)}</span></div>`).join('')||'<p class="muted small">No invoices</p>'}</div>
+    `,
+    foot:`
+      <button class="btn subtle sm" onclick="openPlanChange('${o.id}')">Change plan</button>
+      <span class="spacer"></span>
+      ${s.status==='canceled'?'<button class="btn primary sm" onclick="toast(\'Resubscribed\')">Resubscribe</button>':'<button class="btn danger sm" onclick="cancelSub(\''+id+'\')">Cancel</button>'}
+    `
+  });
+}
+function openInvoice(id){
+  const i=INVOICES.find(x=>x.id===id); const o=org(i.orgId);
+  openDrawer({
+    title:i.id, sub:`<b>${esc(o.name)}</b> · ${i.period}`,
+    av:avFor(o.name), avText:initials(o.name),
+    body:`
+      <dl class="dl">${dl([
+        ['Status', invStatusTag(i.status)],
+        ['Plan', planTag(i.plan)],
+        ['Amount', '<span class="mono">'+money(i.amount)+'</span>'],
+        ['Issued', '<span class="mono">'+i.issued+'</span>'],
+        ['Due', '<span class="mono">'+i.due+'</span>'],
+        ['Organization', '<span class="small">'+esc(o.name)+'</span>']
+      ])}</dl>
+      <div class="divider"></div>
+      <div class="section-title"><h3>Line items</h3></div>
+      <div class="stack" style="gap:6px">
+        <div class="row between"><span class="small">${i.plan} · ${i.seats||(org(i.orgId).members)} seats</span><span class="mono small">${money(i.amount)}</span></div>
+        <div class="row between"><span class="small muted">Subtotal</span><span class="mono small muted">${money(i.amount)}</span></div>
+        <div class="row between"><span class="small muted">Tax</span><span class="mono small muted">$0.00</span></div>
+        <div class="row between" style="border-top:1px solid var(--border);padding-top:7px"><b class="small">Total</b><b class="mono small">${money(i.amount)}</b></div>
+      </div>
+    `,
+    foot:`<button class="btn subtle sm" onclick="toast('PDF download started')">Download PDF</button><span class="spacer"></span>${i.status!=='paid'?'<button class="btn primary sm" onclick="markPaid(\''+id+'\')">Mark as paid</button>':'<button class="btn subtle sm" onclick="toast(\'Refund queued\')">Refund</button>'}`
+  });
+}
+function openPlanEdit(key){
+  const p=PLANS[key];
+  openModal('Edit '+p.name+' plan', `
+    <div class="field"><label>Price (USD / month)</label><input class="input mono" value="${p.price}" ${key==='enterprise'?'disabled':''}/>${key==='enterprise'?'<span class="hint">Enterprise pricing is per-quote.</span>':''}</div>
+    <div class="field"><label>Project limit <span class="hint">(blank = unlimited)</span></label><input class="input mono" value="${p.projectLimit===null?'':p.projectLimit}" placeholder="unlimited"/></div>
+    <div class="field"><label>Description</label><textarea class="textarea">${p.desc}</textarea></div>
+    <div class="field"><label>Features</label></div>
+    <div class="stack" style="gap:9px">${ALL_FEATS.map(f=>`<div class="set-row" style="padding:6px 0"><div class="info"><b class="small">${FEAT_LABEL[f]}</b></div><span class="sw ${p.feats[f]?'on':''}" data-toggle></span></div>`).join('')}</div>
+  `, `<button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn primary sm" onclick="closeModal();toast('${p.name} plan updated')">Save changes</button>`);
+}
+
+/* =====================================================================
+   Modals (create org / invite member / change plan)
+   ===================================================================== */
+function openModal(title, body, foot){
+  hidePop();
+  $('#modal-title').textContent=title;
+  $('#modal-body').innerHTML=body;
+  $('#modal-foot').innerHTML=foot||'';
+  $('#modal').classList.add('show'); $('#scrim').classList.add('show');
+  bindToggles($('#modal-body'));
+}
+function closeModal(){ $('#modal').classList.remove('show'); if(!$('#drawer').classList.contains('show')) $('#scrim').classList.remove('show'); }
+$('#modal-close').addEventListener('click',closeModal);
+$('#scrim').addEventListener('click',()=>{ closePalette(); closeModal(); closeDrawer(); });
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-modal]');
+  if(!t) return;
+  const m=t.dataset.modal;
+  if(m==='org-new') openModal('New organization', `
+    <div class="field"><label>Organization name</label><input class="input" placeholder="e.g. Northwind Studio" id="nf-name"/></div>
+    <div class="grid-fields">
+      <div class="field"><label>Type</label><select class="input"><option>Team</option><option>Personal</option></select></div>
+      <div class="field"><label>Plan</label><select class="input"><option>Free</option><option selected>Professional</option><option>Enterprise</option></select></div>
+    </div>
+    <div class="grid-fields">
+      <div class="field"><label>Domain</label><input class="input mono" placeholder="acme.co"/></div>
+      <div class="field"><label>Owner email</label><input class="input" placeholder="owner@acme.co"/></div>
+    </div>
+    <div class="callout"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><div>The owner receives an invitation to set up their aLabs workspace.</div></div>
+  `, `<button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn primary sm" onclick="createOrg()">Create organization</button>`);
+  if(m==='member-new') openModal('Invite user', `
+    <div class="field"><label>Email address</label><input class="input" placeholder="name@organization.com" id="nf-email"/></div>
+    <div class="grid-fields">
+      <div class="field"><label>Organization</label><select class="input">${ORGS.map(o=>`<option>${esc(o.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>Role</label><select class="input"><option>Member</option><option>Admin</option><option>Owner</option></select></div>
+    </div>
+  `, `<button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn primary sm" onclick="inviteMember()">Send invitation</button>`);
+});
+function createOrg(){
+  const name=$('#nf-name').value.trim()||'Untitled Org';
+  const id='o'+(ORGS.length+1);
+  ORGS.unshift({ id, name, type:'team', plan:'Professional', members:1, projects:0, mrr:0, status:'trial', created:new Date().toISOString().slice(0,10), domain:name.toLowerCase().replace(/[^a-z0-9]+/g,'')+'.co', owner:'(pending)', country:'—' });
+  closeModal(); setCounts(); renderOrgs(); renderDashboard(); toast('Organization “'+name+'” created');
+}
+function inviteMember(){
+  const email=($('#nf-email')?.value||'').trim()||'user@example.com';
+  const id='m'+(MEMBERS.length+1);
+  MEMBERS.unshift({ id, name:email.split('@')[0].replace(/^\w/,c=>c.toUpperCase()), email, orgId:'o1', role:'Member', status:'pending', last:'—', joined:new Date().toISOString().slice(0,10) });
+  closeModal(); setCounts(); renderMembers(); toast('Invitation sent to '+email);
+}
+function openPlanChange(orgId){
+  const s=SUBS.find(x=>x.orgId===orgId); if(!s) return;
+  openModal('Change plan for '+org(orgId).name, `
+    <p class="muted small" style="margin-bottom:12px">Currently on <b>${s.plan}</b>. Select a new plan — billing prorates immediately.</p>
+    <div class="stack" style="gap:9px">${PLAN_ORDER.map(k=>{const p=PLANS[k];const on=planKey(s.plan)===k;return `
+      <label class="set-row" style="padding:11px 12px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;margin:0">
+        <input type="radio" name="np" class="ck" ${on?'checked':''}>
+        <div class="info"><b class="small">${p.name}</b><small>${p.desc}</small></div>
+        <span class="mono small">${k==='enterprise'?'Custom':(p.price===0?'Free':'$'+p.price+'/mo')}</span>
+      </label>`;}).join('')}</div>
+  `, `<button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn primary sm" onclick="changePlan('${orgId}')">Apply change</button>`);
+}
+function changePlan(orgId){
+  const sel=$('input[name=np]:checked'); if(!sel) return closeModal();
+  const card=sel.closest('label'); const name=card.querySelector('.small').textContent;
+  const s=SUBS.find(x=>x.orgId===orgId); if(s){ s.plan=name; s.mrr = name==='Free'?0:(name==='Professional'?Math.max(1,s.seats)*49:4200); s.status='active'; }
+  closeModal(); renderSubs(); renderDashboard(); toast(org(orgId).name+' moved to '+name);
+}
+
+/* =====================================================================
+   Actions (suspend / cancel / mark paid / archive)
+   ===================================================================== */
+function suspend(kind,id){
+  closeDrawer();
+  openModal('Confirm suspension', `<p style="font-size:13px;line-height:1.5">This will immediately block ${kind} access. The owner will be notified by email. You can reactivate at any time.</p>`, `<button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn danger solid sm" onclick="doSuspend('${kind}','${id}')">Suspend ${kind}</button>`);
+}
+function doSuspend(kind,id){
+  closeModal();
+  if(kind==='org'){ const o=org(id); o.status='suspended'; renderOrgs(); renderDashboard(); toast(o.name+' suspended'); }
+  if(kind==='member'){ const m=MEMBERS.find(x=>x.id===id); m.status='suspended'; renderMembers(); toast(m.name+' suspended'); }
+}
+function reactivate(kind,id){
+  closeDrawer();
+  if(kind==='org'){ const o=org(id); o.status='active'; renderOrgs(); renderDashboard(); toast(o.name+' reactivated'); }
+  if(kind==='member'){ const m=MEMBERS.find(x=>x.id===id); m.status='active'; renderMembers(); toast(m.name+' reactivated'); }
+}
+function cancelSub(id){ closeDrawer(); const s=SUBS.find(x=>x.id===id); s.status='canceled'; s.mrr=0; renderSubs(); renderDashboard(); setAlertCount(); toast('Subscription for '+org(s.orgId).name+' canceled'); }
+function markPaid(id){ const i=INVOICES.find(x=>x.id===id); i.status='paid'; renderInvoices(); closeDrawer(); setAlertCount(); toast(id+' marked as paid'); }
+function archive(id){ const p=PROJECTS.find(x=>x.id===id); p.status='archived'; p.progress=100; renderProjects(); closeDrawer(); toast(p.name+' archived'); }
+
+/* =====================================================================
+   Toggles + tabs + toast
+   ===================================================================== */
+function bindToggles(root){ $$('[data-toggle]', root||document).forEach(sw=>{ if(sw._tb) return; sw._tb=1; sw.addEventListener('click',()=>sw.classList.toggle('on')); }); }
+$('#settingsTabs').addEventListener('click',e=>{ const t=e.target.closest('.tab'); if(!t) return; $$('#settingsTabs .tab').forEach(x=>x.classList.remove('on')); t.classList.add('on'); $$('.tab-pane').forEach(p=>p.classList.toggle('on',p.dataset.pane===t.dataset.tab)); });
+
+const TOAST_IC='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+function toast(msg,kind){
+  const t=document.createElement('div'); t.className='toast'+(kind==='warn'?' warn':''); t.innerHTML=TOAST_IC+'<span>'+esc(msg)+'</span>';
+  $('#toasts').appendChild(t); setTimeout(()=>{ t.style.transition='opacity .25s,transform .25s'; t.style.opacity='0'; t.style.transform='translateY(6px)'; setTimeout(()=>t.remove(),250); }, 2600);
+}
+
+/* =====================================================================
+   Popover menus — toolbar (alerts · health · environment) + account
+   ===================================================================== */
+const POP=document.createElement('div'); POP.className='popover'; POP.id='pop'; document.body.appendChild(POP);
+let _popAnchor=null;
+function hidePop(){
+  POP.classList.remove('show');
+  if(_popAnchor){ _popAnchor.classList.remove('active','open'); _popAnchor=null; }
+}
+function _placePop(anchor){
+  const r=anchor.getBoundingClientRect();
+  const drop=anchor.dataset.drop||'down', align=anchor.dataset.align||'right', gap=8, pad=8;
+  const w=POP.offsetWidth, h=POP.offsetHeight;
+  let left = align==='left'? r.left : (r.right-w);
+  let top  = drop==='up' ? (r.top-h-gap) : (r.bottom+gap);
+  if(left<pad) left=pad;
+  if(left+w>window.innerWidth-pad) left=window.innerWidth-w-pad;
+  if(top<pad) top=pad;
+  if(top+h>window.innerHeight-pad) top=window.innerHeight-h-pad;
+  POP.style.left=left+'px'; POP.style.top=top+'px';
+}
+function showPop(anchor, html){
+  POP.innerHTML=html;
+  POP.style.width = anchor.dataset.popw ? anchor.dataset.popw+'px' : '';
+  _placePop(anchor);
+  POP.classList.add('show');
+  _popAnchor=anchor;
+  anchor.classList.add(anchor.id==='btn-user'?'open':'active');
+}
+
+/* --- alerts — derived live from the in-memory DB --- */
+const TRI_IC='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>';
+const CIRC_IC='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>';
+function alertList(){
+  const out=[];
+  SUBS.filter(s=>s.status==='past_due').forEach(s=>out.push({k:'danger',ic:TRI_IC,t:'Subscription past due',s:org(s.orgId).name+' \u00b7 '+s.plan+' \u00b7 '+money(s.mrr)+'/mo',act:`hidePop();go('v-subs');openSub('${s.id}')`}));
+  INVOICES.filter(i=>i.status==='failed').forEach(i=>out.push({k:'danger',ic:TRI_IC,t:'Payment failed',s:org(i.orgId).name+' \u00b7 '+i.id+' \u00b7 '+money(i.amount),act:`hidePop();go('v-billing');openInvoice('${i.id}')`}));
+  SUBS.filter(s=>s.status==='trialing').forEach(s=>out.push({k:'warn',ic:CIRC_IC,t:'Trial expiring',s:org(s.orgId).name+' \u00b7 '+s.plan+' \u00b7 renews '+s.renewal,act:`hidePop();go('v-subs');openSub('${s.id}')`}));
+  return out;
+}
+function alertsHTML(){
+  const items=alertList();
+  const rows=items.length?items.map(a=>`<div class="ap-row" onclick="${a.act}"><span class="ic ${a.k}">${a.ic}</span><div class="tx"><b>${esc(a.t)}</b><small>${esc(a.s)}</small></div></div>`).join(''):'<div class="pop-empty">No revenue alerts — everything is current.</div>';
+  return `<div class="pop-head"><h4>Revenue alerts</h4><span class="c">${items.length}</span></div><div class="pop-body">${rows}</div><div class="pop-foot">Synced 2 min ago · <span class="link" onclick="hidePop();go('v-billing')">View all billing</span></div>`;
+}
+function setAlertCount(){ const el=$('#alert-count'); if(el){ const n=alertList().length; el.textContent=n; el.style.display=n?'grid':'none'; } }
+
+/* --- system health --- */
+function healthHTML(){
+  const svc=[{n:'API gateway',st:'ok',d:'99.98% uptime · 142ms p95'},{n:'Postgres (primary)',st:'ok',d:'replica lag 12ms'},{n:'Object storage',st:'ok',d:'S3 · us-east-1'},{n:'Webhook delivery',st:'warn',d:'3 deliveries retrying'},{n:'Transactional email',st:'ok',d:'Postmark · 0 queued'},{n:'Background workers',st:'ok',d:'2 queues · 0 failed'}];
+  const dots={ok:'<span class="dot ok"></span>',warn:'<span class="dot warn"></span>',down:'<span class="dot down"></span>'};
+  return `<div class="pop-head"><h4>System health</h4><span class="badge-ok">Operational</span></div><div class="pop-body">${svc.map(s=>`<div class="hp-row">${dots[s.st]}<div class="tx"><b>${s.n}</b><small>${s.d}</small></div></div>`).join('')}</div><div class="pop-foot">All systems normal · status.alabs.io</div>`;
+}
+
+/* --- environment switch --- */
+let curEnv='Production';
+const ENV_DOT={Production:'ok',Staging:'warn',Sandbox:'neutral'};
+const ENV_ORDER=['Production','Staging','Sandbox'];
+const CK_IC='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+function envHTML(){ return `<div class="pop-head"><h4>Environment</h4></div><div class="pop-body">${ENV_ORDER.map(e=>`<button class="mi" onclick="switchEnv('${e}')"><span class="dot ${ENV_DOT[e]}"></span><span>${e}</span>${e===curEnv?'<span class="sub">'+CK_IC+'</span>':''}</button>`).join('')}</div><div class="pop-foot">Scoped data reloads on switch.</div>`; }
+function switchEnv(e){ curEnv=e; const pill=$('#btn-env'); pill.dataset.env=e.toLowerCase(); $('#env-name').textContent=e.toUpperCase(); hidePop(); toast('Switched to '+e+' environment'); }
+
+/* --- account menu popup (mirrors alabs-app.html me-pop: small dark dropdown, not a drawer) --- */
+function toggleUserMenu(e){
+  e.stopPropagation();
+  const p=$('#me-pop'), b=$('#btn-user');
+  const isOpen=p.classList.contains('show');
+  hidePop();                 // close any toolbar popover (mutual exclusion)
+  if(isOpen){ closeUserMenu(); }
+  else { p.classList.add('show'); b.classList.add('open'); }
+}
+function closeUserMenu(){
+  const p=$('#me-pop'), b=$('#btn-user');
+  if(p) p.classList.remove('show');
+  if(b) b.classList.remove('open');
+}
+$$('.me-row[data-me]').forEach(r=>r.addEventListener('click',()=>{
+  const a=r.dataset.me; closeUserMenu();
+  if(a==='profile') go('v-settings');
+  else if(a==='notif') toast('Notification preferences · coming soon');
+  else if(a==='appearance') toast('Appearance · coming soon');
+  else if(a==='signout') signOut();
+}));
+document.addEventListener('click',e=>{
+  const p=$('#me-pop');
+  if(!p||!p.classList.contains('show')) return;
+  if(!p.contains(e.target) && !e.target.closest('#btn-user')) closeUserMenu();
+});
+function showShortcuts(){
+  const rows=[['Open search','⌘ K'],['Submit search','Enter'],['Close dialog or menu','Esc'],['Toggle sidebar (mobile)','M']];
+  openModal('Keyboard shortcuts', `<div class="kbd-grid">${rows.map(r=>`<div class="kr"><span>${r[0]}</span><kbd>${r[1]}</kbd></div>`).join('')}</div>`, `<button class="btn ghost sm" onclick="closeModal()">Close</button>`);
+}
+function signOut(){ closeUserMenu(); toast('Signing out…'); }
+
+/* --- wire triggers + dismiss --- */
+const POP_BUILD={alerts:alertsHTML, health:healthHTML, env:envHTML};
+document.addEventListener('click',e=>{
+  const trig=e.target.closest('[data-pop]');
+  if(trig){
+    const same=_popAnchor===trig; hidePop();
+    if(!same){ const fn=POP_BUILD[trig.dataset.pop]; if(fn) showPop(trig, fn()); }
+    return;
+  }
+  if(POP.classList.contains('show') && !POP.contains(e.target)) hidePop();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && POP.classList.contains('show')) hidePop(); });
+window.addEventListener('scroll',()=>{ if(POP.classList.contains('show')) hidePop(); if($('#me-pop').classList.contains('show')) closeUserMenu(); },true);
+window.addEventListener('resize',()=>{ if(POP.classList.contains('show')) hidePop(); if($('#me-pop').classList.contains('show')) closeUserMenu(); });
+setAlertCount();
+
+/* =====================================================================
+   Wire filters/search + init
+   ===================================================================== */
+bindFilter('orgs-status', renderOrgs); bindSearch('orgs', renderOrgs);
+bindFilter('members-status', renderMembers); bindSearch('members', renderMembers);
+bindFilter('projects-status', renderProjects); bindSearch('projects', renderProjects);
+bindFilter('subs-status', renderSubs); bindSearch('subs', renderSubs);
+bindFilter('inv-status', renderInvoices); bindSearch('inv', renderInvoices);
+
+/* ---------- Command palette ---------- */
+const PAL_ICONS = {
+  org:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 21h18M5 21V7l8-4 8 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>',
+  member:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
+  project:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  sub:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>',
+  invoice:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 2h9l5 5v15l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 9h6M9 13h6"/></svg>',
+  nav:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
+};
+const NAV_ITEMS = [
+  {id:'v-dashboard',t:'Dashboard',s:'MRR, members, alerts, top orgs'},
+  {id:'v-orgs',t:'Organizations',s:'Manage every tenant'},
+  {id:'v-members',t:'Members',s:'Users across all orgs'},
+  {id:'v-projects',t:'Projects',s:'Workspaces & pipelines'},
+  {id:'v-subs',t:'Subscriptions',s:'Plans, seats, renewals'},
+  {id:'v-plans',t:'Plans & pricing',s:'Free · Professional · Enterprise'},
+  {id:'v-billing',t:'Billing',s:'Invoices & revenue'},
+  {id:'v-settings',t:'System settings',s:'Platform configuration'}
+];
+let PAL_I=0, PAL_ITEMS=[];
+function palItem(ic,t,s,tag,act){
+  return `<div class="pal-item" data-act="${act}"><span class="pi-ic">${ic}</span><div class="pi-main"><div class="pi-t">${esc(t)}</div><div class="pi-s">${esc(s)}</div></div>${tag?`<span class="pi-tag">${tag}</span>`:''}</div>`;
+}
+function palGroup(label,html){ return html?`<div class="pal-group"><div class="pal-gh">${label}</div>${html}</div>`:''; }
+function palRun(q){
+  if(!q){
+    const jump=[
+      palItem(PAL_ICONS.sub,'Past-due subscriptions',SUBS.filter(s=>s.status==='past_due').length+' orgs','alert',`closePalette();go('v-subs')`),
+      palItem(PAL_ICONS.invoice,'Failed invoices',INVOICES.filter(i=>i.status==='failed').length+' invoices','alert',`closePalette();go('v-billing')`),
+      palItem(PAL_ICONS.org,'Trials ending soon',SUBS.filter(s=>s.status==='trialing').length+' active trials','',`closePalette();go('v-subs')`)
+    ].join('');
+    return palGroup('Navigate to',NAV_ITEMS.map(n=>palItem(PAL_ICONS.nav,n.t,n.s,'',`closePalette();go('${n.id}')`)).join(''))+palGroup('Jump to',jump);
+  }
+  const o=ORGS.filter(x=>(x.name+' '+x.domain+' '+x.owner).toLowerCase().includes(q)).slice(0,6).map(x=>palItem(PAL_ICONS.org,x.name,x.plan+' · '+x.members+' members · '+money(x.mrr)+'/mo',x.status,`closePalette();go('v-orgs');openOrg('${x.id}')`));
+  const m=MEMBERS.filter(x=>(x.name+' '+x.email).toLowerCase().includes(q)).slice(0,6).map(x=>palItem(PAL_ICONS.member,x.name,x.email+' · '+org(x.orgId).name,x.role,`closePalette();go('v-members');openMember('${x.id}')`));
+  const p=PROJECTS.filter(x=>(x.name+' '+x.lead).toLowerCase().includes(q)).slice(0,6).map(x=>palItem(PAL_ICONS.project,x.name,org(x.orgId).name+' · '+x.tasks+' tasks · '+x.progress+'%',x.status,`closePalette();go('v-projects');openProject('${x.id}')`));
+  const s=SUBS.filter(x=>(org(x.orgId).name+' '+x.plan+' '+x.status).toLowerCase().includes(q)).slice(0,5).map(x=>palItem(PAL_ICONS.sub,org(x.orgId).name+' · '+x.plan,x.seats+' seats · '+money(x.mrr)+'/mo · renews '+x.renewal,x.status,`closePalette();go('v-subs');openSub('${x.id}')`));
+  const i=INVOICES.filter(x=>(x.id+' '+org(x.orgId).name+' '+x.status).toLowerCase().includes(q)).slice(0,5).map(x=>palItem(PAL_ICONS.invoice,x.id,org(x.orgId).name+' · '+money(x.amount)+' · '+x.period,x.status,`closePalette();go('v-billing');openInvoice('${x.id}')`));
+  const n=NAV_ITEMS.filter(x=>x.t.toLowerCase().includes(q)).slice(0,4).map(x=>palItem(PAL_ICONS.nav,x.t,x.s,'',`closePalette();go('${x.id}')`));
+  const joined=palGroup('Organizations',o.join(''))+palGroup('Members',m.join(''))+palGroup('Projects',p.join(''))+palGroup('Subscriptions',s.join(''))+palGroup('Invoices',i.join(''))+palGroup('Navigate to',n.join(''));
+  return joined || `<div class="pal-empty">No matches for “${esc(q)}”</div>`;
+}
+function palSync(){
+  PAL_ITEMS=[...$('#pal-results').querySelectorAll('.pal-item')];
+  PAL_I=PAL_ITEMS.length?0:-1;
+  if(PAL_I>=0) PAL_ITEMS[PAL_I].classList.add('on');
+}
+function palScroll(){
+  const it=PAL_ITEMS[PAL_I]; if(!it) return;
+  const box=$('#pal-results'); const r=it.getBoundingClientRect(); const b=box.getBoundingClientRect();
+  if(r.top<b.top) box.scrollTop-=(b.top-r.top)+4;
+  else if(r.bottom>b.bottom) box.scrollTop+=(r.bottom-b.bottom)+4;
+}
+function openPalette(){
+  hidePop(); closeUserMenu();
+  $('#pal-q').value=''; $('#pal-results').innerHTML=palRun(''); palSync();
+  $('#palette').classList.add('show'); $('#scrim').classList.add('show');
+  setTimeout(()=>$('#pal-q').focus(),10);
+}
+function closePalette(){ $('#palette').classList.remove('show'); if(!$('#modal').classList.contains('show')&&!$('#drawer').classList.contains('show')) $('#scrim').classList.remove('show'); }
+$('#btn-search').addEventListener('click',openPalette);
+$('#pal-q').addEventListener('input',e=>{ $('#pal-results').innerHTML=palRun(e.target.value.toLowerCase().trim()); palSync(); });
+$('#pal-results').addEventListener('click',e=>{ const it=e.target.closest('.pal-item'); if(!it) return; new Function(it.dataset.act)(); });
+$('#pal-q').addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ closePalette(); return; }
+  if(!PAL_ITEMS.length) return;
+  if(e.key==='ArrowDown'){ e.preventDefault(); PAL_ITEMS[PAL_I].classList.remove('on'); PAL_I=(PAL_I+1)%PAL_ITEMS.length; PAL_ITEMS[PAL_I].classList.add('on'); palScroll(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); PAL_ITEMS[PAL_I].classList.remove('on'); PAL_I=(PAL_I-1+PAL_ITEMS.length)%PAL_ITEMS.length; PAL_ITEMS[PAL_I].classList.add('on'); palScroll(); }
+  else if(e.key==='Enter'){ e.preventDefault(); if(PAL_ITEMS[PAL_I]) new Function(PAL_ITEMS[PAL_I].dataset.act)(); }
+});
+
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); openPalette(); }
+  if(e.key==='Escape'){ closePalette(); closeModal(); closeDrawer(); closeUserMenu(); }
+  const typing=/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||''));
+  if(!typing && !e.metaKey && !e.ctrlKey && !e.altKey && e.key.toLowerCase()==='m' && window.innerWidth<=860){ $('#sidebar').classList.toggle('show'); }
+});
+
+setCounts(); renderDashboard(); renderOrgs(); renderMembers(); renderProjects(); renderSubs(); renderInvoices(); renderPlans(); bindToggles();
+</script>
+</body>
+</html>

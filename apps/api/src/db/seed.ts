@@ -1,6 +1,6 @@
 /**
  * Seed the in-memory store with the aLabs demo data — mirrors the
- * `designs/alabs-app.html` prototype 1:1 so the web app renders identically.
+ * `designs/app/alabs-app.html` prototype 1:1 so the web app renders identically.
  *
  * Idempotent: `store.seeded` guards re-runs.
  */

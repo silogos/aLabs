@@ -1,4 +1,4 @@
-/** Shared presentational bits for the Tasks module — mirror designs/alabs-app.html markup. */
+/** Shared presentational bits for the Tasks module — mirror designs/app/alabs-app.html markup. */
 import type { PrioId, StatusId, TypeId } from "./tasks-store.js";
 import { P, ST, TY, taskById, who } from "./tasks-store.js";
 

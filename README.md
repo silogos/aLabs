@@ -3,7 +3,7 @@
 A documentation-first project management platform — **Atlas Platform 2.0**.
 
 Unifies delivery (tasks, planning), knowledge (documents), and client
-communication in one place. Built on the design in [`designs/alabs-app.html`](./designs/alabs-app.html)
+communication in one place. Built on the design in [`designs/app/alabs-app.html`](./designs/app/alabs-app.html)
 and the specs in [`docs/`](./docs).
 
 > Status: prototype — the four primary views (Dashboard, Tasks, Documents,

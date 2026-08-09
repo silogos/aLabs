@@ -694,7 +694,7 @@ textarea.fld{height:auto;min-height:76px;padding:9px 10px;line-height:1.55;resiz
    live in `@pmin/editor/editor.css`, imported once from main.tsx. The rules
    below are the app's contextual density overrides for the task drawer. */
 
-/* ============ TASKS · ENTERPRISE (ported from designs/alabs-app.html) ============ */
+/* ============ TASKS · ENTERPRISE (ported from designs/app/alabs-app.html) ============ */
 /* ============ TASKS · TYPE SYSTEM ============ */
 .ty-ic{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;flex:none}
 .ty-ic.v{background:var(--violet-bg);color:var(--violet)} .ty-ic.g{background:var(--ok-bg);color:var(--ok)}
