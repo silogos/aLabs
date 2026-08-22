@@ -13,10 +13,15 @@ function extractToken(req: Request): string | null {
   return null;
 }
 
+export { extractToken };
+
 /** Resolve the current user. `require: false` returns null instead of throwing. */
 export function resolveUser(req: Request, require = true) {
   const token = extractToken(req);
-  const session = token ? store.sessions.find((s) => s.token === token) : null;
+  const now = Date.now();
+  const session = token
+    ? store.sessions.find((s) => s.token === token && Date.parse(s.expiresAt) > now)
+    : null;
   if (session) {
     return store.users.find((u) => u.id === session.userId) ?? null;
   }

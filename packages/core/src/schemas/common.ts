@@ -66,6 +66,7 @@ export const errorCode = z.enum([
   "unprocessable",
   "rate_limited",
   "internal_error",
+  "service_unavailable",
 ]);
 export type ErrorCode = z.infer<typeof errorCode>;
 
@@ -87,6 +88,7 @@ export const ERROR_STATUS: Record<ErrorCode, number> = {
   unprocessable: 422,
   rate_limited: 429,
   internal_error: 500,
+  service_unavailable: 503,
 };
 
 /** State-machine helper: returns true if `to` is in `transitions[from]`. */

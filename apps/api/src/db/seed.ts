@@ -11,6 +11,7 @@ import {
 } from "@pmin/core";
 import type { TaskPriority, Content } from "@pmin/core";
 import { store, type ActivityEntry } from "./store.js";
+import { hashPasswordSync } from "../lib/passwords.js";
 
 const now = () => new Date();
 const iso = (d: Date = now()) => d.toISOString();
@@ -36,6 +37,9 @@ export function seed(): void {
     OFFSET[label] !== undefined ? dayIso(OFFSET[label]!) : null;
 
   /* ---------------- Users ---------------- */
+  // Demo users share a seeded password ("password123") so the login flow is
+  // exercisable against the seeded data.
+  const DEMO_PASSWORD = "password123";
   const seedUser = (name: string, email: string) => {
     const u = {
       id: uuidv7(),
@@ -47,6 +51,14 @@ export function seed(): void {
       updatedAt: iso(),
     };
     store.users.push(u);
+    store.accounts.push({
+      id: uuidv7(),
+      userId: u.id,
+      provider: "credential",
+      providerAccountId: null,
+      passwordHash: hashPasswordSync(DEMO_PASSWORD),
+      createdAt: iso(),
+    });
     return u;
   };
   const aisha = seedUser("Aisha Yusuf", "aisha@northwind.io");
@@ -597,6 +609,7 @@ export function seed(): void {
   store.sessions.push({
     token: "demo-" + aisha.id,
     userId: aisha.id,
+    expiresAt: new Date(Date.now() + 365 * 86_400_000).toISOString(),
     createdAt: iso(),
   });
 

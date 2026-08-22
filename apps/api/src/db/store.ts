@@ -56,6 +56,30 @@ export interface ActivityEntry {
 export interface Session {
   token: string;
   userId: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+/**
+ * Auth provider account — mirrors the Better Auth `accounts` table (see
+ * docs/foundation/01-authentication.md). Credential accounts carry the
+ * password hash; OAuth accounts carry the provider's subject id.
+ */
+export interface Account {
+  id: string;
+  userId: string;
+  provider: "credential" | "google";
+  providerAccountId: string | null;
+  passwordHash: string | null;
+  createdAt: string;
+}
+
+/** One-time password reset token (forgot-password flow). */
+export interface PasswordReset {
+  token: string;
+  userId: string;
+  expiresAt: string;
+  usedAt: string | null;
   createdAt: string;
 }
 
@@ -89,6 +113,8 @@ export interface Store {
   comments: Comment[];
   activity: ActivityEntry[];
   sessions: Session[];
+  accounts: Account[];
+  passwordResets: PasswordReset[];
   projectVisits: ProjectVisit[];
   /** workspace role name → permission keys */
   rolePermissions: Record<string, string[]>;
@@ -119,6 +145,8 @@ export const store: Store = {
   comments: [],
   activity: [],
   sessions: [],
+  accounts: [],
+  passwordResets: [],
   projectVisits: [],
   rolePermissions: {},
   seeded: false,
