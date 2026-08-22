@@ -17,19 +17,19 @@ and the specs in [`docs/`](./docs).
 
 ```bash
 pnpm install
-pnpm dev               # runs the API (8788) and web (5173) together
+pnpm dev               # Next.js on http://localhost:3000 (UI + API in one process)
 ```
 
-Then open **http://localhost:5173**. The API auto-logs you in as the seeded demo
-user (Aisha — member of four workspaces, landing on Northwind → Atlas Platform
-2.0), so the workspace is live immediately and both switchers have real data.
+Then open **http://localhost:3000** and sign in with the seeded demo user:
 
-- Run one app: `pnpm dev:api` / `pnpm dev:web`
+- **aisha@northwind.io / password123** — member of four workspaces, landing on
+  Northwind → Atlas Platform 2.0, so both switchers have real data. (All six
+  seeded users share the password.)
+
 - Type-check everything: `pnpm typecheck`
 - Production build: `pnpm build`
-
-The web dev server proxies `/api` → `http://localhost:8788` (configurable via
-`VITE_API_URL`).
+- Docker: `docker compose up --build` (single service on port 3000)
+- API standalone (rare, for debugging): `pnpm dev:api` — Hono on port 8788
 
 ## What's implemented
 
@@ -42,21 +42,25 @@ The web dev server proxies `/api` → `http://localhost:8788` (configurable via
 | Task drawer — meta, subtasks, comments, status change | ✅ live |
 | Command palette (⌘K), create-task modal, toasts | ✅ live |
 | Workspace & project switchers, mobile nav — multi-org demo seed, server-persisted recents, derived landing project | ✅ live |
-| Auth, Organization (members, invitations, soft delete), Project (members), User (profile, recents), Meeting, Agreement, Reporting, Notification | ✅ API routes |
+| Auth — sign-in, create account, forgot/reset password, Google SSO, sign-out; session-gated routes | ✅ live (UI + API) |
+| Organization (members, invitations, soft delete), Project (members), User (profile, recents), Meeting, Agreement, Reporting, Notification | ✅ API routes |
 | Billing, Client Portal, AI | scaffolded in API |
 
 ## Architecture
 
-A modular monolith deployed as two apps over a shared `core` package, backed by
-PostgreSQL. Everything is Docker-able so the same build runs SaaS and
+A modular monolith deployed as a single Next.js app: the UI renders on the App
+Router and the Hono API is mounted in-process under `/api` (one origin, one
+port, cookie sessions by construction). Backed by PostgreSQL (via a shared
+`core` package). Everything is Docker-able so the same build runs SaaS and
 self-hosted.
 
 ```
 apps/
-  api/    Hono REST API (request lifecycle: auth → tenant → permission → validate → handler)
-  web/    React 19 + Vite dashboard (React Query, the design's CSS verbatim)
+  web/    Next.js (App Router) — UI routes, client-only app shell, /api + /uploads mounts
 packages/
+  api/    Hono REST API as a host-agnostic library (request lifecycle: auth → tenant → permission → validate → handler)
   core/   Shared source of truth: enums, Drizzle schema, zod schemas, blocks, constants
+  editor/ Tiptap editor package
 ```
 
 All internal packages use the `@pmin/*` namespace.
@@ -95,11 +99,11 @@ leaking existence. See `docs/tech/`.
 
 | Layer | Choice |
 | ----- | ------ |
-| Frontend | React 19, TypeScript, Vite, React Query |
-| Backend | Hono |
+| Frontend | Next.js (App Router), React 19, TypeScript, React Query |
+| Backend | Hono (mounted in-process by Next.js) |
 | Database | PostgreSQL |
 | ORM | Drizzle |
-| Auth | Better Auth (session-based; demo auto-login) |
+| Auth | Session cookies (credential login, Google SSO, password reset; Better Auth-shaped for the swap) |
 | Validation | zod (shared) |
 | Build | pnpm workspaces + Turborepo |
 | Deploy | Docker / docker-compose |
