@@ -21,8 +21,8 @@ import {
   AgreementStatus,
   ClientUserStatus,
   PlanName,
-} from "../enums.js";
-import { contentSchema } from "../content.js";
+} from "../enums";
+import { contentSchema } from "../content";
 
 const iso = z.string();
 const id = z.string().uuid();

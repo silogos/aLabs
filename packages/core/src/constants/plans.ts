@@ -2,7 +2,7 @@
  * Plans + default task config — seed the `plans` table and per-project defaults.
  * From `docs/tech/05-seed-data.md`.
  */
-import type { PlanName } from "../enums.js";
+import type { PlanName } from "../enums";
 
 /**
  * Max active projects in a personal (free, single-member) workspace.

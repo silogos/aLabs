@@ -49,7 +49,7 @@ import {
   planNameEnum,
   subscriptionStatusEnum,
   invoiceStatusEnum,
-} from "../enums.js";
+} from "../enums";
 
 const ts = () => timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow();
 const nullableTs = () => timestamp({ withTimezone: true, mode: "date" });

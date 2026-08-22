@@ -11,7 +11,7 @@ import type {
   AgreementStatus,
   ClientUserStatus,
   SubscriptionStatus,
-} from "../enums.js";
+} from "../enums";
 
 export const INVITATION_TRANSITIONS: Record<InvitationStatus, readonly InvitationStatus[]> = {
   pending: ["accepted", "expired", "cancelled"],

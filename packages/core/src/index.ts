@@ -9,12 +9,12 @@
 
 export const VERSION = "0.1.0";
 
-export * from "./enums.js";
-export * from "./uuid.js";
-export * from "./content.js";
-export * from "./schemas/index.js";
-export * from "./schemas/common.js";
-export * from "./constants/permissions.js";
-export * from "./constants/roles.js";
-export * from "./constants/plans.js";
-export * from "./constants/state-machines.js";
+export * from "./enums";
+export * from "./uuid";
+export * from "./content";
+export * from "./schemas/index";
+export * from "./schemas/common";
+export * from "./constants/permissions";
+export * from "./constants/roles";
+export * from "./constants/plans";
+export * from "./constants/state-machines";

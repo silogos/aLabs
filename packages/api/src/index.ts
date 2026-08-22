@@ -1,7 +1,4 @@
 /** Library entry — the Hono app, importable by hosts without starting a
- *  server. `app` matches unprefixed paths (standalone serve.ts, /uploads);
- *  `apiApp` is the same routes under /api for the Next.js catch-all route. */
-import { app } from "./app";
-
-export { app };
-export const apiApp = app.basePath("/api");
+ *  server. Hosts mount it under their own prefix (the Next.js app strips
+ *  /api and delegates here; serve.ts runs it standalone). */
+export { app } from "./app";
