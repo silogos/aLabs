@@ -1,4 +1,4 @@
-/** Session + auth resolution. Demo-friendly: auto-authenticates as the seed user. */
+/** Session + auth resolution — a valid session (cookie or bearer) or nothing. */
 import type { MiddlewareHandler } from "hono";
 import { store } from "../db/store";
 import { unauthorized } from "./errors";
@@ -25,9 +25,6 @@ export function resolveUser(req: Request, require = true) {
   if (session) {
     return store.users.find((u) => u.id === session.userId) ?? null;
   }
-  // Demo fallback: auto-login as the first seeded user so the prototype just works.
-  const demo = store.users[0];
-  if (demo) return demo;
   if (require) throw unauthorized();
   return null;
 }

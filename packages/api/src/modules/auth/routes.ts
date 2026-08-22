@@ -166,7 +166,7 @@ auth.post("/forgot-password", async (c) => {
     usedAt: null,
     createdAt: new Date().toISOString(),
   });
-  const resetUrl = `/auth/reset-password?token=${token}`;
+  const resetUrl = `/reset-password?token=${token}`;
 
   // No email provider wired yet (EMAIL_* is unselected — see .env.example), so
   // log the link as the stand-in. Returned outside production so the flow is
@@ -228,7 +228,11 @@ const googleConfig = () => {
   return clientId && clientSecret ? { clientId, clientSecret } : null;
 };
 
-const webUrl = () => process.env.WEB_URL ?? "http://localhost:5173";
+const webUrl = () => process.env.WEB_URL ?? "http://localhost:3000";
+
+/** The OAuth redirect URI registered with Google. The app serves the API
+ *  under /api (Next.js in-process mount), so the callback lives there. */
+const googleRedirectUri = () => `${webUrl()}/api/auth/oauth/google/callback`;
 
 /** Kick off the flow: redirect to Google's consent screen. */
 auth.get("/oauth/google", (c) => {
@@ -243,7 +247,7 @@ auth.get("/oauth/google", (c) => {
   const state = randomBytes(24).toString("base64url");
   oauthStates.set(state, Date.now() + OAUTH_STATE_TTL_MS);
 
-  const redirectUri = `${new URL(c.req.url).origin}/auth/oauth/google/callback`;
+  const redirectUri = googleRedirectUri();
   const url = new URL(GOOGLE_AUTH_URL);
   url.searchParams.set("client_id", cfg.clientId);
   url.searchParams.set("redirect_uri", redirectUri);
@@ -256,7 +260,7 @@ auth.get("/oauth/google", (c) => {
 
 /** Google redirects back here with ?code&state (or ?error). */
 auth.get("/oauth/google/callback", async (c) => {
-  const fail = (reason: string) => c.redirect(`${webUrl()}/?authError=${encodeURIComponent(reason)}`);
+  const fail = (reason: string) => c.redirect(`${webUrl()}/login?authError=${encodeURIComponent(reason)}`);
 
   const code = c.req.query("code");
   const error = c.req.query("error");
@@ -280,7 +284,7 @@ auth.get("/oauth/google/callback", async (c) => {
       client_secret: cfg.clientSecret,
       code,
       grant_type: "authorization_code",
-      redirect_uri: `${new URL(c.req.url).origin}/auth/oauth/google/callback`,
+      redirect_uri: googleRedirectUri(),
     }),
   });
   if (!tokenRes.ok) return fail("token_exchange_failed");

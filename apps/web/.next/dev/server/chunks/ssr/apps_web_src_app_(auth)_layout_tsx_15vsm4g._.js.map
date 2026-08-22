@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/aminyusuf/Documents/Projects/Amin/Projects/pmin/apps/web/src/app/(auth)/layout.tsx"],"sourcesContent":["import \"./auth.css\";\n\n/** Auth route group — split-pane screens ported from designs/auth/. The\n *  stylesheet above is the design's own token set and classes, imported\n *  here so it only loads on auth routes. */\nexport default function AuthLayout({ children }: { children: React.ReactNode }) {\n  return children;\n}\n"],"names":["AuthLayout","children"],"mappings":";;;;;AAKe,SAASA,WAAW,EAAEC,QAAQ,EAAiC;IAC5E,OAAOA;AACT"}}]
+}

@@ -1461,7 +1461,7 @@ __turbopack_context__.s([]);
 "[project]/packages/api/src/lib/auth.ts [app-route] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/** Session + auth resolution. Demo-friendly: auto-authenticates as the seed user. */ __turbopack_context__.s([
+/** Session + auth resolution — a valid session (cookie or bearer) or nothing. */ __turbopack_context__.s([
     "extractToken",
     ()=>extractToken,
     "requireAuth",
@@ -1489,9 +1489,6 @@ function resolveUser(req, require = true) {
     if (session) {
         return __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$api$2f$src$2f$db$2f$store$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["store"].users.find((u)=>u.id === session.userId) ?? null;
     }
-    // Demo fallback: auto-login as the first seeded user so the prototype just works.
-    const demo = __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$api$2f$src$2f$db$2f$store$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["store"].users[0];
-    if (demo) return demo;
     if (require) throw (0, __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$api$2f$src$2f$lib$2f$errors$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["unauthorized"])();
     return null;
 }
@@ -2000,7 +1997,7 @@ auth.get("/me", async (c)=>{
         usedAt: null,
         createdAt: new Date().toISOString()
     });
-    const resetUrl = `/auth/reset-password?token=${token}`;
+    const resetUrl = `/reset-password?token=${token}`;
     // No email provider wired yet (EMAIL_* is unselected — see .env.example), so
     // log the link as the stand-in. Returned outside production so the flow is
     // testable end-to-end.
@@ -2050,7 +2047,9 @@ const googleConfig = ()=>{
         clientSecret
     } : null;
 };
-const webUrl = ()=>process.env.WEB_URL ?? "http://localhost:5173";
+const webUrl = ()=>process.env.WEB_URL ?? "http://localhost:3000";
+/** The OAuth redirect URI registered with Google. The app serves the API
+ *  under /api (Next.js in-process mount), so the callback lives there. */ const googleRedirectUri = ()=>`${webUrl()}/api/auth/oauth/google/callback`;
 /** Kick off the flow: redirect to Google's consent screen. */ auth.get("/oauth/google", (c)=>{
     const cfg = googleConfig();
     if (!cfg) {
@@ -2058,7 +2057,7 @@ const webUrl = ()=>process.env.WEB_URL ?? "http://localhost:5173";
     }
     const state = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$node$3a$crypto__$5b$external$5d$__$28$node$3a$crypto$2c$__cjs$29$__["randomBytes"])(24).toString("base64url");
     oauthStates.set(state, Date.now() + OAUTH_STATE_TTL_MS);
-    const redirectUri = `${new URL(c.req.url).origin}/auth/oauth/google/callback`;
+    const redirectUri = googleRedirectUri();
     const url = new URL(GOOGLE_AUTH_URL);
     url.searchParams.set("client_id", cfg.clientId);
     url.searchParams.set("redirect_uri", redirectUri);
@@ -2069,7 +2068,7 @@ const webUrl = ()=>process.env.WEB_URL ?? "http://localhost:5173";
     return c.redirect(url.toString());
 });
 /** Google redirects back here with ?code&state (or ?error). */ auth.get("/oauth/google/callback", async (c)=>{
-    const fail = (reason)=>c.redirect(`${webUrl()}/?authError=${encodeURIComponent(reason)}`);
+    const fail = (reason)=>c.redirect(`${webUrl()}/login?authError=${encodeURIComponent(reason)}`);
     const code = c.req.query("code");
     const error = c.req.query("error");
     const state = c.req.query("state");
@@ -2091,7 +2090,7 @@ const webUrl = ()=>process.env.WEB_URL ?? "http://localhost:5173";
             client_secret: cfg.clientSecret,
             code,
             grant_type: "authorization_code",
-            redirect_uri: `${new URL(c.req.url).origin}/auth/oauth/google/callback`
+            redirect_uri: googleRedirectUri()
         })
     });
     if (!tokenRes.ok) return fail("token_exchange_failed");

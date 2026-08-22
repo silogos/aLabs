@@ -3,7 +3,8 @@
  *  lands on the org's derived landing project). Design: separated switchers,
  *  420px modals. Rows render live API data (store.tsx). */
 import { useEffect, useRef, useState } from "react";
-import { useQueries } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useQueryClient, useQueries } from "@tanstack/react-query";
 import { api } from "../api";
 import { useApp } from "../store";
 import type { Project } from "../api";
@@ -71,12 +72,28 @@ const rowIcon = {
 
 function AccountModal() {
   const { user, org, setNavModal, toast } = useApp();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const name = user?.name ?? "Aisha Yusuf";
   const email = user?.email ?? "aisha@northwind.io";
+  const signOut = async () => {
+    setNavModal(null);
+    try {
+      await api.logout();
+    } catch {
+      /* session is cleared client-side regardless */
+    }
+    queryClient.clear();
+    router.replace("/login");
+  };
   const acctRow = (key: keyof typeof rowIcon, label: string, msg: string) => (
     <button
       className={`mrow ${key === "signout" ? "danger" : ""}`}
       onClick={() => {
+        if (key === "signout") {
+          void signOut();
+          return;
+        }
         setNavModal(null);
         toast(msg);
       }}

@@ -3,11 +3,10 @@
 "use strict";
 
 /**
- * API client — thin fetch wrappers around the Hono API.
- *
- * Calls go to `/api/*` which Vite proxies to the API in dev. The active
- * organization + project are resolved once at boot (the demo auto-logs-in as
- * the seed user, who is a member of the seeded Northwind → Atlas project).
+ * API client — thin fetch wrappers around the API mounted in-process at
+ * /api (same origin, so the session cookie travels with every call). The
+ * active organization + project are resolved once at boot from the
+ * authenticated user's memberships.
  */ __turbopack_context__.s([
     "api",
     ()=>api,
@@ -35,6 +34,27 @@ async function req(path, init) {
 const unwrap = (r)=>r.then((x)=>x.data);
 const api = {
     me: ()=>req("/auth/me").then((x)=>x.data),
+    login: (body)=>req("/auth/login", {
+            method: "POST",
+            body: JSON.stringify(body)
+        }).then((x)=>x.data),
+    register: (body)=>req("/auth/register", {
+            method: "POST",
+            body: JSON.stringify(body)
+        }).then((x)=>x.data),
+    logout: ()=>req("/auth/logout", {
+            method: "POST"
+        }).then((x)=>x.data),
+    forgotPassword: (email)=>req("/auth/forgot-password", {
+            method: "POST",
+            body: JSON.stringify({
+                email
+            })
+        }).then((x)=>x.data),
+    resetPassword: (body)=>req("/auth/reset-password", {
+            method: "POST",
+            body: JSON.stringify(body)
+        }).then((x)=>x.data),
     orgs: ()=>req("/organizations").then((x)=>x.data),
     projects: (orgId)=>req(`/organizations/${orgId}/projects`).then((x)=>x.data),
     members: (orgId)=>req(`/organizations/${orgId}/members`).then((x)=>x.data),
@@ -1803,12 +1823,15 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ne
  *  Project switcher (search + recents + this-org projects), Org switcher (search,
  *  lands on the org's derived landing project). Design: separated switchers,
  *  420px modals. Rows render live API data (store.tsx). */ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.3.2_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.3.2_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/navigation.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$tanstack$2b$react$2d$query$40$5$2e$101$2e$4_react$40$19$2e$2$2e$8$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/@tanstack+react-query@5.101.4_react@19.2.8/node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$tanstack$2b$react$2d$query$40$5$2e$101$2e$4_react$40$19$2e$2$2e$8$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useQueries$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/@tanstack+react-query@5.101.4_react@19.2.8/node_modules/@tanstack/react-query/build/modern/useQueries.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/apps/web/src/api.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$store$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/apps/web/src/store.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$components$2f$navData$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/apps/web/src/components/navData.tsx [app-client] (ecmascript)");
 ;
 var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.signature(), _s2 = __turbopack_context__.k.signature(), _s3 = __turbopack_context__.k.signature(), _s4 = __turbopack_context__.k.signature();
+;
 ;
 ;
 ;
@@ -1839,20 +1862,20 @@ function SearchField({ value, onChange, placeholder }) {
                         r: "7"
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                        lineNumber: 20,
+                        lineNumber: 21,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
                         d: "m20 20-3.5-3.5"
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                        lineNumber: 21,
+                        lineNumber: 22,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 19,
+                lineNumber: 20,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1864,13 +1887,13 @@ function SearchField({ value, onChange, placeholder }) {
                 autoComplete: "off"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 23,
+                lineNumber: 24,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-        lineNumber: 18,
+        lineNumber: 19,
         columnNumber: 5
     }, this);
 }
@@ -1891,7 +1914,7 @@ function ModalShell({ title, onClose, children, odId }) {
                         children: title
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                        lineNumber: 32,
+                        lineNumber: 33,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1909,23 +1932,23 @@ function ModalShell({ title, onClose, children, odId }) {
                                 d: "M18 6 6 18M6 6l12 12"
                             }, void 0, false, {
                                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                                lineNumber: 35,
+                                lineNumber: 36,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                            lineNumber: 34,
+                            lineNumber: 35,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                        lineNumber: 33,
+                        lineNumber: 34,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 31,
+                lineNumber: 32,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1933,13 +1956,13 @@ function ModalShell({ title, onClose, children, odId }) {
                 children: children
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 39,
+                lineNumber: 40,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-        lineNumber: 30,
+        lineNumber: 31,
         columnNumber: 5
     }, this);
 }
@@ -1959,20 +1982,20 @@ _c1 = ModalShell;
                 r: "4"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 49,
+                lineNumber: 50,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
                 d: "M4 21c0-4 4-6 8-6s8 2 8 6"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 50,
+                lineNumber: 51,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-        lineNumber: 48,
+        lineNumber: 49,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0)),
     notif: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
@@ -1987,20 +2010,20 @@ _c1 = ModalShell;
                 d: "M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 55,
+                lineNumber: 56,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
                 d: "M13.7 21a2 2 0 0 1-3.4 0"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 56,
+                lineNumber: 57,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-        lineNumber: 54,
+        lineNumber: 55,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0)),
     appearance: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
@@ -2017,20 +2040,20 @@ _c1 = ModalShell;
                 r: "4"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 61,
+                lineNumber: 62,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
                 d: "M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 62,
+                lineNumber: 63,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-        lineNumber: 60,
+        lineNumber: 61,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0)),
     signout: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
@@ -2044,23 +2067,38 @@ _c1 = ModalShell;
             d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"
         }, void 0, false, {
             fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-            lineNumber: 67,
+            lineNumber: 68,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-        lineNumber: 66,
+        lineNumber: 67,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0))
 };
 function AccountModal() {
     _s1();
     const { user, org, setNavModal, toast } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$store$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useApp"])();
+    const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"])();
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$tanstack$2b$react$2d$query$40$5$2e$101$2e$4_react$40$19$2e$2$2e$8$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"])();
     const name = user?.name ?? "Aisha Yusuf";
     const email = user?.email ?? "aisha@northwind.io";
+    const signOut = async ()=>{
+        setNavModal(null);
+        try {
+            await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["api"].logout();
+        } catch  {
+        /* session is cleared client-side regardless */ }
+        queryClient.clear();
+        router.replace("/login");
+    };
     const acctRow = (key, label, msg)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
             className: `mrow ${key === "signout" ? "danger" : ""}`,
             onClick: ()=>{
+                if (key === "signout") {
+                    void signOut();
+                    return;
+                }
                 setNavModal(null);
                 toast(msg);
             },
@@ -2070,7 +2108,7 @@ function AccountModal() {
             ]
         }, void 0, true, {
             fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-            lineNumber: 77,
+            lineNumber: 90,
             columnNumber: 5
         }, this);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ModalShell, {
@@ -2086,7 +2124,7 @@ function AccountModal() {
                         children: name[0]
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                        lineNumber: 91,
+                        lineNumber: 108,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2096,7 +2134,7 @@ function AccountModal() {
                                 children: name
                             }, void 0, false, {
                                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                                lineNumber: 93,
+                                lineNumber: 110,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("small", {
@@ -2106,19 +2144,19 @@ function AccountModal() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                                lineNumber: 94,
+                                lineNumber: 111,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                        lineNumber: 92,
+                        lineNumber: 109,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 90,
+                lineNumber: 107,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2140,17 +2178,17 @@ function AccountModal() {
                                 d: "M3 21h18M5 21V7l7-4 7 4v14M9 9h6M9 13h6M9 17h6"
                             }, void 0, false, {
                                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                                lineNumber: 102,
+                                lineNumber: 119,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                            lineNumber: 101,
+                            lineNumber: 118,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                        lineNumber: 100,
+                        lineNumber: 117,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2160,34 +2198,34 @@ function AccountModal() {
                                 children: "Switch workspace"
                             }, void 0, false, {
                                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                                lineNumber: 106,
+                                lineNumber: 123,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("small", {
                                 children: org?.name ?? "Workspace"
                             }, void 0, false, {
                                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                                lineNumber: 107,
+                                lineNumber: 124,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                        lineNumber: 105,
+                        lineNumber: 122,
                         columnNumber: 9
                     }, this),
                     (0, __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$components$2f$navData$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ChevRight"])("ch")
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 99,
+                lineNumber: 116,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "acct-sep"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 111,
+                lineNumber: 128,
                 columnNumber: 7
             }, this),
             acctRow("profile", "Profile settings", "Profile settings — coming soon"),
@@ -2197,20 +2235,22 @@ function AccountModal() {
                 className: "acct-sep"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 115,
+                lineNumber: 132,
                 columnNumber: 7
             }, this),
             acctRow("signout", "Sign out", "Signed out of aLabs")
         ]
     }, void 0, true, {
         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-        lineNumber: 89,
+        lineNumber: 106,
         columnNumber: 5
     }, this);
 }
-_s1(AccountModal, "3+O25aMmdyDIoeSqWn31g4Xd2Ek=", false, function() {
+_s1(AccountModal, "VFyLAySN7VdD+YeB1qbAD+URI20=", false, function() {
     return [
-        __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$store$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useApp"]
+        __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$store$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useApp"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$tanstack$2b$react$2d$query$40$5$2e$101$2e$4_react$40$19$2e$2$2e$8$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"]
     ];
 });
 _c2 = AccountModal;
@@ -2237,7 +2277,7 @@ _c2 = AccountModal;
                     children: p.icon ?? p.name[0]
                 }, void 0, false, {
                     fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                    lineNumber: 145,
+                    lineNumber: 162,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2245,7 +2285,7 @@ _c2 = AccountModal;
                     children: p.name
                 }, void 0, false, {
                     fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                    lineNumber: 148,
+                    lineNumber: 165,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2253,14 +2293,14 @@ _c2 = AccountModal;
                     children: p.key
                 }, void 0, false, {
                     fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                    lineNumber: 149,
+                    lineNumber: 166,
                     columnNumber: 7
                 }, this),
                 __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$components$2f$navData$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CheckIcon"]
             ]
         }, p.id, true, {
             fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-            lineNumber: 144,
+            lineNumber: 161,
             columnNumber: 5
         }, this);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ModalShell, {
@@ -2274,7 +2314,7 @@ _c2 = AccountModal;
                 placeholder: "Search projects"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 156,
+                lineNumber: 173,
                 columnNumber: 7
             }, this),
             recs.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2282,7 +2322,7 @@ _c2 = AccountModal;
                 children: "Recent"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 157,
+                lineNumber: 174,
                 columnNumber: 27
             }, this),
             recs.map(row),
@@ -2291,7 +2331,7 @@ _c2 = AccountModal;
                 children: query ? `More in ${org?.name}` : `All projects in ${org?.name}`
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 159,
+                lineNumber: 176,
                 columnNumber: 27
             }, this),
             rest.map(row),
@@ -2300,13 +2340,13 @@ _c2 = AccountModal;
                 children: query ? `No projects match "${query}".` : "No projects in this workspace yet."
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 162,
+                lineNumber: 179,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-        lineNumber: 155,
+        lineNumber: 172,
         columnNumber: 5
     }, this);
 }
@@ -2353,7 +2393,7 @@ _c3 = ProjectSwitchModal;
                 placeholder: "Search workspaces"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 188,
+                lineNumber: 205,
                 columnNumber: 7
             }, this),
             list.map((o)=>{
@@ -2370,7 +2410,7 @@ _c3 = ProjectSwitchModal;
                             children: o.name[0]
                         }, void 0, false, {
                             fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                            lineNumber: 193,
+                            lineNumber: 210,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2378,7 +2418,7 @@ _c3 = ProjectSwitchModal;
                             children: o.name
                         }, void 0, false, {
                             fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                            lineNumber: 196,
+                            lineNumber: 213,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2390,14 +2430,14 @@ _c3 = ProjectSwitchModal;
                             ]
                         }, void 0, true, {
                             fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                            lineNumber: 197,
+                            lineNumber: 214,
                             columnNumber: 13
                         }, this),
                         __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$components$2f$navData$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CheckIcon"]
                     ]
                 }, o.id, true, {
                     fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                    lineNumber: 192,
+                    lineNumber: 209,
                     columnNumber: 11
                 }, this);
             }),
@@ -2410,13 +2450,13 @@ _c3 = ProjectSwitchModal;
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 204,
+                lineNumber: 221,
                 columnNumber: 29
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-        lineNumber: 187,
+        lineNumber: 204,
         columnNumber: 5
     }, this);
 }
@@ -2435,23 +2475,23 @@ function NavModals() {
         children: [
             navModal === "acct" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(AccountModal, {}, "acct", false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 214,
+                lineNumber: 231,
                 columnNumber: 31
             }, this),
             navModal === "proj" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ProjectSwitchModal, {}, "proj", false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 215,
+                lineNumber: 232,
                 columnNumber: 31
             }, this),
             navModal === "org" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$3$2e$2_react$2d$dom$40$19$2e$2$2e$8_react$40$19$2e$2$2e$8_$5f$react$40$19$2e$2$2e$8$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(OrgSwitchModal, {}, "org", false, {
                 fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-                lineNumber: 216,
+                lineNumber: 233,
                 columnNumber: 30
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/apps/web/src/components/SwitcherModals.tsx",
-        lineNumber: 213,
+        lineNumber: 230,
         columnNumber: 5
     }, this);
 }
