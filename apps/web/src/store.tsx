@@ -17,6 +17,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type User, type Project, type Organization } from "./api";
 import { setActiveProjectKey } from "./components/ui";
@@ -24,6 +25,20 @@ import { hydrateProject } from "./views/tasks-store";
 
 export type View = "dashboard" | "tasks" | "documents" | "planning" | "meetings" | "reports" | "agreements";
 export type NavModal = "acct" | "proj" | "org" | null;
+
+/** URL per view — the route is the source of truth (no view in storage). */
+export const VIEW_PATH: Record<View, string> = {
+  dashboard: "/dashboard",
+  tasks: "/tasks",
+  documents: "/documents",
+  planning: "/planning",
+  meetings: "/meetings",
+  reports: "/reports",
+  agreements: "/agreements",
+};
+
+const viewFromPath = (p: string): View =>
+  (Object.entries(VIEW_PATH).find(([, path]) => path === p)?.[0] as View | undefined) ?? "dashboard";
 
 interface Toast {
   id: number;
@@ -102,7 +117,9 @@ export function landingProject(projects: Project[], recents: RecentEntry[] | und
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [view, setViewState] = useState<View>(() => (lsGet("alabs-view") as View) || "dashboard");
+  const router = useRouter();
+  const pathname = usePathname();
+  const view = viewFromPath(pathname);
   const [collapsed, setCollapsedState] = useState<boolean>(() => lsGet("alabs-collapsed") === "1");
   const [taskId, setTaskId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -133,10 +150,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // keep the module-level key in sync for taskSerial() (plain helpers, toasts)
   if (project) setActiveProjectKey(project.key);
 
-  const setView = useCallback((v: View) => {
-    setViewState(v);
-    lsSet("alabs-view", v);
-  }, []);
+  const setView = useCallback(
+    (v: View) => {
+      router.push(VIEW_PATH[v]);
+    },
+    [router],
+  );
   const setCollapsed = useCallback((b: boolean) => {
     setCollapsedState(b);
     lsSet("alabs-collapsed", b ? "1" : "0");
@@ -162,8 +181,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       lsSet("alabs-org", p.organizationId);
       setNavModal(null);
       setMNavOpen(false);
-      setViewState("dashboard");
-      lsSet("alabs-view", "dashboard");
+      router.push("/dashboard");
       if (!opts?.silent) toast(`Switched to ${p.name}`);
       // server-persisted visit history (fire-and-forget)
       void api
@@ -171,7 +189,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .catch(() => {})
         .finally(() => queryClient.invalidateQueries({ queryKey: ["recents"] }));
     },
-    [queryClient, toast],
+    [queryClient, router, toast],
   );
 
   // An org switch lands on the org's landing project once its list resolves.

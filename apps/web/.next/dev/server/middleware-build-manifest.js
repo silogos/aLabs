@@ -27,14 +27,80 @@ globalThis.__BUILD_MANIFEST = {
     ]
   },
   "devFiles": [],
-  "polyfillFiles": [],
+  "polyfillFiles": [
+    "static/chunks/0imd_next_dist_build_polyfills_polyfill-nomodule.js"
+  ],
   "lowPriorityFiles": [
     "static/development/_buildManifest.js",
     "static/development/_ssgManifest.js",
     "static/development/_clientMiddlewareManifest.js"
   ],
-  "rootMainFiles": [],
-  "rootMainFilesTree": {},
+  "rootMainFiles": [
+    "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_1tyx6dc._.js",
+    "static/chunks/0imd_next_dist_compiled_next-devtools_index_1vf_xkf.js",
+    "static/chunks/0imd_next_dist_compiled_react-dom_08w40cl._.js",
+    "static/chunks/0imd_next_dist_compiled_react-server-dom-turbopack_1ba53ni._.js",
+    "static/chunks/0imd_next_dist_compiled_17-wt_s._.js",
+    "static/chunks/0imd_next_dist_client_11yl3_o._.js",
+    "static/chunks/0imd_next_dist_0fmqyp9._.js",
+    "static/chunks/0zix_@swc_helpers_cjs_0hi-e47._.js",
+    "static/chunks/apps_web_1anvha4._.js",
+    "static/chunks/turbopack-apps_web_1dhmmo_._.js"
+  ],
+  "rootMainFilesTree": {
+    "/page": [
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_1tyx6dc._.js",
+      "static/chunks/0imd_next_dist_compiled_next-devtools_index_1vf_xkf.js",
+      "static/chunks/0imd_next_dist_compiled_react-dom_08w40cl._.js",
+      "static/chunks/0imd_next_dist_compiled_react-server-dom-turbopack_1ba53ni._.js",
+      "static/chunks/0imd_next_dist_compiled_17-wt_s._.js",
+      "static/chunks/0imd_next_dist_client_11yl3_o._.js",
+      "static/chunks/0imd_next_dist_0fmqyp9._.js",
+      "static/chunks/0zix_@swc_helpers_cjs_0hi-e47._.js",
+      "static/chunks/apps_web_1anvha4._.js",
+      "static/chunks/turbopack-apps_web_1dhmmo_._.js",
+      "static/chunks/apps_web_219uq1s._.js"
+    ],
+    "/(app)/dashboard/page": [
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_1tyx6dc._.js",
+      "static/chunks/0imd_next_dist_compiled_next-devtools_index_1vf_xkf.js",
+      "static/chunks/0imd_next_dist_compiled_react-dom_08w40cl._.js",
+      "static/chunks/0imd_next_dist_compiled_react-server-dom-turbopack_1ba53ni._.js",
+      "static/chunks/0imd_next_dist_compiled_17-wt_s._.js",
+      "static/chunks/0imd_next_dist_client_11yl3_o._.js",
+      "static/chunks/0imd_next_dist_0fmqyp9._.js",
+      "static/chunks/0zix_@swc_helpers_cjs_0hi-e47._.js",
+      "static/chunks/apps_web_1anvha4._.js",
+      "static/chunks/turbopack-apps_web_1dhmmo_._.js",
+      "static/chunks/apps_web_0vun8eb._.js"
+    ],
+    "/(app)/tasks/page": [
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_1tyx6dc._.js",
+      "static/chunks/0imd_next_dist_compiled_next-devtools_index_1vf_xkf.js",
+      "static/chunks/0imd_next_dist_compiled_react-dom_08w40cl._.js",
+      "static/chunks/0imd_next_dist_compiled_react-server-dom-turbopack_1ba53ni._.js",
+      "static/chunks/0imd_next_dist_compiled_17-wt_s._.js",
+      "static/chunks/0imd_next_dist_client_11yl3_o._.js",
+      "static/chunks/0imd_next_dist_0fmqyp9._.js",
+      "static/chunks/0zix_@swc_helpers_cjs_0hi-e47._.js",
+      "static/chunks/apps_web_1anvha4._.js",
+      "static/chunks/turbopack-apps_web_1dhmmo_._.js",
+      "static/chunks/apps_web_1wrqqaq._.js"
+    ],
+    "/(app)/documents/page": [
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_1tyx6dc._.js",
+      "static/chunks/0imd_next_dist_compiled_next-devtools_index_1vf_xkf.js",
+      "static/chunks/0imd_next_dist_compiled_react-dom_08w40cl._.js",
+      "static/chunks/0imd_next_dist_compiled_react-server-dom-turbopack_1ba53ni._.js",
+      "static/chunks/0imd_next_dist_compiled_17-wt_s._.js",
+      "static/chunks/0imd_next_dist_client_11yl3_o._.js",
+      "static/chunks/0imd_next_dist_0fmqyp9._.js",
+      "static/chunks/0zix_@swc_helpers_cjs_0hi-e47._.js",
+      "static/chunks/apps_web_1anvha4._.js",
+      "static/chunks/turbopack-apps_web_1dhmmo_._.js",
+      "static/chunks/apps_web_1b8utje._.js"
+    ]
+  },
   "pagesChunkGroupBootstrapParams": {},
   "chunkLoadingGlobal": "TURBOPACK"
 };

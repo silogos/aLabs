@@ -1,0 +1,214 @@
+/* [project]/packages/editor/src/editor.css [app-client] (css) */
+.alabs-editor {
+  color: var(--fg);
+}
+
+.alabs-editor .al-content .tiptap {
+  color: var(--fg);
+  background: none;
+  outline: none;
+  min-height: 240px;
+  padding: 2px 0 48px;
+}
+
+.alabs-editor .al-content p {
+  margin: 4px 0;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.alabs-editor .al-content h1 {
+  letter-spacing: -.02em;
+  margin: 12px 0 6px;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.alabs-editor .al-content h2 {
+  letter-spacing: -.01em;
+  margin: 10px 0 4px;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.alabs-editor .al-content h3 {
+  margin: 8px 0 4px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.alabs-editor .al-content ul, .alabs-editor .al-content ol {
+  margin: 4px 0;
+  padding-left: 26px;
+}
+
+.alabs-editor .al-content ul {
+  list-style: outside;
+}
+
+.alabs-editor .al-content ol {
+  list-style: decimal;
+}
+
+.alabs-editor .al-content li {
+  margin: 2px 0;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.alabs-editor .al-content li > p {
+  margin: 0;
+}
+
+.alabs-editor .al-content blockquote {
+  border-left: 3px solid var(--accent);
+  color: var(--muted);
+  margin: 6px 0;
+  padding-left: 12px;
+}
+
+.alabs-editor .al-content blockquote p {
+  margin: 0;
+}
+
+.alabs-editor .al-content pre {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--mono);
+  margin: 6px 0;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+.alabs-editor .al-content pre code {
+  font-family: var(--mono);
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+.alabs-editor .al-content code {
+  font-family: var(--mono);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-size: .92em;
+}
+
+.alabs-editor .al-content hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 12px 0;
+}
+
+.alabs-editor .al-content img {
+  border-radius: var(--radius);
+  max-width: 100%;
+  height: auto;
+}
+
+.alabs-editor .al-content .al-link {
+  color: var(--accent);
+  text-underline-offset: 2px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.alabs-editor .al-content .al-link:hover {
+  text-decoration-thickness: 2px;
+}
+
+.alabs-editor .al-content .tiptap p.is-editor-empty:first-child:before {
+  content: attr(data-placeholder);
+  color: var(--faint);
+  float: left;
+  pointer-events: none;
+  height: 0;
+}
+
+.al-toolbar {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  z-index: 2;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  display: flex;
+  position: sticky;
+  top: 0;
+}
+
+.al-toolbar .al-sep {
+  background: var(--border);
+  flex: none;
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+}
+
+.al-tbtn {
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
+  cursor: pointer;
+  background: none;
+  border: 1px solid #0000;
+  border-radius: 6px;
+  place-items: center;
+  transition: background .12s, color .12s, border-color .12s;
+  display: inline-grid;
+}
+
+.al-tbtn:hover {
+  background: var(--surface-2);
+  color: var(--fg);
+}
+
+.al-tbtn.on {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: color-mix(in oklch, var(--accent) 30%, transparent);
+}
+
+.alabs-editor .al-content .task-pill {
+  font-family: var(--mono);
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid color-mix(in oklch, var(--accent) 28%, transparent);
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+  vertical-align: baseline;
+  border-radius: 999px;
+  align-items: center;
+  gap: 4px;
+  margin: 0 1px;
+  padding: 1px 8px;
+  font-size: .85em;
+  font-weight: 600;
+  line-height: 1.5;
+  display: inline-flex;
+}
+
+.alabs-editor .al-content .task-pill:hover {
+  background: color-mix(in oklch, var(--accent) 16%, var(--surface));
+}
+
+.alabs-editor .al-content .task-pill:before {
+  content: "◆";
+  opacity: .8;
+  font-size: .8em;
+}
+
+/*# sourceMappingURL=packages_editor_src_editor_css_1igg3k2._.single.css.map*/
