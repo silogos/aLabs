@@ -5,6 +5,7 @@
 import { Hono } from "hono";
 import { userUpdate, recentTouch } from "@pmin/core";
 import { store } from "../../db/store";
+import * as authRepo from "../../db/auth-repo";
 import { notFound } from "../../lib/errors";
 import { data } from "../../lib/responses";
 import { parseBody } from "../../lib/validate";
@@ -38,8 +39,8 @@ users.use("*", requireAuth);
 users.patch("/me", async (c) => {
   const user = c.get("user")!;
   const input = parseBody(await c.req.json(), userUpdate);
-  Object.assign(user, input, { updatedAt: new Date().toISOString() });
-  return data(c, user);
+  // users live in Postgres — real UPDATE, response is the fresh row
+  return data(c, await authRepo.updateUserProfile(user.id, input));
 });
 
 users.get("/me/recents", (c) => {

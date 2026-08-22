@@ -56,7 +56,9 @@ const nullableTs = () => timestamp({ withTimezone: true, mode: "date" });
 
 /* ============================================================= Identity
  * Better Auth owns users/sessions/accounts/verifications. We model `users`
- * here so domain code can reference it.
+ * here so domain code can reference it; sessions/accounts follow the same
+ * shapes so credential rows migrate cleanly to Better Auth later.
+ * (`verifications` is unmodeled until email verification ships.)
  */
 
 export const users = pgTable("users", {
@@ -68,6 +70,56 @@ export const users = pgTable("users", {
   createdAt: ts().defaultNow(),
   updatedAt: ts().defaultNow(),
 });
+
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: uuid("id").primaryKey(),
+    token: varchar("token", { length: 128 }).notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+    createdAt: ts().defaultNow(),
+  },
+  (t) => [uniqueIndex("sessions_token_key").on(t.token), index("sessions_user_id_idx").on(t.userId)],
+);
+
+export const authAccounts = pgTable(
+  "accounts",
+  {
+    id: uuid("id").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** "credential" | "google" (Better Auth: provider_id) */
+    provider: varchar("provider", { length: 31 }).notNull(),
+    /** Provider-side subject id (Google `sub`); null for credentials. */
+    providerAccountId: varchar("provider_account_id", { length: 255 }),
+    /** scrypt:<salt>:<hash> — same format Better Auth uses. */
+    passwordHash: text("password_hash"),
+    createdAt: ts().defaultNow(),
+  },
+  (t) => [
+    index("accounts_user_id_idx").on(t.userId),
+    uniqueIndex("accounts_user_provider_key").on(t.userId, t.provider),
+  ],
+);
+
+export const passwordResets = pgTable(
+  "password_resets",
+  {
+    id: uuid("id").primaryKey(),
+    token: varchar("token", { length: 128 }).notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true, mode: "date" }),
+    createdAt: ts().defaultNow(),
+  },
+  (t) => [uniqueIndex("password_resets_token_key").on(t.token)],
+);
 
 /* ============================================================= Workspace */
 

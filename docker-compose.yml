@@ -14,9 +14,9 @@ services:
       WEB_URL: "http://localhost:3000"
       BETTER_AUTH_SECRET: "change-me"
       UPLOADS_DIR: /data/uploads
+      DATABASE_URL: postgres://alabs:alabs@postgres:5432/alabs
       # GOOGLE_CLIENT_ID: ...
       # GOOGLE_CLIENT_SECRET: ...
-      # DATABASE_URL: postgres://alabs:alabs@postgres:5432/alabs
     ports:
       - "3000:3000"
     volumes:

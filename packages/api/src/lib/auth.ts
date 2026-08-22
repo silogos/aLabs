@@ -1,6 +1,7 @@
-/** Session + auth resolution — a valid session (cookie or bearer) or nothing. */
+/** Session + auth resolution — a valid session (cookie or bearer) in
+ *  Postgres or nothing. Async since the auth domain moved to Drizzle. */
 import type { MiddlewareHandler } from "hono";
-import { store } from "../db/store";
+import * as authRepo from "../db/auth-repo";
 import { unauthorized } from "./errors";
 import type { Vars } from "./ctx";
 
@@ -16,21 +17,16 @@ function extractToken(req: Request): string | null {
 export { extractToken };
 
 /** Resolve the current user. `require: false` returns null instead of throwing. */
-export function resolveUser(req: Request, require = true) {
+export async function resolveUser(req: Request, require = true) {
   const token = extractToken(req);
-  const now = Date.now();
-  const session = token
-    ? store.sessions.find((s) => s.token === token && Date.parse(s.expiresAt) > now)
-    : null;
-  if (session) {
-    return store.users.find((u) => u.id === session.userId) ?? null;
-  }
+  const user = token ? await authRepo.findSessionUser(token) : null;
+  if (user) return user;
   if (require) throw unauthorized();
   return null;
 }
 
 export const requireAuth: MiddlewareHandler<{ Variables: Vars }> = async (c, next) => {
-  const user = resolveUser(c.req.raw, true);
+  const user = await resolveUser(c.req.raw, true);
   if (user) c.set("user", user);
   await next();
 };

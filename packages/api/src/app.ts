@@ -12,7 +12,7 @@ import { basename, join, normalize } from "node:path";
 import { ApiError } from "./lib/errors";
 import { resolveUser } from "./lib/auth";
 import { UPLOADS_DIR, uploadMime } from "./lib/uploads";
-import { seed } from "./db/seed";
+import { ready } from "./db/boot";
 import type { Vars } from "./lib/ctx";
 
 import { auth } from "./modules/auth/routes";
@@ -27,15 +27,19 @@ import { reporting } from "./modules/reporting/routes";
 import { notification } from "./modules/notification/routes";
 import { users } from "./modules/user/routes";
 
-seed();
-
 export const app = new Hono<{ Variables: Vars }>();
 
 app.use("*", logger());
 
+// boot gate: migrations + auth seed (Postgres) + demo seed before any request
+app.use("*", async (_c, next) => {
+  await ready;
+  await next();
+});
+
 // global user resolution (best-effort; routes that need auth enforce it)
 app.use("*", async (c, next) => {
-  const user = resolveUser(c.req.raw, false);
+  const user = await resolveUser(c.req.raw, false);
   if (user) c.set("user", user);
   await next();
 });

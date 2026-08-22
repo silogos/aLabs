@@ -32,6 +32,6 @@ export default function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // everything except static assets, the API mount, uploads and internals
-    "/((?!_next/static|_next/image|api/|uploads/|icon.svg|favicon.ico).*)",
+    "/((?!_next/static|_next/image|api(?:/|$)|uploads(?:/|$)|icon.svg|favicon.ico).*)",
   ],
 };

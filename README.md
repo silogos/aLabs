@@ -17,8 +17,14 @@ and the specs in [`docs/`](./docs).
 
 ```bash
 pnpm install
+pnpm dev:db            # Postgres in Docker (required — the auth domain persists there)
 pnpm dev               # Next.js on http://localhost:3000 (UI + API in one process)
 ```
+
+`pnpm dev` reads `DATABASE_URL` from `apps/web/.env` — on first boot it copies
+`.env.example` guidance: create the file with
+`DATABASE_URL=postgres://alabs:alabs@localhost:5432/alabs` (matches the compose
+service). Migrations run and the demo users seed automatically.
 
 Then open **http://localhost:3000** and sign in with the seeded demo user:
 
@@ -70,9 +76,12 @@ All internal packages use the `@pmin/*` namespace.
   mirrors `docs/tech/03-data-model.md` table-for-table).
 - **Source of truth for validation** — `packages/core/src/schemas` (zod,
   consumed by both the API and the web app).
-- **Runtime store** — the API runs against an in-memory repository seeded with
-  the aLabs demo data (no Postgres required). A Drizzle repository can drop in
-  behind the same service layer; set `DATABASE_URL` and run Drizzle Kit.
+- **Data layer (migrating)** — the auth domain (users, sessions, accounts,
+  password resets) persists to **Postgres via Drizzle** (`packages/api/src/db/`
+  — auto-migrated and demo-seeded on boot); the remaining modules (orgs,
+  projects, tasks, documents, …) still run on the in-memory store and move
+  over module by module. `pnpm db:generate` / `pnpm db:migrate` manage
+  migrations; `pnpm db:studio` opens Drizzle Studio.
 
 ### Request lifecycle
 

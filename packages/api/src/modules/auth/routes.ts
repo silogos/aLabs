@@ -1,15 +1,15 @@
 /**
- * Auth routes — session-based, demo-friendly.
+ * Auth routes — session-based.
  *
- * Contract: docs/foundation/01-authentication.md. Sessions are opaque tokens
- * (cookie or Bearer) backed by the in-memory store; passwords are scrypt
- * hashes (lib/passwords.ts). Until the Postgres/Better Auth swap, OAuth state
- * and reset tokens also live in memory — fine for a single-node prototype.
+ * Contract: docs/foundation/01-authentication.md. Users, sessions, accounts,
+ * and password resets live in Postgres (db/auth-repo.ts); passwords are
+ * scrypt hashes (lib/passwords.ts). OAuth state stays in memory — short-lived
+ * CSRF nonces, fine for a single-node deployment.
  */
 import { Hono } from "hono";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { randomBytes } from "node:crypto";
-import { store } from "../../db/store";
+import * as authRepo from "../../db/auth-repo";
 import {
   uuidv7,
   registerInput,
@@ -22,6 +22,7 @@ import { extractToken } from "../../lib/auth";
 import { hashPassword, verifyPassword } from "../../lib/passwords";
 import { data } from "../../lib/responses";
 import { parseBody } from "../../lib/validate";
+import { store } from "../../db/store";
 import type { Vars } from "../../lib/ctx";
 import type { User } from "@pmin/core";
 
@@ -33,13 +34,12 @@ const SESSION_COOKIE = "alabs_session";
 
 /* ---------------- helpers ---------------- */
 
-function issueSession(c: Parameters<typeof setCookie>[0], userId: string) {
+async function issueSession(c: Parameters<typeof setCookie>[0], userId: string) {
   const token = "sess-" + randomBytes(24).toString("base64url");
-  store.sessions.push({
+  await authRepo.insertSession({
     token,
     userId,
-    expiresAt: new Date(Date.now() + SESSION_TTL_MS).toISOString(),
-    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + SESSION_TTL_MS),
   });
   setCookie(c, SESSION_COOKIE, token, { httpOnly: true, sameSite: "Lax", path: "/" });
   return token;
@@ -48,24 +48,15 @@ function issueSession(c: Parameters<typeof setCookie>[0], userId: string) {
 /** Create a user + their personal workspace (org of one) — signup path shared
  * by register and Google SSO. See docs/foundation/04-plans-workspaces.md and
  * ADR 0007: personal orgs block invites and cap projects. */
-function createUserWithWorkspace(input: {
+async function createUserWithWorkspace(input: {
   name: string;
   email: string;
   image: string | null;
   emailVerified: boolean;
-}): User {
-  const now = new Date().toISOString();
-  const user: User = {
-    id: uuidv7(),
-    name: input.name,
-    email: input.email,
-    image: input.image,
-    emailVerified: input.emailVerified,
-    createdAt: now,
-    updatedAt: now,
-  };
-  store.users.push(user);
+}): Promise<User> {
+  const user = await authRepo.insertUser(input);
 
+  const now = new Date().toISOString();
   const ownerRole = store.roles.find((r) => r.name === "Owner" && r.scope === "workspace")!;
   const personalOrg = {
     id: uuidv7(),
@@ -99,46 +90,41 @@ function createUserWithWorkspace(input: {
 
 auth.post("/register", async (c) => {
   const input = parseBody(await c.req.json(), registerInput);
-  const existing = store.users.find((u) => u.email.toLowerCase() === input.email.toLowerCase());
+  const existing = await authRepo.getUserByEmail(input.email);
   if (existing) throw badRequest("Email already registered");
 
-  const user = createUserWithWorkspace({
+  const user = await createUserWithWorkspace({
     name: input.name,
     email: input.email,
     image: null,
     emailVerified: false,
   });
-  store.accounts.push({
-    id: uuidv7(),
+  await authRepo.insertAccount({
     userId: user.id,
     provider: "credential",
-    providerAccountId: null,
     passwordHash: await hashPassword(input.password),
-    createdAt: new Date().toISOString(),
   });
 
-  const token = issueSession(c, user.id);
+  const token = await issueSession(c, user.id);
   return data(c, { user, token }, 201);
 });
 
 auth.post("/login", async (c) => {
   const input = parseBody(await c.req.json(), loginInput);
-  const user = store.users.find((u) => u.email.toLowerCase() === input.email.toLowerCase());
-  const account = user
-    ? store.accounts.find((a) => a.userId === user.id && a.provider === "credential")
-    : undefined;
+  const user = await authRepo.getUserByEmail(input.email);
+  const account = user ? await authRepo.findAccount(user.id, "credential") : null;
   const ok = account?.passwordHash
     ? await verifyPassword(input.password, account.passwordHash)
     : false;
   if (!user || !ok) throw unauthorized("Invalid email or password");
 
-  const token = issueSession(c, user.id);
+  const token = await issueSession(c, user.id);
   return data(c, { user, token });
 });
 
 auth.post("/logout", async (c) => {
   const token = extractToken(c.req.raw);
-  if (token) store.sessions = store.sessions.filter((s) => s.token !== token);
+  if (token) await authRepo.deleteSession(token);
   deleteCookie(c, SESSION_COOKIE, { path: "/" });
   return data(c, { ok: true });
 });
@@ -153,18 +139,16 @@ auth.get("/me", async (c) => {
 
 auth.post("/forgot-password", async (c) => {
   const input = parseBody(await c.req.json(), forgotPasswordInput);
-  const user = store.users.find((u) => u.email.toLowerCase() === input.email.toLowerCase());
+  const user = await authRepo.getUserByEmail(input.email);
 
   // Always 200 — never reveal whether the email exists.
   if (!user) return data(c, { ok: true });
 
   const token = randomBytes(24).toString("base64url");
-  store.passwordResets.push({
+  await authRepo.insertPasswordReset({
     token,
     userId: user.id,
-    expiresAt: new Date(Date.now() + RESET_TTL_MS).toISOString(),
-    usedAt: null,
-    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + RESET_TTL_MS),
   });
   const resetUrl = `/reset-password?token=${token}`;
 
@@ -180,34 +164,20 @@ auth.post("/forgot-password", async (c) => {
 
 auth.post("/reset-password", async (c) => {
   const input = parseBody(await c.req.json(), resetPasswordInput);
-  const reset = store.passwordResets.find(
-    (r) =>
-      r.token === input.token &&
-      !r.usedAt &&
-      Date.parse(r.expiresAt) > Date.now(),
-  );
+  const reset = await authRepo.findValidPasswordReset(input.token);
   if (!reset) throw badRequest("Invalid or expired reset token");
 
-  const account = store.accounts.find(
-    (a) => a.userId === reset.userId && a.provider === "credential",
-  );
+  const account = await authRepo.findAccount(reset.userId, "credential");
   const passwordHash = await hashPassword(input.password);
   if (account) {
-    account.passwordHash = passwordHash;
+    await authRepo.updateAccountPassword(account.id, passwordHash);
   } else {
-    store.accounts.push({
-      id: uuidv7(),
-      userId: reset.userId,
-      provider: "credential",
-      providerAccountId: null,
-      passwordHash,
-      createdAt: new Date().toISOString(),
-    });
+    await authRepo.insertAccount({ userId: reset.userId, provider: "credential", passwordHash });
   }
 
   // Single-use token + kill every active session (they may be compromised).
-  reset.usedAt = new Date().toISOString();
-  store.sessions = store.sessions.filter((s) => s.userId !== reset.userId);
+  await authRepo.markPasswordResetUsed(input.token);
+  await authRepo.revokeUserSessions(reset.userId);
 
   return data(c, { ok: true });
 });
@@ -305,31 +275,21 @@ auth.get("/oauth/google/callback", async (c) => {
   if (!profile.email) return fail("email_missing");
 
   // Upsert by email; link the Google account to the user.
-  let user = store.users.find((u) => u.email.toLowerCase() === profile.email!.toLowerCase());
+  let user = await authRepo.getUserByEmail(profile.email);
   if (!user) {
-    user = createUserWithWorkspace({
+    user = await createUserWithWorkspace({
       name: profile.name ?? profile.email.split("@")[0]!,
       email: profile.email,
       image: profile.picture ?? null,
       emailVerified: profile.email_verified ?? true,
     });
   }
-  const linked = store.accounts.find(
-    (a) => a.userId === user!.id && a.provider === "google",
-  );
-  if (linked) {
-    linked.providerAccountId = profile.sub;
-  } else {
-    store.accounts.push({
-      id: uuidv7(),
-      userId: user.id,
-      provider: "google",
-      providerAccountId: profile.sub,
-      passwordHash: null,
-      createdAt: new Date().toISOString(),
-    });
-  }
+  await authRepo.upsertProviderAccount({
+    userId: user.id,
+    provider: "google",
+    providerAccountId: profile.sub,
+  });
 
-  issueSession(c, user.id);
+  await issueSession(c, user.id);
   return c.redirect(webUrl());
 });

@@ -13,10 +13,13 @@ WORKDIR /app
 ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     PORT=3000 \
-    UPLOADS_DIR=/data/uploads
+    UPLOADS_DIR=/data/uploads \
+    MIGRATIONS_DIR=/app/drizzle
 # standalone mirrors the monorepo layout: node_modules at /app, server at /app/apps/web
 COPY --from=build /repo/apps/web/.next/standalone ./
 COPY --from=build /repo/apps/web/.next/static ./apps/web/.next/static
+# generated SQL migrations — applied automatically on boot
+COPY --from=build /repo/drizzle ./drizzle
 WORKDIR /app/apps/web
 EXPOSE 3000
 VOLUME /data/uploads

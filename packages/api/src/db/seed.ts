@@ -2,22 +2,23 @@
  * Seed the in-memory store with the aLabs demo data — mirrors the
  * `designs/app/alabs-app.html` prototype 1:1 so the web app renders identically.
  *
- * Idempotent: `store.seeded` guards re-runs.
+ * Users come from Postgres (db/seed-auth.ts seeds them there with password
+ * "password123"); this seed takes them as a parameter so memberships, tasks,
+ * and activity reference the real DB ids. Idempotent: `store.seeded` guards.
  */
 import { uuidv7 } from "@pmin/core";
 import {
   SYSTEM_WORKSPACE_ROLES,
   SYSTEM_PROJECT_ROLES,
 } from "@pmin/core";
-import type { TaskPriority, Content } from "@pmin/core";
+import type { TaskPriority, Content, User } from "@pmin/core";
 import { store, type ActivityEntry } from "./store";
-import { hashPasswordSync } from "../lib/passwords";
 
 const now = () => new Date();
 const iso = (d: Date = now()) => d.toISOString();
 
-/** Idempotent seed. */
-export function seed(): void {
+/** Idempotent seed. `users` = demo users from Postgres, insertion-ordered. */
+export function seed(users: User[]): void {
   if (store.seeded) return;
 
   // Relative demo calendar — design "today" = Mar 22 in the original mock.
@@ -36,37 +37,18 @@ export function seed(): void {
   const dueIso = (label: string) =>
     OFFSET[label] !== undefined ? dayIso(OFFSET[label]!) : null;
 
-  /* ---------------- Users ---------------- */
-  // Demo users share a seeded password ("password123") so the login flow is
-  // exercisable against the seeded data.
-  const DEMO_PASSWORD = "password123";
-  const seedUser = (name: string, email: string) => {
-    const u = {
-      id: uuidv7(),
-      name,
-      email,
-      image: null,
-      emailVerified: true,
-      createdAt: iso(),
-      updatedAt: iso(),
-    };
-    store.users.push(u);
-    store.accounts.push({
-      id: uuidv7(),
-      userId: u.id,
-      provider: "credential",
-      providerAccountId: null,
-      passwordHash: hashPasswordSync(DEMO_PASSWORD),
-      createdAt: iso(),
-    });
+  /* ---------------- Users (from Postgres — seeded by db/seed-auth.ts) ---------------- */
+  const byEmail = (email: string) => {
+    const u = users.find((x) => x.email === email);
+    if (!u) throw new Error(`seed: demo user ${email} missing from Postgres seed`);
     return u;
   };
-  const aisha = seedUser("Aisha Yusuf", "aisha@northwind.io");
-  const marco = seedUser("Marco Keller", "marco@northwind.io");
-  const lin = seedUser("Lin Chen", "lin@northwind.io");
-  const diego = seedUser("Diego Pereira", "diego@northwind.io");
-  const sara = seedUser("Sara Reinhardt", "sara@northwind.io");
-  const jonas = seedUser("Jonas Berg", "jonas@northwind.io");
+  const aisha = byEmail("aisha@northwind.io");
+  const marco = byEmail("marco@northwind.io");
+  const lin = byEmail("lin@northwind.io");
+  const diego = byEmail("diego@northwind.io");
+  const sara = byEmail("sara@northwind.io");
+  const jonas = byEmail("jonas@northwind.io");
   const usersByShort = { ay: aisha, mk: marco, lc: lin, dp: diego, sr: sara, jb: jonas };
 
   /* ---------------- Roles ---------------- */
@@ -602,14 +584,6 @@ export function seed(): void {
     body: "Backlog grooming: triage queue",
     link: "/tasks/116",
     readAt: null,
-    createdAt: iso(),
-  });
-
-  /* ---------------- Demo session (auto-login as Aisha) ---------------- */
-  store.sessions.push({
-    token: "demo-" + aisha.id,
-    userId: aisha.id,
-    expiresAt: new Date(Date.now() + 365 * 86_400_000).toISOString(),
     createdAt: iso(),
   });
 

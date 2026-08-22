@@ -1,6 +1,7 @@
 /** Reporting routes — dashboard aggregation, progress, activity, export. */
 import { Hono } from "hono";
 import { store } from "../../db/store";
+import * as authRepo from "../../db/auth-repo";
 import { projectSchema } from "@pmin/core";
 import { data } from "../../lib/responses";
 import { projectContext, currentTenant } from "../../lib/tenant";
@@ -12,7 +13,7 @@ reporting.use("*", projectContext);
 
 const pidOf = (c: Ctx) => currentTenant(c).projectId!;
 
-reporting.get("/reporting/dashboard", requirePermission("reporting:view"), (c) => {
+reporting.get("/reporting/dashboard", requirePermission("reporting:view"), async (c) => {
   const pid = pidOf(c);
   const project = projectSchema.parse(store.projects.find((p) => p.id === pid)!);
   const topTasks = store.tasks.filter((t) => t.projectId === pid && !t.parentId && !t.deletedAt);
@@ -32,11 +33,12 @@ reporting.get("/reporting/dashboard", requirePermission("reporting:view"), (c) =
     byStatus("Done").some((d) => d.id === t.id),
   ).length;
 
-  // workload (demo capacity = 12)
-  const workload = store.users.map((u) => {
+  // workload (demo capacity = 12) — users come from Postgres (insertion order)
+  const users = await authRepo.listUsers();
+  const workload = users.map((u, i) => {
     const assigned = topTasks.filter((t) => t.assigneeId === u.id && byStatus("Done").every((d) => d.id !== t.id)).length;
     const colors = ["a", "b", "c", "d", "e", "f"];
-    const idx = store.users.indexOf(u) % colors.length;
+    const idx = i % colors.length;
     return {
       userId: u.id,
       name: u.name,

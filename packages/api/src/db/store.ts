@@ -1,11 +1,11 @@
 /**
- * In-memory repository — the runtime data layer.
+ * In-memory repository — the runtime data layer for the modules that have
+ * not migrated to Postgres yet (workspace, projects, tasks, documents, …).
  *
- * This stands in for PostgreSQL/Drizzle so the app is fully runnable without a
- * database. The Drizzle schema in `@pmin/core/db` is the documented source of
- * truth; this store mirrors those tables with the same tenant columns and is
- * structured so a real Drizzle repository could drop in behind the same service
- * layer.
+ * The auth domain (users, sessions, accounts, password resets) lives in
+ * Postgres via Drizzle — see db/pg.ts + db/auth-repo.ts. The collections
+ * here mirror the remaining tables of the Drizzle schema in `@pmin/core/db`
+ * and will move over module by module.
  *
  * Multi-tenancy rule (`docs/tech/02-conventions.md`): every tenant-scoped query
  * MUST filter by organization_id / project_id. The helpers here enforce that.
@@ -53,36 +53,6 @@ export interface ActivityEntry {
   whenLabel: string;
 }
 
-export interface Session {
-  token: string;
-  userId: string;
-  expiresAt: string;
-  createdAt: string;
-}
-
-/**
- * Auth provider account — mirrors the Better Auth `accounts` table (see
- * docs/foundation/01-authentication.md). Credential accounts carry the
- * password hash; OAuth accounts carry the provider's subject id.
- */
-export interface Account {
-  id: string;
-  userId: string;
-  provider: "credential" | "google";
-  providerAccountId: string | null;
-  passwordHash: string | null;
-  createdAt: string;
-}
-
-/** One-time password reset token (forgot-password flow). */
-export interface PasswordReset {
-  token: string;
-  userId: string;
-  expiresAt: string;
-  usedAt: string | null;
-  createdAt: string;
-}
-
 /** project_visits row — per-user project visit history (recents). */
 export interface ProjectVisit {
   userId: string;
@@ -91,7 +61,6 @@ export interface ProjectVisit {
 }
 
 export interface Store {
-  users: User[];
   organizations: (Organization & Meta)[];
   roles: Role[];
   members: Member[];
@@ -112,9 +81,6 @@ export interface Store {
   agreements: (Agreement & Meta)[];
   comments: Comment[];
   activity: ActivityEntry[];
-  sessions: Session[];
-  accounts: Account[];
-  passwordResets: PasswordReset[];
   projectVisits: ProjectVisit[];
   /** workspace role name → permission keys */
   rolePermissions: Record<string, string[]>;
@@ -123,7 +89,6 @@ export interface Store {
 }
 
 export const store: Store = {
-  users: [],
   organizations: [],
   roles: [],
   members: [],
@@ -144,10 +109,10 @@ export const store: Store = {
   agreements: [],
   comments: [],
   activity: [],
-  sessions: [],
-  accounts: [],
-  passwordResets: [],
   projectVisits: [],
   rolePermissions: {},
   seeded: false,
 };
+
+/** Re-exported for modules that still import these from the store module. */
+export type { User };

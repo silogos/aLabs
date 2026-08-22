@@ -11,15 +11,21 @@
     "dev:api": "pnpm --filter @pmin/api dev",
     "dev:db": "docker compose up -d postgres",
     "dev:db:down": "docker compose stop postgres",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
     "typecheck": "turbo run typecheck",
     "clean": "rm -rf apps/*/dist apps/*/.next packages/*/dist node_modules/.cache .turbo"
   },
   "devDependencies": {
+    "drizzle-kit": "^0.31.10",
     "turbo": "^2",
     "typescript": "^5"
   },
   "packageManager": "pnpm@10.25.0",
-  "engines": { "node": ">=18.0.0" },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "pnpm": {
     "overrides": {
       "@tiptap/core": "3.29.2",

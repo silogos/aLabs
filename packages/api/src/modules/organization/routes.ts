@@ -1,6 +1,7 @@
 /** Organization routes — workspace + members + invitations. */
 import { Hono } from "hono";
 import { store } from "../../db/store";
+import * as authRepo from "../../db/auth-repo";
 import {
   uuidv7,
   organizationCreate,
@@ -90,10 +91,19 @@ organization.patch("/:organizationId", orgContext, requirePermission("organizati
 });
 
 // Members
-organization.get("/:organizationId/members", orgContext, requirePermission("member:view"), (c) => {
-  const members = store.members.filter((m) => m.organizationId === currentOrg(c).id);
-  return data(c, members);
-});
+organization.get(
+  "/:organizationId/members",
+  orgContext,
+  requirePermission("member:view"),
+  async (c) => {
+    const members = store.members.filter((m) => m.organizationId === currentOrg(c).id);
+    // users live in Postgres — hydrate fresh copies so PATCH /me shows up
+    const fresh = new Map(
+      (await authRepo.getUsersByIds(members.map((m) => m.userId))).map((u) => [u.id, u]),
+    );
+    return data(c, members.map((m) => ({ ...m, user: fresh.get(m.userId) ?? m.user })));
+  },
+);
 
 // Change a member's workspace role.
 organization.patch(
@@ -220,9 +230,7 @@ organization.patch(
       return data(c, invitation);
     }
     // accept: the invitee must have registered on their own (personal workspace)
-    const user = store.users.find(
-      (u) => u.email.toLowerCase() === invitation.email.toLowerCase(),
-    );
+    const user = await authRepo.getUserByEmail(invitation.email);
     if (!user)
       throw badRequest("User must register before accepting this invitation");
     if (store.members.some((m) => m.organizationId === org.id && m.userId === user.id))
