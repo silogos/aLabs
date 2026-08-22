@@ -1,11 +1,10 @@
 # docker-compose — runs the full-stack web app.
 #
 # Next.js serves the UI and the API in one process: the Hono app is mounted
-# in-process under /api. It ships an in-memory store seeded with the aLabs
-# demo data, so the stack is fully usable without postgres. Point it at
-# postgres by setting DATABASE_URL and swapping the repository implementation
-# behind the service layer (see packages/core/src/db/schema.ts — the Drizzle
-# source of truth).
+# in-process under /api. The API currently runs against an in-memory store
+# seeded with the aLabs demo data; Postgres is provisioned below so the
+# Drizzle repository can be wired in by setting DATABASE_URL on `web`
+# (see packages/core/src/db/schema.ts — the Drizzle source of truth).
 services:
   web:
     build:
@@ -22,17 +21,25 @@ services:
       - "3000:3000"
     volumes:
       - ./uploads:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
 
-  # postgres:
-  #   image: postgres:16-alpine
-  #   environment:
-  #     POSTGRES_USER: alabs
-  #     POSTGRES_PASSWORD: alabs
-  #     POSTGRES_DB: alabs
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - pgdata:/var/lib/postgresql/data
-  #
-  # volumes:
-  #   pgdata:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: alabs
+      POSTGRES_PASSWORD: alabs
+      POSTGRES_DB: alabs
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alabs -d alabs"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
