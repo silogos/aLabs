@@ -108,7 +108,15 @@ export function isOverdue(iso: string | null): boolean {
   return new Date(iso).getTime() < Date.now();
 }
 
-/** Display serial — ATL-NNN, derived from the task's order (matches the mock). */
-export function taskSerial(order: number): string {
-  return `ATL-${order}`;
+/** Active project key, synced by AppProvider on each render. Module-level so
+ *  plain helpers and event handlers can read it without hook plumbing. */
+let activeProjectKey = "ATL";
+export const setActiveProjectKey = (key: string) => {
+  activeProjectKey = key;
+};
+export const projKey = () => activeProjectKey;
+
+/** Display serial — `<KEY>-NNN` (active project key + task id/order). */
+export function taskSerial(id: number | string): string {
+  return `${activeProjectKey}-${id}`;
 }

@@ -167,6 +167,22 @@ Unique `(organization_id, slug)`. Unique `(organization_id, key)`.
 
 Unique `(project_id, user_id)`.
 
+## project_visits `[NEW v1.1]`
+
+Per-user project visit history — powers the "Recent projects" group in the
+switchers and the derived landing project when switching workspaces
+(most-recently-visited project in the org, else first project by `created_at`).
+
+| Column     | Type         | Constraints                        |
+| ---------- | ------------ | ---------------------------------- |
+| user_id    | uuid         | pk, fk users                       |
+| project_id | uuid         | pk, fk projects                    |
+| visited_at | timestamptz  | not null default now               |
+
+Primary key `(user_id, project_id)` — one row per user/project; `visited_at`
+is upserted on each visit. The application caps the history at 5 rows per
+user.
+
 ---
 
 # Task

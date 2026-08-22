@@ -13,7 +13,7 @@ import type { Vars } from "./lib/ctx.js";
 
 import { auth } from "./modules/auth/routes.js";
 import { organization } from "./modules/organization/routes.js";
-import { project } from "./modules/project/routes.js";
+import { project, projectMembers } from "./modules/project/routes.js";
 import { task } from "./modules/task/routes.js";
 import { documents } from "./modules/documents/routes.js";
 import { planning } from "./modules/planning/routes.js";
@@ -21,6 +21,7 @@ import { meeting } from "./modules/meeting/routes.js";
 import { agreement } from "./modules/agreement/routes.js";
 import { reporting } from "./modules/reporting/routes.js";
 import { notification } from "./modules/notification/routes.js";
+import { users } from "./modules/user/routes.js";
 
 seed();
 
@@ -56,6 +57,7 @@ app.get("/", (c) =>
     ok: true,
     endpoints: [
       "/auth",
+      "/users",
       "/organizations",
       "/organizations/:organizationId/projects",
       "/projects/:projectId/tasks",
@@ -68,8 +70,10 @@ app.get("/", (c) =>
 );
 
 app.route("/auth", auth);
+app.route("/users", users);
 app.route("/organizations", organization);
 app.route("/organizations/:organizationId/projects", project);
+app.route("/projects/:projectId", projectMembers);
 app.route("/projects/:projectId", task);
 app.route("/projects/:projectId", documents);
 app.route("/projects/:projectId", planning);

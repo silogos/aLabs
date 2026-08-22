@@ -6,6 +6,8 @@ import {
   projectCreate,
   projectUpdate,
   projectSchema,
+  projectMemberAdd,
+  projectMemberUpdate,
   DEFAULT_TASK_STATUSES,
   DEFAULT_TASK_TYPES,
 } from "@pmin/core";
@@ -38,7 +40,7 @@ project.post("/", orgContext, requirePermission("project:create"), async (c) => 
   // Personal workspaces are capped at PERSONAL_PROJECT_LIMIT active projects.
   // Active = not archived and not soft-deleted (archiving frees the slot).
   // See docs/foundation/04-plans-workspaces.md and ADR 0007.
-  const org = store.organizations.find((o) => o.id === orgId);
+  const org = store.organizations.find((o) => o.id === orgId && !o.deletedAt);
   if (org?.type === "personal") {
     const active = store.projects.filter(
       (p) => p.organizationId === orgId && !p.deletedAt && p.status !== "archived",
@@ -82,9 +84,110 @@ project.post("/", orgContext, requirePermission("project:create"), async (c) => 
 
   // creator becomes a Project Admin
   const role = store.roles.find((r) => r.name === "Project Admin" && r.scope === "project")!;
+  store.projectMembers.push({
+    id: uuidv7(),
+    projectId: proj.id,
+    userId: user.id,
+    role,
+    status: "active" as const,
+    joinedAt: new Date().toISOString(),
+    user,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
 
   return created(c, projectSchema.parse(proj));
 });
+
+/* ---------------- Project members ----------------
+ * Inviting = creating a pending membership row for an existing (active) org
+ * member, keyed by email. Accept flips it to active. Admin-driven — the
+ * invitee-side flow needs email delivery (deferred).
+ *
+ * Mounted at /projects/:projectId (contract: Prj/members), like task/documents/
+ * planning — NOT under the org-scoped project mount. */
+export const projectMembers = new Hono<{ Variables: Vars }>();
+
+projectMembers.get("/members", projectContext, (c) => {
+  const projectId = currentTenant(c).projectId!;
+  return data(c, store.projectMembers.filter((m) => m.projectId === projectId));
+});
+
+projectMembers.post(
+  "/members",
+  projectContext,
+  requirePermission("project:manage-members"),
+  async (c) => {
+    const proj = currentProject(c);
+    const input = parseBody(await c.req.json(), projectMemberAdd);
+    // only active org members can be invited — 404, never 403 (leak rule)
+    const orgMember = store.members.find(
+      (m) =>
+        m.organizationId === proj.organizationId &&
+        m.status === "active" &&
+        m.user.email.toLowerCase() === input.email.toLowerCase(),
+    );
+    if (!orgMember) throw notFound();
+    if (store.projectMembers.some((m) => m.projectId === proj.id && m.userId === orgMember.userId))
+      throw badRequest("Already a member or invited");
+    const role = store.roles.find(
+      (r) => r.name === (input.roleName ?? "Member") && r.scope === "project",
+    );
+    if (!role) throw badRequest(`Unknown project role "${input.roleName ?? "Member"}"`);
+    const row = {
+      id: uuidv7(),
+      projectId: proj.id,
+      userId: orgMember.userId,
+      role,
+      status: "pending" as const,
+      joinedAt: null as string | null,
+      user: orgMember.user,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    store.projectMembers.push(row);
+    return created(c, row);
+  },
+);
+
+projectMembers.patch(
+  "/members/:memberId",
+  projectContext,
+  requirePermission("project:manage-members"),
+  async (c) => {
+    const proj = currentProject(c);
+    const row = store.projectMembers.find(
+      (m) => m.id === c.req.param("memberId") && m.projectId === proj.id,
+    );
+    if (!row) throw notFound();
+    const input = parseBody(await c.req.json(), projectMemberUpdate);
+    if (input.roleName) {
+      const role = store.roles.find((r) => r.name === input.roleName && r.scope === "project");
+      if (!role) throw badRequest(`Unknown project role "${input.roleName}"`);
+      row.role = role;
+    }
+    if (input.status === "active") {
+      if (row.status !== "pending") throw badRequest("Only pending invitations can be accepted");
+      row.status = "active";
+      row.joinedAt = new Date().toISOString();
+    }
+    row.updatedAt = new Date().toISOString();
+    return data(c, row);
+  },
+);
+
+projectMembers.delete(
+  "/members/:memberId",
+  projectContext,
+  requirePermission("project:manage-members"),
+  (c) => {
+    const proj = currentProject(c);
+    const id = c.req.param("memberId");
+    if (!store.projectMembers.some((m) => m.id === id && m.projectId === proj.id)) throw notFound();
+    store.projectMembers = store.projectMembers.filter((m) => m.id !== id);
+    return noContent(c);
+  },
+);
 
 // Project-scoped routes (by :projectId across the whole org)
 project.get("/:projectId", projectContext, (c) => data(c, currentProject(c)));

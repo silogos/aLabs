@@ -205,6 +205,25 @@ export const projectMembers = pgTable(
   ],
 );
 
+/** Per-user project visit history — powers "Recent projects" and the
+ *  derived landing project when switching workspaces. */
+export const projectVisits = pgTable(
+  "project_visits",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id),
+    visitedAt: ts().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.projectId] }),
+    index("project_visit_user_idx").on(t.userId, t.visitedAt),
+  ],
+);
+
 /* ============================================================= Task */
 
 export const taskTypes = pgTable("task_types", {
@@ -575,6 +594,7 @@ export const schema = {
   invitations,
   projects,
   projectMembers,
+  projectVisits,
   taskTypes,
   taskStatuses,
   taskLabels,

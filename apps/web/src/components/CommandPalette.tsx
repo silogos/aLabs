@@ -1,6 +1,7 @@
 /** Command palette — navigate, create, jump to a task. */
 import { useMemo, useState } from "react";
 import { useApp, type View } from "../store.js";
+import { taskSerial } from "./ui.js";
 import { useTasksVersion, allTasks } from "../views/tasks-store.js";
 
 export function CommandPalette() {
@@ -22,9 +23,9 @@ export function CommandPalette() {
     ];
     const filteredNav = nav.filter(([l]) => l.toLowerCase().includes(ql));
     const filteredTasks = tasks
-      .filter((t) => (`ATL-${t.id}`).toLowerCase().includes(ql) || t.t.toLowerCase().includes(ql))
+      .filter((t) => (`${taskSerial(t.id)}`).toLowerCase().includes(ql) || t.t.toLowerCase().includes(ql))
       .slice(0, 6)
-      .map((t) => [`ATL-${t.id} · ${t.t}`, String(t.id)] as [string, string]);
+      .map((t) => [`${taskSerial(t.id)} · ${t.t}`, String(t.id)] as [string, string]);
     return [
       { g: "Navigate", items: filteredNav.map(([l, v]) => ({ label: l, action: () => go(v, null) })) },
       { g: "Create", items: [{ label: "New task", action: () => { setCreateOpen(true); setCmdkOpen(false); } }] },

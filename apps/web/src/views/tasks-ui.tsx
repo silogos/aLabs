@@ -1,6 +1,6 @@
 /** Shared presentational bits for the Tasks module — mirror designs/app/alabs-app.html markup. */
 import type { PrioId, StatusId, TypeId } from "./tasks-store.js";
-import { P, ST, TY, taskById, who } from "./tasks-store.js";
+import { ST, TY, taskById, who, personOf } from "./tasks-store.js";
 
 export function TyIcon({ ty, size = 13 }: { ty: TypeId; size?: number }) {
   const m = TY[ty] ?? TY.task;
@@ -17,7 +17,7 @@ export function TyTag({ ty }: { ty: TypeId }) {
 }
 
 export function AvKey({ id, size = "" }: { id: string; size?: "sm" | "" }) {
-  const p = P[id];
+  const p = personOf(id);
   if (!p) return <span className={`av b ${size}`}>?</span>;
   return <span className={`av ${p.color} ${size}`}>{p.initials}</span>;
 }

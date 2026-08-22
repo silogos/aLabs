@@ -15,6 +15,8 @@ import { TaskModal } from "./components/TaskModal.js";
 import { RelModal } from "./components/RelModal.js";
 import { CommandPalette } from "./components/CommandPalette.js";
 import { Toasts } from "./components/Toasts.js";
+import { NavModals } from "./components/SwitcherModals.js";
+import { MobileNav } from "./components/MobileNav.js";
 
 const TITLES: Record<View, string> = {
   dashboard: "Dashboard",
@@ -27,10 +29,25 @@ const TITLES: Record<View, string> = {
 };
 
 export default function App() {
-  const { view, taskId, createOpen, cmdkOpen, closeTask, setCreateOpen, setCmdkOpen, closeRelPicker, relPickerId, project, collapsed } =
-    useApp();
+  const {
+    view,
+    taskId,
+    createOpen,
+    cmdkOpen,
+    closeTask,
+    setCreateOpen,
+    setCmdkOpen,
+    closeRelPicker,
+    relPickerId,
+    project,
+    collapsed,
+    navModal,
+    setNavModal,
+    mNavOpen,
+    setMNavOpen,
+  } = useApp();
 
-  // global keyboard: ⌘K command palette, Esc closes overlays
+  // global keyboard: ⌘K command palette, Esc closes overlays (nav stack first)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -38,15 +55,19 @@ export default function App() {
         setCmdkOpen(true);
       }
       if (e.key === "Escape") {
-        setCmdkOpen(false);
-        closeRelPicker();
-        closeTask();
-        setCreateOpen(false);
+        if (mNavOpen) setMNavOpen(false);
+        else if (navModal) setNavModal(null);
+        else {
+          setCmdkOpen(false);
+          closeRelPicker();
+          closeTask();
+          setCreateOpen(false);
+        }
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [setCmdkOpen, closeTask, setCreateOpen, closeRelPicker]);
+  }, [setCmdkOpen, closeTask, setCreateOpen, closeRelPicker, mNavOpen, navModal, setMNavOpen, setNavModal]);
 
   if (!project) {
     return (
@@ -58,7 +79,7 @@ export default function App() {
     );
   }
 
-  const overlayOpen = taskId || createOpen || cmdkOpen || relPickerId;
+  const overlayOpen = taskId || createOpen || cmdkOpen || relPickerId || navModal || mNavOpen;
 
   return (
     <div className={`app ${collapsed ? "collapsed" : ""}`}>
@@ -77,7 +98,28 @@ export default function App() {
       </div>
 
       {/* overlays */}
-      <div className={`scrim ${overlayOpen ? "show" : ""}`} onClick={() => { if (relPickerId) { closeRelPicker(); return; } closeTask(); setCreateOpen(false); setCmdkOpen(false); }} />
+      <div
+        className={`scrim ${overlayOpen ? "show" : ""}`}
+        onClick={() => {
+          if (mNavOpen) {
+            setMNavOpen(false);
+            return;
+          }
+          if (navModal) {
+            setNavModal(null);
+            return;
+          }
+          if (relPickerId) {
+            closeRelPicker();
+            return;
+          }
+          closeTask();
+          setCreateOpen(false);
+          setCmdkOpen(false);
+        }}
+      />
+      <NavModals />
+      <MobileNav />
       {taskId && <TaskDrawer id={taskId} />}
       {relPickerId && <RelModal />}
       {createOpen && <TaskModal />}

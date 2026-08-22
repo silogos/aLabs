@@ -72,26 +72,43 @@ export function seed(): void {
   }
   const workspaceRole = (name: string) => store.roles.find((r) => r.scope === "workspace" && r.name === name)!;
 
-  /* ---------------- Organization ---------------- */
-  const northwind = {
-    id: uuidv7(),
-    name: "Northwind",
-    slug: "northwind",
-    type: "team" as const,
-    logo: null,
-    description: "Software House",
-    timezone: "UTC",
-    language: "en",
-    website: "https://northwind.io",
-    createdAt: iso(),
-    updatedAt: iso(),
+  /* ---------------- Organizations (multi-org world for the switchers) ---------------- */
+  const makeOrg = (
+    name: string,
+    slug: string,
+    type: "team" | "personal",
+    description: string,
+    website: string | null = null,
+  ) => {
+    const o = {
+      id: uuidv7(),
+      name,
+      slug,
+      type,
+      logo: null as string | null,
+      description,
+      timezone: "UTC",
+      language: "en",
+      website,
+      createdAt: iso(),
+      updatedAt: iso(),
+    };
+    store.organizations.push(o);
+    return o;
   };
-  store.organizations.push(northwind);
+  const northwind = makeOrg("Northwind", "northwind", "team", "Software House", "https://northwind.io");
+  const personal = makeOrg("Personal", "personal", "personal", "Aisha's personal workspace");
+  const aminStudio = makeOrg("Amin Studio", "amin-studio", "team", "Independent consultancy");
+  const acme = makeOrg("Acme Internal", "acme-internal", "team", "Acme's internal product org");
 
-  const makeMember = (user: typeof aisha, roleName: string) => {
+  const makeMember = (
+    org: typeof northwind,
+    user: typeof aisha,
+    roleName: string,
+  ) => {
     const m = {
       id: uuidv7(),
-      organizationId: northwind.id,
+      organizationId: org.id,
       userId: user.id,
       role: workspaceRole(roleName),
       status: "active" as const,
@@ -103,12 +120,16 @@ export function seed(): void {
     store.members.push(m);
     return m;
   };
-  makeMember(aisha, "Owner");
-  makeMember(marco, "Admin");
-  makeMember(lin, "Member");
-  makeMember(diego, "Member");
-  makeMember(sara, "Member");
-  makeMember(jonas, "Member");
+  makeMember(northwind, aisha, "Owner");
+  makeMember(northwind, marco, "Admin");
+  makeMember(northwind, lin, "Member");
+  makeMember(northwind, diego, "Member");
+  makeMember(northwind, sara, "Member");
+  makeMember(northwind, jonas, "Member");
+  // Aisha's other workspaces (she is the sole member; Owner of personal by rule)
+  makeMember(personal, aisha, "Owner");
+  makeMember(aminStudio, aisha, "Owner");
+  makeMember(acme, aisha, "Member");
 
   /* ---------------- Project ---------------- */
   const atlas = {
@@ -125,6 +146,32 @@ export function seed(): void {
     updatedAt: iso(),
   };
   store.projects.push(atlas);
+
+  /* ---------------- Project memberships (Atlas) ----------------
+   * Real project_members rows: Aisha administers, everyone else participates.
+   * Behavior-neutral for the demo (Owner ∪ anything ⊇ Member), but the
+   * tenant context now resolves actual roles + visibility. */
+  const projectRole = (name: string) =>
+    store.roles.find((r) => r.scope === "project" && r.name === name)!;
+  const projectMember = (user: typeof aisha, roleName: string) => {
+    store.projectMembers.push({
+      id: uuidv7(),
+      projectId: atlas.id,
+      userId: user.id,
+      role: projectRole(roleName),
+      status: "active" as const,
+      joinedAt: iso(),
+      user,
+      createdAt: iso(),
+      updatedAt: iso(),
+    });
+  };
+  projectMember(aisha, "Project Admin");
+  projectMember(marco, "Member");
+  projectMember(lin, "Member");
+  projectMember(diego, "Member");
+  projectMember(sara, "Member");
+  projectMember(jonas, "Member");
 
   /* ---------------- Task statuses (design uses 5 columns) ---------------- */
   const statusDefs: Array<{ name: string; order: number; color: string; isDefault: boolean }> = [
@@ -571,6 +618,126 @@ export function seed(): void {
       createdAt: new Date(Date.now() - 26 * 3600_000).toISOString(),
     });
   }
+
+  /* ---------------- Other projects (minimal shape so switching lands on a
+     usable board — statuses + a few tasks each; only Atlas is fully seeded) ---------------- */
+  const sideProject = (
+    org: typeof northwind,
+    name: string,
+    slug: string,
+    key: string,
+    icon: string,
+    titles: [string, number][], // [title, statusIndex] — indexes into the 5 statuses
+  ) => {
+    const p = {
+      id: uuidv7(),
+      organizationId: org.id,
+      name,
+      slug,
+      key,
+      description: null,
+      icon,
+      status: "active" as const,
+      visibility: "organization" as const,
+      createdAt: iso(),
+      updatedAt: iso(),
+    };
+    store.projects.push(p);
+    const statuses = statusDefs.map((s) => ({
+      id: uuidv7(),
+      projectId: p.id,
+      name: s.name,
+      color: s.color,
+      order: s.order,
+      isDefault: s.isDefault,
+    }));
+    store.taskStatuses.push(...statuses);
+    titles.forEach(([title, si], i) => {
+      store.tasks.push({
+        id: uuidv7(),
+        projectId: p.id,
+        title,
+        description: null,
+        statusId: statuses[si]!.id,
+        assigneeId: aisha.id,
+        reporterId: aisha.id,
+        priority: "medium" as const,
+        typeId: null,
+        parentId: null,
+        iterationId: null,
+        milestoneId: null,
+        dueDate: null,
+        order: i,
+        labels: [],
+        estimate: null,
+        createdAt: iso(),
+        updatedAt: iso(),
+      });
+    });
+    return p;
+  };
+
+  const mobile = sideProject(
+    northwind, "Mobile App v1", "mobile-app-v1", "MOB", "M",
+    [
+      ["Set up React Native scaffold", 4],
+      ["Push notifications proof of concept", 2],
+      ["Offline task cache", 1],
+      ["App Store screenshots", 0],
+    ],
+  );
+  sideProject(
+    personal, "Notes", "notes", "NOT", "N",
+    [
+      ["Reading list: shipping for startups", 1],
+      ["Weekly review template", 4],
+      ["Ideas parking lot", 0],
+    ],
+  );
+  sideProject(
+    aminStudio, "Data Warehouse", "data-warehouse", "DWH", "D",
+    [
+      ["Source-system inventory", 4],
+      ["Model dim_customer v1", 2],
+      ["Nightly ELT failure alerts", 1],
+      ["Backfill 2025 orders", 0],
+    ],
+  );
+  sideProject(
+    aminStudio, "Brand Refresh", "brand-refresh", "BRD", "B",
+    [
+      ["Logo explorations round 2", 2],
+      ["Typography shortlist", 1],
+      ["Website color tokens", 0],
+      ["Stakeholder review deck", 1],
+    ],
+  );
+  sideProject(
+    acme, "Marketing Site", "marketing-site", "MKT", "M",
+    [
+      ["Pricing page copy", 2],
+      ["CMS migration plan", 1],
+      ["SEO audit fixes", 4],
+      ["Launch checklist", 0],
+    ],
+  );
+  sideProject(
+    acme, "Ops Automation", "ops-automation", "OPS", "O",
+    [
+      ["Invoice sync job", 2],
+      ["Onboarding runbook", 4],
+      ["Alert routing rules", 1],
+      ["Quarterly access review", 0],
+    ],
+  );
+
+  /* ---------------- Recents (pre-seeded so the "Recent" group renders) ----------------
+   * Atlas is the most recent visit → the derived landing project for Northwind
+   * is the fully-seeded demo project. */
+  store.projectVisits.push(
+    { userId: aisha.id, projectId: mobile.id, visitedAt: new Date(Date.now() - 2 * 86_400_000).toISOString() },
+    { userId: aisha.id, projectId: atlas.id, visitedAt: new Date(Date.now() - 1 * 86_400_000).toISOString() },
+  );
 
   store.seeded = true;
 }

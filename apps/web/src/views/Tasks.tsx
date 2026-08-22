@@ -1,6 +1,7 @@
 /** Tasks view — enterprise task management: Board / List / Tree. */
 import { useMemo, useState, useLayoutEffect, useRef, useCallback, type CSSProperties } from "react";
 import { useApp } from "../store.js";
+import { taskSerial } from "../components/ui.js";
 import { useTasksVersion, allTasks, subsOf, childrenOf, late, ptsTotal, progOf, taskById, COLS, SPRINTS, ST, P, who, EPIC_IDS, EPIC_META, bulkSetStatus, bulkSetAssignee, bulkDelete, setField, sprintRows, sprintStatusLabel, type StatusId, type TaskRow } from "./tasks-store.js";
 import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill, EpicChip } from "./tasks-ui.js";
 
@@ -253,7 +254,7 @@ function Board({ filtered, boardSprints, onOpen }: { filtered: TaskRow[]; boardS
     if (!t || t.s === statusId) { setDragId(null); return; }
     setField(id, "s", statusId);
     setDragId(null);
-    toast(`ATL-${id} → ${ST[statusId][0]}`);
+    toast(`${taskSerial(id)} → ${ST[statusId][0]}`);
   };
 
   return (
@@ -297,7 +298,7 @@ function Card({ t, dragging, onOpen, onDragStart, onDragEnd }: { t: TaskRow; dra
   const subd = subs.filter((s) => s.s === "done").length;
   return (
     <div className={`tcard ${dragging ? "dragging" : ""}`} draggable onDragStart={onDragStart} onDragEnd={onDragEnd} onClick={() => onOpen(String(t.id))}>
-      <div className="ttop"><span className="tid">ATL-{t.id}</span><TyTag ty={t.ty} /></div>
+      <div className="ttop"><span className="tid">{taskSerial(t.id)}</span><TyTag ty={t.ty} /></div>
       <div className="tt">{t.t}</div>
       {t.epic && <div className="epic-line"><EpicChip epic={t.epic} /></div>}
       {(t.lb || []).length > 0 && (
@@ -388,7 +389,7 @@ function TableView(props: {
   const cellContent = (t: TaskRow, k: string) => {
     switch (k) {
       case "type": return <div className="cell-ic"><TyIcon ty={t.ty} /></div>;
-      case "key": return <span className="mono id">ATL-{t.id}</span>;
+      case "key": return <span className="mono id">{taskSerial(t.id)}</span>;
       case "status": return <StatusBadge s={t.s} />;
       case "priority": return <PrioBadge p={t.p} />;
       case "assignee": return <span className="cell-who"><AvKey id={t.a} size="sm" /><span className="small truncate" style={{ maxWidth: 84 }}>{who(t.a).split(" ")[0]}</span></span>;
@@ -604,7 +605,7 @@ function BlIssueLi({ t, last, collapsedBlNodes, onToggleNode, onOpen }: {
           <button className={`caret sm ${nclosed ? "" : "open"}`} onClick={(ev) => { ev.stopPropagation(); onToggleNode(t.id); }} title="Collapse/expand"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 6l6 6-6 6" /></svg></button>
         ) : <span className="caret-sp" />}
         <span className="row-open"><TyIcon ty={t.ty} /></span>
-        <span className="mono id">ATL-{t.id}</span>
+        <span className="mono id">{taskSerial(t.id)}</span>
         <span className="bl-r-t truncate">{t.t}</span>
         <span className="bl-nd-meta">{sp}<PrioBadge p={t.p} /><StatusBadge s={t.s} /><PtsPill pts={t.pts} /><AvKey id={t.a} size="sm" /></span>
       </div>
@@ -615,7 +616,7 @@ function BlIssueLi({ t, last, collapsedBlNodes, onToggleNode, onOpen }: {
               <div className="bl-nd" onClick={() => onOpen(String(s.id))}>
                 <span className="caret-sp" />
                 <span className="row-open"><TyIcon ty={s.ty} /></span>
-                <span className="mono id">ATL-{s.id}</span>
+                <span className="mono id">{taskSerial(s.id)}</span>
                 <span className="bl-r-t truncate">{s.t}</span>
                 <span className="bl-nd-meta"><PrioBadge p={s.p} /><StatusBadge s={s.s} /><PtsPill pts={s.pts} /><AvKey id={s.a} size="sm" /></span>
               </div>

@@ -17,9 +17,11 @@ export const orgContext: MiddlewareHandler<{ Variables: Vars }> = async (c, next
   const user = c.get("user");
   if (!user) return await next();
   const organizationId = c.req.param("organizationId");
-  const org = store.organizations.find((o) => o.id === organizationId);
+  const org = store.organizations.find((o) => o.id === organizationId && !o.deletedAt);
   if (!org) throw notFound();
-  const member = store.members.find((m) => m.organizationId === org.id && m.userId === user.id);
+  const member = store.members.find(
+    (m) => m.organizationId === org.id && m.userId === user.id && m.status === "active",
+  );
   // 404 (not 403) to avoid leaking existence outside the tenant.
   if (!member) throw notFound();
   const ctx: TenantContext = {
@@ -31,27 +33,33 @@ export const orgContext: MiddlewareHandler<{ Variables: Vars }> = async (c, next
   await next();
 };
 
-/** Project-scoped tenant resolution. Expects :projectId. */
+/** Project-scoped tenant resolution. Expects :projectId.
+ *
+ * Effective permissions = workspace role ∪ project role (real membership row).
+ * Private projects require an active project membership — otherwise 404. */
 export const projectContext: MiddlewareHandler<{ Variables: Vars }> = async (c, next) => {
   const user = c.get("user");
   if (!user) return await next();
   const projectId = c.req.param("projectId");
   const project = store.projects.find((p) => p.id === projectId && !p.deletedAt);
   if (!project) throw notFound();
-  // must be an org member to access any project
+  // must be an active org member to access any project
   const orgMember = store.members.find(
-    (m) => m.organizationId === project.organizationId && m.userId === user.id,
+    (m) => m.organizationId === project.organizationId && m.userId === user.id && m.status === "active",
   );
   if (!orgMember) throw notFound();
+  // project membership (optional): pending invitations grant nothing yet
+  const pm = store.projectMembers.find(
+    (m) => m.projectId === project.id && m.userId === user.id && m.status === "active",
+  );
+  if (project.visibility === "private" && !pm) throw notFound();
   const wsPerms = new Set(store.rolePermissions[orgMember.role.name] ?? []);
-  // project role (optional): union into effective permissions
-  const projectRoleName = "Member"; // demo: every org member is a project Member
-  for (const p of store.rolePermissions[projectRoleName] ?? []) wsPerms.add(p);
+  if (pm) for (const p of store.rolePermissions[pm.role.name] ?? []) wsPerms.add(p);
   const ctx: TenantContext = {
     organizationId: project.organizationId,
     projectId: project.id,
     workspaceRole: orgMember.role.name,
-    projectRole: projectRoleName,
+    projectRole: pm?.role.name,
     permissions: wsPerms,
   };
   c.set("tenant", ctx);

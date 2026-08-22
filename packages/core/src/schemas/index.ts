@@ -50,6 +50,11 @@ export const loginInput = z.object({
   password: z.string(),
 });
 
+export const userUpdate = z.object({
+  name: z.string().min(1).max(100).optional(),
+  image: z.string().nullable().optional(),
+});
+
 /* ---------------- Organization ---------------- */
 
 export const organizationSchema = z.object({
@@ -85,6 +90,8 @@ export const roleSchema = z.object({
 });
 export type Role = z.infer<typeof roleSchema>;
 
+export const memberUpdate = z.object({ roleName: z.string().min(1) });
+
 export const memberSchema = z.object({
   id,
   organizationId: id,
@@ -102,6 +109,7 @@ export const invitationInput = z.object({
   email: z.string().email(),
   roleName: z.string(),
 });
+export const invitationAction = z.object({ action: z.enum(["accept", "cancel"]) });
 export const invitationSchema = z.object({
   id,
   organizationId: id,
@@ -112,6 +120,32 @@ export const invitationSchema = z.object({
   createdAt: iso,
 });
 export type Invitation = z.infer<typeof invitationSchema>;
+
+export const projectMemberSchema = z.object({
+  id,
+  projectId: id,
+  userId: id,
+  role: roleSchema,
+  status: MemberStatus,
+  joinedAt: iso.nullable(),
+  user: userSchema,
+  createdAt: iso,
+  updatedAt: iso,
+});
+export type ProjectMember = z.infer<typeof projectMemberSchema>;
+
+export const projectMemberAdd = z.object({
+  email: z.string().email(),
+  roleName: z.string().optional(),
+});
+export const projectMemberUpdate = z.object({
+  roleName: z.string().min(1).optional(),
+  status: z.literal("active").optional(),
+});
+
+/* ---------------- Recents (project visit history) ---------------- */
+
+export const recentTouch = z.object({ projectId: id });
 
 /* ---------------- Project ---------------- */
 
@@ -137,7 +171,10 @@ export const projectCreate = z.object({
   description: z.string().optional(),
   icon: z.string().max(20).optional(),
 });
-export const projectUpdate = projectCreate.partial();
+export const projectUpdate = projectCreate.partial().extend({
+  status: ProjectStatus.optional(),
+  visibility: ProjectVisibility.optional(),
+});
 
 /* ---------------- Task ---------------- */
 

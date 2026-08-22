@@ -1,31 +1,55 @@
-/** Global app state: active tenant, current view, overlays, toasts. */
+/** Global app state: active tenant (real org/project ids, persisted as the
+ *  last-visited pair), current view, overlays, toasts.
+ *
+ *  Switching model (per the nav design):
+ *   - project switcher = frequent, this-org projects only;
+ *   - org switcher = identity-level, rare — lands on the org's *derived*
+ *     landing project: most-recently-visited project in that org, else the
+ *     first project by createdAt.
+ *  Every switch POSTs /users/me/recents (server-persisted visit history). */
 import {
   createContext,
   useContext,
   useState,
   useCallback,
+  useEffect,
+  useMemo,
+  useRef,
   type ReactNode,
 } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type User, type Project, type Organization } from "./api.js";
+import { setActiveProjectKey } from "./components/ui.js";
+import { hydrateProject } from "./views/tasks-store.js";
 
 export type View = "dashboard" | "tasks" | "documents" | "planning" | "meetings" | "reports" | "agreements";
+export type NavModal = "acct" | "proj" | "org" | null;
 
 interface Toast {
   id: number;
   msg: string;
 }
 
+export interface RecentEntry {
+  project: Project;
+  organization: Organization;
+  visitedAt: string;
+}
+
 interface AppState {
   user: User | undefined;
   org: Organization | undefined;
   project: Project | undefined;
-  /** MVP display overrides for the sidebar switchers — labels + context only;
-   *  underlying data queries stay anchored to the real org/project. */
-  projLabel: { name: string; icon: string } | null;
-  setProjLabel: (p: { name: string; icon: string } | null) => void;
-  orgLabel: string | null;
-  setOrgLabel: (s: string | null) => void;
+  orgs: Organization[] | undefined;
+  projects: Project[] | undefined;
+  recents: RecentEntry[] | undefined;
+  /** Nav-switcher state (design: separated switchers + mobile sheet). */
+  navModal: NavModal; // centered switcher/account modals
+  mNavOpen: boolean; // mobile bottom-sheet nav
+  switchProject: (p: Project, opts?: { silent?: boolean }) => void;
+  switchOrg: (id: string) => void;
+  setNavModal: (m: NavModal) => void;
+  setMNavOpen: (b: boolean) => void;
   view: View;
   collapsed: boolean; // sidebar rail collapse (manual toggle)
   taskId: string | null; // open drawer
@@ -46,46 +70,76 @@ interface AppState {
 
 const Ctx = createContext<AppState | null>(null);
 
+const lsGet = (k: string) => {
+  try {
+    return localStorage.getItem(k);
+  } catch {
+    return null;
+  }
+};
+const lsSet = (k: string, v: string) => {
+  try {
+    localStorage.setItem(k, v);
+  } catch {
+    /* ignore */
+  }
+};
+const lsDel = (k: string) => {
+  try {
+    localStorage.removeItem(k);
+  } catch {
+    /* ignore */
+  }
+};
+
+/** Landing rule: most-recently-visited project in this org → else first by createdAt. */
+export function landingProject(projects: Project[], recents: RecentEntry[] | undefined): Project | undefined {
+  for (const r of recents ?? []) {
+    const p = projects.find((x) => x.id === r.project.id);
+    if (p) return p;
+  }
+  return [...projects].sort((a, b) => a.createdAt.localeCompare(b.createdAt))[0];
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [view, setViewState] = useState<View>(
-    () => (typeof localStorage !== "undefined" && (localStorage.getItem("alabs-view") as View)) || "dashboard",
-  );
-  const [collapsed, setCollapsedState] = useState<boolean>(
-    () => typeof localStorage !== "undefined" && localStorage.getItem("alabs-collapsed") === "1",
-  );
+  const [view, setViewState] = useState<View>(() => (lsGet("alabs-view") as View) || "dashboard");
+  const [collapsed, setCollapsedState] = useState<boolean>(() => lsGet("alabs-collapsed") === "1");
   const [taskId, setTaskId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [cmdkOpen, setCmdkOpen] = useState(false);
   const [relPickerId, setRelPickerId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [projLabel, setProjLabel] = useState<{ name: string; icon: string } | null>(null);
-  const [orgLabel, setOrgLabel] = useState<string | null>(null);
+  // last-visited tenant (persisted); null → derived from the org list / landing rule
+  const [orgPref, setOrgPref] = useState<string | null>(() => lsGet("alabs-org"));
+  const [projPref, setProjPref] = useState<string | null>(() => lsGet("alabs-project"));
+  const [navModal, setNavModal] = useState<NavModal>(null);
+  const [mNavOpen, setMNavOpen] = useState(false);
 
+  const queryClient = useQueryClient();
   const { data: user } = useQuery({ queryKey: ["me"], queryFn: api.me });
   const { data: orgs } = useQuery({ queryKey: ["orgs"], queryFn: api.orgs });
-  const org = orgs?.[0];
+  const { data: recents } = useQuery({ queryKey: ["recents"], queryFn: () => api.recents(5) });
+
+  const org = orgs?.find((o) => o.id === orgPref) ?? orgs?.[0];
   const { data: projects } = useQuery({
     queryKey: ["projects", org?.id],
     queryFn: () => api.projects(org!.id),
     enabled: !!org,
   });
-  const project = projects?.[0];
+  const project = useMemo(
+    () => (projects?.length ? projects.find((p) => p.id === projPref) ?? landingProject(projects, recents) : undefined),
+    [projects, projPref, recents],
+  );
+  // keep the module-level key in sync for taskSerial() (plain helpers, toasts)
+  if (project) setActiveProjectKey(project.key);
 
   const setView = useCallback((v: View) => {
     setViewState(v);
-    try {
-      localStorage.setItem("alabs-view", v);
-    } catch {
-      /* ignore */
-    }
+    lsSet("alabs-view", v);
   }, []);
   const setCollapsed = useCallback((b: boolean) => {
     setCollapsedState(b);
-    try {
-      localStorage.setItem("alabs-collapsed", b ? "1" : "0");
-    } catch {
-      /* ignore */
-    }
+    lsSet("alabs-collapsed", b ? "1" : "0");
   }, []);
 
   const toast = useCallback((msg: string) => {
@@ -99,14 +153,98 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const openRelPicker = useCallback((id: string) => setRelPickerId(id), []);
   const closeRelPicker = useCallback(() => setRelPickerId(null), []);
 
+  // ---- nav switchers (design: project = frequent, this-org only; org = identity) ----
+  const switchProject = useCallback(
+    (p: Project, opts?: { silent?: boolean }) => {
+      setProjPref(p.id);
+      setOrgPref(p.organizationId);
+      lsSet("alabs-project", p.id);
+      lsSet("alabs-org", p.organizationId);
+      setNavModal(null);
+      setMNavOpen(false);
+      setViewState("dashboard");
+      lsSet("alabs-view", "dashboard");
+      if (!opts?.silent) toast(`Switched to ${p.name}`);
+      // server-persisted visit history (fire-and-forget)
+      void api
+        .touchProject(p.id)
+        .catch(() => {})
+        .finally(() => queryClient.invalidateQueries({ queryKey: ["recents"] }));
+    },
+    [queryClient, toast],
+  );
+
+  // An org switch lands on the org's landing project once its list resolves.
+  const pendingOrgName = useRef<string | null>(null);
+  const switchOrg = useCallback(
+    (id: string) => {
+      const o = orgs?.find((x) => x.id === id);
+      if (!o) return;
+      setNavModal(null);
+      if (o.id === org?.id) return;
+      setOrgPref(id);
+      lsSet("alabs-org", id);
+      setProjPref(null);
+      lsDel("alabs-project");
+      pendingOrgName.current = o.name;
+    },
+    [orgs, org],
+  );
+  useEffect(() => {
+    if (!pendingOrgName.current || !projects) return;
+    const orgName = pendingOrgName.current;
+    pendingOrgName.current = null;
+    const landing = landingProject(projects, recents);
+    if (landing) {
+      switchProject(landing, { silent: true });
+      toast(`Switched to ${orgName}`);
+    } else {
+      toast(`${orgName} has no projects yet`);
+    }
+  }, [projects, recents, switchProject, toast]);
+
+  // Swap the Tasks/Planning demo dataset to the active project's real rows
+  // (Atlas keeps its rich built-in demo set — see tasks-store.ts header).
+  const pid = project?.id;
+  useEffect(() => {
+    if (!project || !pid) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const [page, statuses, members] = await Promise.all([
+          api.tasks(pid),
+          api.statuses(pid),
+          api.members(project.organizationId),
+        ]);
+        if (cancelled) return;
+        hydrateProject(
+          project.key,
+          page.items,
+          statuses,
+          members.map((m) => m.user),
+        );
+      } catch {
+        /* offline/failure → keep the current dataset */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pid, project?.key, project?.organizationId]);
+
   const value: AppState = {
     user,
     org,
     project,
-    projLabel,
-    setProjLabel,
-    orgLabel,
-    setOrgLabel,
+    orgs,
+    projects,
+    recents,
+    navModal,
+    mNavOpen,
+    switchProject,
+    switchOrg,
+    setNavModal,
+    setMNavOpen,
     view,
     collapsed,
     setCollapsed,

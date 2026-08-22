@@ -7,6 +7,7 @@ import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill } from "../views/
 import { RichTextEditor } from "@pmin/editor";
 import type { Content } from "@pmin/core";
 import { api } from "../api.js";
+import { taskSerial } from "./ui.js";
 
 export function TaskDrawer({ id }: { id: string }) {
   useTasksVersion();
@@ -30,7 +31,7 @@ export function TaskDrawer({ id }: { id: string }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="dh-top">
             {t.ty === "epic" ? <span className="tag o">Epic</span> : <TyTag ty={t.ty} />}
-            <span className="tid">{t.ty === "epic" ? `EPIC · ATL-${t.id}` : `ATL-${t.id}`}</span>
+            <span className="tid">{t.ty === "epic" ? `EPIC · ${taskSerial(t.id)}` : `${taskSerial(t.id)}`}</span>
           </div>
           <h3
             ref={titleRef}
@@ -122,9 +123,9 @@ function TaskDetail({ t, onOpen, toast, openRelPicker, pid }: { t: TaskRow; onOp
               {subs.map((s) => (
                 <li className="sub-item" key={s.id}>
                   <span className="sub-grip">⋮⋮</span>
-                  <input type="checkbox" className="ck" checked={s.s === "done"} onChange={() => { toggleSubDone(s.id); toast(`ATL-${s.id} ${s.s === "done" ? "reopened" : "completed"}`); }} />
+                  <input type="checkbox" className="ck" checked={s.s === "done"} onChange={() => { toggleSubDone(s.id); toast(`${taskSerial(s.id)} ${s.s === "done" ? "reopened" : "completed"}`); }} />
                   <button className="sub-open" onClick={() => onOpen(String(s.id))}><TyIcon ty={s.ty} size={12} /></button>
-                  <div className="sub-body"><a className={`sub-title ${s.s === "done" ? "done" : ""}`} onClick={() => onOpen(String(s.id))}>{s.t}</a><span className="sub-meta mono">ATL-{s.id}</span></div>
+                  <div className="sub-body"><a className={`sub-title ${s.s === "done" ? "done" : ""}`} onClick={() => onOpen(String(s.id))}>{s.t}</a><span className="sub-meta mono">{taskSerial(s.id)}</span></div>
                   <span className="sub-side"><StatusBadge s={s.s} /><AvKey id={s.a} size="sm" /></span>
                 </li>
               ))}
@@ -142,7 +143,7 @@ function TaskDetail({ t, onOpen, toast, openRelPicker, pid }: { t: TaskRow; onOp
                     <div className="dw-rel-row" key={`ro-${i}`}>
                       <span className="dw-rel-k">{r.label}</span>
                       {c ? (
-                        <a className="dw-rel-v" onClick={() => onOpen(String(c.id))}><TyIcon ty={c.ty} size={12} /> ATL-{c.id} · {c.t}</a>
+                        <a className="dw-rel-v" onClick={() => onOpen(String(c.id))}><TyIcon ty={c.ty} size={12} /> {taskSerial(c.id)} · {c.t}</a>
                       ) : (
                         <span className="dw-rel-v static">{r.static}</span>
                       )}
@@ -158,7 +159,7 @@ function TaskDetail({ t, onOpen, toast, openRelPicker, pid }: { t: TaskRow; onOp
                         if (!c) return null;
                         return (
                           <div className="dw-rel-li" key={oid}>
-                            <a className="dw-rel-v" onClick={() => onOpen(String(c.id))}><TyIcon ty={c.ty} size={12} /> ATL-{c.id} · {c.t}</a>
+                            <a className="dw-rel-v" onClick={() => onOpen(String(c.id))}><TyIcon ty={c.ty} size={12} /> {taskSerial(c.id)} · {c.t}</a>
                             <button className="rel-x" title="Remove link" onClick={() => { removeRelationship(t.id, g.key, oid); toast("Link removed"); }}>
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M18 6 6 18M6 6l12 12" /></svg>
                             </button>
@@ -285,7 +286,7 @@ function EpicDetail({ e, onOpen }: { e: TaskRow; onOpen: (id: string) => void })
           <div className="epic-kids">
             {children.map((c) => (
               <a className="kid-row" key={c.id} onClick={() => onOpen(String(c.id))}>
-                <TyIcon ty={c.ty} /><span className="mono id">ATL-{c.id}</span><span className="kid-t truncate">{c.t}</span><StatusBadge s={c.s} /><PrioBadge p={c.p} /><PtsPill pts={c.pts} /><AvKey id={c.a} size="sm" />
+                <TyIcon ty={c.ty} /><span className="mono id">{taskSerial(c.id)}</span><span className="kid-t truncate">{c.t}</span><StatusBadge s={c.s} /><PrioBadge p={c.p} /><PtsPill pts={c.pts} /><AvKey id={c.a} size="sm" />
               </a>
             ))}
           </div>

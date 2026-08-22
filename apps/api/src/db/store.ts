@@ -25,6 +25,8 @@ import {
   type FileRef,
   type Notification,
   type Member,
+  type ProjectMember,
+  type Invitation,
   type Role,
   type Meeting,
   type Agreement,
@@ -57,11 +59,20 @@ export interface Session {
   createdAt: string;
 }
 
+/** project_visits row — per-user project visit history (recents). */
+export interface ProjectVisit {
+  userId: string;
+  projectId: string;
+  visitedAt: string;
+}
+
 export interface Store {
   users: User[];
-  organizations: Organization[];
+  organizations: (Organization & Meta)[];
   roles: Role[];
   members: Member[];
+  invitations: Invitation[];
+  projectMembers: ProjectMember[];
   projects: (Project & Meta)[];
   taskStatuses: TaskStatus[];
   taskTypes: TaskType[];
@@ -78,6 +89,7 @@ export interface Store {
   comments: Comment[];
   activity: ActivityEntry[];
   sessions: Session[];
+  projectVisits: ProjectVisit[];
   /** workspace role name → permission keys */
   rolePermissions: Record<string, string[]>;
   /** seeded = seed() is idempotent */
@@ -89,6 +101,8 @@ export const store: Store = {
   organizations: [],
   roles: [],
   members: [],
+  invitations: [],
+  projectMembers: [],
   projects: [],
   taskStatuses: [],
   taskTypes: [],
@@ -105,6 +119,7 @@ export const store: Store = {
   comments: [],
   activity: [],
   sessions: [],
+  projectVisits: [],
   rolePermissions: {},
   seeded: false,
 };

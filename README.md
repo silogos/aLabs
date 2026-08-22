@@ -21,8 +21,8 @@ pnpm dev               # runs the API (8788) and web (5173) together
 ```
 
 Then open **http://localhost:5173**. The API auto-logs you in as the seeded demo
-user (Aisha, Owner of Northwind → Atlas Platform 2.0), so the workspace is live
-immediately.
+user (Aisha — member of four workspaces, landing on Northwind → Atlas Platform
+2.0), so the workspace is live immediately and both switchers have real data.
 
 - Run one app: `pnpm dev:api` / `pnpm dev:web`
 - Type-check everything: `pnpm typecheck`
@@ -41,7 +41,8 @@ The web dev server proxies `/api` → `http://localhost:8788` (configurable via
 | Planning — iterations, milestones, backlog, velocity, timeline (Gantt) | ✅ live |
 | Task drawer — meta, subtasks, comments, status change | ✅ live |
 | Command palette (⌘K), create-task modal, toasts | ✅ live |
-| Auth, Organization, Project, Meeting, Agreement, Reporting, Notification | ✅ API routes |
+| Workspace & project switchers, mobile nav — multi-org demo seed, server-persisted recents, derived landing project | ✅ live |
+| Auth, Organization (members, invitations, soft delete), Project (members), User (profile, recents), Meeting, Agreement, Reporting, Notification | ✅ API routes |
 | Billing, Client Portal, AI | scaffolded in API |
 
 ## Architecture

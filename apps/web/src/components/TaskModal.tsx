@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useApp } from "../store.js";
 import { useTasksVersion, TY, P, SPRINTS, EPIC_IDS, taskById, allTasks, createIssue, type TypeId, type PrioId } from "../views/tasks-store.js";
 import { TyIcon } from "../views/tasks-ui.js";
+import { taskSerial } from "./ui.js";
 
 const CREATE_TYPES: TypeId[] = ["story", "task", "bug", "epic", "subtask"];
 const PLACEHOLDERS: Record<TypeId, string> = {
@@ -47,7 +48,7 @@ export function TaskModal() {
     });
     close();
     setTitle("");
-    toast(`Created ATL-${id} (${TY[ty].l})`);
+    toast(`Created ${taskSerial(id)} (${TY[ty].l})`);
     setTimeout(() => openTask(String(id)), 120);
   };
 
@@ -83,7 +84,7 @@ export function TaskModal() {
             <label className="cr-f"><span>Parent</span>
               <select className="fld" value={parent} onChange={(e) => setParent(e.target.value)}>
                 <option value="">Select parent…</option>
-                {allTasks().filter((t) => t.ty !== "epic" && t.ty !== "subtask").map((t) => <option key={t.id} value={t.id}>ATL-{t.id} · {t.t}</option>)}
+                {allTasks().filter((t) => t.ty !== "epic" && t.ty !== "subtask").map((t) => <option key={t.id} value={t.id}>{taskSerial(t.id)} · {t.t}</option>)}
               </select>
             </label>
           ) : ty === "epic" ? null : (

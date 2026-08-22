@@ -53,6 +53,17 @@ export const api = {
       `/organizations/${orgId}/members`,
     ).then((x) => x.data),
 
+  /* ---- recents (project visit history) ---- */
+  recents: (limit = 3) =>
+    req<{ data: { project: Project; organization: Organization; visitedAt: string }[] }>(
+      `/users/me/recents?limit=${limit}`,
+    ).then((x) => x.data),
+  touchProject: (pid: string) =>
+    req<{ data: { project: Project; visitedAt: string } }>("/users/me/recents", {
+      method: "POST",
+      body: JSON.stringify({ projectId: pid }),
+    }).then((x) => x.data),
+
   /* ---- tasks ---- */
   tasks: (pid: string, params: Record<string, string | undefined> = {}) => {
     const qs = new URLSearchParams();

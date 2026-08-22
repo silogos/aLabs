@@ -4,11 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api.js";
 
 export function Topbar({ title }: { title: string }) {
-  const { project, projLabel } = useApp();
+  const { project } = useApp();
   const { data: notifs } = useQuery({ queryKey: ["notifications"], queryFn: api.notifications });
   const unread = notifs?.filter((n) => !n.readAt).length ?? 0;
-  const pName = projLabel?.name ?? project?.name ?? "Atlas Platform 2.0";
-  const pIcon = projLabel?.icon ?? project?.icon ?? "A";
+  const pName = project?.name ?? "…";
+  const pIcon = project?.icon ?? pName[0];
 
   return (
     <header className="topbar" data-od-id="topbar">

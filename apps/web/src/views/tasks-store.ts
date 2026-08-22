@@ -30,7 +30,29 @@ export const P: Record<string, Person> = {
   jb: { name: "Jonas Berg", initials: "JB", color: "f", role: "Designer" },
 };
 
-export const who = (id: string | undefined): string => (id && P[id] ? P[id].name : "Unassigned");
+/** Runtime people registry (API org members keyed by user id) layered over the
+ *  demo `P` map — hydrated per project so avatars/names resolve for real data. */
+const API_PEOPLE: Record<string, Person> = {};
+export function registerPeople(users: { id: string; name: string }[]): void {
+  for (const u of users) {
+    const initials = u.name
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+    API_PEOPLE[u.id] = {
+      name: u.name,
+      initials,
+      color: "a",
+      role: "Member",
+    };
+  }
+}
+export const personOf = (id: string | undefined): Person | undefined =>
+  (id && (API_PEOPLE[id] ?? P[id])) || undefined;
+
+export const who = (id: string | undefined): string => personOf(id)?.name ?? "Unassigned";
 
 export const TY: Record<TypeId, { l: string; c: string; ic: string }> = {
   epic: { l: "Epic", c: "v", ic: '<path d="M12 3 21 12 12 21 3 12Z"/><path d="M12 9v6"/>' },
@@ -91,6 +113,7 @@ export const MILESTONES: Milestone[] = [
   { id: "ms2", t: "Design System v1", date: "2025-04-12", risk: "on_track", done: 11, total: 20 },
   { id: "ms3", t: "Security hardening", date: "2025-04-30", risk: "on_track", done: 6, total: 20 },
 ];
+const DEMO_MILESTONES: Milestone[] = MILESTONES.map((m) => ({ ...m }));
 export const VELOCITY = [
   { name: "S9", committed: 38, completed: 34 },
   { name: "S10", committed: 42, completed: 40 },
@@ -184,7 +207,7 @@ export interface TaskRow {
   desc?: Content;
 }
 
-let TASKS: TaskRow[] = [
+const DEMO_TASKS: TaskRow[] = [
   /* ----- Executable issues (101-120) ----- */
   { id: 101, t: "Implement OAuth2 SSO flow", s: "progress", a: "mk", rep: "ay", p: "p2", ty: "story", epic: 200, sp: "s14", lb: ["sso", "security"], due: "Mar 24", pts: 8, ac: [{ text: "Spec out scopes & claims", done: true }, { text: "Authorization-code + PKCE", done: true }, { text: "Token refresh rotation", done: false }, { text: "IdP sandbox sign-off", done: false }], rel: { blocks: [], blockedBy: [105], relates: [] }, com: [{ by: "mk", when: "2h ago", text: "Blocked on the IdP sandbox credentials — chasing Ops. PKCE verifier is done." }, { by: "sr", when: "yesterday", text: "Added a regression test for expired refresh tokens. Clean on staging." }], att: [{ n: "oauth-sequence.png", sz: "240 KB", by: "mk" }] },
   { id: 102, t: "Board drag-and-drop performance", s: "progress", a: "lc", rep: "lc", p: "p3", ty: "task", epic: 203, sp: "s14", lb: ["frontend"], due: "Mar 23", pts: 5, ac: [{ text: "Profile with 500 cards", done: true }, { text: "Virtualize off-screen columns", done: false }], com: [], att: [] },
@@ -221,6 +244,71 @@ let TASKS: TaskRow[] = [
   { id: 309, t: "Stabilise test fixtures", s: "progress", a: "dp", p: "p1", ty: "subtask", parent: 103, lb: [], due: "Mar 23", pts: 2, com: [] },
   { id: 310, t: "pg_trgm migration", s: "done", a: "dp", p: "p3", ty: "subtask", parent: 108, lb: [], due: "Mar 20", pts: 2, com: [] },
 ];
+let TASKS: TaskRow[] = structuredClone(DEMO_TASKS);
+
+/* ---- API hydration ----
+ * The demo set above IS the Atlas Platform 2.0 dataset (the API seed mirrors
+ * it). Switching to any other project swaps in that project's real API rows;
+ * switching back to Atlas restores the rich demo set (sprints, epics,
+ * relations, comments have no API counterpart yet — see header note). */
+interface ApiTaskLike {
+  id: string;
+  title: string;
+  statusId: string;
+  assigneeId: string | null;
+  priority: string;
+  typeId: string | null;
+  parentId: string | null;
+  dueDate: string | null;
+  order: number;
+  estimate: number | null;
+  labels: { name: string }[];
+}
+const STATUS_BY_NAME: Record<string, StatusId> = {
+  Backlog: "backlog",
+  "To Do": "todo",
+  "In Progress": "progress",
+  "In Review": "review",
+  Done: "done",
+};
+const PRIO_MAP: Record<string, PrioId> = { urgent: "p1", high: "p2", medium: "p3", low: "p4" };
+const dueFmt = (iso: string | null): string =>
+  iso ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—";
+
+export function hydrateProject(
+  projectKey: string,
+  tasks: ApiTaskLike[],
+  statuses: { id: string; name: string }[],
+  users: { id: string; name: string }[],
+): void {
+  registerPeople(users);
+  if (projectKey === "ATL") {
+    TASKS = structuredClone(DEMO_TASKS);
+    MILESTONES.length = 0;
+    MILESTONES.push(...DEMO_MILESTONES.map((m) => ({ ...m })));
+    notify();
+    return;
+  }
+  const statusMap = new Map(statuses.map((s) => [s.id, STATUS_BY_NAME[s.name] ?? "todo"]));
+  const orderByUuid = new Map(tasks.map((t) => [t.id, t.order]));
+  TASKS = tasks.map((t) => {
+    const parent = t.parentId ? orderByUuid.get(t.parentId) : undefined;
+    return {
+      id: t.order,
+      t: t.title,
+      s: statusMap.get(t.statusId) ?? "todo",
+      a: t.assigneeId ?? "",
+      p: PRIO_MAP[t.priority] ?? "p3",
+      ty: parent !== undefined ? ("subtask" as TypeId) : ("task" as TypeId),
+      lb: t.labels.map((l) => l.name),
+      due: dueFmt(t.dueDate),
+      pts: t.estimate ?? 0,
+      ...(parent !== undefined ? { parent } : {}),
+    };
+  });
+  MILESTONES.length = 0;
+  notify();
+}
 
 /* ---- read helpers ---- */
 export const taskById = (id: number): TaskRow | undefined => TASKS.find((t) => t.id === id);
@@ -228,7 +316,12 @@ export const subsOf = (id: number): TaskRow[] => TASKS.filter((t) => t.parent ==
 export const childrenOf = (id: number): TaskRow[] => TASKS.filter((t) => t.epic === id && t.ty !== "subtask");
 export const isWork = (t: TaskRow): boolean => !t.parent && t.ty !== "epic";
 export const allTasks = (): TaskRow[] => TASKS;
-export const late = (t: TaskRow): boolean => t.s !== "done" && t.due === "Mar 22";
+/** Overdue = due date before today, not done. ("Aug 20"-style display dates
+ *  carry no year — demo dates are current-year.) */
+export const late = (t: TaskRow): boolean => {
+  if (t.s === "done" || !t.due || t.due === "—") return false;
+  return new Date(`${t.due} ${new Date().getFullYear()}`).getTime() < Date.now();
+};
 export const ptsTotal = (list: TaskRow[]): number => list.reduce((n, t) => n + (t.pts || 0), 0);
 export const progOf = (list: TaskRow[]): number => {
   const d = list.filter((t) => t.s === "done").length;

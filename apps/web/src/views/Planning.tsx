@@ -3,6 +3,7 @@
  *  with the Tasks board/list/backlog via the `task.sp` field. */
 import { useState, useRef, useMemo, useEffect, type CSSProperties } from "react";
 import { useApp } from "../store.js";
+import { taskSerial } from "../components/ui.js";
 import {
   useTasksVersion,
   SPRINTS,
@@ -239,7 +240,7 @@ function SprintPane({
           const id = e.dataTransfer.getData("text/plain");
           if (id && plannable) {
             commitToSprint(+id, curSprint);
-            toast("ATL-" + id + " → " + SPRINTS[curSprint].name);
+            toast(taskSerial(id) + " → " + SPRINTS[curSprint].name);
           }
         }}
       >
@@ -334,7 +335,7 @@ function SprintItem({
           onClick={(e) => {
             e.stopPropagation();
             uncommitFromSprint(id);
-            toast("ATL-" + id + " returned to backlog");
+            toast(taskSerial(id) + " returned to backlog");
           }}
         >
           ◀
@@ -343,7 +344,7 @@ function SprintItem({
         <span className="plan-spacer" />
       )}
       <TyIcon ty={t.ty} />
-      <span className="tid">ATL-{t.id}</span>
+      <span className="tid">{taskSerial(t.id)}</span>
       <span className="tt">{t.t}</span>
       <StatusBadge s={t.s} />
       <span className="pts">{t.pts || 0}</span>
@@ -382,7 +383,7 @@ function BacklogPane({
           const id = e.dataTransfer.getData("text/plain");
           if (id) {
             uncommitFromSprint(+id);
-            toast("ATL-" + id + " returned to backlog");
+            toast(taskSerial(id) + " returned to backlog");
           }
         }}
       >
@@ -419,7 +420,7 @@ function BacklogPane({
                 }}
               >
                 <TyIcon ty={t.ty} />
-                <span className="tid">ATL-{t.id}</span>
+                <span className="tid">{taskSerial(t.id)}</span>
                 <span className="tt">{t.t}</span>
                 <span className={`pts ${t.pts ? "" : "unpointed"}`}>{t.pts || "?"}</span>
                 <PrioBadge p={t.p} />
@@ -431,7 +432,7 @@ function BacklogPane({
                     onClick={(e) => {
                       e.stopPropagation();
                       commitToSprint(t.id, curSprint);
-                      toast("ATL-" + t.id + " → " + SPRINTS[curSprint].name);
+                      toast(taskSerial(t.id) + " → " + SPRINTS[curSprint].name);
                     }}
                   >
                     →
