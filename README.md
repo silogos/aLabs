@@ -29,6 +29,7 @@ Then open **http://localhost:3000** and sign in with the seeded demo user:
 - Type-check everything: `pnpm typecheck`
 - Production build: `pnpm build`
 - Docker: `docker compose up --build` (single service on port 3000)
+- Dev database: `pnpm dev:db` (Postgres in Docker — unused by the app until the Drizzle repository lands)
 - API standalone (rare, for debugging): `pnpm dev:api` — Hono on port 8788
 
 ## What's implemented

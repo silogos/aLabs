@@ -9,6 +9,8 @@
     "dev": "turbo run dev",
     "dev:web": "pnpm --filter @pmin/web dev",
     "dev:api": "pnpm --filter @pmin/api dev",
+    "dev:db": "docker compose up -d postgres",
+    "dev:db:down": "docker compose stop postgres",
     "typecheck": "turbo run typecheck",
     "clean": "rm -rf apps/*/dist apps/*/.next packages/*/dist node_modules/.cache .turbo"
   },
