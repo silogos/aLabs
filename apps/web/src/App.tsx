@@ -1,22 +1,22 @@
 /** App shell — sidebar + topbar + active view + global overlays. */
 import { useEffect } from "react";
-import { useApp, type View } from "./store.js";
-import { Sidebar } from "./components/Sidebar.js";
-import { Topbar } from "./components/Topbar.js";
-import { Dashboard } from "./views/Dashboard.js";
-import { Tasks } from "./views/Tasks.js";
-import { Documents } from "./views/Documents.js";
-import { Planning } from "./views/Planning.js";
-import { Meetings } from "./views/Meetings.js";
-import { Reports } from "./views/Reports.js";
-import { Agreements } from "./views/Agreements.js";
-import { TaskDrawer } from "./components/TaskDrawer.js";
-import { TaskModal } from "./components/TaskModal.js";
-import { RelModal } from "./components/RelModal.js";
-import { CommandPalette } from "./components/CommandPalette.js";
-import { Toasts } from "./components/Toasts.js";
-import { NavModals } from "./components/SwitcherModals.js";
-import { MobileNav } from "./components/MobileNav.js";
+import { useApp, type View } from "./store";
+import { Sidebar } from "./components/Sidebar";
+import { Topbar } from "./components/Topbar";
+import { Dashboard } from "./views/Dashboard";
+import { Tasks } from "./views/Tasks";
+import { Documents } from "./views/Documents";
+import { Planning } from "./views/Planning";
+import { Meetings } from "./views/Meetings";
+import { Reports } from "./views/Reports";
+import { Agreements } from "./views/Agreements";
+import { TaskDrawer } from "./components/TaskDrawer";
+import { TaskModal } from "./components/TaskModal";
+import { RelModal } from "./components/RelModal";
+import { CommandPalette } from "./components/CommandPalette";
+import { Toasts } from "./components/Toasts";
+import { NavModals } from "./components/SwitcherModals";
+import { MobileNav } from "./components/MobileNav";
 
 const TITLES: Record<View, string> = {
   dashboard: "Dashboard",

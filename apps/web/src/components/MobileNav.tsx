@@ -2,8 +2,8 @@
  *  Design: account card at top toggles the panel below between Menu (nav sections)
  *  and Account (switchers + account rows + sign out); reopens on Menu. */
 import { useEffect, useState } from "react";
-import { useApp } from "../store.js";
-import { NAV_SECTIONS, NAV_ICONS, hueFor, projColor, ChevRight, ChevDown, useNavCounts } from "./navData.js";
+import { useApp } from "../store";
+import { NAV_SECTIONS, NAV_ICONS, hueFor, projColor, ChevRight, ChevDown, useNavCounts } from "./navData";
 
 export function MobileNav() {
   const { mNavOpen, setMNavOpen, setNavModal, setView, view, user, project, org, toast } = useApp();

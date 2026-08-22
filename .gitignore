@@ -8,5 +8,5 @@ dist
 !.env.example
 
 # Runtime uploads + tooling metadata
-apps/api/uploads/
+uploads/
 apps/web/index.html.artifact.json

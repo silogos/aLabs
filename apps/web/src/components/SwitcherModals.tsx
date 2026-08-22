@@ -4,10 +4,10 @@
  *  420px modals. Rows render live API data (store.tsx). */
 import { useEffect, useRef, useState } from "react";
 import { useQueries } from "@tanstack/react-query";
-import { api } from "../api.js";
-import { useApp } from "../store.js";
-import type { Project } from "../api.js";
-import { hueFor, projColor, CheckIcon, ChevRight } from "./navData.js";
+import { api } from "../api";
+import { useApp } from "../store";
+import type { Project } from "../api";
+import { hueFor, projColor, CheckIcon, ChevRight } from "./navData";
 
 function SearchField({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
   const ref = useRef<HTMLInputElement>(null);

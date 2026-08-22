@@ -1,13 +1,13 @@
 /** Task detail drawer — two-column workspace (main + side panel) + epic mode.
  *  Reads from the tasks mock store; entry via store.openTask(id). */
 import { useState, useRef, useEffect } from "react";
-import { useApp } from "../store.js";
-import { useTasksVersion, taskById, subsOf, childrenOf, SPRINTS, ST, P, PRIO, PRIO_ORDER, EPIC_META, EPIC_IDS, who, progOf, ptsTotal, setField, toggleAc, toggleSubDone, addSubtask, addComment, removeRelationship, type TaskRow, type RelKey } from "../views/tasks-store.js";
-import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill } from "../views/tasks-ui.js";
+import { useApp } from "../store";
+import { useTasksVersion, taskById, subsOf, childrenOf, SPRINTS, ST, P, PRIO, PRIO_ORDER, EPIC_META, EPIC_IDS, who, progOf, ptsTotal, setField, toggleAc, toggleSubDone, addSubtask, addComment, removeRelationship, type TaskRow, type RelKey } from "../views/tasks-store";
+import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill } from "../views/tasks-ui";
 import { RichTextEditor } from "@pmin/editor";
 import type { Content } from "@pmin/core";
-import { api } from "../api.js";
-import { taskSerial } from "./ui.js";
+import { api } from "../api";
+import { taskSerial } from "./ui";
 
 export function TaskDrawer({ id }: { id: string }) {
   useTasksVersion();

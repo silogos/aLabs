@@ -2,10 +2,10 @@
  *  Mirrors the design prototype (designs/app/alabs-app.html). Org/project rows
  *  render from live API data (store.tsx); row colors derive from the entity id. */
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../api.js";
+import { api } from "../api";
 import type { ReactNode } from "react";
-import type { View } from "../store.js";
-import { useApp } from "../store.js";
+import type { View } from "../store";
+import { useApp } from "../store";
 
 /* ---------- nav sections (sidebar + mobile sheet render from this) ---------- */
 

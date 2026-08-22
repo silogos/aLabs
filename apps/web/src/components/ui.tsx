@@ -1,6 +1,6 @@
 /** Shared UI primitives — small presentational helpers reusing the design CSS. */
 import type { TaskPriority } from "@pmin/core";
-import type { User } from "../api.js";
+import type { User } from "../api";
 
 export function initials(name: string): string {
   return name

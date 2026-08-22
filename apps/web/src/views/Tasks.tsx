@@ -1,9 +1,9 @@
 /** Tasks view — enterprise task management: Board / List / Tree. */
 import { useMemo, useState, useLayoutEffect, useRef, useCallback, type CSSProperties } from "react";
-import { useApp } from "../store.js";
-import { taskSerial } from "../components/ui.js";
-import { useTasksVersion, allTasks, subsOf, childrenOf, late, ptsTotal, progOf, taskById, COLS, SPRINTS, ST, P, who, EPIC_IDS, EPIC_META, bulkSetStatus, bulkSetAssignee, bulkDelete, setField, sprintRows, sprintStatusLabel, type StatusId, type TaskRow } from "./tasks-store.js";
-import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill, EpicChip } from "./tasks-ui.js";
+import { useApp } from "../store";
+import { taskSerial } from "../components/ui";
+import { useTasksVersion, allTasks, subsOf, childrenOf, late, ptsTotal, progOf, taskById, COLS, SPRINTS, ST, P, who, EPIC_IDS, EPIC_META, bulkSetStatus, bulkSetAssignee, bulkDelete, setField, sprintRows, sprintStatusLabel, type StatusId, type TaskRow } from "./tasks-store";
+import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill, EpicChip } from "./tasks-ui";
 
 type Mode = "board" | "table" | "backlog";
 type GroupBy = "none" | "sprint" | "epic" | "status" | "assignee";

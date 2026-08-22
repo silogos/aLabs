@@ -1,6 +1,6 @@
 /** Agreements view — master/detail split + lifecycle timeline + new-agreement modal. */
 import { useMemo, useState } from "react";
-import { useApp } from "../store.js";
+import { useApp } from "../store";
 
 type Tone = "accent" | "violet" | "info" | "warn";
 type AgrTypeKey = "sow" | "nda" | "contract" | "proposal";

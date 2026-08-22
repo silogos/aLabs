@@ -1,6 +1,6 @@
 /** Reports view — Overview KPIs/charts, and a standard-reports gallery + viewer. */
 import { useState, type ReactNode } from "react";
-import { useApp } from "../store.js";
+import { useApp } from "../store";
 
 type PersonId = "ay" | "mk" | "lc" | "dp" | "sr" | "jb";
 const PCOLOR: Record<PersonId, string> = { ay: "a", mk: "b", lc: "c", dp: "d", sr: "e", jb: "f" };

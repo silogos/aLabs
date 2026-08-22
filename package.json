@@ -7,10 +7,10 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "dev:api": "pnpm --filter @pmin/api dev",
     "dev:web": "pnpm --filter @pmin/web dev",
+    "dev:api": "pnpm --filter @pmin/api dev",
     "typecheck": "turbo run typecheck",
-    "clean": "rm -rf apps/*/dist packages/*/dist node_modules/.cache .turbo"
+    "clean": "rm -rf apps/*/dist apps/*/.next packages/*/dist node_modules/.cache .turbo"
   },
   "devDependencies": {
     "turbo": "^2",

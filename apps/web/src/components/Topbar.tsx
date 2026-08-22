@@ -1,7 +1,7 @@
 /** Topbar — breadcrumb + notifications. */
-import { useApp } from "../store.js";
+import { useApp } from "../store";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../api.js";
+import { api } from "../api";
 
 export function Topbar({ title }: { title: string }) {
   const { project } = useApp();

@@ -1,9 +1,9 @@
 /** Documents view — space/page tree + a BlockNote-powered block editor with persistence. */
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "../api.js";
-import { useApp } from "../store.js";
-import { initials, colorFor, timeAgo } from "../components/ui.js";
+import { api } from "../api";
+import { useApp } from "../store";
+import { initials, colorFor, timeAgo } from "../components/ui";
 import { RichTextEditor } from "@pmin/editor";
 import type { Content, Page } from "@pmin/core";
 

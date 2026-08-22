@@ -1,8 +1,8 @@
 /** Command palette — navigate, create, jump to a task. */
 import { useMemo, useState } from "react";
-import { useApp, type View } from "../store.js";
-import { taskSerial } from "./ui.js";
-import { useTasksVersion, allTasks } from "../views/tasks-store.js";
+import { useApp, type View } from "../store";
+import { taskSerial } from "./ui";
+import { useTasksVersion, allTasks } from "../views/tasks-store";
 
 export function CommandPalette() {
   useTasksVersion();

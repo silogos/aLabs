@@ -1,8 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import App from "./App.js";
-import { AppProvider } from "./store.js";
+import App from "./App";
+import { AppProvider } from "./store";
 
 import "./styles.css";
 import "@pmin/editor/editor.css";

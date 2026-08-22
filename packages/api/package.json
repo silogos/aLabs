@@ -1,0 +1,25 @@
+{
+  "name": "@pmin/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch src/serve.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pmin/core": "workspace:*",
+    "hono": "^4",
+    "@hono/node-server": "^1",
+    "zod": "^3"
+  },
+  "devDependencies": {
+    "tsx": "^4",
+    "typescript": "^5",
+    "@types/node": "^22"
+  }
+}

@@ -18,9 +18,9 @@ import {
   type ReactNode,
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, type User, type Project, type Organization } from "./api.js";
-import { setActiveProjectKey } from "./components/ui.js";
-import { hydrateProject } from "./views/tasks-store.js";
+import { api, type User, type Project, type Organization } from "./api";
+import { setActiveProjectKey } from "./components/ui";
+import { hydrateProject } from "./views/tasks-store";
 
 export type View = "dashboard" | "tasks" | "documents" | "planning" | "meetings" | "reports" | "agreements";
 export type NavModal = "acct" | "proj" | "org" | null;
