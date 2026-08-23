@@ -2,8 +2,8 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../api.js";
-import { useApp } from "../store.js";
+import { api } from "../api";
+import { useApp } from "../store";
 import {
   Avatar,
   Prio,
@@ -15,7 +15,7 @@ import {
   isOverdue,
   taskSerial,
   timeAgo,
-} from "../components/ui.js";
+} from "../components/ui";
 
 function Spark({ data, color }: { data: number[]; color: string }) {
   const max = Math.max(...data, 1);

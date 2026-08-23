@@ -17,6 +17,6 @@
  * point — pass e.g. `className="dw-desc"` and style `.alabs-editor.dw-desc …`
  * in your app; those rules win by specificity over the package base.
  */
-export { RichTextEditor, TaskLink } from "./editor.js";
-export type { RichTextEditorProps, TaskLinkAttrs } from "./editor.js";
+export { RichTextEditor, TaskLink } from "./editor";
+export type { RichTextEditorProps, TaskLinkAttrs } from "./editor";
 export type { Content } from "@pmin/core";

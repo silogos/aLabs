@@ -1,9 +1,8 @@
 /**
- * API client — thin fetch wrappers around the Hono API.
- *
- * Calls go to `/api/*` which Vite proxies to the API in dev. The active
- * organization + project are resolved once at boot (the demo auto-logs-in as
- * the seed user, who is a member of the seeded Northwind → Atlas project).
+ * API client — thin fetch wrappers around the API mounted in-process at
+ * /api (same origin, so the session cookie travels with every call). The
+ * active organization + project are resolved once at boot from the
+ * authenticated user's memberships.
  */
 import type {
   User,
@@ -35,7 +34,8 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg = body?.error?.message ?? `Request failed (${res.status})`;
-    throw new Error(msg);
+    // status on the Error lets callers branch on 401 (expired/revoked session)
+    throw Object.assign(new Error(msg), { status: res.status });
   }
   return body as T;
 }
@@ -45,6 +45,28 @@ const unwrap = <T>(r: Promise<{ data: T }>) => r.then((x) => x.data);
 /* ---- auth + tenant ---- */
 export const api = {
   me: () => req<{ data: User }>("/auth/me").then((x) => x.data),
+  login: (body: { email: string; password: string }) =>
+    req<{ data: { user: User; token: string } }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  register: (body: { name: string; email: string; password: string }) =>
+    req<{ data: { user: User; token: string } }>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  logout: () =>
+    req<{ data: { ok: boolean } }>("/auth/logout", { method: "POST" }).then((x) => x.data),
+  forgotPassword: (email: string) =>
+    req<{ data: { ok: boolean; resetPath?: string } }>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }).then((x) => x.data),
+  resetPassword: (body: { token: string; password: string }) =>
+    req<{ data: { ok: boolean } }>("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
   orgs: () => req<{ data: Organization[] }>("/organizations").then((x) => x.data),
   projects: (orgId: string) =>
     req<{ data: Project[] }>(`/organizations/${orgId}/projects`).then((x) => x.data),

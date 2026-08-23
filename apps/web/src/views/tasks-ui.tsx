@@ -1,6 +1,6 @@
 /** Shared presentational bits for the Tasks module — mirror designs/app/alabs-app.html markup. */
-import type { PrioId, StatusId, TypeId } from "./tasks-store.js";
-import { ST, TY, taskById, who, personOf } from "./tasks-store.js";
+import type { PrioId, StatusId, TypeId } from "./tasks-store";
+import { ST, TY, taskById, who, personOf } from "./tasks-store";
 
 export function TyIcon({ ty, size = 13 }: { ty: TypeId; size?: number }) {
   const m = TY[ty] ?? TY.task;

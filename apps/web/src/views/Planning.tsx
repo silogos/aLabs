@@ -2,8 +2,8 @@
  *  Reads the shared tasks-store (SPRINTS/TASKS/MILESTONES) so it stays in sync
  *  with the Tasks board/list/backlog via the `task.sp` field. */
 import { useState, useRef, useMemo, useEffect, type CSSProperties } from "react";
-import { useApp } from "../store.js";
-import { taskSerial } from "../components/ui.js";
+import { useApp } from "../store";
+import { taskSerial } from "../components/ui";
 import {
   useTasksVersion,
   SPRINTS,
@@ -35,8 +35,8 @@ import {
   addMilestone,
   updateMilestone,
   deleteMilestone,
-} from "./tasks-store.js";
-import { TyIcon, StatusBadge, PrioBadge, AvKey } from "./tasks-ui.js";
+} from "./tasks-store";
+import { TyIcon, StatusBadge, PrioBadge, AvKey } from "./tasks-ui";
 
 type PlanView = "board" | "timeline" | "velocity";
 type Zoom = "day" | "week" | "month";

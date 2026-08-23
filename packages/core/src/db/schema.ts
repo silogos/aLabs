@@ -49,14 +49,16 @@ import {
   planNameEnum,
   subscriptionStatusEnum,
   invoiceStatusEnum,
-} from "../enums.js";
+} from "../enums";
 
 const ts = () => timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow();
 const nullableTs = () => timestamp({ withTimezone: true, mode: "date" });
 
 /* ============================================================= Identity
  * Better Auth owns users/sessions/accounts/verifications. We model `users`
- * here so domain code can reference it.
+ * here so domain code can reference it; sessions/accounts follow the same
+ * shapes so credential rows migrate cleanly to Better Auth later.
+ * (`verifications` is unmodeled until email verification ships.)
  */
 
 export const users = pgTable("users", {
@@ -68,6 +70,56 @@ export const users = pgTable("users", {
   createdAt: ts().defaultNow(),
   updatedAt: ts().defaultNow(),
 });
+
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: uuid("id").primaryKey(),
+    token: varchar("token", { length: 128 }).notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+    createdAt: ts().defaultNow(),
+  },
+  (t) => [uniqueIndex("sessions_token_key").on(t.token), index("sessions_user_id_idx").on(t.userId)],
+);
+
+export const authAccounts = pgTable(
+  "accounts",
+  {
+    id: uuid("id").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** "credential" | "google" (Better Auth: provider_id) */
+    provider: varchar("provider", { length: 31 }).notNull(),
+    /** Provider-side subject id (Google `sub`); null for credentials. */
+    providerAccountId: varchar("provider_account_id", { length: 255 }),
+    /** scrypt:<salt>:<hash> — same format Better Auth uses. */
+    passwordHash: text("password_hash"),
+    createdAt: ts().defaultNow(),
+  },
+  (t) => [
+    index("accounts_user_id_idx").on(t.userId),
+    uniqueIndex("accounts_user_provider_key").on(t.userId, t.provider),
+  ],
+);
+
+export const passwordResets = pgTable(
+  "password_resets",
+  {
+    id: uuid("id").primaryKey(),
+    token: varchar("token", { length: 128 }).notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true, mode: "date" }),
+    createdAt: ts().defaultNow(),
+  },
+  (t) => [uniqueIndex("password_resets_token_key").on(t.token)],
+);
 
 /* ============================================================= Workspace */
 
@@ -83,6 +135,7 @@ export const organizations = pgTable("organizations", {
   website: text("website"),
   createdAt: ts().defaultNow(),
   updatedAt: ts().defaultNow(),
+  deletedAt: nullableTs(),
 });
 
 export const permissions = pgTable("permissions", {
@@ -91,15 +144,26 @@ export const permissions = pgTable("permissions", {
   description: text("description"),
 });
 
-export const roles = pgTable("roles", {
-  id: uuid("id").primaryKey(),
-  organizationId: uuid("organization_id"), // null = system default
-  scope: roleScopeEnum("scope").notNull(),
-  name: varchar("name", { length: 50 }).notNull(),
-  isSystem: boolean("is_system").notNull().default(false),
-  createdAt: ts().defaultNow(),
-  updatedAt: ts().defaultNow(),
-});
+export const roles = pgTable(
+  "roles",
+  {
+    id: uuid("id").primaryKey(),
+    organizationId: uuid("organization_id"), // null = system default
+    scope: roleScopeEnum("scope").notNull(),
+    name: varchar("name", { length: 50 }).notNull(),
+    isSystem: boolean("is_system").notNull().default(false),
+    // permission keys embedded on the row (the normalized role_permissions
+    // join below stays available for a future admin UI)
+    permissions: text("permissions").array().notNull().default([]),
+    createdAt: ts().defaultNow(),
+    updatedAt: ts().defaultNow(),
+  },
+  (t) => [
+    // lookup index (a unique version needs nulls-not-distinct, which this
+    // drizzle-orm doesn't support yet — seeding is guarded, code takes first)
+    index("roles_scope_name_idx").on(t.scope, t.name, t.organizationId),
+  ],
+);
 
 export const rolePermissions = pgTable(
   "role_permissions",
@@ -195,7 +259,8 @@ export const projectMembers = pgTable(
       .notNull()
       .references(() => roles.id),
     status: memberStatusEnum("status").notNull().default("active"),
-    joinedAt: ts().notNull().defaultNow(),
+    // null while the invitation is pending (set on accept), like org members
+    joinedAt: nullableTs(),
     createdAt: ts().defaultNow(),
     updatedAt: ts().defaultNow(),
   },
@@ -282,6 +347,7 @@ export const tasks = pgTable(
     milestoneId: uuid("milestone_id").references(() => milestones.id),
     dueDate: nullableTs(),
     order: integer("order").notNull().default(0),
+    estimate: integer("estimate"),
     createdAt: ts().defaultNow(),
     updatedAt: ts().defaultNow(),
     deletedAt: nullableTs(),
@@ -296,10 +362,31 @@ export const tasks = pgTable(
 export const taskLabelLinks = pgTable(
   "task_label_links",
   {
-    taskId: uuid("task_id").references(() => tasks.id),
-    labelId: uuid("label_id").references(() => taskLabels.id),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    labelId: uuid("label_id")
+      .notNull()
+      .references(() => taskLabels.id, { onDelete: "cascade" }),
   },
   (t) => [primaryKey({ columns: [t.taskId, t.labelId] })],
+);
+
+/** Task comments (task drawer). */
+export const taskComments = pgTable(
+  "task_comments",
+  {
+    id: uuid("id").primaryKey(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    body: text("body").notNull(),
+    createdAt: ts().defaultNow(),
+  },
+  (t) => [index("task_comments_task_idx").on(t.taskId)],
 );
 
 /* ============================================================= Documents */
@@ -328,8 +415,9 @@ export const pages = pgTable(
       .references(() => spaces.id),
     parentId: uuid("parent_id"),
     title: varchar("title", { length: 255 }).notNull(),
-    content: jsonb("content").notNull().default([]),
+    content: jsonb("content").notNull(),
     icon: varchar("icon", { length: 20 }),
+    editedBy: uuid("edited_by").references(() => users.id),
     order: integer("order").notNull().default(0),
     createdAt: ts().defaultNow(),
     updatedAt: ts().defaultNow(),
@@ -357,11 +445,9 @@ export const files = pgTable("files", {
     .references(() => projects.id),
   name: varchar("name", { length: 255 }).notNull(),
   mimeType: varchar("mime_type", { length: 100 }).notNull(),
-  size: bigint("size", { mode: "bigint" }).notNull(),
+  size: bigint("size", { mode: "number" }).notNull(),
   url: text("url").notNull(),
-  uploadedBy: uuid("uploaded_by")
-    .notNull()
-    .references(() => users.id),
+  uploadedBy: uuid("uploaded_by").references(() => users.id),
   createdAt: ts().defaultNow(),
   deletedAt: nullableTs(),
 });
@@ -378,6 +464,10 @@ export const iterations = pgTable("iterations", {
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   status: iterationStatusEnum("status").notNull().default("planned"),
+  // seeded aggregates (velocity widgets) — kept stored, not derived
+  committedPoints: integer("committed_points").notNull().default(0),
+  completedPoints: integer("completed_points").notNull().default(0),
+  progress: integer("progress").notNull().default(0),
   createdAt: ts().defaultNow(),
   updatedAt: ts().defaultNow(),
 });
@@ -391,6 +481,10 @@ export const milestones = pgTable("milestones", {
   description: text("description"),
   dueDate: date("due_date"),
   status: milestoneStatusEnum("status").notNull().default("planned"),
+  // seeded aggregates (milestone widgets) — kept stored, not derived
+  totalTasks: integer("total_tasks").notNull().default(0),
+  doneTasks: integer("done_tasks").notNull().default(0),
+  progress: integer("progress").notNull().default(0),
   createdAt: ts().defaultNow(),
   updatedAt: ts().defaultNow(),
 });
@@ -500,6 +594,27 @@ export const clientShares = pgTable(
 );
 
 /* ============================================================= Notification */
+
+/** Dashboard activity feed (seeded demo events today; written by modules
+ *  as they gain audit trails). `whenLabel` is the display string shown in
+ *  the UI next to the timestamp. */
+export const activity = pgTable(
+  "activity",
+  {
+    id: uuid("id").primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id),
+    kind: varchar("kind", { length: 10 }).notNull(), // move|doc|com|done|mile
+    actorId: uuid("actor_id")
+      .notNull()
+      .references(() => users.id),
+    target: varchar("target", { length: 255 }).notNull(),
+    occurredAt: ts().defaultNow(),
+    whenLabel: varchar("when_label", { length: 100 }).notNull(),
+  },
+  (t) => [index("activity_project_when_idx").on(t.projectId, t.occurredAt)],
+);
 
 export const notifications = pgTable(
   "notifications",

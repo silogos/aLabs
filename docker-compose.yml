@@ -1,41 +1,45 @@
-# docker-compose — runs api, web, and postgres.
+# docker-compose — runs the full-stack web app.
 #
-# The API ships an in-memory store seeded with the aLabs demo data, so the stack
-# is fully usable without postgres. Point the API at postgres by setting
-# DATABASE_URL and swapping the repository implementation behind the service
-# layer (see packages/core/src/db/schema.ts — the Drizzle source of truth).
+# Next.js serves the UI and the API in one process: the Hono app is mounted
+# in-process under /api. The API currently runs against an in-memory store
+# seeded with the aLabs demo data; Postgres is provisioned below so the
+# Drizzle repository can be wired in by setting DATABASE_URL on `web`
+# (see packages/core/src/db/schema.ts — the Drizzle source of truth).
 services:
-  api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-    environment:
-      PORT: "8787"
-      # DATABASE_URL: postgres://alabs:alabs@postgres:5432/alabs
-    ports:
-      - "8787:8787"
-
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
     environment:
-      VITE_API_URL: "http://api:8787"
+      WEB_URL: "http://localhost:3000"
+      BETTER_AUTH_SECRET: "change-me"
+      UPLOADS_DIR: /data/uploads
+      DATABASE_URL: postgres://alabs:alabs@postgres:5432/alabs
+      # GOOGLE_CLIENT_ID: ...
+      # GOOGLE_CLIENT_SECRET: ...
     ports:
-      - "5173:5173"
+      - "3000:3000"
+    volumes:
+      - ./uploads:/data/uploads
     depends_on:
-      - api
+      postgres:
+        condition: service_healthy
 
-  # postgres:
-  #   image: postgres:16-alpine
-  #   environment:
-  #     POSTGRES_USER: alabs
-  #     POSTGRES_PASSWORD: alabs
-  #     POSTGRES_DB: alabs
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - pgdata:/var/lib/postgresql/data
-  #
-  # volumes:
-  #   pgdata:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: alabs
+      POSTGRES_PASSWORD: alabs
+      POSTGRES_DB: alabs
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alabs -d alabs"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

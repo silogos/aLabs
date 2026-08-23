@@ -1,6 +1,6 @@
 /** Meetings view — master/detail split: filterable list + rich detail pane. */
 import { useState, type ReactNode } from "react";
-import { useApp } from "../store.js";
+import { useApp } from "../store";
 
 type PersonId = "ay" | "mk" | "lc" | "dp" | "sr" | "jb";
 type MeetingType = "standup" | "review" | "planning" | "client" | "other";

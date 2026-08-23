@@ -1,9 +1,9 @@
 /** Create-issue modal — type picker + progressive fields (writes to tasks store). */
 import { useState } from "react";
-import { useApp } from "../store.js";
-import { useTasksVersion, TY, P, SPRINTS, EPIC_IDS, taskById, allTasks, createIssue, type TypeId, type PrioId } from "../views/tasks-store.js";
-import { TyIcon } from "../views/tasks-ui.js";
-import { taskSerial } from "./ui.js";
+import { useApp } from "../store";
+import { useTasksVersion, TY, P, SPRINTS, EPIC_IDS, taskById, allTasks, createIssue, type TypeId, type PrioId } from "../views/tasks-store";
+import { TyIcon } from "../views/tasks-ui";
+import { taskSerial } from "./ui";
 
 const CREATE_TYPES: TypeId[] = ["story", "task", "bug", "epic", "subtask"];
 const PLACEHOLDERS: Record<TypeId, string> = {
