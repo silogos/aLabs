@@ -281,6 +281,19 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
       }
     }
 
+    // cross-issue links from the design's Relationships section:
+    // 101 blocked-by 105 → 105 blocks 101; 108 relates 117; 116 blocks 109
+    const byOrder = (o: number) => parents.find((p) => p.order === o);
+    const link = async (sourceOrder: number, targetOrder: number, type: "blocks" | "relates_to") => {
+      const src = byOrder(sourceOrder);
+      const tgt = byOrder(targetOrder);
+      if (src && tgt)
+        await taskRepo.addTaskLink({ projectId: atlas.id, taskId: src.id, targetId: tgt.id, type });
+    };
+    await link(105, 101, "blocks");
+    await link(108, 117, "relates_to");
+    await link(116, 109, "blocks");
+
     // wire iteration points (stored aggregates, matching the design numbers)
     const points = (filter: (t: TaskWithMeta) => boolean) =>
       parents.filter(filter).reduce((n, t) => n + (t.estimate ?? 0), 0);

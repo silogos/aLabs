@@ -7,6 +7,8 @@ import {
   taskCreate,
   taskUpdate,
   taskSchema,
+  taskLinkAdd,
+  taskLinkSchema,
   paginationQuery,
   paginate,
 } from "@pmin/core";
@@ -39,7 +41,9 @@ function projectIdOf(c: Ctx) {
 // ---- list ----
 task.get("/tasks", requirePermission("task:view"), async (c) => {
   const q = parseQuery(c.req.query(), taskListQuery);
-  const rows = await taskRepo.listTasks(projectIdOf(c), q);
+  const pid = projectIdOf(c);
+  const rows = await taskRepo.listTasks(pid, q);
+  taskRepo.attachLinks(rows, await taskRepo.listProjectLinks(pid));
   return paginated(c, paginate(rows.map((r) => taskSchema.parse(r)), q));
 });
 
@@ -101,6 +105,27 @@ task.post("/tasks/types", requirePermission("task:update"), async (c) => {
   return created(c, await taskRepo.insertType(pid, body.name));
 });
 
+// ---- cross-issue links (static sub-path BEFORE :id) ----
+task.post("/tasks/:id/links", requirePermission("task:update"), async (c) => {
+  const t = await findTask(c);
+  const input = parseBody(await c.req.json(), taskLinkAdd);
+  const link = await taskRepo.addTaskLink({
+    projectId: projectIdOf(c),
+    taskId: t.id,
+    targetId: input.targetId,
+    type: input.type,
+  });
+  if (!link) throw badRequest("Cannot link a task to itself or across projects");
+  return created(c, taskLinkSchema.parse(link));
+});
+
+task.delete("/tasks/:id/links/:linkId", requirePermission("task:update"), async (c) => {
+  const t = await findTask(c);
+  const ok = await taskRepo.deleteTaskLink(projectIdOf(c), t.id, c.req.param("linkId")!);
+  if (!ok) throw notFound();
+  return noContent(c);
+});
+
 task.get("/tasks/:id", requirePermission("task:view"), async (c) => {
   return data(c, await serializeTask(await findTask(c)));
 });
@@ -155,6 +180,7 @@ async function findTask(c: Ctx) {
 }
 
 async function serializeTask(t: taskRepo.TaskWithMeta) {
+  taskRepo.attachLinks([t], await taskRepo.listProjectLinks(t.projectId));
   return {
     ...t,
     subtasks: await taskRepo.listSubtasks(t.id),

@@ -9,6 +9,7 @@
  */
 import { useSyncExternalStore } from "react";
 import type { Content } from "@pmin/core";
+import { api } from "../api";
 
 export type StatusId = "backlog" | "todo" | "progress" | "review" | "done";
 export type TypeId = "epic" | "story" | "task" | "bug" | "subtask";
@@ -263,6 +264,7 @@ interface ApiTaskLike {
   order: number;
   estimate: number | null;
   labels: { name: string }[];
+  links?: { id: string; sourceId: string; targetId: string; type: string }[];
 }
 const STATUS_BY_NAME: Record<string, StatusId> = {
   Backlog: "backlog",
@@ -275,14 +277,26 @@ const PRIO_MAP: Record<string, PrioId> = { urgent: "p1", high: "p2", medium: "p3
 const dueFmt = (iso: string | null): string =>
   iso ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—";
 
+/**** API-backed mode **************************************************
+ * For non-ATL projects the rows come from the API; relationship add/remove
+ * mirrors to the API (optimistic — the local arrays update immediately). */
+let API_PROJECT: string | null = null;
+let ACTIVE_PID: string | null = null;
+let UUID_BY_ORDER = new Map<number, string>();
+
+const orderOfUuid = (m: Map<string, number>, uuid: string): number => m.get(uuid) ?? -1;
+
 export function hydrateProject(
   projectKey: string,
+  projectId: string | null,
   tasks: ApiTaskLike[],
   statuses: { id: string; name: string }[],
   users: { id: string; name: string }[],
 ): void {
   registerPeople(users);
   if (projectKey === "ATL") {
+    API_PROJECT = null;
+    UUID_BY_ORDER = new Map();
     TASKS = structuredClone(DEMO_TASKS);
     MILESTONES.length = 0;
     MILESTONES.push(...DEMO_MILESTONES.map((m) => ({ ...m })));
@@ -291,10 +305,21 @@ export function hydrateProject(
   }
   const statusMap = new Map(statuses.map((s) => [s.id, STATUS_BY_NAME[s.name] ?? "todo"]));
   const orderByUuid = new Map(tasks.map((t) => [t.id, t.order]));
+  UUID_BY_ORDER = new Map(tasks.map((t) => [t.order, t.id]));
+  API_PROJECT = projectId ? "api" : null;
+  ACTIVE_PID = projectId;
   TASKS = tasks.map((t) => {
     const parent = t.parentId ? orderByUuid.get(t.parentId) : undefined;
+    const rel = { blocks: [] as number[], blockedBy: [] as number[], relates: [] as number[] };
+    for (const l of t.links ?? []) {
+      if (l.type === "blocks" && l.targetId === t.id) rel.blockedBy.push(orderOfUuid(orderByUuid, l.sourceId));
+      else if (l.type === "blocks" && l.sourceId === t.id) rel.blocks.push(orderOfUuid(orderByUuid, l.targetId));
+      else if (l.type === "relates_to")
+        rel.relates.push(orderOfUuid(orderByUuid, l.sourceId === t.id ? l.targetId : l.sourceId));
+    }
     return {
       id: t.order,
+      rel,
       t: t.title,
       s: statusMap.get(t.statusId) ?? "todo",
       a: t.assigneeId ?? "",
@@ -403,6 +428,7 @@ export function addRelationship(taskId: number, key: RelKey, otherId: number): v
   const t = taskById(taskId);
   const o = taskById(otherId);
   if (!t || !o) return;
+  void apiMirror("add", taskId, key, otherId);
   t.rel = t.rel ?? { blocks: [], blockedBy: [], relates: [] };
   if (!t.rel[key]!.includes(otherId)) t.rel[key]!.push(otherId);
   const rev = REL_REVERSE[key];
@@ -412,6 +438,7 @@ export function addRelationship(taskId: number, key: RelKey, otherId: number): v
 }
 /** Remove a link (and its reverse on the other issue). */
 export function removeRelationship(taskId: number, key: RelKey, otherId: number): void {
+  void apiMirror("remove", taskId, key, otherId);
   const t = taskById(taskId);
   const o = taskById(otherId);
   if (t?.rel) t.rel[key] = (t.rel[key] || []).filter((x) => x !== otherId);
@@ -627,5 +654,42 @@ export function deleteMilestone(id: string): void {
   if (i >= 0) {
     MILESTONES.splice(i, 1);
     notify();
+  }
+}
+
+
+/** Mirror a relationship mutation to the API (hydrated projects only). */
+const API_TYPE: Record<RelKey, "blocks" | "blocked_by" | "relates_to"> = {
+  blocks: "blocks",
+  blockedBy: "blocked_by",
+  relates: "relates_to",
+};
+async function apiMirror(
+  action: "add" | "remove",
+  taskId: number,
+  key: RelKey,
+  otherId: number,
+): Promise<void> {
+  if (API_PROJECT !== "api") return;
+  const pid = ACTIVE_PID;
+  const taskUuid = UUID_BY_ORDER.get(taskId);
+  const otherUuid = UUID_BY_ORDER.get(otherId);
+  if (!pid || !taskUuid || !otherUuid) return;
+  try {
+    if (action === "add") {
+      await api.addTaskLink(pid, taskUuid, { targetId: otherUuid, type: API_TYPE[key] });
+    } else {
+      // find the link row touching the pair, then delete it
+      const page = await api.tasks(pid, {});
+      const me = page.items.find((x) => x.id === taskUuid);
+      const link = (me?.links ?? []).find(
+        (l) =>
+          (l.sourceId === taskUuid && l.targetId === otherUuid) ||
+          (l.sourceId === otherUuid && l.targetId === taskUuid),
+      );
+      if (link) await api.deleteTaskLink(pid, taskUuid, link.id);
+    }
+  } catch {
+    /* offline-tolerant: the local optimistic state stands */
   }
 }

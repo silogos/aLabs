@@ -107,6 +107,19 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(body),
     }).then((x) => x.data),
+  addTaskLink: (
+    pid: string,
+    taskId: string,
+    body: { targetId: string; type: "blocks" | "blocked_by" | "relates_to" },
+  ) =>
+    req<{ data: { id: string } }>(`/projects/${pid}/tasks/${taskId}/links`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  deleteTaskLink: (pid: string, taskId: string, linkId: string) =>
+    req<{ data: unknown }>(`/projects/${pid}/tasks/${taskId}/links/${linkId}`, {
+      method: "DELETE",
+    }).then((x) => x.data),
   statuses: (pid: string) =>
     req<{ data: TaskStatus[] }>(`/projects/${pid}/tasks/statuses`).then((x) => x.data),
   labels: (pid: string) =>
