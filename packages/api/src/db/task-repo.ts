@@ -3,7 +3,7 @@
  *  embed their labels array (joined + grouped here); the list endpoint keeps
  *  its cursor envelope by paginating the fetched rows in memory (prototype
  *  volumes). */
-import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { db } from "./pg";
 import {
   tasks,
@@ -11,9 +11,10 @@ import {
   taskTypes,
   taskLabels,
   taskLabelLinks,
+  taskLinks,
   taskComments,
 } from "@pmin/core/db";
-import { uuidv7, type Task, type TaskStatus, type TaskType, type TaskLabel } from "@pmin/core";
+import { uuidv7, type Task, type TaskStatus, type TaskType, type TaskLabel, type TaskLink } from "@pmin/core";
 
 type TaskRow = typeof tasks.$inferSelect;
 type StatusRow = typeof taskStatuses.$inferSelect;
@@ -174,6 +175,7 @@ const baseTask = (r: TaskRow): TaskWithMeta => ({
   order: r.order,
   estimate: r.estimate,
   labels: [],
+  links: [],
   createdAt: r.createdAt.toISOString(),
   updatedAt: r.updatedAt.toISOString(),
   deletedAt: iso(r.deletedAt),
@@ -348,6 +350,104 @@ export async function listSubtasks(taskId: string): Promise<TaskWithMeta[]> {
     .where(and(eq(tasks.parentId, taskId), isNull(tasks.deletedAt)))
     .orderBy(asc(tasks.order));
   return withLabels(rows);
+}
+
+/* ---------------- task links (cross-issue relationships) ---------------- */
+
+export type TaskLinkTypeValue = TaskLink["type"];
+
+/** All links touching a project's tasks (both directions). */
+export async function listProjectLinks(projectId: string): Promise<TaskLink[]> {
+  const rows = await db.select().from(taskLinks).where(eq(taskLinks.projectId, projectId));
+  return rows.map((r) => ({
+    id: r.id,
+    projectId: r.projectId,
+    sourceId: r.sourceId,
+    targetId: r.targetId,
+    type: r.type,
+    createdAt: r.createdAt.toISOString(),
+  }));
+}
+
+/** Attach `links` (both directions) to serialized tasks. */
+export function attachLinks(rows: TaskWithMeta[], links: TaskLink[]): void {
+  for (const t of rows) {
+    t.links = links.filter((l) => l.sourceId === t.id || l.targetId === t.id);
+  }
+}
+
+/**
+ * Create a link. "blocked_by" is normalized to a directed `blocks` row
+ * (source blocks target); "relates_to" is stored once per pair (deduped in
+ * both directions). Returns the existing row when the link already exists.
+ */
+export async function addTaskLink(input: {
+  projectId: string;
+  taskId: string;
+  targetId: string;
+  type: TaskLinkTypeValue;
+}): Promise<TaskLink | null> {
+  if (input.taskId === input.targetId) return null;
+  const target = await getTask(input.targetId);
+  if (!target || target.projectId !== input.projectId) return null;
+
+  const [source, targetId, type] =
+    input.type === "blocked_by"
+      ? ([input.targetId, input.taskId, "blocks"] as const)
+      : ([input.taskId, input.targetId, input.type] as const);
+
+  // relates_to is directionless — reuse the inverse row if present
+  if (type === "relates_to") {
+    const existing = await listProjectLinks(input.projectId);
+    const inv = existing.find(
+      (l) => l.type === "relates_to" && l.sourceId === targetId && l.targetId === source,
+    );
+    if (inv) return inv;
+  }
+
+  const id = uuidv7();
+  const [row] = await db
+    .insert(taskLinks)
+    .values({
+      id,
+      projectId: input.projectId,
+      sourceId: source,
+      targetId,
+      type,
+      createdAt: new Date(),
+    })
+    .onConflictDoNothing({ target: [taskLinks.sourceId, taskLinks.targetId, taskLinks.type] })
+    .returning();
+  if (row) {
+    return {
+      id: row.id,
+      projectId: row.projectId,
+      sourceId: row.sourceId,
+      targetId: row.targetId,
+      type: row.type,
+      createdAt: row.createdAt.toISOString(),
+    };
+  }
+  // conflict — return the existing row
+  const existing = await listProjectLinks(input.projectId);
+  return existing.find(
+    (l) => l.sourceId === source && l.targetId === targetId && l.type === type,
+  ) ?? null;
+}
+
+/** Delete a link touching the task (either end). Unknown ids are a no-op. */
+export async function deleteTaskLink(projectId: string, taskId: string, linkId: string): Promise<boolean> {
+  const res = await db
+    .delete(taskLinks)
+    .where(
+      and(
+        eq(taskLinks.id, linkId),
+        eq(taskLinks.projectId, projectId),
+        or(eq(taskLinks.sourceId, taskId), eq(taskLinks.targetId, taskId)),
+      ),
+    )
+    .returning();
+  return res.length > 0;
 }
 
 /* ---------------- comments ---------------- */

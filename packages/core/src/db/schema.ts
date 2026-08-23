@@ -37,6 +37,7 @@ import {
   projectStatusEnum,
   projectVisibilityEnum,
   taskPriorityEnum,
+  taskLinkTypeEnum,
   iterationStatusEnum,
   milestoneStatusEnum,
   meetingTypeEnum,
@@ -370,6 +371,32 @@ export const taskLabelLinks = pgTable(
       .references(() => taskLabels.id, { onDelete: "cascade" }),
   },
   (t) => [primaryKey({ columns: [t.taskId, t.labelId] })],
+);
+
+/** Cross-issue relationships (blocks / blocked_by / relates_to).
+ *  One directed row per link; blocked_by is the computed inverse of blocks
+ *  (docs/tech/03-data-model.md: task_links). */
+export const taskLinks = pgTable(
+  "task_links",
+  {
+    id: uuid("id").primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    sourceId: uuid("source_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    targetId: uuid("target_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    type: taskLinkTypeEnum("type").notNull(),
+    createdAt: ts().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("task_link_uniq").on(t.sourceId, t.targetId, t.type),
+    index("task_link_project_source_idx").on(t.projectId, t.sourceId),
+    index("task_link_project_target_idx").on(t.projectId, t.targetId),
+  ],
 );
 
 /** Task comments (task drawer). */

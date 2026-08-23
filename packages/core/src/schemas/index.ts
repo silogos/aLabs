@@ -21,6 +21,7 @@ import {
   AgreementStatus,
   ClientUserStatus,
   PlanName,
+  type TaskLinkType,
 } from "../enums";
 import { contentSchema } from "../content";
 
@@ -210,6 +211,25 @@ export const taskTypeSchema = z.object({
 });
 export type TaskType = z.infer<typeof taskTypeSchema>;
 
+/* ---------------- Task links (cross-issue relationships) ---------------- */
+
+const taskLinkType = z.enum(["blocks", "blocked_by", "relates_to"]);
+
+export const taskLinkSchema = z.object({
+  id,
+  projectId: id,
+  sourceId: id,
+  targetId: id,
+  type: taskLinkType,
+  createdAt: iso,
+});
+export type TaskLink = z.infer<typeof taskLinkSchema>;
+
+export const taskLinkAdd = z.object({
+  targetId: id,
+  type: taskLinkType,
+});
+
 export const taskSchema = z.object({
   id,
   projectId: id,
@@ -229,6 +249,7 @@ export const taskSchema = z.object({
   estimate: z.number().int().nullable(),
   createdAt: iso,
   updatedAt: iso,
+  links: z.array(taskLinkSchema).default([]),
 });
 export type Task = z.infer<typeof taskSchema>;
 

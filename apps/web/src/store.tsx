@@ -257,6 +257,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         hydrateProject(
           project.key,
+          project.id,
           page.items,
           statuses,
           members.map((m) => m.user),

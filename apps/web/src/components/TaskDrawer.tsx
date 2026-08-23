@@ -230,7 +230,7 @@ function TaskDetail({ t, onOpen, toast, openRelPicker, pid }: { t: TaskRow; onOp
             <div className="sp-row"><span className="sp-k">Sprint</span><div className="sp-v"><span className="muted tiny">Inherited</span></div></div>
           )}
           {t.ty !== "subtask" && (
-            <SpSelect k="Epic" value={t.epic ? String(t.epic) : ""} options={[["", "None"], ...EPIC_IDS.map((e) => [String(e), taskById(e)!.t] as [string, string])]} onChange={(v) => upd("epic", v ? Number(v) : undefined, "Updated")} />
+            <SpSelect k="Epic" value={t.epic ? String(t.epic) : ""} options={[["", "None"], ...EPIC_IDS.filter((e) => taskById(e)).map((e) => [String(e), taskById(e)!.t] as [string, string])]} onChange={(v) => upd("epic", v ? Number(v) : undefined, "Updated")} />
           )}
           <div className="sp-row"><span className="sp-k">Labels</span><div className="sp-v">{(t.lb || []).length ? (t.lb || []).map((l) => <span className="tag" key={l}>{l}</span>) : <span className="muted tiny">None</span>}</div></div>
           <div className="sp-row"><span className="sp-k">Story points</span><div className="sp-v"><input className="sp-num" type="number" min={0} value={t.pts || 0} onChange={(e) => upd("pts", Number(e.target.value), "Updated")} /></div></div>
