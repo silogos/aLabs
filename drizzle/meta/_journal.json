@@ -22,6 +22,13 @@
       "when": 1787480879278,
       "tag": "0002_perpetual_callisto",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787481694380,
+      "tag": "0003_absurd_gressill",
+      "breakpoints": true
     }
   ]
 }

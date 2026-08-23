@@ -26,7 +26,7 @@ export const ready: Promise<User[]> = (async () => {
     const users = await seedAuth();
     const { orgs, roles } = await seedWorkspace(users);
     const projects = await seedProjects(users, orgs, roles);
-    if (!store.seeded) seed(users, projects);
+    if (!store.seeded) await seed(users, projects);
     return users;
   } finally {
     await conn`select pg_advisory_unlock(${BOOT_LOCK_KEY})`.catch(() => {});

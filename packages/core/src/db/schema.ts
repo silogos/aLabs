@@ -347,6 +347,7 @@ export const tasks = pgTable(
     milestoneId: uuid("milestone_id").references(() => milestones.id),
     dueDate: nullableTs(),
     order: integer("order").notNull().default(0),
+    estimate: integer("estimate"),
     createdAt: ts().defaultNow(),
     updatedAt: ts().defaultNow(),
     deletedAt: nullableTs(),
@@ -361,10 +362,31 @@ export const tasks = pgTable(
 export const taskLabelLinks = pgTable(
   "task_label_links",
   {
-    taskId: uuid("task_id").references(() => tasks.id),
-    labelId: uuid("label_id").references(() => taskLabels.id),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    labelId: uuid("label_id")
+      .notNull()
+      .references(() => taskLabels.id, { onDelete: "cascade" }),
   },
   (t) => [primaryKey({ columns: [t.taskId, t.labelId] })],
+);
+
+/** Task comments (task drawer). */
+export const taskComments = pgTable(
+  "task_comments",
+  {
+    id: uuid("id").primaryKey(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    body: text("body").notNull(),
+    createdAt: ts().defaultNow(),
+  },
+  (t) => [index("task_comments_task_idx").on(t.taskId)],
 );
 
 /* ============================================================= Documents */
@@ -443,6 +465,10 @@ export const iterations = pgTable("iterations", {
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   status: iterationStatusEnum("status").notNull().default("planned"),
+  // seeded aggregates (velocity widgets) — kept stored, not derived
+  committedPoints: integer("committed_points").notNull().default(0),
+  completedPoints: integer("completed_points").notNull().default(0),
+  progress: integer("progress").notNull().default(0),
   createdAt: ts().defaultNow(),
   updatedAt: ts().defaultNow(),
 });
@@ -456,6 +482,10 @@ export const milestones = pgTable("milestones", {
   description: text("description"),
   dueDate: date("due_date"),
   status: milestoneStatusEnum("status").notNull().default("planned"),
+  // seeded aggregates (milestone widgets) — kept stored, not derived
+  totalTasks: integer("total_tasks").notNull().default(0),
+  doneTasks: integer("done_tasks").notNull().default(0),
+  progress: integer("progress").notNull().default(0),
   createdAt: ts().defaultNow(),
   updatedAt: ts().defaultNow(),
 });

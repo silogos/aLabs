@@ -3,6 +3,8 @@ import { Hono } from "hono";
 import { store } from "../../db/store";
 import * as authRepo from "../../db/auth-repo";
 import * as projectRepo from "../../db/project-repo";
+import * as taskRepo from "../../db/task-repo";
+import * as planningRepo from "../../db/planning-repo";
 import { projectSchema } from "@pmin/core";
 import { data } from "../../lib/responses";
 import { projectContext, currentTenant } from "../../lib/tenant";
@@ -19,12 +21,13 @@ reporting.get("/reporting/dashboard", requirePermission("reporting:view"), async
   const pgProject = await projectRepo.getProject(pid);
   if (!pgProject) throw new Error("project disappeared from tenant context");
   const project = projectSchema.parse(pgProject);
-  const topTasks = store.tasks.filter((t) => t.projectId === pid && !t.parentId && !t.deletedAt);
+  const topTasks = await taskRepo.listTasks(pid);
+  const statuses = await taskRepo.listStatuses(pid);
   const byStatus = (name: string) => {
-    const s = store.taskStatuses.find((x) => x.projectId === pid && x.name === name);
+    const s = statuses.find((x) => x.name === name);
     return topTasks.filter((t) => s && t.statusId === s.id);
   };
-  const iteration = store.iterations.find((i) => i.projectId === pid && i.status === "active");
+  const iteration = (await planningRepo.listIterations(pid)).find((i) => i.status === "active") ?? null;
   const iterationTasks = iteration
     ? topTasks.filter((t) => t.iterationId === iteration.id)
     : topTasks;
@@ -93,17 +96,15 @@ reporting.get("/reporting/dashboard", requirePermission("reporting:view"), async
   });
 });
 
-reporting.get("/reporting/progress", requirePermission("reporting:view"), (c) => {
+reporting.get("/reporting/progress", requirePermission("reporting:view"), async (c) => {
   const pid = pidOf(c);
-  const statuses = store.taskStatuses
-    .filter((s) => s.projectId === pid)
-    .sort((a, b) => a.order - b.order)
-    .map((s) => ({
-      id: s.id,
-      name: s.name,
-      color: s.color,
-      count: store.tasks.filter((t) => t.projectId === pid && t.statusId === s.id && !t.deletedAt && !t.parentId).length,
-    }));
+  const rows = await taskRepo.listTasks(pid);
+  const statuses = (await taskRepo.listStatuses(pid)).map((s) => ({
+    id: s.id,
+    name: s.name,
+    color: s.color,
+    count: rows.filter((t) => t.statusId === s.id).length,
+  }));
   return data(c, { statuses });
 });
 

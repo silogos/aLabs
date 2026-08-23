@@ -1,22 +1,25 @@
 /**
- * Seed the in-memory store with the aLabs demo data — mirrors the
- * `designs/app/alabs-app.html` prototype 1:1 so the web app renders identically.
+ * Seed the demo data — mirrors the `designs/app/alabs-app.html` prototype 1:1.
  *
- * Users and projects come from Postgres (db/seed-auth + db/seed-projects);
- * this seed takes them as parameters so tasks, documents, and activity
- * reference the real DB ids. Idempotent: `store.seeded` guards.
+ * The tasks domain (statuses, types, labels, iterations, milestones, tasks,
+ * subtasks, comments) seeds into Postgres (db/task-repo + db/planning-repo);
+ * documents, notifications, and activity stay on the in-memory store until
+ * their phase. Users/projects come from earlier PG seeds; everything here
+ * references the real DB ids. Idempotent: PG part guards on an empty tasks
+ * table, memory part on `store.seeded`.
  */
 import { uuidv7 } from "@pmin/core";
-import type { TaskPriority, Content, User } from "@pmin/core";
+import type { TaskPriority, Content, User, TaskType } from "@pmin/core";
 import type { ProjectWithMeta } from "./project-repo";
+import * as taskRepo from "./task-repo";
+import * as planningRepo from "./planning-repo";
 import { store, type ActivityEntry } from "./store";
+import type { TaskWithMeta } from "./task-repo";
 
 const now = () => new Date();
 const iso = (d: Date = now()) => d.toISOString();
 
-/** Idempotent seed. `users`/`projects` = demo rows from Postgres. */
-export function seed(users: User[], projects: ProjectWithMeta[]): void {
-  if (store.seeded) return;
+export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<void> {
 
   // Relative demo calendar — design "today" = Mar 22 in the original mock.
   // Offsets are applied from runtime-today so the board never looks stale.
@@ -57,7 +60,10 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
   };
   const atlas = projectByKey("ATL");
 
-  /* ---------------- Task statuses (design uses 5 columns) ---------------- */
+  // idempotency: the PG section below only runs into an empty tasks table
+  const pgSeeded = (await taskRepo.countProjectTasks(atlas.id)) > 0;
+
+  /* ---------------- Task statuses (design uses 5 columns) — PG ---------------- */
   const statusDefs: Array<{ name: string; order: number; color: string; isDefault: boolean }> = [
     { name: "Backlog", order: 0, color: "var(--faint)", isDefault: false },
     { name: "To Do", order: 1, color: "var(--muted)", isDefault: true },
@@ -65,34 +71,29 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
     { name: "In Review", order: 3, color: "var(--violet)", isDefault: false },
     { name: "Done", order: 4, color: "var(--ok)", isDefault: false },
   ];
-  for (const s of statusDefs) {
-    store.taskStatuses.push({
-      id: uuidv7(),
-      projectId: atlas.id,
-      name: s.name,
-      color: s.color,
-      order: s.order,
-      isDefault: s.isDefault,
-    });
-  }
-  const statusByShort: Record<string, (typeof store.taskStatuses)[number]> = {
-    backlog: store.taskStatuses[0],
-    todo: store.taskStatuses[1],
-    progress: store.taskStatuses[2],
-    review: store.taskStatuses[3],
-    done: store.taskStatuses[4],
+  const statusList = pgSeeded
+    ? await taskRepo.listStatuses(atlas.id)
+    : await Promise.all(statusDefs.map((s) => taskRepo.insertStatus({ ...s, projectId: atlas.id })));
+  const statusByShort: Record<string, (typeof statusList)[number]> = {
+    backlog: statusList.find((s) => s.name === "Backlog")!,
+    todo: statusList.find((s) => s.name === "To Do")!,
+    progress: statusList.find((s) => s.name === "In Progress")!,
+    review: statusList.find((s) => s.name === "In Review")!,
+    done: statusList.find((s) => s.name === "Done")!,
   };
-  const statusByName = (n: string) => store.taskStatuses.find((s) => s.name === n)!;
+  const statusByName = (n: string) => statusList.find((s) => s.name === n)!;
 
-  /* ---------------- Task types ---------------- */
-  for (const name of ["Task", "Bug", "Feature", "Epic"]) {
-    store.taskTypes.push({ id: uuidv7(), projectId: atlas.id, name });
-  }
-  const typeByShort: Record<string, (typeof store.taskTypes)[number]> = {
-    task: store.taskTypes[0],
-    bug: store.taskTypes[1],
-    feat: store.taskTypes[2],
-    epic: store.taskTypes[3],
+  /* ---------------- Task types — PG ---------------- */
+  const typeNames = ["Task", "Bug", "Feature", "Epic"];
+  const typeList: TaskType[] = pgSeeded
+    ? await taskRepo.listTypes(atlas.id)
+    : await Promise.all(typeNames.map((name) => taskRepo.insertType(atlas.id, name)));
+  const typeByName = (n: string) => typeList.find((t) => t.name === n)!;
+  const typeByShort: Record<string, (typeof typeList)[number]> = {
+    task: typeByName("Task"),
+    bug: typeByName("Bug"),
+    feat: typeByName("Feature"),
+    epic: typeByName("Epic"),
   };
 
   /* ---------------- Task labels ---------------- */
@@ -114,10 +115,11 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
     "planning",
     "new",
   ];
-  for (const n of labelNames) {
-    store.taskLabels.push({ id: uuidv7(), projectId: atlas.id, name: n, color: null });
-  }
-  const labelByName = (n: string) => store.taskLabels.find((l) => l.name === n)!;
+  const labelList = pgSeeded
+    ? await taskRepo.listLabels(atlas.id)
+    : await Promise.all(labelNames.map((n) => taskRepo.insertLabel({ projectId: atlas.id, name: n })));
+  const labelByName = (n: string) => labelList.find((l) => l.name === n)!;
+  const labelIdByName = (n: string) => labelByName(n)!.id;
 
   /* ---------------- Iterations ---------------- */
   const iter = (
@@ -126,33 +128,31 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
     start: string,
     end: string,
     status: "planned" | "active" | "completed",
-  ) => {
-    const it = {
-      id: uuidv7(),
+  ) =>
+    planningRepo.insertIteration({
       projectId: atlas.id,
       name,
       goal,
       startDate: start,
       endDate: end,
       status,
-      committedPoints: 0,
-      completedPoints: 0,
-      progress: 0,
-      createdAt: iso(),
-      updatedAt: iso(),
-    };
-    store.iterations.push(it);
-    return it;
-  };
-  const sprint13 = iter("Sprint 13", "Module scaffolding", dayIso(-24), dayIso(-11), "completed");
-  const sprint14 = iter(
-    "Sprint 14 — SSO + Audit-log MVP",
-    "Ship OAuth2 SSO behind a feature flag and land the immutable audit-log store. Client-portal scaffolding visible but read-only.",
-    dayIso(-10),
-    dayIso(4),
-    "active",
-  );
-  const sprint15 = iter("Sprint 15", null, dayIso(5), dayIso(18), "planned");
+    });
+  const existingIters = pgSeeded ? await planningRepo.listIterations(atlas.id) : null;
+  const byIterName = (n: string) => existingIters?.find((i) => i.name === n)!;
+  const sprint13 =
+    byIterName("Sprint 13") ??
+    (await iter("Sprint 13", "Module scaffolding", dayIso(-24), dayIso(-11), "completed"));
+  const sprint14 =
+    byIterName("Sprint 14 — SSO + Audit-log MVP") ??
+    (await iter(
+      "Sprint 14 — SSO + Audit-log MVP",
+      "Ship OAuth2 SSO behind a feature flag and land the immutable audit-log store. Client-portal scaffolding visible but read-only.",
+      dayIso(-10),
+      dayIso(4),
+      "active",
+    ));
+  const sprint15 =
+    byIterName("Sprint 15") ?? (await iter("Sprint 15", null, dayIso(5), dayIso(18), "planned"));
 
   /* ---------------- Milestones ---------------- */
   const ms = (
@@ -162,9 +162,8 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
     status: "planned" | "reached",
     total: number,
     done: number,
-  ) => {
-    const m = {
-      id: uuidv7(),
+  ) =>
+    planningRepo.insertMilestone({
       projectId: atlas.id,
       name,
       description: desc,
@@ -173,15 +172,18 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
       totalTasks: total,
       doneTasks: done,
       progress: Math.round((done / total) * 100),
-      createdAt: iso(),
-      updatedAt: iso(),
-    };
-    store.milestones.push(m);
-    return m;
-  };
-  const v2Beta = ms("v2.0 Beta release", "Public beta of aLabs 2.0", dayIso(6), "planned", 25, 18);
-  const designSystem = ms("Design System v1", "Component library + tokens", dayIso(21), "planned", 20, 11);
-  const security = ms("Security hardening", "Audit log, SSO, rate limiting", dayIso(39), "planned", 20, 6);
+    });
+  const existingMs = pgSeeded ? await planningRepo.listMilestones(atlas.id) : null;
+  const byMsName = (n: string) => existingMs?.find((m) => m.name === n)!;
+  const v2Beta =
+    byMsName("v2.0 Beta release") ??
+    (await ms("v2.0 Beta release", "Public beta of aLabs 2.0", dayIso(6), "planned", 25, 18));
+  const designSystem =
+    byMsName("Design System v1") ??
+    (await ms("Design System v1", "Component library + tokens", dayIso(21), "planned", 20, 11));
+  const security =
+    byMsName("Security hardening") ??
+    (await ms("Security hardening", "Audit log, SSO, rate limiting", dayIso(39), "planned", 20, 6));
 
   /* ---------------- Tasks (mirror design TASKS[]) ---------------- */
   type DesignTask = {
@@ -234,67 +236,64 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
     { id: 126, t: "Empty-state illustrations (set of 6)", s: "backlog", a: "jb", p: "p3", ty: "task", lb: ["design"], due: "Apr 28", pts: 2, sub: [], com: 0 },
   ];
 
-  for (const d of designTasks) {
-    const parent = {
-      id: uuidv7(),
-      projectId: atlas.id,
-      title: d.t,
-      description: null,
-      statusId: statusByShort[d.s].id,
-      assigneeId: usersByShort[d.a].id,
-      reporterId: aisha.id,
-      priority: PRIO[d.p],
-      typeId: typeByShort[d.ty].id,
-      parentId: null,
-      iterationId: d.s === "backlog" ? null : sprint14.id,
-      milestoneId:
+  const parents: TaskWithMeta[] = [];
+  if (!pgSeeded) {
+    for (const d of designTasks) {
+      const milestoneId =
         d.lb.includes("security") || d.lb.includes("sso") || d.lb.includes("auth")
           ? security.id
           : d.lb.includes("design")
             ? designSystem.id
-            : v2Beta.id,
-      dueDate: dueIso(d.due),
-      order: d.id,
-      labels: d.lb.map(labelByName),
-      estimate: d.pts,
-      createdAt: iso(),
-      updatedAt: iso(),
-    };
-    store.tasks.push(parent);
-    // subtasks → real child tasks
-    for (const [n, desc, done] of d.sub) {
-      store.tasks.push({
-        id: uuidv7(),
+            : v2Beta.id;
+      const iterationId = d.s === "backlog" ? null : sprint14.id;
+      const parent = await taskRepo.insertTask({
         projectId: atlas.id,
-        title: desc,
-        description: null,
-        statusId: (done ? statusByName("Done") : statusByName("To Do")).id,
+        title: d.t,
+        statusId: statusByShort[d.s]!.id,
         assigneeId: usersByShort[d.a].id,
         reporterId: aisha.id,
         priority: PRIO[d.p],
         typeId: typeByShort[d.ty].id,
-        parentId: parent.id,
-        iterationId: parent.iterationId,
-        milestoneId: parent.milestoneId,
-        dueDate: parent.dueDate,
-        order: n,
-        labels: [],
-        estimate: null,
-        createdAt: iso(),
-        updatedAt: iso(),
+        iterationId,
+        milestoneId,
+        dueDate: dueIso(d.due) ? new Date(dueIso(d.due)!) : null,
+        order: d.id,
+        estimate: d.pts,
+        labelIds: d.lb.map(labelIdByName),
       });
+      parents.push(parent);
+      // subtasks → real child tasks
+      for (const [n, desc, done] of d.sub) {
+        await taskRepo.insertTask({
+          projectId: atlas.id,
+          title: desc,
+          statusId: (done ? statusByName("Done") : statusByName("To Do")).id,
+          assigneeId: usersByShort[d.a].id,
+          reporterId: aisha.id,
+          priority: PRIO[d.p],
+          typeId: typeByShort[d.ty].id,
+          parentId: parent.id,
+          iterationId,
+          milestoneId,
+          dueDate: dueIso(d.due) ? new Date(dueIso(d.due)!) : null,
+          order: n,
+        });
+      }
     }
-  }
 
-  // wire iteration points
-  const points = (filter: (t: (typeof store.tasks)[number]) => boolean) =>
-    store.tasks.filter((t) => !t.parentId && filter(t)).reduce((n, t) => n + (t.estimate ?? 0), 0);
-  sprint14.committedPoints = 52;
-  sprint14.completedPoints = points((t) => t.iterationId === sprint14.id && t.statusId === statusByShort.done.id);
-  sprint14.progress = Math.round((sprint14.completedPoints / sprint14.committedPoints) * 100);
-  sprint13.committedPoints = points((t) => t.iterationId === sprint13.id);
-  sprint13.completedPoints = sprint13.committedPoints;
-  sprint13.progress = 100;
+    // wire iteration points (stored aggregates, matching the design numbers)
+    const points = (filter: (t: TaskWithMeta) => boolean) =>
+      parents.filter(filter).reduce((n, t) => n + (t.estimate ?? 0), 0);
+    const completed = points((t) => t.iterationId === sprint14.id && t.statusId === statusByShort.done!.id);
+    await planningRepo.patchIteration(sprint14.id, {
+      committedPoints: 52,
+      completedPoints: completed,
+      progress: Math.round((completed / 52) * 100),
+    });
+    await planningRepo.patchIteration(sprint13.id, { progress: 100 });
+  } else {
+    parents.push(...(await taskRepo.listTasks(atlas.id)));
+  }
 
   /* ---------------- Document spaces + pages ---------------- */
   const spaces = (name: string, icon: string, order: number) => {
@@ -478,68 +477,52 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
   });
 
   /* ---------------- Comments (for the task drawer) ---------------- */
-  const ssoTask = store.tasks.find((t) => t.title === "Implement OAuth2 SSO flow" && !t.parentId);
-  if (ssoTask) {
-    store.comments.push({
-      id: uuidv7(),
-      taskId: ssoTask.id,
-      userId: marco.id,
-      body: "Blocked on the IdP sandbox credentials — chasing Ops. Unblocked scope: PKCE verifier generation is done.",
-      createdAt: new Date(Date.now() - 2 * 3600_000).toISOString(),
-    });
-    store.comments.push({
-      id: uuidv7(),
-      taskId: ssoTask.id,
-      userId: sara.id,
-      body: "Added a regression test for expired refresh tokens. Looks clean on staging.",
-      createdAt: new Date(Date.now() - 26 * 3600_000).toISOString(),
-    });
+  if (!pgSeeded) {
+    const ssoTask = parents.find((t) => t.title === "Implement OAuth2 SSO flow");
+    if (ssoTask) {
+      await taskRepo.insertComment({
+        taskId: ssoTask.id,
+        userId: marco.id,
+        body: "Blocked on the IdP sandbox credentials — chasing Ops. Unblocked scope: PKCE verifier generation is done.",
+        createdAt: new Date(Date.now() - 2 * 3600_000),
+      });
+      await taskRepo.insertComment({
+        taskId: ssoTask.id,
+        userId: sara.id,
+        body: "Added a regression test for expired refresh tokens. Looks clean on staging.",
+        createdAt: new Date(Date.now() - 26 * 3600_000),
+      });
+    }
   }
 
   /* ---------------- Other projects (minimal shape so switching lands on a
      usable board — statuses + a few tasks each; only Atlas is fully seeded) ---------------- */
   // projects live in Postgres — the board content (statuses + starter tasks)
   // is what this half seeds, keyed by the DB project row
-  const sideProject = (
+  const sideProject = async (
     key: string,
     titles: [string, number][], // [title, statusIndex] — indexes into the 5 statuses
   ) => {
     const p = projectByKey(key);
-    const statuses = statusDefs.map((s) => ({
-      id: uuidv7(),
-      projectId: p.id,
-      name: s.name,
-      color: s.color,
-      order: s.order,
-      isDefault: s.isDefault,
-    }));
-    store.taskStatuses.push(...statuses);
-    titles.forEach(([title, si], i) => {
-      store.tasks.push({
-        id: uuidv7(),
+    const already = (await taskRepo.listStatuses(p.id)).length > 0;
+    if (already) return p;
+    const statuses = await Promise.all(
+      statusDefs.map((s) => taskRepo.insertStatus({ ...s, projectId: p.id })),
+    );
+    for (const [i, [title, si]] of titles.entries()) {
+      await taskRepo.insertTask({
         projectId: p.id,
         title,
-        description: null,
         statusId: statuses[si]!.id,
         assigneeId: aisha.id,
         reporterId: aisha.id,
-        priority: "medium" as const,
-        typeId: null,
-        parentId: null,
-        iterationId: null,
-        milestoneId: null,
-        dueDate: null,
         order: i,
-        labels: [],
-        estimate: null,
-        createdAt: iso(),
-        updatedAt: iso(),
       });
-    });
+    }
     return p;
   };
 
-  sideProject(
+  await sideProject(
     "MOB",
     [
       ["Set up React Native scaffold", 4],
@@ -548,7 +531,7 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
       ["App Store screenshots", 0],
     ],
   );
-  sideProject(
+  await sideProject(
     "NOT",
     [
       ["Reading list: shipping for startups", 1],
@@ -556,7 +539,7 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
       ["Ideas parking lot", 0],
     ],
   );
-  sideProject(
+  await sideProject(
     "DWH",
     [
       ["Source-system inventory", 4],
@@ -565,7 +548,7 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
       ["Backfill 2025 orders", 0],
     ],
   );
-  sideProject(
+  await sideProject(
     "BRD",
     [
       ["Logo explorations round 2", 2],
@@ -574,7 +557,7 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
       ["Stakeholder review deck", 1],
     ],
   );
-  sideProject(
+  await sideProject(
     "MKT",
     [
       ["Pricing page copy", 2],
@@ -583,7 +566,7 @@ export function seed(users: User[], projects: ProjectWithMeta[]): void {
       ["Launch checklist", 0],
     ],
   );
-  sideProject(
+  await sideProject(
     "OPS",
     [
       ["Invoice sync job", 2],

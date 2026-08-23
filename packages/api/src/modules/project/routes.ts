@@ -2,11 +2,10 @@
  *  Project rows and memberships live in Postgres (db/project-repo.ts);
  *  per-project task config (statuses/types) is still in-memory (task phase). */
 import { Hono } from "hono";
-import { store } from "../../db/store";
 import * as orgRepo from "../../db/org-repo";
 import * as projectRepo from "../../db/project-repo";
+import * as taskRepo from "../../db/task-repo";
 import {
-  uuidv7,
   projectCreate,
   projectUpdate,
   projectSchema,
@@ -59,17 +58,15 @@ project.post("/", orgContext, requirePermission("project:create"), async (c) => 
 
   // default task config — created per project on first access (05-seed-data.md)
   for (const s of DEFAULT_TASK_STATUSES) {
-    store.taskStatuses.push({
-      id: uuidv7(),
+    await taskRepo.insertStatus({
       projectId: proj.id,
       name: s.name,
-      color: null,
       order: s.order,
       isDefault: s.isDefault,
     });
   }
   for (const name of DEFAULT_TASK_TYPES) {
-    store.taskTypes.push({ id: uuidv7(), projectId: proj.id, name });
+    await taskRepo.insertType(proj.id, name);
   }
 
   // creator becomes a Project Admin (system project roles live in Postgres)

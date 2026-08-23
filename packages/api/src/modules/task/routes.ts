@@ -1,9 +1,9 @@
-/** Task routes — list (filtered), CRUD, statuses/labels/types. */
+/** Task routes — list (filtered), CRUD, statuses/labels/types.
+ *  Task rows, config, and comments live in Postgres (db/task-repo.ts). */
 import { Hono } from "hono";
 import { z } from "zod";
-import { store } from "../../db/store";
+import * as taskRepo from "../../db/task-repo";
 import {
-  uuidv7,
   taskCreate,
   taskUpdate,
   taskSchema,
@@ -37,23 +37,9 @@ function projectIdOf(c: Ctx) {
 }
 
 // ---- list ----
-task.get("/tasks", requirePermission("task:view"), (c) => {
+task.get("/tasks", requirePermission("task:view"), async (c) => {
   const q = parseQuery(c.req.query(), taskListQuery);
-  const pid = projectIdOf(c);
-  let rows = store.tasks.filter(
-    (t) => t.projectId === pid && !t.deletedAt && !t.parentId, // top-level tasks
-  );
-  if (q.statusId) rows = rows.filter((t) => t.statusId === q.statusId);
-  if (q.assigneeId) rows = rows.filter((t) => t.assigneeId === q.assigneeId);
-  if (q.typeId) rows = rows.filter((t) => t.typeId === q.typeId);
-  if (q.priority) rows = rows.filter((t) => t.priority === q.priority);
-  if (q.iterationId) rows = rows.filter((t) => t.iterationId === q.iterationId);
-  if (q.labelId) rows = rows.filter((t) => t.labels.some((l) => l.id === q.labelId));
-  if (q.q) {
-    const s = q.q.toLowerCase();
-    rows = rows.filter((t) => t.title.toLowerCase().includes(s));
-  }
-  rows = rows.sort((a, b) => a.order - b.order);
+  const rows = await taskRepo.listTasks(projectIdOf(c), q);
   return paginated(c, paginate(rows.map((r) => taskSchema.parse(r)), q));
 });
 
@@ -61,20 +47,19 @@ task.post("/tasks", requirePermission("task:create"), async (c) => {
   const pid = projectIdOf(c);
   const user = c.get("user")!;
   const input = parseBody(await c.req.json(), taskCreate);
-  const defaultStatus = store.taskStatuses.find((s) => s.projectId === pid && s.isDefault);
-  const status = input.statusId
-    ? store.taskStatuses.find((s) => s.id === input.statusId && s.projectId === pid)
-    : defaultStatus;
+  const defaultStatus = await taskRepo.findDefaultStatus(pid);
+  if (!defaultStatus) throw badRequest("Project has no default task status");
+  const status = input.statusId ? await taskRepo.findStatus(pid, input.statusId) : defaultStatus;
   if (input.statusId && !status) throw notFound("Status not found");
-  const labels = (input.labelIds ?? [])
-    .map((id: string) => store.taskLabels.find((l) => l.id === id && l.projectId === pid))
-    .filter(Boolean);
-  const created_ = {
-    id: uuidv7(),
+  if (input.labelIds) {
+    const found = await taskRepo.findLabels(pid, input.labelIds);
+    if (found.length !== input.labelIds.length) throw badRequest("Unknown label id");
+  }
+  const created_ = await taskRepo.insertTask({
     projectId: pid,
     title: input.title,
     description: input.description ?? null,
-    statusId: status?.id ?? defaultStatus!.id,
+    statusId: status?.id ?? defaultStatus.id,
     assigneeId: input.assigneeId ?? null,
     reporterId: user.id,
     priority: input.priority ?? "medium",
@@ -82,75 +67,58 @@ task.post("/tasks", requirePermission("task:create"), async (c) => {
     parentId: input.parentId ?? null,
     iterationId: input.iterationId ?? null,
     milestoneId: input.milestoneId ?? null,
-    dueDate: input.dueDate ?? null,
-    order: store.tasks.filter((t) => t.projectId === pid).length,
-    labels,
+    dueDate: input.dueDate ? new Date(input.dueDate) : null,
+    order: await taskRepo.countProjectTasks(pid),
     estimate: input.estimate ?? null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  store.tasks.push(created_);
+    labelIds: input.labelIds ?? [],
+  });
   return created(c, taskSchema.parse(created_));
 });
 
 // ---- statuses / labels / types (static sub-paths BEFORE :id) ----
-task.get("/tasks/statuses", requirePermission("task:view"), (c) =>
-  data(
-    c,
-    store.taskStatuses
-      .filter((s) => s.projectId === projectIdOf(c))
-      .sort((a, b) => a.order - b.order),
-  ),
+task.get("/tasks/statuses", requirePermission("task:view"), async (c) =>
+  data(c, await taskRepo.listStatuses(projectIdOf(c))),
 );
 task.post("/tasks/statuses", requirePermission("task:update"), async (c) => {
   const pid = projectIdOf(c);
   const body = parseBody(await c.req.json(), z.object({ name: z.string(), color: z.string().optional() }));
-  const s = { id: uuidv7(), projectId: pid, name: body.name, color: body.color ?? null, order: 0, isDefault: false };
-  store.taskStatuses.push(s);
-  return created(c, s);
+  return created(c, await taskRepo.insertStatus({ projectId: pid, name: body.name, color: body.color ?? null }));
 });
-task.get("/tasks/labels", requirePermission("task:view"), (c) =>
-  data(c, store.taskLabels.filter((l) => l.projectId === projectIdOf(c))),
+task.get("/tasks/labels", requirePermission("task:view"), async (c) =>
+  data(c, await taskRepo.listLabels(projectIdOf(c))),
 );
 task.post("/tasks/labels", requirePermission("task:update"), async (c) => {
   const pid = projectIdOf(c);
   const body = parseBody(await c.req.json(), z.object({ name: z.string(), color: z.string().optional() }));
-  const l = { id: uuidv7(), projectId: pid, name: body.name, color: body.color ?? null };
-  store.taskLabels.push(l);
-  return created(c, l);
+  return created(c, await taskRepo.insertLabel({ projectId: pid, name: body.name, color: body.color ?? null }));
 });
-task.get("/tasks/types", requirePermission("task:view"), (c) =>
-  data(c, store.taskTypes.filter((t) => t.projectId === projectIdOf(c))),
+task.get("/tasks/types", requirePermission("task:view"), async (c) =>
+  data(c, await taskRepo.listTypes(projectIdOf(c))),
 );
 task.post("/tasks/types", requirePermission("task:update"), async (c) => {
   const pid = projectIdOf(c);
   const body = parseBody(await c.req.json(), z.object({ name: z.string() }));
-  const t = { id: uuidv7(), projectId: pid, name: body.name };
-  store.taskTypes.push(t);
-  return created(c, t);
+  return created(c, await taskRepo.insertType(pid, body.name));
 });
 
-task.get("/tasks/:id", requirePermission("task:view"), (c) => {
-  const t = findTask(c);
-  return data(c, serializeTask(t));
+task.get("/tasks/:id", requirePermission("task:view"), async (c) => {
+  return data(c, await serializeTask(await findTask(c)));
 });
 
 task.patch("/tasks/:id", requirePermission("task:update"), async (c) => {
-  const t = findTask(c);
+  const t = await findTask(c);
   const input = parseBody(await c.req.json(), taskUpdate);
   // optimistic concurrency
   if (input.updatedAt && input.updatedAt !== t.updatedAt) throw conflict("Task was modified");
   if (input.statusId) {
-    const pid = projectIdOf(c);
-    const ns = store.taskStatuses.find((s) => s.id === input.statusId && s.projectId === pid);
+    const ns = await taskRepo.findStatus(projectIdOf(c), input.statusId);
     if (!ns) throw notFound("Status not found");
   }
   if (input.labelIds) {
-    const pid = projectIdOf(c);
-    t.labels = input.labelIds
-      .map((id: string) => store.taskLabels.find((l) => l.id === id && l.projectId === pid)!)
-      .filter(Boolean);
+    const found = await taskRepo.findLabels(projectIdOf(c), input.labelIds);
+    if (found.length !== input.labelIds.length) throw badRequest("Unknown label id");
   }
+  const patch: Parameters<typeof taskRepo.patchTask>[2] = {};
   for (const k of [
     "title",
     "description",
@@ -161,39 +129,35 @@ task.patch("/tasks/:id", requirePermission("task:update"), async (c) => {
     "parentId",
     "iterationId",
     "milestoneId",
-    "dueDate",
     "estimate",
   ] as const) {
-    if (input[k] !== undefined) (t as Record<string, unknown>)[k] = input[k];
+    if (input[k] !== undefined) (patch as Record<string, unknown>)[k] = input[k];
   }
-  t.updatedAt = new Date().toISOString();
-  return data(c, serializeTask(t));
+  if (input.dueDate !== undefined) patch.dueDate = input.dueDate ? new Date(input.dueDate) : null;
+  if (input.labelIds) patch.labelIds = input.labelIds;
+  const updated = await taskRepo.patchTask(t.id, t.updatedAt!, patch);
+  if (!updated) throw conflict("Task was modified");
+  return data(c, await serializeTask(updated));
 });
 
-task.delete("/tasks/:id", requirePermission("task:delete"), (c) => {
-  const t = findTask(c);
-  t.deletedAt = new Date().toISOString();
+task.delete("/tasks/:id", requirePermission("task:delete"), async (c) => {
+  const t = await findTask(c);
+  await taskRepo.softDeleteTask(t.id);
   return noContent(c);
 });
 
 /* ---- helpers ---- */
 
-function findTask(c: Ctx) {
-  const pid = projectIdOf(c);
-  const id = c.req.param("id");
-  const t = store.tasks.find((x) => x.id === id && x.projectId === pid && !x.deletedAt);
-  if (!t) throw notFound();
+async function findTask(c: Ctx) {
+  const t = await taskRepo.getTask(c.req.param("id")!);
+  if (!t || t.projectId !== projectIdOf(c)) throw notFound();
   return t;
 }
 
-function serializeTask(t: (typeof store.tasks)[number]) {
+async function serializeTask(t: taskRepo.TaskWithMeta) {
   return {
     ...t,
-    subtasks: store.tasks
-      .filter((s) => s.parentId === t.id && !s.deletedAt)
-      .sort((a, b) => a.order - b.order),
-    comments: store.comments
-      .filter((cm) => cm.taskId === t.id)
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
+    subtasks: await taskRepo.listSubtasks(t.id),
+    comments: await taskRepo.listComments(t.id),
   };
 }
