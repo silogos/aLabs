@@ -2,20 +2,20 @@
  * Seed the in-memory store with the aLabs demo data — mirrors the
  * `designs/app/alabs-app.html` prototype 1:1 so the web app renders identically.
  *
- * Users, organizations, and roles come from Postgres (db/seed-auth.ts +
- * db/seed-workspace.ts seed them there); this seed takes them as parameters
- * so memberships, tasks, and activity reference the real DB ids. Idempotent:
- * `store.seeded` guards.
+ * Users and projects come from Postgres (db/seed-auth + db/seed-projects);
+ * this seed takes them as parameters so tasks, documents, and activity
+ * reference the real DB ids. Idempotent: `store.seeded` guards.
  */
 import { uuidv7 } from "@pmin/core";
-import type { TaskPriority, Content, User, Organization, Role } from "@pmin/core";
+import type { TaskPriority, Content, User } from "@pmin/core";
+import type { ProjectWithMeta } from "./project-repo";
 import { store, type ActivityEntry } from "./store";
 
 const now = () => new Date();
 const iso = (d: Date = now()) => d.toISOString();
 
-/** Idempotent seed. `users`/`orgs`/`roles` = demo rows from Postgres. */
-export function seed(users: User[], orgs: Organization[], roles: Role[]): void {
+/** Idempotent seed. `users`/`projects` = demo rows from Postgres. */
+export function seed(users: User[], projects: ProjectWithMeta[]): void {
   if (store.seeded) return;
 
   // Relative demo calendar — design "today" = Mar 22 in the original mock.
@@ -49,57 +49,13 @@ export function seed(users: User[], orgs: Organization[], roles: Role[]): void {
   const usersByShort = { ay: aisha, mk: marco, lc: lin, dp: diego, sr: sara, jb: jonas };
 
   /* ---------------- Roles + organizations (from Postgres) ---------------- */
-  const workspaceRole = (name: string) => roles.find((r) => r.scope === "workspace" && r.name === name)!;
-  const projectRole = (name: string) => roles.find((r) => r.scope === "project" && r.name === name)!;
-  const orgBySlug = (slug: string) => {
-    const o = orgs.find((x) => x.slug === slug);
-    if (!o) throw new Error(`seed: demo org ${slug} missing from Postgres seed`);
-    return o;
+  /* ---------------- Project (from Postgres) ---------------- */
+  const projectByKey = (key: string) => {
+    const p = projects.find((x) => x.key === key);
+    if (!p) throw new Error(`seed: demo project ${key} missing from Postgres seed`);
+    return p;
   };
-  const northwind = orgBySlug("northwind");
-  const personal = orgBySlug("personal");
-  const aminStudio = orgBySlug("amin-studio");
-  const acme = orgBySlug("acme-internal");
-
-  /* ---------------- Project ---------------- */
-  const atlas = {
-    id: uuidv7(),
-    organizationId: northwind.id,
-    name: "Atlas Platform 2.0",
-    slug: "atlas-platform-2",
-    key: "ATL",
-    description: "Unified delivery, documentation, planning & client portal.",
-    icon: "A",
-    status: "active" as const,
-    visibility: "organization" as const,
-    createdAt: iso(),
-    updatedAt: iso(),
-  };
-  store.projects.push(atlas);
-
-  /* ---------------- Project memberships (Atlas) ----------------
-   * Real project_members rows: Aisha administers, everyone else participates.
-   * Behavior-neutral for the demo (Owner ∪ anything ⊇ Member), but the
-   * tenant context now resolves actual roles + visibility. */
-  const projectMember = (user: typeof aisha, roleName: string) => {
-    store.projectMembers.push({
-      id: uuidv7(),
-      projectId: atlas.id,
-      userId: user.id,
-      role: projectRole(roleName),
-      status: "active" as const,
-      joinedAt: iso(),
-      user,
-      createdAt: iso(),
-      updatedAt: iso(),
-    });
-  };
-  projectMember(aisha, "Project Admin");
-  projectMember(marco, "Member");
-  projectMember(lin, "Member");
-  projectMember(diego, "Member");
-  projectMember(sara, "Member");
-  projectMember(jonas, "Member");
+  const atlas = projectByKey("ATL");
 
   /* ---------------- Task statuses (design uses 5 columns) ---------------- */
   const statusDefs: Array<{ name: string; order: number; color: string; isDefault: boolean }> = [
@@ -542,28 +498,13 @@ export function seed(users: User[], orgs: Organization[], roles: Role[]): void {
 
   /* ---------------- Other projects (minimal shape so switching lands on a
      usable board — statuses + a few tasks each; only Atlas is fully seeded) ---------------- */
+  // projects live in Postgres — the board content (statuses + starter tasks)
+  // is what this half seeds, keyed by the DB project row
   const sideProject = (
-    org: typeof northwind,
-    name: string,
-    slug: string,
     key: string,
-    icon: string,
     titles: [string, number][], // [title, statusIndex] — indexes into the 5 statuses
   ) => {
-    const p = {
-      id: uuidv7(),
-      organizationId: org.id,
-      name,
-      slug,
-      key,
-      description: null,
-      icon,
-      status: "active" as const,
-      visibility: "organization" as const,
-      createdAt: iso(),
-      updatedAt: iso(),
-    };
-    store.projects.push(p);
+    const p = projectByKey(key);
     const statuses = statusDefs.map((s) => ({
       id: uuidv7(),
       projectId: p.id,
@@ -598,8 +539,8 @@ export function seed(users: User[], orgs: Organization[], roles: Role[]): void {
     return p;
   };
 
-  const mobile = sideProject(
-    northwind, "Mobile App v1", "mobile-app-v1", "MOB", "M",
+  sideProject(
+    "MOB",
     [
       ["Set up React Native scaffold", 4],
       ["Push notifications proof of concept", 2],
@@ -608,7 +549,7 @@ export function seed(users: User[], orgs: Organization[], roles: Role[]): void {
     ],
   );
   sideProject(
-    personal, "Notes", "notes", "NOT", "N",
+    "NOT",
     [
       ["Reading list: shipping for startups", 1],
       ["Weekly review template", 4],
@@ -616,7 +557,7 @@ export function seed(users: User[], orgs: Organization[], roles: Role[]): void {
     ],
   );
   sideProject(
-    aminStudio, "Data Warehouse", "data-warehouse", "DWH", "D",
+    "DWH",
     [
       ["Source-system inventory", 4],
       ["Model dim_customer v1", 2],
@@ -625,7 +566,7 @@ export function seed(users: User[], orgs: Organization[], roles: Role[]): void {
     ],
   );
   sideProject(
-    aminStudio, "Brand Refresh", "brand-refresh", "BRD", "B",
+    "BRD",
     [
       ["Logo explorations round 2", 2],
       ["Typography shortlist", 1],
@@ -634,7 +575,7 @@ export function seed(users: User[], orgs: Organization[], roles: Role[]): void {
     ],
   );
   sideProject(
-    acme, "Marketing Site", "marketing-site", "MKT", "M",
+    "MKT",
     [
       ["Pricing page copy", 2],
       ["CMS migration plan", 1],
@@ -643,21 +584,13 @@ export function seed(users: User[], orgs: Organization[], roles: Role[]): void {
     ],
   );
   sideProject(
-    acme, "Ops Automation", "ops-automation", "OPS", "O",
+    "OPS",
     [
       ["Invoice sync job", 2],
       ["Onboarding runbook", 4],
       ["Alert routing rules", 1],
       ["Quarterly access review", 0],
     ],
-  );
-
-  /* ---------------- Recents (pre-seeded so the "Recent" group renders) ----------------
-   * Atlas is the most recent visit → the derived landing project for Northwind
-   * is the fully-seeded demo project. */
-  store.projectVisits.push(
-    { userId: aisha.id, projectId: mobile.id, visitedAt: new Date(Date.now() - 2 * 86_400_000).toISOString() },
-    { userId: aisha.id, projectId: atlas.id, visitedAt: new Date(Date.now() - 1 * 86_400_000).toISOString() },
   );
 
   store.seeded = true;

@@ -7,12 +7,12 @@
  *      a project member; compute the *effective* permission set =
  *      workspace role ∪ project role
  *
- * Org/membership rows live in Postgres (db/org-repo.ts); projects and project
- * memberships are still in-memory (next migration phase).
+ * Org/membership/project rows live in Postgres (db/org-repo.ts,
+ * db/project-repo.ts) — the Foundation layer is fully persisted.
  */
 import type { MiddlewareHandler } from "hono";
-import { store } from "../db/store";
 import * as orgRepo from "../db/org-repo";
+import * as projectRepo from "../db/project-repo";
 import { notFound } from "./errors";
 import type { Vars, TenantContext, Ctx } from "./ctx";
 
@@ -42,16 +42,14 @@ export const orgContext: MiddlewareHandler<{ Variables: Vars }> = async (c, next
 export const projectContext: MiddlewareHandler<{ Variables: Vars }> = async (c, next) => {
   const user = c.get("user");
   if (!user) return await next();
-  const projectId = c.req.param("projectId");
-  const project = store.projects.find((p) => p.id === projectId && !p.deletedAt);
+  const projectId = c.req.param("projectId")!;
+  const project = await projectRepo.getProject(projectId);
   if (!project) throw notFound();
   // must be an active org member to access any project
   const orgMember = await orgRepo.getActiveMember(project.organizationId, user.id);
   if (!orgMember) throw notFound();
   // project membership (optional): pending invitations grant nothing yet
-  const pm = store.projectMembers.find(
-    (m) => m.projectId === project.id && m.userId === user.id && m.status === "active",
-  );
+  const pm = await projectRepo.getActiveProjectMember(project.id, user.id);
   if (project.visibility === "private" && !pm) throw notFound();
   const wsPerms = new Set(orgMember.role.permissions);
   if (pm) for (const p of pm.role.permissions) wsPerms.add(p);

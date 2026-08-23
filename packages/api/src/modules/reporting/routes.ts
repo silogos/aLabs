@@ -2,6 +2,7 @@
 import { Hono } from "hono";
 import { store } from "../../db/store";
 import * as authRepo from "../../db/auth-repo";
+import * as projectRepo from "../../db/project-repo";
 import { projectSchema } from "@pmin/core";
 import { data } from "../../lib/responses";
 import { projectContext, currentTenant } from "../../lib/tenant";
@@ -15,7 +16,9 @@ const pidOf = (c: Ctx) => currentTenant(c).projectId!;
 
 reporting.get("/reporting/dashboard", requirePermission("reporting:view"), async (c) => {
   const pid = pidOf(c);
-  const project = projectSchema.parse(store.projects.find((p) => p.id === pid)!);
+  const pgProject = await projectRepo.getProject(pid);
+  if (!pgProject) throw new Error("project disappeared from tenant context");
+  const project = projectSchema.parse(pgProject);
   const topTasks = store.tasks.filter((t) => t.projectId === pid && !t.parentId && !t.deletedAt);
   const byStatus = (name: string) => {
     const s = store.taskStatuses.find((x) => x.projectId === pid && x.name === name);

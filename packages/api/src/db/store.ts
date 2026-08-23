@@ -2,18 +2,18 @@
  * In-memory repository — the runtime data layer for the modules that have
  * not migrated to Postgres yet (projects, tasks, documents, …).
  *
- * The auth domain (users, sessions, accounts, password resets — db/pg.ts +
- * db/auth-repo.ts) and the workspace domain (organizations, roles, members,
- * invitations — db/org-repo.ts) live in Postgres. The collections here
- * mirror the remaining tables of the Drizzle schema and move over module
- * by module.
+ * The Foundation layer is fully in Postgres: auth (users, sessions,
+ * accounts, password resets — db/auth-repo.ts), workspace (organizations,
+ * roles, members, invitations — db/org-repo.ts), and projects (projects,
+ * memberships, visits — db/project-repo.ts). What remains here are the
+ * business modules: tasks, documents, planning, meetings, agreements,
+ * notifications, comments, activity.
  *
  * Multi-tenancy rule (`docs/tech/02-conventions.md`): every tenant-scoped query
  * MUST filter by organization_id / project_id. The helpers here enforce that.
  */
 import {
   type User,
-  type Project,
   type Task,
   type TaskStatus,
   type TaskLabel,
@@ -24,7 +24,6 @@ import {
   type Page,
   type FileRef,
   type Notification,
-  type ProjectMember,
   type Meeting,
   type Agreement,
 } from "@pmin/core";
@@ -50,16 +49,7 @@ export interface ActivityEntry {
   whenLabel: string;
 }
 
-/** project_visits row — per-user project visit history (recents). */
-export interface ProjectVisit {
-  userId: string;
-  projectId: string;
-  visitedAt: string;
-}
-
 export interface Store {
-  projectMembers: ProjectMember[];
-  projects: (Project & Meta)[];
   taskStatuses: TaskStatus[];
   taskTypes: TaskType[];
   taskLabels: TaskLabel[];
@@ -74,14 +64,11 @@ export interface Store {
   agreements: (Agreement & Meta)[];
   comments: Comment[];
   activity: ActivityEntry[];
-  projectVisits: ProjectVisit[];
   /** seeded = seed() is idempotent */
   seeded: boolean;
 }
 
 export const store: Store = {
-  projectMembers: [],
-  projects: [],
   taskStatuses: [],
   taskTypes: [],
   taskLabels: [],
@@ -96,7 +83,6 @@ export const store: Store = {
   agreements: [],
   comments: [],
   activity: [],
-  projectVisits: [],
   seeded: false,
 };
 

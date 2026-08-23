@@ -29,7 +29,7 @@ const toOrg = (r: OrgRow): Organization & { deletedAt: string | null } => ({
   deletedAt: iso(r.deletedAt),
 });
 
-const toRole = (r: RoleRow): Role => ({
+export const toRole = (r: RoleRow): Role => ({
   id: r.id,
   organizationId: r.organizationId,
   scope: r.scope,

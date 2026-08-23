@@ -259,7 +259,8 @@ export const projectMembers = pgTable(
       .notNull()
       .references(() => roles.id),
     status: memberStatusEnum("status").notNull().default("active"),
-    joinedAt: ts().notNull().defaultNow(),
+    // null while the invitation is pending (set on accept), like org members
+    joinedAt: nullableTs(),
     createdAt: ts().defaultNow(),
     updatedAt: ts().defaultNow(),
   },
