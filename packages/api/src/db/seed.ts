@@ -2,23 +2,20 @@
  * Seed the in-memory store with the aLabs demo data — mirrors the
  * `designs/app/alabs-app.html` prototype 1:1 so the web app renders identically.
  *
- * Users come from Postgres (db/seed-auth.ts seeds them there with password
- * "password123"); this seed takes them as a parameter so memberships, tasks,
- * and activity reference the real DB ids. Idempotent: `store.seeded` guards.
+ * Users, organizations, and roles come from Postgres (db/seed-auth.ts +
+ * db/seed-workspace.ts seed them there); this seed takes them as parameters
+ * so memberships, tasks, and activity reference the real DB ids. Idempotent:
+ * `store.seeded` guards.
  */
 import { uuidv7 } from "@pmin/core";
-import {
-  SYSTEM_WORKSPACE_ROLES,
-  SYSTEM_PROJECT_ROLES,
-} from "@pmin/core";
-import type { TaskPriority, Content, User } from "@pmin/core";
+import type { TaskPriority, Content, User, Organization, Role } from "@pmin/core";
 import { store, type ActivityEntry } from "./store";
 
 const now = () => new Date();
 const iso = (d: Date = now()) => d.toISOString();
 
-/** Idempotent seed. `users` = demo users from Postgres, insertion-ordered. */
-export function seed(users: User[]): void {
+/** Idempotent seed. `users`/`orgs`/`roles` = demo rows from Postgres. */
+export function seed(users: User[], orgs: Organization[], roles: Role[]): void {
   if (store.seeded) return;
 
   // Relative demo calendar — design "today" = Mar 22 in the original mock.
@@ -51,79 +48,18 @@ export function seed(users: User[]): void {
   const jonas = byEmail("jonas@northwind.io");
   const usersByShort = { ay: aisha, mk: marco, lc: lin, dp: diego, sr: sara, jb: jonas };
 
-  /* ---------------- Roles ---------------- */
-  for (const r of [...SYSTEM_WORKSPACE_ROLES, ...SYSTEM_PROJECT_ROLES]) {
-    const role = {
-      id: uuidv7(),
-      organizationId: null,
-      scope: r.scope,
-      name: r.name,
-      isSystem: true,
-      permissions: r.permissions,
-    };
-    store.roles.push(role);
-    store.rolePermissions[r.name] = r.permissions;
-  }
-  const workspaceRole = (name: string) => store.roles.find((r) => r.scope === "workspace" && r.name === name)!;
-
-  /* ---------------- Organizations (multi-org world for the switchers) ---------------- */
-  const makeOrg = (
-    name: string,
-    slug: string,
-    type: "team" | "personal",
-    description: string,
-    website: string | null = null,
-  ) => {
-    const o = {
-      id: uuidv7(),
-      name,
-      slug,
-      type,
-      logo: null as string | null,
-      description,
-      timezone: "UTC",
-      language: "en",
-      website,
-      createdAt: iso(),
-      updatedAt: iso(),
-    };
-    store.organizations.push(o);
+  /* ---------------- Roles + organizations (from Postgres) ---------------- */
+  const workspaceRole = (name: string) => roles.find((r) => r.scope === "workspace" && r.name === name)!;
+  const projectRole = (name: string) => roles.find((r) => r.scope === "project" && r.name === name)!;
+  const orgBySlug = (slug: string) => {
+    const o = orgs.find((x) => x.slug === slug);
+    if (!o) throw new Error(`seed: demo org ${slug} missing from Postgres seed`);
     return o;
   };
-  const northwind = makeOrg("Northwind", "northwind", "team", "Software House", "https://northwind.io");
-  const personal = makeOrg("Personal", "personal", "personal", "Aisha's personal workspace");
-  const aminStudio = makeOrg("Amin Studio", "amin-studio", "team", "Independent consultancy");
-  const acme = makeOrg("Acme Internal", "acme-internal", "team", "Acme's internal product org");
-
-  const makeMember = (
-    org: typeof northwind,
-    user: typeof aisha,
-    roleName: string,
-  ) => {
-    const m = {
-      id: uuidv7(),
-      organizationId: org.id,
-      userId: user.id,
-      role: workspaceRole(roleName),
-      status: "active" as const,
-      joinedAt: iso(),
-      user,
-      createdAt: iso(),
-      updatedAt: iso(),
-    };
-    store.members.push(m);
-    return m;
-  };
-  makeMember(northwind, aisha, "Owner");
-  makeMember(northwind, marco, "Admin");
-  makeMember(northwind, lin, "Member");
-  makeMember(northwind, diego, "Member");
-  makeMember(northwind, sara, "Member");
-  makeMember(northwind, jonas, "Member");
-  // Aisha's other workspaces (she is the sole member; Owner of personal by rule)
-  makeMember(personal, aisha, "Owner");
-  makeMember(aminStudio, aisha, "Owner");
-  makeMember(acme, aisha, "Member");
+  const northwind = orgBySlug("northwind");
+  const personal = orgBySlug("personal");
+  const aminStudio = orgBySlug("amin-studio");
+  const acme = orgBySlug("acme-internal");
 
   /* ---------------- Project ---------------- */
   const atlas = {
@@ -145,8 +81,6 @@ export function seed(users: User[]): void {
    * Real project_members rows: Aisha administers, everyone else participates.
    * Behavior-neutral for the demo (Owner ∪ anything ⊇ Member), but the
    * tenant context now resolves actual roles + visibility. */
-  const projectRole = (name: string) =>
-    store.roles.find((r) => r.scope === "project" && r.name === name)!;
   const projectMember = (user: typeof aisha, roleName: string) => {
     store.projectMembers.push({
       id: uuidv7(),

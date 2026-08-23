@@ -1,21 +1,22 @@
-/** Organization routes — workspace + members + invitations. */
+/** Organization routes — workspace + members + invitations.
+ *  All workspace rows live in Postgres (db/org-repo.ts). */
 import { Hono } from "hono";
-import { store } from "../../db/store";
+import { randomBytes } from "node:crypto";
+import * as orgRepo from "../../db/org-repo";
 import * as authRepo from "../../db/auth-repo";
 import {
-  uuidv7,
   organizationCreate,
   organizationUpdate,
   memberUpdate,
   invitationInput,
   invitationAction,
   paginationQuery,
+  paginate,
 } from "@pmin/core";
 import { badRequest, notFound } from "../../lib/errors";
 import { created, data, noContent, paginated } from "../../lib/responses";
-import { paginate } from "@pmin/core";
 import { parseBody, parseQuery } from "../../lib/validate";
-import { orgContext } from "../../lib/tenant";
+import { orgContext, currentTenant } from "../../lib/tenant";
 import { requireAuth } from "../../lib/auth";
 import { requirePermission } from "../../lib/permission";
 import type { Vars, Ctx } from "../../lib/ctx";
@@ -25,85 +26,56 @@ export const organization = new Hono<{ Variables: Vars }>();
 organization.use("*", requireAuth);
 
 // List orgs the user belongs to (soft-deleted orgs disappear)
-organization.get("/", (c) => {
+organization.get("/", async (c) => {
   const user = c.get("user")!;
-  const orgs = store.members
-    .filter((m) => m.userId === user.id && m.status === "active")
-    .map((m) => store.organizations.find((o) => o.id === m.organizationId && !o.deletedAt)!)
-    .filter(Boolean);
-  return data(c, orgs);
+  return data(c, await orgRepo.listOrganizationsForUser(user.id));
 });
 
 organization.post("/", async (c) => {
   const user = c.get("user")!;
   const input = parseBody(await c.req.json(), organizationCreate);
-  if (store.organizations.some((o) => o.slug === input.slug && !o.deletedAt))
-    throw badRequest("Slug already taken");
-  const org = {
-    id: uuidv7(),
+  if (await orgRepo.slugTaken(input.slug)) throw badRequest("Slug already taken");
+  const org = await orgRepo.insertOrganization({
     name: input.name,
     slug: input.slug,
-    type: "team" as const,
-    logo: null,
+    type: "team",
     description: input.description ?? null,
-    timezone: "UTC",
-    language: "en",
     website: input.website ?? null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  store.organizations.push(org);
-  // creator becomes Owner
-  const ownerRole = store.roles.find((r) => r.name === "Owner" && r.scope === "workspace")!;
-  store.members.push({
-    id: uuidv7(),
-    organizationId: org.id,
-    userId: user.id,
-    role: ownerRole,
-    status: "active",
-    joinedAt: new Date().toISOString(),
-    user,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   });
+  // creator becomes Owner
+  const ownerRole = await orgRepo.findRoleByName("workspace", "Owner");
+  if (!ownerRole) throw new Error("workspace Owner role missing — seed incomplete");
+  await orgRepo.insertMember({ organizationId: org.id, userId: user.id, roleId: ownerRole.id });
   return created(c, org);
 });
 
-organization.get("/:organizationId", orgContext, (c) => data(c, currentOrg(c)));
+organization.get("/:organizationId", orgContext, async (c) => {
+  const org = await orgRepo.getOrganization(currentTenant(c).organizationId);
+  if (!org) throw notFound();
+  return data(c, org);
+});
 
 // Soft delete — the org and everything under it becomes unreachable (404).
 organization.delete(
   "/:organizationId",
   orgContext,
   requirePermission("organization:delete"),
-  (c) => {
-    const org = currentOrg(c);
-    org.deletedAt = new Date().toISOString();
+  async (c) => {
+    await orgRepo.softDeleteOrganization(currentTenant(c).organizationId);
     return noContent(c);
   },
 );
 
 organization.patch("/:organizationId", orgContext, requirePermission("organization:update"), async (c) => {
-  const org = currentOrg(c);
   const input = parseBody(await c.req.json(), organizationUpdate);
-  Object.assign(org, input, { updatedAt: new Date().toISOString() });
+  const org = await orgRepo.updateOrganization(currentTenant(c).organizationId, input);
   return data(c, org);
 });
 
 // Members
-organization.get(
-  "/:organizationId/members",
-  orgContext,
-  requirePermission("member:view"),
-  async (c) => {
-    const members = store.members.filter((m) => m.organizationId === currentOrg(c).id);
-    // users live in Postgres — hydrate fresh copies so PATCH /me shows up
-    const fresh = new Map(
-      (await authRepo.getUsersByIds(members.map((m) => m.userId))).map((u) => [u.id, u]),
-    );
-    return data(c, members.map((m) => ({ ...m, user: fresh.get(m.userId) ?? m.user })));
-  },
-);
+organization.get("/:organizationId/members", orgContext, requirePermission("member:view"), async (c) => {
+  return data(c, await orgRepo.listOrgMembers(currentTenant(c).organizationId));
+});
 
 // Change a member's workspace role.
 organization.patch(
@@ -111,25 +83,18 @@ organization.patch(
   orgContext,
   requirePermission("member:update"),
   async (c) => {
-    const org = currentOrg(c);
-    const member = store.members.find(
-      (m) => m.id === c.req.param("memberId") && m.organizationId === org.id,
-    );
+    const orgId = currentTenant(c).organizationId;
+    const member = await orgRepo.getOrgMember(orgId, c.req.param("memberId"));
     if (!member) throw notFound();
-    if (org.type === "personal") throw badRequest("Personal workspaces cannot change roles");
+    if (member.role.scope !== "workspace") throw badRequest("Not a workspace membership");
     const input = parseBody(await c.req.json(), memberUpdate);
-    const role = store.roles.find((r) => r.name === input.roleName && r.scope === "workspace");
+    const role = await orgRepo.findRoleByName("workspace", input.roleName);
     if (!role) throw badRequest(`Unknown workspace role "${input.roleName}"`);
     // an org always keeps at least one active Owner
-    if (
-      member.role.name === "Owner" &&
-      role.name !== "Owner" &&
-      activeOwners(org.id).length <= 1
-    )
+    if (member.role.name === "Owner" && role.name !== "Owner" && (await orgRepo.countActiveOwners(orgId)) <= 1)
       throw badRequest("Cannot demote the last owner of the workspace");
-    member.role = role;
-    member.updatedAt = new Date().toISOString();
-    return data(c, member);
+    await orgRepo.updateMemberRole(member.id, role.id);
+    return data(c, { ...member, role });
   },
 );
 
@@ -137,24 +102,16 @@ organization.delete(
   "/:organizationId/members/:memberId",
   orgContext,
   requirePermission("member:remove"),
-  (c) => {
-    const org = currentOrg(c);
-    const id = c.req.param("memberId");
-    const member = store.members.find((m) => m.id === id && m.organizationId === org.id);
+  async (c) => {
+    const orgId = currentTenant(c).organizationId;
+    const member = await orgRepo.getOrgMember(orgId, c.req.param("memberId"));
     if (!member) throw notFound();
-    if (org.type === "personal") throw badRequest("Personal workspaces cannot remove members");
-    if (member.role.name === "Owner" && activeOwners(org.id).length <= 1)
+    if (member.role.name === "Owner" && (await orgRepo.countActiveOwners(orgId)) <= 1)
       throw badRequest("Cannot remove the last owner of the workspace");
-    store.members = store.members.filter((m) => m.id !== id);
+    await orgRepo.deleteMember(member.id);
     return noContent(c);
   },
 );
-
-function activeOwners(orgId: string) {
-  return store.members.filter(
-    (m) => m.organizationId === orgId && m.status === "active" && m.role.name === "Owner",
-  );
-}
 
 /* ---------------- Invitations (the membership flow) ----------------
  * Users self-register (→ personal workspace); joining an org happens by
@@ -166,35 +123,25 @@ organization.post(
   requirePermission("member:create"),
   async (c) => {
     const input = parseBody(await c.req.json(), invitationInput);
-    const org = currentOrg(c);
-    if (org.type === "personal") throw badRequest("Personal workspaces cannot invite members");
+    const orgId = currentTenant(c).organizationId;
     const role =
-      store.roles.find((r) => r.name === input.roleName && r.scope === "workspace") ??
-      store.roles.find((r) => r.name === "Member" && r.scope === "workspace")!;
-    const email = input.email.toLowerCase();
-    if (
-      store.members.some(
-        (m) => m.organizationId === org.id && m.status === "active" && m.user.email.toLowerCase() === email,
-      )
-    )
+      (await orgRepo.findRoleByName("workspace", input.roleName)) ??
+      (await orgRepo.findRoleByName("workspace", "Member"));
+    if (!role) throw new Error("workspace Member role missing — seed incomplete");
+    if (await orgRepo.getActiveMemberByEmail(orgId, input.email))
       throw badRequest("Already a member");
-    if (
-      store.invitations.some(
-        (i) => i.organizationId === org.id && i.email.toLowerCase() === email && i.status === "pending",
-      )
-    )
+    if (await orgRepo.hasPendingInvitation(orgId, input.email))
       throw badRequest("Invitation already pending");
-    const invitation = {
-      id: uuidv7(),
-      organizationId: org.id,
+    await orgRepo.insertInvitation({
+      organizationId: orgId,
       email: input.email,
-      status: "pending" as const,
-      roleName: role.name,
-      expiresAt: new Date(Date.now() + 7 * 86400000).toISOString(),
-      createdAt: new Date().toISOString(),
-    };
-    store.invitations.push(invitation);
-    return created(c, invitation);
+      roleId: role.id,
+      expiresAt: new Date(Date.now() + 7 * 86400000),
+      // admin-driven flow today; the token future-proofs email delivery
+      token: randomBytes(24).toString("base64url"),
+    });
+    const list = await orgRepo.listOrgInvitations(orgId);
+    return created(c, list.at(-1)!);
   },
 );
 
@@ -202,12 +149,9 @@ organization.get(
   "/:organizationId/invitations",
   orgContext,
   requirePermission("member:view"),
-  (c) => {
+  async (c) => {
     const q = parseQuery(c.req.query(), paginationQuery);
-    return paginated(
-      c,
-      paginate(store.invitations.filter((i) => i.organizationId === currentOrg(c).id), q),
-    );
+    return paginated(c, paginate(await orgRepo.listOrgInvitations(currentTenant(c).organizationId), q));
   },
 );
 
@@ -217,46 +161,27 @@ organization.patch(
   orgContext,
   requirePermission("member:create"),
   async (c) => {
-    const org = currentOrg(c);
-    const invitation = store.invitations.find(
-      (i) => i.id === c.req.param("invitationId") && i.organizationId === org.id,
-    );
+    const orgId = currentTenant(c).organizationId;
+    const invitation = await orgRepo.getOrgInvitation(orgId, c.req.param("invitationId"));
     if (!invitation) throw notFound();
     if (invitation.status !== "pending")
       throw badRequest(`Invitation is already ${invitation.status}`);
     const input = parseBody(await c.req.json(), invitationAction);
     if (input.action === "cancel") {
-      invitation.status = "cancelled";
+      await orgRepo.updateInvitationStatus(invitation.id, "cancelled");
       return data(c, invitation);
     }
     // accept: the invitee must have registered on their own (personal workspace)
-    const user = await authRepo.getUserByEmail(invitation.email);
-    if (!user)
-      throw badRequest("User must register before accepting this invitation");
-    if (store.members.some((m) => m.organizationId === org.id && m.userId === user.id))
+    if (await orgRepo.getActiveMemberByEmail(orgId, invitation.email))
       throw badRequest("Already a member");
+    const registered = await authRepo.getUserByEmail(invitation.email);
+    if (!registered) throw badRequest("User must register before accepting this invitation");
     const role =
-      store.roles.find((r) => r.name === invitation.roleName && r.scope === "workspace") ??
-      store.roles.find((r) => r.name === "Member" && r.scope === "workspace")!;
-    store.members.push({
-      id: uuidv7(),
-      organizationId: org.id,
-      userId: user.id,
-      role,
-      status: "active" as const,
-      joinedAt: new Date().toISOString(),
-      user,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    invitation.status = "accepted";
+      (await orgRepo.findRoleByName("workspace", invitation.roleName)) ??
+      (await orgRepo.findRoleByName("workspace", "Member"));
+    if (!role) throw new Error("workspace role missing — seed incomplete");
+    await orgRepo.insertMember({ organizationId: orgId, userId: registered.id, roleId: role.id });
+    await orgRepo.updateInvitationStatus(invitation.id, "accepted");
     return data(c, invitation);
   },
 );
-
-function currentOrg(c: Ctx) {
-  const t = c.get("tenant");
-  const org = store.organizations.find((o) => o.id === t?.organizationId);
-  if (!org) throw notFound();
-  return org;
-}

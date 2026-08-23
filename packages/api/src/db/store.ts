@@ -1,18 +1,18 @@
 /**
  * In-memory repository — the runtime data layer for the modules that have
- * not migrated to Postgres yet (workspace, projects, tasks, documents, …).
+ * not migrated to Postgres yet (projects, tasks, documents, …).
  *
- * The auth domain (users, sessions, accounts, password resets) lives in
- * Postgres via Drizzle — see db/pg.ts + db/auth-repo.ts. The collections
- * here mirror the remaining tables of the Drizzle schema in `@pmin/core/db`
- * and will move over module by module.
+ * The auth domain (users, sessions, accounts, password resets — db/pg.ts +
+ * db/auth-repo.ts) and the workspace domain (organizations, roles, members,
+ * invitations — db/org-repo.ts) live in Postgres. The collections here
+ * mirror the remaining tables of the Drizzle schema and move over module
+ * by module.
  *
  * Multi-tenancy rule (`docs/tech/02-conventions.md`): every tenant-scoped query
  * MUST filter by organization_id / project_id. The helpers here enforce that.
  */
 import {
   type User,
-  type Organization,
   type Project,
   type Task,
   type TaskStatus,
@@ -24,10 +24,7 @@ import {
   type Page,
   type FileRef,
   type Notification,
-  type Member,
   type ProjectMember,
-  type Invitation,
-  type Role,
   type Meeting,
   type Agreement,
 } from "@pmin/core";
@@ -61,10 +58,6 @@ export interface ProjectVisit {
 }
 
 export interface Store {
-  organizations: (Organization & Meta)[];
-  roles: Role[];
-  members: Member[];
-  invitations: Invitation[];
   projectMembers: ProjectMember[];
   projects: (Project & Meta)[];
   taskStatuses: TaskStatus[];
@@ -82,17 +75,11 @@ export interface Store {
   comments: Comment[];
   activity: ActivityEntry[];
   projectVisits: ProjectVisit[];
-  /** workspace role name → permission keys */
-  rolePermissions: Record<string, string[]>;
   /** seeded = seed() is idempotent */
   seeded: boolean;
 }
 
 export const store: Store = {
-  organizations: [],
-  roles: [],
-  members: [],
-  invitations: [],
   projectMembers: [],
   projects: [],
   taskStatuses: [],
@@ -110,7 +97,6 @@ export const store: Store = {
   comments: [],
   activity: [],
   projectVisits: [],
-  rolePermissions: {},
   seeded: false,
 };
 

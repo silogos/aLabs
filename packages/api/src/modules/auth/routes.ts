@@ -10,8 +10,8 @@ import { Hono } from "hono";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { randomBytes } from "node:crypto";
 import * as authRepo from "../../db/auth-repo";
+import * as orgRepo from "../../db/org-repo";
 import {
-  uuidv7,
   registerInput,
   loginInput,
   forgotPasswordInput,
@@ -22,7 +22,6 @@ import { extractToken } from "../../lib/auth";
 import { hashPassword, verifyPassword } from "../../lib/passwords";
 import { data } from "../../lib/responses";
 import { parseBody } from "../../lib/validate";
-import { store } from "../../db/store";
 import type { Vars } from "../../lib/ctx";
 import type { User } from "@pmin/core";
 
@@ -56,33 +55,14 @@ async function createUserWithWorkspace(input: {
 }): Promise<User> {
   const user = await authRepo.insertUser(input);
 
-  const now = new Date().toISOString();
-  const ownerRole = store.roles.find((r) => r.name === "Owner" && r.scope === "workspace")!;
-  const personalOrg = {
-    id: uuidv7(),
+  const org = await orgRepo.insertOrganization({
     name: `${input.name}'s Workspace`,
     slug: `personal-${user.id.slice(-8)}`,
-    type: "personal" as const,
-    logo: null,
-    description: null,
-    timezone: "UTC",
-    language: "en",
-    website: null,
-    createdAt: now,
-    updatedAt: now,
-  };
-  store.organizations.push(personalOrg);
-  store.members.push({
-    id: uuidv7(),
-    organizationId: personalOrg.id,
-    userId: user.id,
-    role: ownerRole,
-    status: "active" as const,
-    joinedAt: now,
-    user,
-    createdAt: now,
-    updatedAt: now,
+    type: "personal",
   });
+  const ownerRole = await orgRepo.findRoleByName("workspace", "Owner");
+  if (!ownerRole) throw new Error("workspace Owner role missing — seed incomplete");
+  await orgRepo.insertMember({ organizationId: org.id, userId: user.id, roleId: ownerRole.id });
   return user;
 }
 

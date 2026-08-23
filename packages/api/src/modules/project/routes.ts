@@ -1,6 +1,7 @@
 /** Project routes — projects under an org, and project members. */
 import { Hono } from "hono";
 import { store } from "../../db/store";
+import * as orgRepo from "../../db/org-repo";
 import {
   uuidv7,
   projectCreate,
@@ -40,7 +41,7 @@ project.post("/", orgContext, requirePermission("project:create"), async (c) => 
   // Personal workspaces are capped at PERSONAL_PROJECT_LIMIT active projects.
   // Active = not archived and not soft-deleted (archiving frees the slot).
   // See docs/foundation/04-plans-workspaces.md and ADR 0007.
-  const org = store.organizations.find((o) => o.id === orgId && !o.deletedAt);
+  const org = await orgRepo.getOrganization(orgId);
   if (org?.type === "personal") {
     const active = store.projects.filter(
       (p) => p.organizationId === orgId && !p.deletedAt && p.status !== "archived",
@@ -82,8 +83,9 @@ project.post("/", orgContext, requirePermission("project:create"), async (c) => 
     store.taskTypes.push({ id: uuidv7(), projectId: proj.id, name });
   }
 
-  // creator becomes a Project Admin
-  const role = store.roles.find((r) => r.name === "Project Admin" && r.scope === "project")!;
+  // creator becomes a Project Admin (system project roles live in Postgres)
+  const role = await orgRepo.findRoleByName("project", "Project Admin");
+  if (!role) throw new Error("project Project Admin role missing — seed incomplete");
   store.projectMembers.push({
     id: uuidv7(),
     projectId: proj.id,
@@ -121,18 +123,11 @@ projectMembers.post(
     const proj = currentProject(c);
     const input = parseBody(await c.req.json(), projectMemberAdd);
     // only active org members can be invited — 404, never 403 (leak rule)
-    const orgMember = store.members.find(
-      (m) =>
-        m.organizationId === proj.organizationId &&
-        m.status === "active" &&
-        m.user.email.toLowerCase() === input.email.toLowerCase(),
-    );
+    const orgMember = await orgRepo.getActiveMemberByEmail(proj.organizationId, input.email);
     if (!orgMember) throw notFound();
     if (store.projectMembers.some((m) => m.projectId === proj.id && m.userId === orgMember.userId))
       throw badRequest("Already a member or invited");
-    const role = store.roles.find(
-      (r) => r.name === (input.roleName ?? "Member") && r.scope === "project",
-    );
+    const role = await orgRepo.findRoleByName("project", input.roleName ?? "Member");
     if (!role) throw badRequest(`Unknown project role "${input.roleName ?? "Member"}"`);
     const row = {
       id: uuidv7(),
@@ -162,7 +157,7 @@ projectMembers.patch(
     if (!row) throw notFound();
     const input = parseBody(await c.req.json(), projectMemberUpdate);
     if (input.roleName) {
-      const role = store.roles.find((r) => r.name === input.roleName && r.scope === "project");
+      const role = await orgRepo.findRoleByName("project", input.roleName);
       if (!role) throw badRequest(`Unknown project role "${input.roleName}"`);
       row.role = role;
     }

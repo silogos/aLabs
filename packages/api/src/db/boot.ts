@@ -1,13 +1,14 @@
 /** Boot gate — one awaited promise between server start and first request:
- *  migrations → auth seed (Postgres) → demo seed (in-memory).
+ *  migrations → auth seed → workspace seed (Postgres) → demo seed (in-memory).
  *
  *  A Postgres advisory lock serializes boot across module instances (Next dev
  *  + Turbopack can instantiate this module more than once; migrations and the
- *  demo seed are idempotent, but concurrent CREATE TYPE would race). The app's
- *  first middleware awaits `ready`; the no-op catch keeps an early rejection
- *  from crashing the process before any request surfaces it. */
+ *  demo seeds are idempotent, but concurrent CREATE TYPE would race). The
+ *  app's first middleware awaits `ready`; the no-op catch keeps an early
+ *  rejection from crashing the process before any request surfaces it. */
 import { client, initDb } from "./pg";
 import { seedAuth } from "./seed-auth";
+import { seedWorkspace } from "./seed-workspace";
 import { seed } from "./seed";
 import { store } from "./store";
 import type { User } from "@pmin/core";
@@ -21,7 +22,8 @@ export const ready: Promise<User[]> = (async () => {
     await conn`select pg_advisory_lock(${BOOT_LOCK_KEY})`;
     await initDb();
     const users = await seedAuth();
-    if (!store.seeded) seed(users);
+    const { orgs, roles } = await seedWorkspace(users);
+    if (!store.seeded) seed(users, orgs, roles);
     return users;
   } finally {
     await conn`select pg_advisory_unlock(${BOOT_LOCK_KEY})`.catch(() => {});

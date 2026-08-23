@@ -135,6 +135,7 @@ export const organizations = pgTable("organizations", {
   website: text("website"),
   createdAt: ts().defaultNow(),
   updatedAt: ts().defaultNow(),
+  deletedAt: nullableTs(),
 });
 
 export const permissions = pgTable("permissions", {
@@ -143,15 +144,26 @@ export const permissions = pgTable("permissions", {
   description: text("description"),
 });
 
-export const roles = pgTable("roles", {
-  id: uuid("id").primaryKey(),
-  organizationId: uuid("organization_id"), // null = system default
-  scope: roleScopeEnum("scope").notNull(),
-  name: varchar("name", { length: 50 }).notNull(),
-  isSystem: boolean("is_system").notNull().default(false),
-  createdAt: ts().defaultNow(),
-  updatedAt: ts().defaultNow(),
-});
+export const roles = pgTable(
+  "roles",
+  {
+    id: uuid("id").primaryKey(),
+    organizationId: uuid("organization_id"), // null = system default
+    scope: roleScopeEnum("scope").notNull(),
+    name: varchar("name", { length: 50 }).notNull(),
+    isSystem: boolean("is_system").notNull().default(false),
+    // permission keys embedded on the row (the normalized role_permissions
+    // join below stays available for a future admin UI)
+    permissions: text("permissions").array().notNull().default([]),
+    createdAt: ts().defaultNow(),
+    updatedAt: ts().defaultNow(),
+  },
+  (t) => [
+    // lookup index (a unique version needs nulls-not-distinct, which this
+    // drizzle-orm doesn't support yet — seeding is guarded, code takes first)
+    index("roles_scope_name_idx").on(t.scope, t.name, t.organizationId),
+  ],
+);
 
 export const rolePermissions = pgTable(
   "role_permissions",
