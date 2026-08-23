@@ -76,15 +76,12 @@ All internal packages use the `@pmin/*` namespace.
   mirrors `docs/tech/03-data-model.md` table-for-table).
 - **Source of truth for validation** — `packages/core/src/schemas` (zod,
   consumed by both the API and the web app).
-- **Data layer (migrating)** — auth (users, sessions, accounts, password
-  resets), workspace (organizations, roles, members, invitations), projects
-  (+memberships, visit history), and the tasks domain (tasks, statuses,
-  labels, types, comments, iterations, milestones) persist to **Postgres via
-  Drizzle** (`packages/api/src/db/` — auto-migrated and demo-seeded on boot).
-  Documents (spaces/pages/files), meetings, agreements, notifications, and
-  activity still run on the in-memory store and move over next.
-  `pnpm db:generate` / `pnpm db:migrate` manage migrations; `pnpm db:studio`
-  opens Drizzle Studio.
+- **Data layer — Postgres via Drizzle, fully migrated.** Every domain
+  persists to Postgres (auth, workspace, projects, tasks + planning,
+  documents, meetings, agreements, notifications, activity) through the
+  per-domain repositories in `packages/api/src/db/` — auto-migrated and
+  demo-seeded on boot. `pnpm db:generate` / `pnpm db:migrate` manage
+  migrations; `pnpm db:studio` opens Drizzle Studio.
 
 ### Request lifecycle
 

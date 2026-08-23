@@ -1,8 +1,9 @@
-/** Meeting routes — meetings + action items. */
+/** Meeting routes — meetings + action items.
+ *  Rows live in Postgres (db/misc-repo.ts). */
 import { Hono } from "hono";
 import { z } from "zod";
-import { store } from "../../db/store";
-import { uuidv7, meetingCreate, meetingUpdate } from "@pmin/core";
+import * as miscRepo from "../../db/misc-repo";
+import { meetingCreate, meetingUpdate } from "@pmin/core";
 import { MEETING_TRANSITIONS, canTransition } from "@pmin/core";
 import { conflict, notFound } from "../../lib/errors";
 import { created, data, noContent } from "../../lib/responses";
@@ -16,49 +17,43 @@ meeting.use("*", projectContext);
 
 const pidOf = (c: Ctx) => currentTenant(c).projectId!;
 
-meeting.get("/meetings", requirePermission("meeting:view"), (c) =>
-  data(c, store.meetings.filter((m) => m.projectId === pidOf(c) && !m.deletedAt)),
+meeting.get("/meetings", requirePermission("meeting:view"), async (c) =>
+  data(c, await miscRepo.listMeetings(pidOf(c))),
 );
 meeting.post("/meetings", requirePermission("meeting:create"), async (c) => {
   const input = parseBody(await c.req.json(), meetingCreate);
-  const m = {
-    id: uuidv7(),
+  const m = await miscRepo.insertMeeting({
     projectId: pidOf(c),
     title: input.title,
     type: input.type ?? null,
-    scheduledAt: input.scheduledAt,
+    scheduledAt: new Date(input.scheduledAt),
     duration: input.duration ?? null,
     location: input.location ?? null,
-    agenda: null,
-    notes: null,
-    status: "scheduled" as const,
-    participants: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    deletedAt: null as string | null,
-  };
-  store.meetings.push(m);
+  });
   return created(c, m);
 });
-meeting.get("/meetings/:id", requirePermission("meeting:view"), (c) => {
-  const m = store.meetings.find((x) => x.id === c.req.param("id") && x.projectId === pidOf(c) && !x.deletedAt);
+meeting.get("/meetings/:id", requirePermission("meeting:view"), async (c) => {
+  const m = await miscRepo.getMeeting(pidOf(c), c.req.param("id")!);
   if (!m) throw notFound();
   return data(c, m);
 });
 meeting.patch("/meetings/:id", requirePermission("meeting:update"), async (c) => {
-  const m = store.meetings.find((x) => x.id === c.req.param("id") && x.projectId === pidOf(c) && !x.deletedAt);
+  const m = await miscRepo.getMeeting(pidOf(c), c.req.param("id")!);
   if (!m) throw notFound();
   const input = parseBody(await c.req.json(), meetingUpdate);
   if (input.status && input.status !== m.status) {
     if (!canTransition(MEETING_TRANSITIONS, m.status, input.status)) throw conflict("Invalid status transition");
   }
-  Object.assign(m, input, { updatedAt: new Date().toISOString() });
-  return data(c, m);
+  await miscRepo.patchMeeting(m.id, {
+    ...input,
+    scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : undefined,
+  });
+  return data(c, await miscRepo.getMeeting(pidOf(c), m.id));
 });
-meeting.delete("/meetings/:id", requirePermission("meeting:delete"), (c) => {
-  const m = store.meetings.find((x) => x.id === c.req.param("id") && x.projectId === pidOf(c) && !x.deletedAt);
+meeting.delete("/meetings/:id", requirePermission("meeting:delete"), async (c) => {
+  const m = await miscRepo.getMeeting(pidOf(c), c.req.param("id")!);
   if (!m) throw notFound();
-  m.deletedAt = new Date().toISOString();
+  await miscRepo.softDeleteMeeting(m.id);
   return noContent(c);
 });
 meeting.post(

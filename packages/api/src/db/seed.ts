@@ -1,19 +1,19 @@
 /**
  * Seed the demo data — mirrors the `designs/app/alabs-app.html` prototype 1:1.
  *
- * The tasks domain (statuses, types, labels, iterations, milestones, tasks,
- * subtasks, comments) seeds into Postgres (db/task-repo + db/planning-repo);
- * documents, notifications, and activity stay on the in-memory store until
- * their phase. Users/projects come from earlier PG seeds; everything here
- * references the real DB ids. Idempotent: PG part guards on an empty tasks
- * table, memory part on `store.seeded`.
+ * Everything seeds into Postgres via the domain repos. Users/projects come
+ * from earlier PG seeds; everything here references the real DB ids.
+ * Idempotent: the task/planning half guards on an empty tasks table, the
+ * documents half on empty spaces.
  */
 import { uuidv7 } from "@pmin/core";
-import type { TaskPriority, Content, User, TaskType } from "@pmin/core";
+import type { TaskPriority, Content, User, TaskType, Space } from "@pmin/core";
 import type { ProjectWithMeta } from "./project-repo";
 import * as taskRepo from "./task-repo";
 import * as planningRepo from "./planning-repo";
-import { store, type ActivityEntry } from "./store";
+import * as docRepo from "./doc-repo";
+import * as miscRepo from "./misc-repo";
+
 import type { TaskWithMeta } from "./task-repo";
 
 const now = () => new Date();
@@ -295,35 +295,28 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
     parents.push(...(await taskRepo.listTasks(atlas.id)));
   }
 
-  /* ---------------- Document spaces + pages ---------------- */
-  const spaces = (name: string, icon: string, order: number) => {
-    const s = { id: uuidv7(), projectId: atlas.id, name, icon, order, createdAt: iso() };
-    store.spaces.push(s);
-    return s;
-  };
-  const product = spaces("Product", "📐", 0);
-  const engineering = spaces("Engineering", "⚙️", 1);
-  const design = spaces("Design", "🎨", 2);
-  const client = spaces("Client", "🤝", 3);
-  const legal = spaces("Legal", "⚖️", 4);
+  /* ---------------- Document spaces + pages — PG ---------------- */
+  const docSeeded = (await docRepo.listSpaces(atlas.id)).length > 0;
+  const spaces = (name: string, icon: string, order: number) =>
+    docRepo.insertSpace({ projectId: atlas.id, name, icon, order });
+  if (!docSeeded) {
+  const product = await spaces("Product", "📐", 0);
+  const engineering = await spaces("Engineering", "⚙️", 1);
+  const design = await spaces("Design", "🎨", 2);
+  const client = await spaces("Client", "🤝", 3);
+  const legal = await spaces("Legal", "⚖️", 4);
 
-  const page = (space: ReturnType<typeof spaces>, title: string, icon: string, content: Content) => {
-    const p = {
-      id: uuidv7(),
-      projectId: atlas.id,
-      spaceId: space.id,
-      parentId: null,
-      title,
-      content,
-      icon,
-      order: 0,
-      createdAt: iso(),
-      updatedAt: iso(),
-      editedBy: marco,
-    };
-    store.pages.push(p);
-    return p;
-  };
+  const page = (space: Space | Promise<Space>, title: string, icon: string, content: Content) =>
+    Promise.resolve(space).then((sp) =>
+      docRepo.insertPage({
+        projectId: atlas.id,
+        spaceId: sp.id,
+        title,
+        icon,
+        content,
+        editedBy: marco.id,
+      }),
+    );
 
   /* ProseMirror doc builders for seed page content (native JSON — no adapter). */
   const txt = (t: string): Content => ({ type: "text", text: t });
@@ -334,7 +327,7 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
   const ul = (...items: string[]): Content => ({ type: "bulletList", content: items.map((i) => ({ type: "listItem", content: [para(i)] })) });
   const doc = (...blocks: Content[]): Content => ({ type: "doc", content: blocks });
 
-  page(product, "Vision & positioning", "🎯", doc(
+  await page(product, "Vision & positioning", "🎯", doc(
     hd(2, "Vision"),
     para("A project management platform purpose-built for software delivery — simple enough for a two-person team, scalable enough for an enterprise. Most tools track tasks or store documents. aLabs unifies delivery, documentation, planning, and client communication in one place."),
     bq("AI is an optional enhancement, never the core experience. Every feature works without it."),
@@ -347,7 +340,7 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
     ),
   ));
 
-  page(engineering, "Architecture", "🏛️", doc(
+  await page(engineering, "Architecture", "🏛️", doc(
     bq("Source of truth. This doc governs all module work. ADRs live under Engineering → ADRs; changes here require an ADR."),
     hd(2, "Hierarchy"),
     para("aLabs is strictly hierarchical: User → Organization → Project → Modules. Every business activity belongs to a Project — nothing floats free. Data is isolated per organization; multi-tenancy is enforced at the database layer, not the application layer."),
@@ -369,7 +362,7 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
     bq("Open decision. Object storage & search providers are still TBD — see Pending Decisions in the README."),
   ));
 
-  page(engineering, "Data model", "🗄️", doc(
+  await page(engineering, "Data model", "🗄️", doc(
     hd(2, "Core entities"),
     para("Tasks, Documents, Planning, and Meetings each own their tables, scoped by projectId. There are no cross-project foreign keys."),
     cblk("sql", "-- task is the primary unit of execution\nCREATE TABLE task (\n  id          uuid PRIMARY KEY,\n  project_id  uuid NOT NULL REFERENCES project,\n  title       text NOT NULL,\n  status_id   uuid NOT NULL REFERENCES task_status,\n  assignee_id uuid,\n  priority    task_priority NOT NULL DEFAULT 'medium',\n  due_date    timestamptz,\n  CONSTRAINT within_project CHECK (...)\n);"),
@@ -377,14 +370,14 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
     para("See the full schema in 03-data-model.md."),
   ));
 
-  page(engineering, "API contract", "🔌", doc(
+  await page(engineering, "API contract", "🔌", doc(
     hd(2, "Conventions"),
     para("RESTful, JSON, cursor-based pagination. Every route is scoped under an organization and project."),
     cblk("http", "# list tasks in a project\nGET /orgs/{orgId}/projects/{projectId}/tasks\n     ?status=progress&assignee=me&cursor={cursor}\n\n# 200 OK\n{ \"data\": [...], \"nextCursor\": \"...\", \"hasMore\": true }"),
     para("Every endpoint is guarded by a capability check: task:view, task:create, document:update, and so on. Capabilities are derived from the member's role in the org and project."),
   ));
 
-  page(product, "Roadmap", "🗺️", doc(
+  await page(product, "Roadmap", "🗺️", doc(
     hd(2, "Phasing"),
     para("Phase 1 Foundation → Phase 2 Task & Documents → Phase 3 Planning & Meetings → Phase 4 Client portal & Governance → Phase 5 Notifications & Billing → Phase 6 AI add-on."),
     ul(
@@ -393,88 +386,83 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
       "Planning module — active sprint",
     ),
   ));
-  page(product, "Pricing model", "💲", doc(para("Seat-free. We charge for projects and features, not people.")));
-  page(product, "Personas", "👥", doc(para("Product Manager, Project Manager, Business Analyst, Software Engineer, QA Engineer, UI/UX Designer.")));
-  page(engineering, "ADRs", "📋", doc(para("Architecture Decision Records live here.")));
-  page(engineering, "Conventions", "📜", doc(
+  await page(product, "Pricing model", "💲", doc(para("Seat-free. We charge for projects and features, not people.")));
+  await page(product, "Personas", "👥", doc(para("Product Manager, Project Manager, Business Analyst, Software Engineer, QA Engineer, UI/UX Designer.")));
+  await page(engineering, "ADRs", "📋", doc(para("Architecture Decision Records live here.")));
+  await page(engineering, "Conventions", "📜", doc(
     hd(2, "Coding standards"),
     para("TypeScript strict mode everywhere, no any without an inline justification. Naming is camelCase for code, snake_case for database columns."),
     bq("Every architectural decision gets an ADR before the PR merges."),
   ));
-  page(design, "Design system", "🎨", doc(para("Tokens, type scale, and component primitives.")));
-  page(design, "Component library", "🧩", doc(para("React component library shared across the app.")));
-  page(client, "Northwind SOW", "📄", doc(para("Statement of work for the Atlas Platform 2.0 engagement.")));
-  page(client, "Status report — Mar", "📊", doc(para("March status report shared with the client.")));
-  page(legal, "Master services agreement", "📑", doc(para("MSA between Northwind and the client.")));
+  await page(design, "Design system", "🎨", doc(para("Tokens, type scale, and component primitives.")));
+  await page(design, "Component library", "🧩", doc(para("React component library shared across the app.")));
+  await page(client, "Northwind SOW", "📄", doc(para("Statement of work for the Atlas Platform 2.0 engagement.")));
+  await page(client, "Status report — Mar", "📊", doc(para("March status report shared with the client.")));
+  await page(legal, "Master services agreement", "📑", doc(para("MSA between Northwind and the client.")));
 
-  /* ---------------- Files ---------------- */
-  const file = (name: string, mimeType: string, size: number, icon: string, uploadedBy: typeof aisha) => {
-    store.files.push({
-      id: uuidv7(),
-      projectId: atlas.id,
-      name,
-      mimeType,
-      size,
-      url: `files/${icon}/${name}`,
-      uploadedBy,
-      createdAt: iso(),
+  }
+
+  /* ---------------- Files — PG ---------------- */
+  if (!docSeeded) {
+    const file = (name: string, mimeType: string, size: number, icon: string, uploadedBy: string) =>
+      docRepo.insertFile({
+        projectId: atlas.id,
+        name,
+        mimeType,
+        size,
+        url: `files/${icon}/${name}`,
+        uploadedBy,
+      });
+    await file("design-system.fig", "application/figma", 24100000, "fig", jonas.id);
+    await file("northwind-sow.pdf", "application/pdf", 880000, "pdf", aisha.id);
+    await file("data-model-v3.png", "image/png", 1200000, "img", diego.id);
+    await file("openapi.yaml", "text/yaml", 96000, "yml", marco.id);
+    await file("brand-guidelines.pdf", "application/pdf", 12000000, "doc", jonas.id);
+    await file("assets-export.zip", "application/zip", 8400000, "zip", lin.id);
+  }
+
+  /* ---------------- Activity feed — PG ---------------- */
+  if (!docSeeded) {
+    const activity = (
+      kind: "move" | "doc" | "com" | "done" | "mile",
+      actor: keyof typeof usersByShort,
+      target: string,
+      whenLabel: string,
+      minutesAgo: number,
+    ) =>
+      miscRepo.insertActivity({
+        projectId: atlas.id,
+        kind,
+        actorId: usersByShort[actor].id,
+        target,
+        whenLabel,
+        occurredAt: new Date(Date.now() - minutesAgo * 60_000),
+      });
+    await activity("move", "mk", "ATL-101", "12 minutes ago", 12);
+    await activity("doc", "jb", "Design System v1", "38 minutes ago", 38);
+    await activity("com", "dp", "ATL-103", "1 hour ago", 60);
+    await activity("done", "sr", "ATL-112", "2 hours ago", 120);
+    await activity("mile", "ay", "Security hardening", "3 hours ago", 180);
+    await activity("done", "lc", "ATL-113", "5 hours ago", 300);
+  }
+
+  /* ---------------- Notifications — PG ---------------- */
+  if (!docSeeded) {
+    await miscRepo.insertNotification({
+      userId: aisha.id,
+      type: "mention",
+      title: "Marco mentioned you on ATL-101",
+      body: "Can you review the PKCE verifier before EOD?",
+      link: "/tasks/101",
     });
-  };
-  file("design-system.fig", "application/figma", 24100000, "fig", jonas);
-  file("northwind-sow.pdf", "application/pdf", 880000, "pdf", aisha);
-  file("data-model-v3.png", "image/png", 1200000, "img", diego);
-  file("openapi.yaml", "text/yaml", 96000, "yml", marco);
-  file("brand-guidelines.pdf", "application/pdf", 12000000, "doc", jonas);
-  file("assets-export.zip", "application/zip", 8400000, "zip", lin);
-
-  /* ---------------- Activity feed ---------------- */
-  const activity = (
-    kind: ActivityEntry["kind"],
-    actor: keyof typeof usersByShort,
-    target: string,
-    whenLabel: string,
-    minutesAgo: number,
-  ): ActivityEntry => {
-    const e = {
-      id: uuidv7(),
-      kind,
-      projectId: atlas.id,
-      actorId: usersByShort[actor].id,
-      target,
-      when: new Date(Date.now() - minutesAgo * 60_000).toISOString(),
-      whenLabel,
-    };
-    store.activity.push(e);
-    return e;
-  };
-  activity("move", "mk", "ATL-101", "12 minutes ago", 12);
-  activity("doc", "jb", "Design System v1", "38 minutes ago", 38);
-  activity("com", "dp", "ATL-103", "1 hour ago", 60);
-  activity("done", "sr", "ATL-112", "2 hours ago", 120);
-  activity("mile", "ay", "Security hardening", "3 hours ago", 180);
-  activity("done", "lc", "ATL-113", "5 hours ago", 300);
-
-  /* ---------------- Notifications ---------------- */
-  store.notifications.push({
-    id: uuidv7(),
-    userId: aisha.id,
-    type: "mention",
-    title: "Marco mentioned you on ATL-101",
-    body: "Can you review the PKCE verifier before EOD?",
-    link: "/tasks/101",
-    readAt: null,
-    createdAt: iso(),
-  });
-  store.notifications.push({
-    id: uuidv7(),
-    userId: aisha.id,
-    type: "due",
-    title: "ATL-116 is due today",
-    body: "Backlog grooming: triage queue",
-    link: "/tasks/116",
-    readAt: null,
-    createdAt: iso(),
-  });
+    await miscRepo.insertNotification({
+      userId: aisha.id,
+      type: "due",
+      title: "ATL-116 is due today",
+      body: "Backlog grooming: triage queue",
+      link: "/tasks/116",
+    });
+  }
 
   /* ---------------- Comments (for the task drawer) ---------------- */
   if (!pgSeeded) {
@@ -576,5 +564,4 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
     ],
   );
 
-  store.seeded = true;
 }

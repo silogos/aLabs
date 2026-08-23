@@ -415,8 +415,9 @@ export const pages = pgTable(
       .references(() => spaces.id),
     parentId: uuid("parent_id"),
     title: varchar("title", { length: 255 }).notNull(),
-    content: jsonb("content").notNull().default([]),
+    content: jsonb("content").notNull(),
     icon: varchar("icon", { length: 20 }),
+    editedBy: uuid("edited_by").references(() => users.id),
     order: integer("order").notNull().default(0),
     createdAt: ts().defaultNow(),
     updatedAt: ts().defaultNow(),
@@ -444,11 +445,9 @@ export const files = pgTable("files", {
     .references(() => projects.id),
   name: varchar("name", { length: 255 }).notNull(),
   mimeType: varchar("mime_type", { length: 100 }).notNull(),
-  size: bigint("size", { mode: "bigint" }).notNull(),
+  size: bigint("size", { mode: "number" }).notNull(),
   url: text("url").notNull(),
-  uploadedBy: uuid("uploaded_by")
-    .notNull()
-    .references(() => users.id),
+  uploadedBy: uuid("uploaded_by").references(() => users.id),
   createdAt: ts().defaultNow(),
   deletedAt: nullableTs(),
 });
@@ -595,6 +594,27 @@ export const clientShares = pgTable(
 );
 
 /* ============================================================= Notification */
+
+/** Dashboard activity feed (seeded demo events today; written by modules
+ *  as they gain audit trails). `whenLabel` is the display string shown in
+ *  the UI next to the timestamp. */
+export const activity = pgTable(
+  "activity",
+  {
+    id: uuid("id").primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id),
+    kind: varchar("kind", { length: 10 }).notNull(), // move|doc|com|done|mile
+    actorId: uuid("actor_id")
+      .notNull()
+      .references(() => users.id),
+    target: varchar("target", { length: 255 }).notNull(),
+    occurredAt: ts().defaultNow(),
+    whenLabel: varchar("when_label", { length: 100 }).notNull(),
+  },
+  (t) => [index("activity_project_when_idx").on(t.projectId, t.occurredAt)],
+);
 
 export const notifications = pgTable(
   "notifications",

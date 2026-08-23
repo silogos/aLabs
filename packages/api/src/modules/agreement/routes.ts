@@ -1,7 +1,8 @@
-/** Agreement routes — contracts/SOWs/NDAs. */
+/** Agreement routes — contracts/SOWs/NDAs.
+ *  Rows live in Postgres (db/misc-repo.ts). */
 import { Hono } from "hono";
-import { store } from "../../db/store";
-import { uuidv7, agreementCreate, agreementUpdate } from "@pmin/core";
+import * as miscRepo from "../../db/misc-repo";
+import { agreementCreate, agreementUpdate } from "@pmin/core";
 import { AGREEMENT_TRANSITIONS, canTransition } from "@pmin/core";
 import { conflict, notFound } from "../../lib/errors";
 import { created, data, noContent } from "../../lib/responses";
@@ -15,48 +16,45 @@ agreement.use("*", projectContext);
 
 const pidOf = (c: Ctx) => currentTenant(c).projectId!;
 
-agreement.get("/agreements", requirePermission("agreement:view"), (c) =>
-  data(c, store.agreements.filter((a) => a.projectId === pidOf(c) && !a.deletedAt)),
+agreement.get("/agreements", requirePermission("agreement:view"), async (c) =>
+  data(c, await miscRepo.listAgreements(pidOf(c))),
 );
 agreement.post("/agreements", requirePermission("agreement:create"), async (c) => {
   const input = parseBody(await c.req.json(), agreementCreate);
-  const a = {
-    id: uuidv7(),
+  const a = await miscRepo.insertAgreement({
     projectId: pidOf(c),
     title: input.title,
-    type: input.type ?? null,
-    status: "draft" as const,
+    type: input.type ?? "other",
     counterparty: input.counterparty,
     value: input.value ?? null,
     currency: input.currency ?? null,
     startDate: input.startDate ?? null,
     endDate: input.endDate ?? null,
-    signedAt: null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    deletedAt: null as string | null,
-  };
-  store.agreements.push(a);
+  });
   return created(c, a);
 });
-agreement.get("/agreements/:id", requirePermission("agreement:view"), (c) => {
-  const a = store.agreements.find((x) => x.id === c.req.param("id") && x.projectId === pidOf(c) && !x.deletedAt);
+agreement.get("/agreements/:id", requirePermission("agreement:view"), async (c) => {
+  const a = await miscRepo.getAgreement(pidOf(c), c.req.param("id")!);
   if (!a) throw notFound();
   return data(c, a);
 });
 agreement.patch("/agreements/:id", requirePermission("agreement:update"), async (c) => {
-  const a = store.agreements.find((x) => x.id === c.req.param("id") && x.projectId === pidOf(c) && !x.deletedAt);
+  const a = await miscRepo.getAgreement(pidOf(c), c.req.param("id")!);
   if (!a) throw notFound();
   const input = parseBody(await c.req.json(), agreementUpdate);
   if (input.status && input.status !== a.status) {
     if (!canTransition(AGREEMENT_TRANSITIONS, a.status, input.status)) throw conflict("Invalid status transition");
   }
-  Object.assign(a, input, { updatedAt: new Date().toISOString() });
-  return data(c, a);
+  const { signedAt, ...rest } = input;
+  await miscRepo.patchAgreement(a.id, {
+    ...rest,
+    signedAt: signedAt ? new Date(signedAt) : undefined,
+  });
+  return data(c, await miscRepo.getAgreement(pidOf(c), a.id));
 });
-agreement.delete("/agreements/:id", requirePermission("agreement:delete"), (c) => {
-  const d = store.agreements.find((x) => x.id === c.req.param("id") && x.projectId === pidOf(c) && !x.deletedAt);
+agreement.delete("/agreements/:id", requirePermission("agreement:delete"), async (c) => {
+  const d = await miscRepo.getAgreement(pidOf(c), c.req.param("id")!);
   if (!d) throw notFound();
-  d.deletedAt = new Date().toISOString();
+  await miscRepo.softDeleteAgreement(d.id);
   return noContent(c);
 });

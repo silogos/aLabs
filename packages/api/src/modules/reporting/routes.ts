@@ -1,10 +1,10 @@
 /** Reporting routes — dashboard aggregation, progress, activity, export. */
 import { Hono } from "hono";
-import { store } from "../../db/store";
 import * as authRepo from "../../db/auth-repo";
 import * as projectRepo from "../../db/project-repo";
 import * as taskRepo from "../../db/task-repo";
 import * as planningRepo from "../../db/planning-repo";
+import * as miscRepo from "../../db/misc-repo";
 import { projectSchema } from "@pmin/core";
 import { data } from "../../lib/responses";
 import { projectContext, currentTenant } from "../../lib/tenant";
@@ -88,10 +88,7 @@ reporting.get("/reporting/dashboard", requirePermission("reporting:view"), async
           ],
         }
       : null,
-    activity: store.activity
-      .filter((a) => a.projectId === pid)
-      .sort((a, b) => b.when.localeCompare(a.when))
-      .slice(0, 8),
+    activity: await miscRepo.listActivity(pid, 8),
     workload,
   });
 });
@@ -108,10 +105,9 @@ reporting.get("/reporting/progress", requirePermission("reporting:view"), async 
   return data(c, { statuses });
 });
 
-reporting.get("/reporting/activity", requirePermission("reporting:view"), (c) => {
-  const pid = pidOf(c);
-  return data(c, store.activity.filter((a) => a.projectId === pid).sort((a, b) => b.when.localeCompare(a.when)));
-});
+reporting.get("/reporting/activity", requirePermission("reporting:view"), async (c) =>
+  data(c, await miscRepo.listActivity(pidOf(c))),
+);
 
 reporting.get("/reporting/export", requirePermission("reporting:export"), (c) =>
   data(c, { format: c.req.query("format") ?? "csv", url: null }),
