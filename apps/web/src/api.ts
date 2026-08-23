@@ -34,7 +34,8 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg = body?.error?.message ?? `Request failed (${res.status})`;
-    throw new Error(msg);
+    // status on the Error lets callers branch on 401 (expired/revoked session)
+    throw Object.assign(new Error(msg), { status: res.status });
   }
   return body as T;
 }

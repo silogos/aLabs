@@ -133,9 +133,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [mNavOpen, setMNavOpen] = useState(false);
 
   const queryClient = useQueryClient();
-  const { data: user } = useQuery({ queryKey: ["me"], queryFn: api.me });
+  const { data: user, error: meError } = useQuery({ queryKey: ["me"], queryFn: api.me });
   const { data: orgs } = useQuery({ queryKey: ["orgs"], queryFn: api.orgs });
   const { data: recents } = useQuery({ queryKey: ["recents"], queryFn: () => api.recents(5) });
+
+  // Session died server-side (expired, revoked by a password reset, DB reset):
+  // the proxy only checks cookie presence, so sign out client-side first —
+  // clearing the cookie server-side avoids the /login ⇄ /dashboard proxy loop.
+  useEffect(() => {
+    if (meError && (meError as Error & { status?: number }).status === 401) {
+      let cancelled = false;
+      void api
+        .logout()
+        .catch(() => {})
+        .finally(() => {
+          if (cancelled) return;
+          queryClient.clear();
+          router.replace("/login");
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [meError, queryClient, router]);
 
   const org = orgs?.find((o) => o.id === orgPref) ?? orgs?.[0];
   const { data: projects } = useQuery({
