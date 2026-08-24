@@ -1,11 +1,24 @@
-/** Reports view — Overview KPIs/charts, and a standard-reports gallery + viewer. */
-import { useState, type ReactNode } from "react";
+/** Reports view — Overview KPIs/charts and a standard-reports gallery, both
+ *  generated from live data (dashboard, iterations, milestones, statuses,
+ *  activity) instead of hardcoded arrays. */
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../store";
+import { api, type Iteration, type Milestone, type Dashboard } from "../api";
+import { registerPeople, personOf } from "./tasks-store";
 
-type PersonId = "ay" | "mk" | "lc" | "dp" | "sr" | "jb";
-const PCOLOR: Record<PersonId, string> = { ay: "a", mk: "b", lc: "c", dp: "d", sr: "e", jb: "f" };
-
-function Spark({ color, pts }: { color: string; pts: string }) {
+function Spark({ color, vals }: { color: string; vals: number[] }) {
+  if (vals.length < 2) return null;
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const span = max - min || 1;
+  const pts = vals
+    .map((v, i) => {
+      const x = Math.round((i / (vals.length - 1)) * 200);
+      const y = Math.round(24 - ((v - min) / span) * 18);
+      return `${x},${y}`;
+    })
+    .join(" ");
   return (
     <svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none">
       <polyline fill="none" stroke={color} strokeWidth="2" points={pts} />
@@ -13,176 +26,105 @@ function Spark({ color, pts }: { color: string; pts: string }) {
   );
 }
 
-const VELO = [
-  { l: "S10", plan: 40, done: 36 },
-  { l: "S11", plan: 44, done: 41 },
-  { l: "S12", plan: 48, done: 38 },
-  { l: "S13", plan: 46, done: 40 },
-  { l: "S14", plan: 52, done: 34, now: true },
-];
-const VMAX = 58;
-
-const STATUS_BARS = [
-  { l: "Done", n: 55, c: "var(--ok)" },
-  { l: "In Progress", n: 21, c: "oklch(58% 0.12 240)" },
-  { l: "To Do", n: 33, c: "oklch(60% 0.02 255)" },
-  { l: "In Review", n: 9, c: "oklch(54% 0.14 300)" },
-  { l: "Backlog", n: 18, c: "oklch(64% 0.01 255)" },
-];
-const WORK: [PersonId, string, number, boolean][] = [
-  ["mk", "Marco K.", 12, true],
-  ["lc", "Lin C.", 10, false],
-  ["dp", "Diego P.", 9, false],
-  ["sr", "Sara R.", 7, false],
-  ["jb", "Jonas B.", 6, false],
-  ["ay", "Aisha Y.", 5, false],
-];
-
-interface Report {
-  id: string;
-  t: string;
-  sub: string;
-  when: string;
-  tone: "info" | "ok" | "violet";
-  ic: ReactNode;
-}
-const REPORTS: Report[] = [
-  {
-    id: "status", t: "Status report", sub: "Weekly project snapshot · auto-generated", when: "Mar 22", tone: "info",
-    ic: (
-      <>
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <path d="M14 2v6h6M9 13l2 2 4-4" />
-      </>
-    ),
-  },
-  {
-    id: "progress", t: "Progress report", sub: "Milestone & sprint progress", when: "Mar 21", tone: "ok",
-    ic: (
-      <>
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <path d="M22 4 12 14.01l-3-3" />
-      </>
-    ),
-  },
-  {
-    id: "activity", t: "Activity report", sub: "Team activity log", when: "Mar 20", tone: "violet",
-    ic: (
-      <>
-        <path d="M3 3v18h18" />
-        <path d="M7 14l3-3 3 2 4-5" />
-      </>
-    ),
-  },
-];
-
 const CAL = "M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z";
+const dayFmt = (iso: string | null) =>
+  iso
+    ? new Date(iso.length === 10 ? iso + "T00:00:00" : iso).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      })
+    : "—";
+const todayFmt = () =>
+  new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-function reportBody(id: string): ReactNode {
-  if (id === "progress") {
-    return (
-      <>
-        <table className="doc-table">
-          <thead>
-            <tr>
-              <th>Milestone</th>
-              <th>Due</th>
-              <th>Progress</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>v2.0 Beta</td>
-              <td className="mono">Mar 28</td>
-              <td><div className="bar warn" style={{ margin: 0, width: 130 }}><i style={{ width: "72%" }}></i></div></td>
-              <td><span className="status warn"><span className="d"></span>At risk</span></td>
-            </tr>
-            <tr>
-              <td>Design System v1</td>
-              <td className="mono">Apr 12</td>
-              <td><div className="bar" style={{ margin: 0, width: 130 }}><i style={{ width: "55%" }}></i></div></td>
-              <td><span className="status neutral"><span className="d"></span>On track</span></td>
-            </tr>
-            <tr>
-              <td>Security hardening</td>
-              <td className="mono">Apr 30</td>
-              <td><div className="bar ok" style={{ margin: 0, width: 130 }}><i style={{ width: "30%" }}></i></div></td>
-              <td><span className="status ok"><span className="d"></span>On track</span></td>
-            </tr>
-          </tbody>
-        </table>
-        <h3>Sprint velocity</h3>
-        <p>
-          Rolling 5-sprint average is <b>38.6 pts</b> completed against <b>46.0 pts</b> planned — an <b>84%</b>{" "}
-          say/do ratio. Sprint 14 is mid-flight at 34 of 52 pts.
-        </p>
-      </>
-    );
-  }
-  if (id === "activity") {
-    return (
-      <>
-        <h3>This week's activity</h3>
-        <ul>
-          <li><b>234</b> events across <b>6</b> contributors (Mar 16–22).</li>
-          <li><b>34</b> tasks completed · <b>41</b> comments · <b>12</b> documents updated.</li>
-          <li>Most active: <b>Marco K.</b> (61 events), <b>Lin C.</b> (48), <b>Diego P.</b> (39).</li>
-        </ul>
-        <div className="callout info">
-          <svg className="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 16v-4M12 8h.01" />
-          </svg>
-          <span>
-            Reporting aggregates read-only data from Task, Planning, and Meeting modules — nothing is duplicated.
-          </span>
-        </div>
-      </>
-    );
-  }
+function Kpi({
+  label, val, delta, deltaUp, sub, col, series,
+}: {
+  label: string; val: string; delta: string; deltaUp: boolean; sub: string; col: string;
+  series?: number[];
+}) {
   return (
-    <>
-      <h3>Summary</h3>
-      <p>
-        Sprint 14 (<b>SSO + Audit-log MVP</b>) is on day 10 of 14 at <b>65% completion</b> — 34 of 52 points done.
-        The <b>v2.0 Beta</b> milestone remains <b>at risk</b> for the Mar 28 cutoff: 72% complete with 7 days
-        remaining.
-      </p>
-      <h3>This week</h3>
-      <ul>
-        <li><b>Shipped</b> — PKCE verifier generation, expired-refresh-token regression test, RBAC policy scaffolding.</li>
-        <li><b>In flight</b> — SSO sign-in / sign-out flows (ATL-101), immutable audit-log write path.</li>
-        <li><b>Blocked</b> — IdP sandbox credentials pending from Ops.</li>
-      </ul>
-      <h3>Risks</h3>
-      <div className="callout warn">
-        <svg className="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-          <path d={CAL} />
-          <path d="M12 9v4M12 17h.01" />
-        </svg>
-        <span>
-          <b>v2.0 Beta at risk.</b> SSO is the critical path — any slip past Mar 26 pushes the release.
-          Mitigation: keep client-portal write access read-only for beta.
-        </span>
+    <div className="card kpi">
+      <div className="label">{label}</div>
+      <div className="val" style={{ color: col }}>{val}</div>
+      <div className="sub">
+        <span className={deltaUp ? "up" : "dn"}>{delta}</span> {sub}
       </div>
-      <h3>Next week</h3>
-      <ul>
-        <li>Complete the SSO sign-in flow + audit-log integration (target Mar 25).</li>
-        <li>Client demo on Mar 27 — beta preview for Northwind.</li>
-        <li>Sprint 15 planning on Mar 25.</li>
-      </ul>
-    </>
+      <div className="spark">{series && <Spark color={col} vals={series} />}</div>
+    </div>
   );
 }
 
 export function Reports() {
-  const { toast } = useApp();
+  const { project, toast } = useApp();
+  const pid = project!.id;
   const [tab, setTab] = useState<"overview" | "reports">("overview");
   const [current, setCurrent] = useState<string>("status");
+
+  const { data: dash } = useQuery({ queryKey: ["dashboard", pid], queryFn: () => api.dashboard(pid) });
+  const { data: iterations } = useQuery({ queryKey: ["iterations", pid], queryFn: () => api.iterations(pid) });
+  const { data: milestones } = useQuery({ queryKey: ["milestones", pid], queryFn: () => api.milestones(pid) });
+  const { data: statuses } = useQuery({ queryKey: ["progress", pid], queryFn: () => api.reportProgress(pid) });
+  const { data: activity } = useQuery({ queryKey: ["activity-full", pid], queryFn: () => api.reportActivity(pid) });
+  const { data: members } = useQuery({
+    queryKey: ["members", project?.organizationId],
+    queryFn: () => api.members(project!.organizationId),
+    enabled: !!project,
+  });
+
+  useEffect(() => {
+    if (members) registerPeople(members.map((m) => m.user));
+  }, [members]);
+
+  /* ---- derived series (all real: iteration points, sprint counts) ---- */
+  const sprints = useMemo(
+    () => [...(iterations ?? [])].sort((a, b) => a.startDate.localeCompare(b.startDate)).slice(-5),
+    [iterations],
+  );
+  const completedSprints = useMemo(
+    () => sprints.filter((s) => s.status === "completed" && s.committedPoints > 0),
+    [sprints],
+  );
+  const avg = (xs: number[]) => (xs.length ? xs.reduce((n, x) => n + x, 0) / xs.length : 0);
+  const last3 = completedSprints.slice(-3);
+  const prev3 = completedSprints.slice(-6, -3);
+  const velocity = Math.round(avg(last3.map((s) => s.completedPoints)));
+  const velocityPrev = Math.round(avg(prev3.map((s) => s.completedPoints)));
+  const sayDo = Math.round(
+    (avg(last3.map((s) => s.completedPoints)) / Math.max(1, avg(last3.map((s) => s.committedPoints)))) * 100,
+  );
+  const activeSprint = sprints.find((s) => s.status === "active") ?? null;
+  const completion = activeSprint && activeSprint.committedPoints > 0
+    ? Math.round((activeSprint.completedPoints / activeSprint.committedPoints) * 100)
+    : 0;
+  const sprintDay = activeSprint
+    ? Math.max(
+        1,
+        Math.ceil((Date.now() - +new Date(activeSprint.startDate + "T00:00:00")) / 864e5) + 1,
+      )
+    : 0;
+  const sprintLen = activeSprint
+    ? Math.max(
+        1,
+        Math.round(
+          (+new Date(activeSprint.endDate + "T00:00:00") - +new Date(activeSprint.startDate + "T00:00:00")) /
+            864e5,
+        ),
+      )
+    : 0;
+
+  const exportFmt = (fmt: string) => toast(`Exported · ${fmt.toUpperCase()}`);
+
+  const REPORTS = [
+    { id: "status", t: "Status report", sub: "Weekly project snapshot · auto-generated" },
+    { id: "progress", t: "Progress report", sub: "Milestone & sprint progress" },
+    { id: "activity", t: "Activity report", sub: "Team activity log" },
+  ];
   const r = REPORTS.find((x) => x.id === current) ?? REPORTS[0]!;
 
-  const exportFmt = (fmt: string) => toast(`Exported dashboard · ${fmt.toUpperCase()}`);
+  const statusMax = Math.max(1, ...(statuses ?? []).map((s) => s.count));
+  const statusTotal = (statuses ?? []).reduce((n, s) => n + s.count, 0);
+  const veloMax = Math.max(1, ...sprints.map((s) => Math.max(s.committedPoints, s.completedPoints)));
 
   return (
     <section className="view active">
@@ -214,48 +156,83 @@ export function Reports() {
 
       {tab === "overview" ? (
         <>
-          {/* KPI row */}
+          {/* KPI row — velocity/completion sparklines are real per-sprint series */}
           <div className="grid g4" style={{ marginBottom: 14 }} data-od-id="report-kpis">
-            <Kpi label="Velocity" val="38 pts" delta="▲ 4" sub="3-sprint avg" col="var(--accent)" pts="0,20 25,16 50,18 75,12 100,14 125,9 150,11 175,7 200,8" />
-            <Kpi label="Completion" val="65%" delta="▲ 8%" sub="of committed" col="var(--ok)" pts="0,24 25,20 50,17 75,14 100,12 125,10 150,8 175,6 200,4" />
-            <Kpi label="Open tasks" val="63" delta="▲ 6" sub="active now" col="var(--accent)" pts="0,14 25,18 50,12 75,16 100,11 125,14 150,9 175,12 200,8" />
-            <Kpi label="Cycle time" val="2.4d" delta="▼ 0.3" sub="median" col="var(--accent)" pts="0,8 25,11 50,9 75,13 100,11 125,15 150,12 175,16 200,14" />
+            <Kpi
+              label="Velocity"
+              val={`${velocity} pts`}
+              delta={velocity >= velocityPrev ? `▲ ${velocity - velocityPrev}` : `▼ ${velocityPrev - velocity}`}
+              deltaUp={velocity >= velocityPrev}
+              sub="3-sprint avg"
+              col="var(--accent)"
+              series={completedSprints.map((s) => s.completedPoints)}
+            />
+            <Kpi
+              label="Say / do"
+              val={`${sayDo}%`}
+              delta={sayDo >= 80 ? "▲ healthy" : "▼ stretched"}
+              deltaUp={sayDo >= 80}
+              sub="completed vs committed"
+              col="var(--ok)"
+              series={completedSprints.map((s) =>
+                s.committedPoints ? Math.round((s.completedPoints / s.committedPoints) * 100) : 0,
+              )}
+            />
+            <Kpi
+              label="Open tasks"
+              val={String(dash?.kpis.active ?? 0)}
+              delta={`${dash?.kpis.inProgress ?? 0} in progress`}
+              deltaUp={false}
+              sub={`active now`}
+              col="var(--accent)"
+            />
+            <Kpi
+              label="Overdue"
+              val={String(dash?.kpis.overdue ?? 0)}
+              delta={dash?.kpis.overdue ? "▲ needs attention" : "▲ none"}
+              deltaUp={!dash?.kpis.overdue}
+              sub={`${dash?.kpis.doneThisIteration ?? 0} done this sprint`}
+              col={dash?.kpis.overdue ? "var(--warn)" : "var(--ok)"}
+            />
           </div>
 
           <div className="grid g2" data-od-id="report-charts">
             <div className="card">
               <div className="panel-head">
                 <h3>Tasks by status</h3>
-                <span className="muted">136 total</span>
+                <span className="muted">{statusTotal} total</span>
               </div>
               <div className="panel-body">
-                {STATUS_BARS.map((s) => (
-                  <div className="stbar-row" key={s.l}>
-                    <span className="lbl">{s.l}</span>
+                {!statuses && <div className="tiny faint">Loading…</div>}
+                {statuses?.map((s) => (
+                  <div className="stbar-row" key={s.id}>
+                    <span className="lbl">{s.name}</span>
                     <span className="track">
-                      <i style={{ width: `${Math.round((s.n / 55) * 100)}%`, background: s.c }}></i>
+                      <i style={{ width: `${Math.round((s.count / statusMax) * 100)}%`, background: s.color }}></i>
                     </span>
-                    <span className="n">{s.n}</span>
+                    <span className="n">{s.count}</span>
                   </div>
                 ))}
+                {statuses?.length === 0 && <div className="tiny faint">No tasks yet.</div>}
               </div>
             </div>
             <div className="card">
               <div className="panel-head">
                 <h3>Velocity</h3>
-                <span className="muted">last 5 sprints</span>
+                <span className="muted">last {sprints.length || 0} sprints</span>
               </div>
               <div className="panel-body">
                 <div className="velo">
-                  {VELO.map((v) => (
-                    <div key={v.l} className={`vcol ${v.now ? "vnow" : ""}`}>
+                  {sprints.map((v) => (
+                    <div key={v.id} className={`vcol ${v.status === "active" ? "vnow" : ""}`}>
                       <div className="vbars">
-                        <div className="vbar plan" style={{ height: Math.round((v.plan / VMAX) * 112) }}></div>
-                        <div className="vbar done" style={{ height: Math.round((v.done / VMAX) * 112) }}></div>
+                        <div className="vbar plan" style={{ height: Math.round((v.committedPoints / veloMax) * 112) }}></div>
+                        <div className="vbar done" style={{ height: Math.round((v.completedPoints / veloMax) * 112) }}></div>
                       </div>
-                      <span className="vlbl">{v.l}</span>
+                      <span className="vlbl">{v.name.replace("Sprint ", "S").split(" — ")[0]}</span>
                     </div>
                   ))}
+                  {sprints.length === 0 && <div className="tiny faint">No iterations yet.</div>}
                 </div>
                 <div className="row" style={{ gap: 14, marginTop: 10 }}>
                   <span className="tiny mono muted">▒ Committed</span>
@@ -267,18 +244,22 @@ export function Reports() {
 
           <div className="card" style={{ marginTop: 14 }} data-od-id="report-workload">
             <div className="panel-head">
-              <h3>Throughput by assignee</h3>
-              <span className="muted">Sprint 14</span>
+              <h3>Workload by assignee</h3>
+              <span className="muted">{activeSprint?.name ?? "all tasks"}</span>
             </div>
             <div className="panel-body">
-              {WORK.map(([id, name, n, over]) => (
-                <div className="work-row" key={id}>
-                  <span className={`av sm ${PCOLOR[id]}`}>{name.split(" ")[0]![0]}{name.split(" ")[1]![0]}</span>
-                  <span className="nm">{name}</span>
+              {!dash && <div className="tiny faint">Loading…</div>}
+              {dash?.workload.map((w) => (
+                <div className="work-row" key={w.userId}>
+                  <span className={`av sm ${w.color}`}>{w.initials}</span>
+                  <span className="nm">{w.name}</span>
                   <div className="wbar">
-                    <i style={{ width: `${Math.round((n / 12) * 100)}%` }} className={over ? "over" : ""}></i>
+                    <i
+                      style={{ width: `${Math.min(100, Math.round((w.assigned / w.capacity) * 100))}%` }}
+                      className={w.assigned > w.capacity ? "over" : ""}
+                    ></i>
                   </div>
-                  <span className="n">{n}</span>
+                  <span className="n">{w.assigned}</span>
                 </div>
               ))}
             </div>
@@ -290,9 +271,10 @@ export function Reports() {
             {REPORTS.map((x) => (
               <div key={x.id} className={`rpt-card ${x.id === current ? "sel" : ""}`} onClick={() => setCurrent(x.id)}>
                 <div className="rc-top">
-                  <div className="rc-ic" style={{ background: `var(--${x.tone}-bg)`, color: `var(--${x.tone})` }}>
+                  <div className="rc-ic" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                      {x.ic}
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <path d="M14 2v6h6" />
                     </svg>
                   </div>
                   <div>
@@ -301,7 +283,7 @@ export function Reports() {
                   </div>
                 </div>
                 <div className="row between">
-                  <span className="tiny mono muted">Last run · {x.when}</span>
+                  <span className="tiny mono muted">Live · {todayFmt()}</span>
                   <span className="tiny" style={{ color: "var(--accent)" }}>
                     {x.id === current ? "Viewing" : "Open"} →
                   </span>
@@ -313,7 +295,7 @@ export function Reports() {
           <div className="card" data-od-id="report-viewer">
             <div className="panel-head">
               <h3>{r.t}</h3>
-              <span className="muted">Generated {r.when}</span>
+              <span className="muted">Generated {todayFmt()}</span>
               <div className="right">
                 <button className="btn subtle sm" onClick={() => toast(`Exported ${r.t} · PDF`)}>
                   Export PDF
@@ -323,7 +305,7 @@ export function Reports() {
                 </button>
               </div>
             </div>
-            <div className="panel-body rpt-body">{reportBody(r.id)}</div>
+            <div className="panel-body rpt-body">{reportBody(r.id, { activeSprint, sprintDay, sprintLen, milestones, activity, last3, sayDo, velocity })}</div>
           </div>
         </>
       )}
@@ -331,21 +313,179 @@ export function Reports() {
   );
 }
 
-function Kpi({
-  label, val, delta, sub, col, pts,
-}: {
-  label: string; val: string; delta: string; sub: string; col: string; pts: string;
-}) {
+/* ---------------- report bodies — generated from live data ---------------- */
+
+type BodyCtx = {
+  activeSprint: Iteration | null;
+  sprintDay: number;
+  sprintLen: number;
+  milestones: Milestone[] | undefined;
+  activity: Dashboard["activity"] | undefined;
+  last3: Iteration[];
+  sayDo: number;
+  velocity: number;
+};
+
+const KIND_LABEL: Record<string, string> = {
+  move: "status moves",
+  doc: "document edits",
+  com: "comments",
+  done: "tasks completed",
+  mile: "milestone updates",
+};
+
+function milestoneRisk(m: { dueDate: string | null; progress: number; status: string }): "reached" | "risk" | "ok" {
+  if (m.status === "reached") return "reached";
+  if (m.dueDate) {
+    const days = Math.round((+new Date(m.dueDate + "T00:00:00") - Date.now()) / 864e5);
+    if (days <= 14 && m.progress < 90) return "risk";
+  }
+  return "ok";
+}
+
+function reportBody(id: string, ctx: BodyCtx): React.ReactNode {
+  const { activeSprint, sprintDay, sprintLen, milestones, activity, last3, sayDo, velocity } = ctx;
+
+  if (id === "progress") {
+    return (
+      <>
+        <table className="doc-table">
+          <thead>
+            <tr>
+              <th>Milestone</th>
+              <th>Due</th>
+              <th>Progress</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(milestones ?? []).map((m) => {
+              const risk = milestoneRisk(m);
+              return (
+                <tr key={m.id}>
+                  <td>{m.name}</td>
+                  <td className="mono">{dayFmt(m.dueDate)}</td>
+                  <td>
+                    <div className={`bar ${risk === "risk" ? "warn" : risk === "reached" ? "ok" : ""}`} style={{ margin: 0, width: 130 }}>
+                      <i style={{ width: `${m.progress}%` }}></i>
+                    </div>
+                  </td>
+                  <td>
+                    {risk === "reached" ? (
+                      <span className="status ok"><span className="d"></span>Reached</span>
+                    ) : risk === "risk" ? (
+                      <span className="status warn"><span className="d"></span>At risk</span>
+                    ) : (
+                      <span className="status neutral"><span className="d"></span>On track</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            {milestones?.length === 0 && (
+              <tr>
+                <td colSpan={4} className="muted">No milestones defined yet.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        <h3>Sprint velocity</h3>
+        <p>
+          Rolling 3-sprint average is <b>{velocity} pts</b> completed against{" "}
+          <b>{Math.round(last3.reduce((n, s) => n + s.committedPoints, 0) / Math.max(1, last3.length))} pts</b>{" "}
+          planned — a <b>{sayDo}%</b> say/do ratio.
+          {activeSprint
+            ? ` ${activeSprint.name} is mid-flight at ${activeSprint.completedPoints} of ${activeSprint.committedPoints} pts.`
+            : ""}
+        </p>
+      </>
+    );
+  }
+
+  if (id === "activity") {
+    const rows = activity ?? [];
+    const week = rows.filter((a) => Date.now() - +new Date(a.when) <= 7 * 864e5);
+    const byActor = new Map<string, number>();
+    for (const a of week) byActor.set(a.actorId, (byActor.get(a.actorId) ?? 0) + 1);
+    const top = [...byActor.entries()].sort((x, y) => y[1] - x[1]).slice(0, 3);
+    const kindCount = (k: string) => week.filter((a) => a.kind === k).length;
+    return (
+      <>
+        <h3>Last 7 days</h3>
+        <ul>
+          <li><b>{week.length}</b> events across <b>{byActor.size}</b> contributors.</li>
+          <li>
+            <b>{kindCount("done")}</b> {KIND_LABEL.done} · <b>{kindCount("com")}</b> {KIND_LABEL.com} ·{" "}
+            <b>{kindCount("doc")}</b> {KIND_LABEL.doc} · <b>{kindCount("move")}</b> {KIND_LABEL.move}.
+          </li>
+          {top.length > 0 && (
+            <li>
+              Most active:{" "}
+              {top.map(([uid, n], i) => (
+                <span key={uid}>
+                  {i > 0 && ", "}
+                  <b>{personOf(uid)?.name ?? "Unknown"} ({n})</b>
+                </span>
+              ))}.
+            </li>
+          )}
+        </ul>
+        <div className="callout info">
+          <svg className="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4M12 8h.01" />
+          </svg>
+          <span>
+            Reporting aggregates read-only data from Task, Planning, and Meeting modules — nothing is duplicated.
+          </span>
+        </div>
+      </>
+    );
+  }
+
+  // status report
+  const risky = (milestones ?? []).filter((m) => milestoneRisk(m) === "risk");
+  const done = (activity ?? []).filter((a) => a.kind === "done" && Date.now() - +new Date(a.when) <= 7 * 864e5);
   return (
-    <div className="card kpi">
-      <div className="label">{label}</div>
-      <div className="val" style={{ color: col }}>{val}</div>
-      <div className="sub">
-        <span className={delta.startsWith("▼") ? "dn" : "up"}>{delta}</span> {sub}
-      </div>
-      <div className="spark">
-        <Spark color={col} pts={pts} />
-      </div>
-    </div>
+    <>
+      <h3>Summary</h3>
+      <p>
+        {activeSprint ? (
+          <>
+            <b>{activeSprint.name}</b> is on day <b>{sprintDay}</b> of <b>{sprintLen}</b> at{" "}
+            <b>{Math.round(activeSprint.progress)}% completion</b> — {activeSprint.completedPoints} of{" "}
+            {activeSprint.committedPoints} points done.
+          </>
+        ) : (
+          <>No active sprint — tasks continue from the backlog.</>
+        )}{" "}
+        {risky.length > 0 && (
+          <>
+            The <b>{risky[0]!.name}</b> milestone is <b>at risk</b>: {risky[0]!.progress}% complete, due{" "}
+            {dayFmt(risky[0]!.dueDate)}.
+          </>
+        )}
+      </p>
+      <h3>This week</h3>
+      <ul>
+        <li><b>Completed</b> — {done.length ? done.slice(0, 3).map((d) => d.target).join(", ") : "no completions recorded"}.</li>
+        <li><b>In flight</b> — {activeSprint ? `${activeSprint.committedPoints - activeSprint.completedPoints} committed points remain in ${activeSprint.name}.` : "—"}</li>
+      </ul>
+      {risky.length > 0 && (
+        <h3>Risks</h3>
+      )}
+      {risky.map((m) => (
+        <div className="callout warn" key={m.id}>
+          <svg className="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d={CAL} />
+            <path d="M12 9v4M12 17h.01" />
+          </svg>
+          <span>
+            <b>{m.name} at risk.</b> {m.progress}% complete with {m.doneTasks}/{m.totalTasks} tasks done and the
+            cutoff on {dayFmt(m.dueDate)}.
+          </span>
+        </div>
+      ))}
+    </>
   );
 }

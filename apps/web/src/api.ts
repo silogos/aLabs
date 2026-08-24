@@ -242,6 +242,12 @@ export const api = {
   /* ---- reporting ---- */
   dashboard: (pid: string) =>
     req<{ data: Dashboard }>(`/projects/${pid}/reporting/dashboard`).then((x) => x.data),
+  reportProgress: (pid: string) =>
+    req<{ data: { statuses: { id: string; name: string; color: string; count: number }[] } }>(
+      `/projects/${pid}/reporting/progress`,
+    ).then((x) => x.data.statuses),
+  reportActivity: (pid: string) =>
+    req<{ data: Dashboard["activity"] }>(`/projects/${pid}/reporting/activity`).then((x) => x.data),
 
   /* ---- agreements ---- */
   agreements: (pid: string) =>

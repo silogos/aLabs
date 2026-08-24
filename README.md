@@ -51,8 +51,9 @@ Then open **http://localhost:3000** and sign in with the seeded demo user:
 | Workspace & project switchers, mobile nav — multi-org demo seed, server-persisted recents, derived landing project | ✅ live |
 | Meetings — master/detail list, schedule modal, agenda + notes editors, action items with convert-to-task | ✅ live (UI + API) |
 | Agreements — master/detail list, lifecycle timeline with auto-stamped send/accept dates, new-agreement modal | ✅ live (UI + API) |
+| Reports — overview KPIs/velocity/workload charts + standard status/progress/activity reports, all generated from live data | ✅ live (UI + API) |
 | Auth — sign-in, create account, forgot/reset password, Google SSO, sign-out; session-gated routes | ✅ live (UI + API) |
-| Organization (members, invitations, soft delete), Project (members), User (profile, recents), Reporting, Notification | ✅ API routes |
+| Organization (members, invitations, soft delete), Project (members), User (profile, recents), Notification | ✅ API routes |
 | Billing, Client Portal, AI | scaffolded in API |
 
 ## Architecture

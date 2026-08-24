@@ -154,6 +154,24 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
   const sprint15 =
     byIterName("Sprint 15") ?? (await iter("Sprint 15", null, dayIso(5), dayIso(18), "planned"));
 
+  // Velocity history for the reports view — backfill completed-sprint points
+  // and add the two sprints before Sprint 13. All guarded; no-op once present.
+  if (sprint13.committedPoints === 0) {
+    await planningRepo.patchIteration(sprint13.id, { committedPoints: 46, completedPoints: 40 });
+  }
+  const sprint11 =
+    byIterName("Sprint 11") ??
+    (await iter("Sprint 11", "Auth foundations", dayIso(-52), dayIso(-39), "completed"));
+  const sprint12 =
+    byIterName("Sprint 12") ??
+    (await iter("Sprint 12", "Board + editor polish", dayIso(-38), dayIso(-25), "completed"));
+  if (sprint11.committedPoints === 0) {
+    await planningRepo.patchIteration(sprint11.id, { committedPoints: 44, completedPoints: 41 });
+  }
+  if (sprint12.committedPoints === 0) {
+    await planningRepo.patchIteration(sprint12.id, { committedPoints: 48, completedPoints: 38 });
+  }
+
   /* ---------------- Milestones ---------------- */
   const ms = (
     name: string,
@@ -457,6 +475,35 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
     await activity("done", "sr", "ATL-112", "2 hours ago", 120);
     await activity("mile", "ay", "Security hardening", "3 hours ago", 180);
     await activity("done", "lc", "ATL-113", "5 hours ago", 300);
+  }
+
+  /* Activity history for the reports view — additive, only while the feed is
+   * still the bare first-seed set, so re-seeding never duplicates rows. */
+  if ((await miscRepo.listActivity(atlas.id)).length <= 6) {
+    const hist = (
+      kind: "move" | "doc" | "com" | "done" | "mile",
+      actor: keyof typeof usersByShort,
+      target: string,
+      daysAgo: number,
+    ) =>
+      miscRepo.insertActivity({
+        projectId: atlas.id,
+        kind,
+        actorId: usersByShort[actor].id,
+        target,
+        whenLabel: `${daysAgo}d ago`,
+        occurredAt: new Date(Date.now() - daysAgo * 864e5 - Math.round(Math.random() * 8 * 3600_000)),
+      });
+    const rows: Parameters<typeof hist>[] = [
+      ["done", "mk", "ATL-101", 1], ["com", "lc", "ATL-102", 1], ["move", "ay", "ATL-108", 1],
+      ["doc", "jb", "Design System v1", 2], ["done", "dp", "ATL-104", 2], ["com", "sr", "ATL-112", 2],
+      ["done", "lc", "ATL-106", 3], ["move", "mk", "ATL-105", 3], ["doc", "ay", "Northwind SOW", 3],
+      ["done", "jb", "ATL-109", 4], ["com", "dp", "ATL-103", 4], ["mile", "ay", "v2.0 Beta release", 4],
+      ["done", "sr", "ATL-110", 5], ["doc", "lc", "Data model v3", 5], ["com", "mk", "ATL-101", 5],
+      ["done", "dp", "ATL-111", 6], ["move", "jb", "ATL-107", 6], ["com", "ay", "ATL-101", 6],
+      ["done", "mk", "ATL-113", 6], ["doc", "sr", "Test plan", 6],
+    ];
+    for (const r of rows) await hist(r[0], r[1], r[2], r[3]);
   }
 
   /* ---------------- Notifications — PG ---------------- */
