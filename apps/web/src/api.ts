@@ -20,7 +20,23 @@ import type {
   Notification,
   Dashboard,
   Paginated,
+  Meeting,
+  ActionItem,
+  MeetingType,
 } from "@pmin/core";
+
+/** PATCH /meetings/:id body — subset of Meeting fields (see meetingUpdate). */
+export interface MeetingUpdateInput {
+  title: string;
+  type: MeetingType;
+  scheduledAt: string;
+  duration: number;
+  location: string;
+  participantIds: string[];
+  agenda: string[];
+  notes: string;
+  status: "scheduled" | "completed" | "cancelled";
+}
 
 const BASE = "/api";
 
@@ -117,9 +133,9 @@ export const api = {
       body: JSON.stringify(body),
     }).then((x) => x.data),
   deleteTaskLink: (pid: string, taskId: string, linkId: string) =>
-    req<{ data: unknown }>(`/projects/${pid}/tasks/${taskId}/links/${linkId}`, {
+    req<void>(`/projects/${pid}/tasks/${taskId}/links/${linkId}`, {
       method: "DELETE",
-    }).then((x) => x.data),
+    }).then(() => undefined),
   statuses: (pid: string) =>
     req<{ data: TaskStatus[] }>(`/projects/${pid}/tasks/statuses`).then((x) => x.data),
   labels: (pid: string) =>
@@ -180,6 +196,46 @@ export const api = {
   milestones: (pid: string) =>
     req<{ data: Milestone[] }>(`/projects/${pid}/planning/milestones`).then((x) => x.data),
 
+  /* ---- meetings ---- */
+  meetings: (pid: string) =>
+    req<{ data: Meeting[] }>(`/projects/${pid}/meetings`).then((x) => x.data),
+  createMeeting: (
+    pid: string,
+    body: {
+      title: string;
+      type?: MeetingType;
+      scheduledAt: string;
+      duration?: number;
+      location?: string;
+      participantIds?: string[];
+    },
+  ) =>
+    req<{ data: Meeting }>(`/projects/${pid}/meetings`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  updateMeeting: (pid: string, id: string, body: Partial<MeetingUpdateInput>) =>
+    req<{ data: Meeting }>(`/projects/${pid}/meetings/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  deleteMeeting: (pid: string, id: string) =>
+    req<void>(`/projects/${pid}/meetings/${id}`, { method: "DELETE" }).then(() => undefined),
+  addActionItem: (pid: string, meetingId: string, body: { description: string; assigneeId?: string; dueDate?: string }) =>
+    req<{ data: ActionItem }>(`/projects/${pid}/meetings/${meetingId}/action-items`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  updateActionItem: (
+    pid: string,
+    id: string,
+    body: Partial<{ description: string; assigneeId: string; dueDate: string; done: boolean; taskId: string }>,
+  ) =>
+    req<{ data: ActionItem }>(`/projects/${pid}/action-items/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+
   /* ---- reporting ---- */
   dashboard: (pid: string) =>
     req<{ data: Dashboard }>(`/projects/${pid}/reporting/dashboard`).then((x) => x.data),
@@ -212,5 +268,8 @@ export type {
   Iteration,
   Milestone,
   Dashboard,
+  Meeting,
+  ActionItem,
+  MeetingType,
 };
 export { unwrap };

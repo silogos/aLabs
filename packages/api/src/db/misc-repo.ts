@@ -2,10 +2,10 @@
  *  the dashboard activity feed. Small enough to share one module; each domain
  *  keeps its zod-inferred shapes (meeting participants are hydrated Users,
  *  agreement value maps numeric → number). */
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "./pg";
-import { meetings, meetingParticipants, agreements, notifications, activity } from "@pmin/core/db";
-import { uuidv7, type Meeting, type Agreement, type Notification } from "@pmin/core";
+import { meetings, meetingParticipants, actionItems, agreements, notifications, activity } from "@pmin/core/db";
+import { uuidv7, type Meeting, type ActionItem, type Agreement, type Notification } from "@pmin/core";
 import { getUsersByIds } from "./auth-repo";
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
@@ -13,8 +13,25 @@ const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 /* ---------------- meetings ---------------- */
 
 type MeetingRow = typeof meetings.$inferSelect;
+type ActionItemRow = typeof actionItems.$inferSelect;
 
-const toMeeting = (r: MeetingRow, participants: Meeting["participants"]): Meeting & { deletedAt: string | null } => ({
+const toActionItem = (r: ActionItemRow): ActionItem => ({
+  id: r.id,
+  meetingId: r.meetingId,
+  taskId: r.taskId,
+  assigneeId: r.assigneeId,
+  description: r.description,
+  done: r.done,
+  dueDate: iso(r.dueDate),
+  createdAt: r.createdAt.toISOString(),
+  updatedAt: r.updatedAt.toISOString(),
+});
+
+const toMeeting = (
+  r: MeetingRow,
+  participants: Meeting["participants"],
+  items: ActionItem[],
+): Meeting & { deletedAt: string | null } => ({
   id: r.id,
   projectId: r.projectId,
   title: r.title,
@@ -22,10 +39,11 @@ const toMeeting = (r: MeetingRow, participants: Meeting["participants"]): Meetin
   scheduledAt: r.scheduledAt.toISOString(),
   duration: r.duration,
   location: r.location,
-  agenda: r.agenda,
-  notes: r.notes,
+  agenda: (r.agenda as string[] | null) ?? null,
+  notes: (r.notes as string | null) ?? null,
   status: r.status,
   participants,
+  actionItems: items,
   createdAt: r.createdAt.toISOString(),
   updatedAt: r.updatedAt.toISOString(),
   deletedAt: iso(r.deletedAt),
@@ -41,6 +59,11 @@ async function hydrateMeetings(rows: MeetingRow[]): Promise<MeetingWithMeta[]> {
   const ids = [...new Set(links.map((l) => l.userId).filter((x): x is string => !!x))];
   const users = await getUsersByIds(ids);
   const byId = new Map(users.map((u) => [u.id, u]));
+  const items = await db
+    .select()
+    .from(actionItems)
+    .where(inArray(actionItems.meetingId, rows.map((r) => r.id)))
+    .orderBy(actionItems.createdAt);
   return rows.map((r) =>
     toMeeting(
       r,
@@ -48,6 +71,7 @@ async function hydrateMeetings(rows: MeetingRow[]): Promise<MeetingWithMeta[]> {
         .filter((l) => l.meetingId === r.id && l.userId)
         .map((l) => byId.get(l.userId!))
         .filter((u): u is NonNullable<typeof u> => !!u),
+      items.filter((i) => i.meetingId === r.id).map(toActionItem),
     ),
   );
 }
@@ -71,6 +95,15 @@ export async function getMeeting(projectId: string, id: string): Promise<Meeting
   return (await hydrateMeetings([row]))[0]!;
 }
 
+async function replaceParticipants(meetingId: string, userIds: string[]): Promise<void> {
+  await db.delete(meetingParticipants).where(eq(meetingParticipants.meetingId, meetingId));
+  if (userIds.length > 0) {
+    await db
+      .insert(meetingParticipants)
+      .values(userIds.map((userId) => ({ meetingId, userId })));
+  }
+}
+
 export async function insertMeeting(input: {
   projectId: string;
   title: string;
@@ -78,6 +111,9 @@ export async function insertMeeting(input: {
   scheduledAt: Date;
   duration?: number;
   location?: string | null;
+  agenda?: string[];
+  notes?: string;
+  participantIds?: string[];
 }): Promise<MeetingWithMeta> {
   const now = new Date();
   const [row] = await db
@@ -90,14 +126,16 @@ export async function insertMeeting(input: {
       scheduledAt: input.scheduledAt,
       duration: input.duration ?? 30,
       location: input.location ?? null,
-      agenda: null,
-      notes: null,
+      agenda: input.agenda ?? null,
+      notes: input.notes ?? null,
       status: "scheduled",
       createdAt: now,
       updatedAt: now,
     })
     .returning();
-  return toMeeting(row!, []);
+  if (input.participantIds?.length) await replaceParticipants(row!.id, input.participantIds);
+  // re-read so the response carries hydrated participants/action items
+  return (await getMeeting(input.projectId, row!.id))!;
 }
 
 export async function patchMeeting(
@@ -108,15 +146,18 @@ export async function patchMeeting(
     scheduledAt?: Date;
     duration?: number;
     location?: string | null;
-    agenda?: Meeting["agenda"];
-    notes?: Meeting["notes"];
+    agenda?: string[];
+    notes?: string;
     status?: Meeting["status"];
+    participantIds?: string[];
   },
 ): Promise<void> {
+  const { participantIds, ...cols } = patch;
   await db
     .update(meetings)
-    .set({ ...patch, updatedAt: new Date() })
+    .set({ ...cols, updatedAt: new Date() })
     .where(eq(meetings.id, id));
+  if (participantIds) await replaceParticipants(id, participantIds);
 }
 
 export async function softDeleteMeeting(id: string): Promise<void> {
@@ -124,6 +165,65 @@ export async function softDeleteMeeting(id: string): Promise<void> {
     .update(meetings)
     .set({ deletedAt: new Date(), updatedAt: new Date() })
     .where(eq(meetings.id, id));
+}
+
+/* ---------------- meeting action items ---------------- */
+
+/** Tenant-checked fetch: the item must belong to a meeting of this project. */
+export async function getActionItem(
+  projectId: string,
+  id: string,
+): Promise<{ item: ActionItem; meeting: MeetingWithMeta } | null> {
+  const [row] = await db
+    .select({ item: actionItems, meeting: meetings })
+    .from(actionItems)
+    .innerJoin(meetings, eq(actionItems.meetingId, meetings.id))
+    .where(and(eq(actionItems.id, id), eq(meetings.projectId, projectId)))
+    .limit(1);
+  if (!row) return null;
+  const meeting = (await hydrateMeetings([row.meeting]))[0]!;
+  return { item: toActionItem(row.item), meeting };
+}
+
+export async function insertActionItem(input: {
+  meetingId: string;
+  description: string;
+  assigneeId?: string | null;
+  dueDate?: Date | null;
+  taskId?: string | null;
+}): Promise<ActionItem> {
+  const now = new Date();
+  const [row] = await db
+    .insert(actionItems)
+    .values({
+      id: uuidv7(),
+      meetingId: input.meetingId,
+      description: input.description,
+      assigneeId: input.assigneeId ?? null,
+      dueDate: input.dueDate ?? null,
+      taskId: input.taskId ?? null,
+      done: false,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+  return toActionItem(row!);
+}
+
+export async function patchActionItem(
+  id: string,
+  patch: {
+    description?: string;
+    assigneeId?: string | null;
+    dueDate?: Date | null;
+    done?: boolean;
+    taskId?: string | null;
+  },
+): Promise<void> {
+  await db
+    .update(actionItems)
+    .set({ ...patch, updatedAt: new Date() })
+    .where(eq(actionItems.id, id));
 }
 
 /* ---------------- agreements ---------------- */

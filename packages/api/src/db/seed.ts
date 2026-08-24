@@ -477,6 +477,152 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
     });
   }
 
+  /* ---------------- Meetings + action items — PG ---------------- */
+  // mirrors the prototype's six demo meetings; scheduled relative to runtime
+  // today so the Upcoming/Past split always has content on both sides.
+  if ((await miscRepo.listMeetings(atlas.id)).length === 0) {
+    const at = (offset: number, h: number, m = 0) =>
+      new Date(`${dayIso(offset)}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00.000Z`);
+    const ids = (...shorts: (keyof typeof usersByShort)[]) => shorts.map((s) => usersByShort[s].id);
+    const action = (
+      meetingId: string,
+      description: string,
+      who: keyof typeof usersByShort,
+      dueOffset: number | null,
+      opts: { done?: boolean; taskId?: string } = {},
+    ) =>
+      miscRepo
+        .insertActionItem({
+          meetingId,
+          description,
+          assigneeId: usersByShort[who].id,
+          dueDate: dueOffset === null ? null : new Date(`${dayIso(dueOffset)}T00:00:00.000Z`),
+          taskId: opts.taskId,
+        })
+        .then((item) =>
+          opts.done ? miscRepo.patchActionItem(item.id, { done: true }) : undefined,
+        );
+
+    const ssoTask = parents.find((t) => t.title === "Implement OAuth2 SSO flow");
+
+    const ssoSync = await miscRepo.insertMeeting({
+      projectId: atlas.id,
+      title: "SSO design sync",
+      type: "planning",
+      scheduledAt: at(1, 10, 0),
+      duration: 45,
+      location: "Zoom · alabs.demos/sso",
+      participantIds: ids("mk", "lc", "dp", "ay"),
+      agenda: [
+        "Walk the SSO sign-in & sign-out flows (10m)",
+        "PKCE vs. client-secret decision (10m)",
+        "Audit-log write path and immutability (15m)",
+        "Feature-flag rollout plan (10m)",
+      ],
+      notes:
+        "Settled on PKCE for every public client; confidential server-side apps keep a client secret. " +
+        "The audit log will use an append-only table with a per-row hash chain — no in-place updates, ever. " +
+        "Blocker: IdP sandbox credentials are still with Ops — Marco chasing today.",
+    });
+    await action(ssoSync.id, "Provision the IdP sandbox environment", "mk", 2, {
+      taskId: ssoTask?.id,
+    });
+    await action(ssoSync.id, "Draft the PKCE flow diagram for the wiki", "lc", 3);
+    await action(ssoSync.id, "Confirm the feature-flag name with stakeholders", "ay", 0, { done: true });
+
+    await miscRepo.insertMeeting({
+      projectId: atlas.id,
+      title: "Daily standup",
+      type: "standup",
+      scheduledAt: at(1, 9, 15),
+      duration: 15,
+      location: "Recurring · #engineering",
+      participantIds: ids("ay", "mk", "lc", "dp", "sr"),
+      agenda: ["Round-robin: yesterday · today · blockers (15m)"],
+      notes: "Notes are captured live during the standup and posted to #engineering.",
+    });
+
+    const clientDemo = await miscRepo.insertMeeting({
+      projectId: atlas.id,
+      title: "Client demo — v2.0 beta preview",
+      type: "client",
+      scheduledAt: at(5, 14, 0),
+      duration: 60,
+      location: "Google Meet · shared with Northwind",
+      participantIds: ids("ay", "mk", "jb"),
+      agenda: [
+        "Sprint 13–14 recap (10m)",
+        "Live demo: SSO sign-in + audit log (25m)",
+        "Design System v1 components (10m)",
+        "Q&A and beta feedback (15m)",
+      ],
+      notes:
+        "Aisha drives the demo, Marco owns the audit-log deep-dive, Jonas walks the new component library. " +
+        "Demo script is locked — no ad-hoc features.",
+    });
+    await action(clientDemo.id, "Polish the demo dataset on staging", "dp", 4);
+    await action(clientDemo.id, "Prepare the beta feedback intake form", "ay", 4);
+
+    const sprint14 = await miscRepo.insertMeeting({
+      projectId: atlas.id,
+      title: "Sprint 14 planning",
+      type: "planning",
+      scheduledAt: at(-11, 13, 0),
+      duration: 90,
+      location: "Conference room B",
+      participantIds: ids("ay", "mk", "lc", "dp", "sr", "jb"),
+      agenda: [
+        "Review Sprint 13 outcomes (15m)",
+        "Capacity check (10m)",
+        "Pull SSO + audit-log scope into the sprint (45m)",
+        "Lock the sprint goal and exit criteria (20m)",
+      ],
+      notes:
+        "Goal locked: ship OAuth2 SSO behind a feature flag and land the immutable audit-log store. " +
+        "Client-portal scaffolding stays visible but read-only. 52 points committed across 23 issues.",
+    });
+    await action(sprint14.id, "Break ATL-101 into PKCE + token-refresh subtasks", "mk", -9, {
+      done: true,
+      taskId: ssoTask?.id,
+    });
+    await action(sprint14.id, "Write the audit-log ADR", "mk", -8, { done: true });
+    await miscRepo.patchMeeting(sprint14.id, { status: "completed" });
+
+    const archReview = await miscRepo.insertMeeting({
+      projectId: atlas.id,
+      title: "Audit-log architecture review",
+      type: "review",
+      scheduledAt: at(-7, 11, 0),
+      duration: 60,
+      location: "Zoom",
+      participantIds: ids("mk", "lc", "dp"),
+      agenda: [
+        "Hash-chain vs. Merkle-tree trade-offs (20m)",
+        "Retention and partitioning (15m)",
+        "Read path for reporting (15m)",
+        "Decisions & follow-ups (10m)",
+      ],
+      notes:
+        "Settled on a simple forward hash-chain — cheaper to verify and good enough for the threat model. " +
+        "Partition by month; reporting reads from a nightly materialized view.",
+    });
+    await action(archReview.id, "Spike: hash-chain verification query", "lc", -3, { done: true });
+    await miscRepo.patchMeeting(archReview.id, { status: "completed" });
+
+    const grooming = await miscRepo.insertMeeting({
+      projectId: atlas.id,
+      title: "Backlog grooming",
+      type: "standup",
+      scheduledAt: at(-4, 16, 0),
+      duration: 30,
+      location: "Recurring · #engineering",
+      participantIds: ids("ay", "mk", "lc"),
+      agenda: ["Triage the inbox queue"],
+      notes: "Cancelled — merged into the Sprint 14 mid-sprint check-in.",
+    });
+    await miscRepo.patchMeeting(grooming.id, { status: "cancelled" });
+  }
+
   /* ---------------- Comments (for the task drawer) ---------------- */
   if (!pgSeeded) {
     const ssoTask = parents.find((t) => t.title === "Implement OAuth2 SSO flow");

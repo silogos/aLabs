@@ -1,10 +1,15 @@
-/** Meeting routes — meetings + action items.
+/** Meeting routes — meetings, participants, and action items.
  *  Rows live in Postgres (db/misc-repo.ts). */
 import { Hono } from "hono";
-import { z } from "zod";
+import {
+  meetingCreate,
+  meetingUpdate,
+  actionItemCreate,
+  actionItemUpdate,
+  MEETING_TRANSITIONS,
+  canTransition,
+} from "@pmin/core";
 import * as miscRepo from "../../db/misc-repo";
-import { meetingCreate, meetingUpdate } from "@pmin/core";
-import { MEETING_TRANSITIONS, canTransition } from "@pmin/core";
 import { conflict, notFound } from "../../lib/errors";
 import { created, data, noContent } from "../../lib/responses";
 import { parseBody } from "../../lib/validate";
@@ -25,10 +30,11 @@ meeting.post("/meetings", requirePermission("meeting:create"), async (c) => {
   const m = await miscRepo.insertMeeting({
     projectId: pidOf(c),
     title: input.title,
-    type: input.type ?? null,
+    type: input.type,
     scheduledAt: new Date(input.scheduledAt),
-    duration: input.duration ?? null,
-    location: input.location ?? null,
+    duration: input.duration,
+    location: input.location,
+    participantIds: input.participantIds,
   });
   return created(c, m);
 });
@@ -44,9 +50,14 @@ meeting.patch("/meetings/:id", requirePermission("meeting:update"), async (c) =>
   if (input.status && input.status !== m.status) {
     if (!canTransition(MEETING_TRANSITIONS, m.status, input.status)) throw conflict("Invalid status transition");
   }
+  const { participantIds, status, agenda, notes, scheduledAt, ...rest } = input;
   await miscRepo.patchMeeting(m.id, {
-    ...input,
-    scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : undefined,
+    ...rest,
+    ...(status !== undefined ? { status } : {}),
+    ...(agenda !== undefined ? { agenda } : {}),
+    ...(notes !== undefined ? { notes } : {}),
+    ...(scheduledAt !== undefined ? { scheduledAt: new Date(scheduledAt) } : {}),
+    ...(participantIds !== undefined ? { participantIds } : {}),
   });
   return data(c, await miscRepo.getMeeting(pidOf(c), m.id));
 });
@@ -56,11 +67,29 @@ meeting.delete("/meetings/:id", requirePermission("meeting:delete"), async (c) =
   await miscRepo.softDeleteMeeting(m.id);
   return noContent(c);
 });
-meeting.post(
-  "/meetings/:id/action-items",
-  requirePermission("meeting:update"),
-  async (c) => {
-    const body = parseBody(await c.req.json(), z.object({ description: z.string(), assigneeId: z.string().uuid().optional() }));
-    return created(c, body);
-  },
-);
+
+/* Action items — nested create (per contract), flat patch by item id. */
+meeting.post("/meetings/:id/action-items", requirePermission("meeting:update"), async (c) => {
+  const m = await miscRepo.getMeeting(pidOf(c), c.req.param("id")!);
+  if (!m) throw notFound();
+  const input = parseBody(await c.req.json(), actionItemCreate);
+  const item = await miscRepo.insertActionItem({
+    meetingId: m.id,
+    description: input.description,
+    assigneeId: input.assigneeId,
+    dueDate: input.dueDate ? new Date(input.dueDate) : null,
+  });
+  return created(c, item);
+});
+meeting.patch("/action-items/:id", requirePermission("meeting:update"), async (c) => {
+  const found = await miscRepo.getActionItem(pidOf(c), c.req.param("id")!);
+  if (!found) throw notFound();
+  const input = parseBody(await c.req.json(), actionItemUpdate);
+  const { dueDate, ...rest } = input;
+  await miscRepo.patchActionItem(found.item.id, {
+    ...rest,
+    ...(dueDate !== undefined ? { dueDate: dueDate ? new Date(dueDate) : null } : {}),
+  });
+  const fresh = await miscRepo.getActionItem(pidOf(c), found.item.id);
+  return data(c, fresh?.item ?? null);
+});

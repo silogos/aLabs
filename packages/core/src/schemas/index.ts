@@ -380,6 +380,31 @@ export const milestoneUpdate = milestoneCreate.partial().extend({
   status: MilestoneStatus.optional(),
 });
 
+/* ---------------- ActionItem (declared before Meeting — referenced inline) ---------------- */
+
+export const actionItemSchema = z.object({
+  id,
+  meetingId: id,
+  taskId: id.nullable(),
+  assigneeId: id.nullable(),
+  description: z.string(),
+  done: z.boolean(),
+  dueDate: iso.nullable(),
+  createdAt: iso,
+  updatedAt: iso,
+});
+export type ActionItem = z.infer<typeof actionItemSchema>;
+
+export const actionItemCreate = z.object({
+  description: z.string().min(1).max(2000),
+  assigneeId: id.optional(),
+  dueDate: iso.optional(),
+});
+export const actionItemUpdate = actionItemCreate.partial().extend({
+  done: z.boolean().optional(),
+  taskId: id.nullable().optional(),
+});
+
 /* ---------------- Meeting ---------------- */
 
 export const meetingSchema = z.object({
@@ -390,10 +415,11 @@ export const meetingSchema = z.object({
   scheduledAt: iso,
   duration: z.number().int().nullable(),
   location: z.string().nullable(),
-  agenda: z.unknown().nullable(),
-  notes: z.unknown().nullable(),
+  agenda: z.array(z.string()).nullable(),
+  notes: z.string().nullable(),
   status: MeetingStatus,
   participants: z.array(userSchema).default([]),
+  actionItems: z.array(actionItemSchema).default([]),
   createdAt: iso,
   updatedAt: iso,
 });
@@ -409,6 +435,8 @@ export const meetingCreate = z.object({
 });
 export const meetingUpdate = meetingCreate.partial().extend({
   status: MeetingStatus.optional(),
+  agenda: z.array(z.string()).optional(),
+  notes: z.string().optional(),
 });
 
 /* ---------------- Agreement ---------------- */
