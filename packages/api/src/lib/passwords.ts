@@ -3,7 +3,7 @@
  * as `scrypt:<salt>:<hash>` (same shape Better Auth uses, so credential rows
  * migrate cleanly when the Postgres/Better Auth swap happens).
  */
-import { randomBytes, scrypt as _scrypt, scryptSync, timingSafeEqual } from "node:crypto";
+import { randomBytes, scrypt as _scrypt, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 
 const scrypt = promisify(_scrypt) as (
@@ -17,13 +17,6 @@ const KEYLEN = 64;
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
   const hash = await scrypt(password, salt, KEYLEN);
-  return `scrypt:${salt.toString("base64")}:${hash.toString("base64")}`;
-}
-
-/** Sync twin for synchronous call sites (seed) — same format as hashPassword. */
-export function hashPasswordSync(password: string): string {
-  const salt = randomBytes(16);
-  const hash = scryptSync(password, salt, KEYLEN);
   return `scrypt:${salt.toString("base64")}:${hash.toString("base64")}`;
 }
 

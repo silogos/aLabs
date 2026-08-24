@@ -57,6 +57,13 @@
       "when": 1787592748226,
       "tag": "0007_giant_korath",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787606283566,
+      "tag": "0008_serious_mesmero",
+      "breakpoints": true
     }
   ]
 }

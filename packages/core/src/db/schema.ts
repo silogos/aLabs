@@ -1,10 +1,9 @@
 /**
  * Drizzle schema — the DB-precise source of truth.
  *
- * Mirrors `docs/tech/03-data-model.md` table-for-table. The API currently runs
- * against an in-memory store (see `apps/api/src/db/memory.ts`) so the app is
- * runnable without Postgres; this schema is what `drizzle-kit` would push and
- * what a real `db` repository implementation would query.
+ * Mirrors `docs/tech/03-data-model.md` table-for-table; the API's
+ * `db/*-repo.ts` modules query these tables through the Drizzle instance
+ * in `packages/api/src/db/pg.ts`.
  *
  * Conventions (`docs/tech/02-conventions.md`):
  *   - uuid PKs (app-generated, UUID v7)
@@ -27,7 +26,6 @@ import {
   index,
   uniqueIndex,
   primaryKey,
-  foreignKey,
 } from "drizzle-orm/pg-core";
 
 import {
@@ -45,12 +43,6 @@ import {
   meetingStatusEnum,
   agreementTypeEnum,
   agreementStatusEnum,
-  clientUserStatusEnum,
-  clientShareResourceEnum,
-  notificationChannelEnum,
-  planNameEnum,
-  subscriptionStatusEnum,
-  invoiceStatusEnum,
 } from "../enums";
 
 const ts = () => timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow();
@@ -140,12 +132,6 @@ export const organizations = pgTable("organizations", {
   deletedAt: nullableTs(),
 });
 
-export const permissions = pgTable("permissions", {
-  id: uuid("id").primaryKey(),
-  key: varchar("key", { length: 80 }).notNull().unique(),
-  description: text("description"),
-});
-
 export const roles = pgTable(
   "roles",
   {
@@ -154,8 +140,7 @@ export const roles = pgTable(
     scope: roleScopeEnum("scope").notNull(),
     name: varchar("name", { length: 50 }).notNull(),
     isSystem: boolean("is_system").notNull().default(false),
-    // permission keys embedded on the row (the normalized role_permissions
-    // join below stays available for a future admin UI)
+    // permission keys embedded on the row
     permissions: text("permissions").array().notNull().default([]),
     createdAt: ts().defaultNow(),
     updatedAt: ts().defaultNow(),
@@ -165,15 +150,6 @@ export const roles = pgTable(
     // drizzle-orm doesn't support yet — seeding is guarded, code takes first)
     index("roles_scope_name_idx").on(t.scope, t.name, t.organizationId),
   ],
-);
-
-export const rolePermissions = pgTable(
-  "role_permissions",
-  {
-    roleId: uuid("role_id").notNull().references(() => roles.id),
-    permissionId: uuid("permission_id").notNull().references(() => permissions.id),
-  },
-  (t) => [primaryKey({ columns: [t.roleId, t.permissionId] })],
 );
 
 export const organizationMembers = pgTable(
@@ -455,18 +431,6 @@ export const pages = pgTable(
   (t) => [index("page_proj_space_idx").on(t.projectId, t.spaceId)],
 );
 
-export const pageRevisions = pgTable("page_revisions", {
-  id: uuid("id").primaryKey(),
-  pageId: uuid("page_id")
-    .notNull()
-    .references(() => pages.id),
-  content: jsonb("content").notNull(),
-  editedBy: uuid("edited_by")
-    .notNull()
-    .references(() => users.id),
-  createdAt: ts().defaultNow(),
-});
-
 export const files = pgTable("files", {
   id: uuid("id").primaryKey(),
   projectId: uuid("project_id")
@@ -585,46 +549,6 @@ export const agreements = pgTable("agreements", {
   deletedAt: nullableTs(),
 });
 
-export const agreementAttachments = pgTable(
-  "agreement_attachments",
-  {
-    agreementId: uuid("agreement_id").references(() => agreements.id),
-    fileId: uuid("file_id").references(() => files.id),
-  },
-  (t) => [primaryKey({ columns: [t.agreementId, t.fileId] })],
-);
-
-/* ============================================================= Client Portal */
-
-export const clientUsers = pgTable(
-  "client_users",
-  {
-    id: uuid("id").primaryKey(),
-    projectId: uuid("project_id")
-      .notNull()
-      .references(() => projects.id),
-    email: varchar("email", { length: 255 }).notNull(),
-    name: varchar("name", { length: 120 }).notNull(),
-    status: clientUserStatusEnum("status").notNull().default("invited"),
-    createdAt: ts().defaultNow(),
-  },
-  (t) => [uniqueIndex("client_user_uniq").on(t.projectId, t.email)],
-);
-
-export const clientShares = pgTable(
-  "client_shares",
-  {
-    id: uuid("id").primaryKey(),
-    projectId: uuid("project_id")
-      .notNull()
-      .references(() => projects.id),
-    resource: clientShareResourceEnum("resource").notNull(),
-    visible: boolean("visible").notNull().default(false),
-    createdAt: ts().defaultNow(),
-  },
-  (t) => [uniqueIndex("client_share_uniq").on(t.projectId, t.resource)],
-);
-
 /* ============================================================= Notification */
 
 /** Dashboard activity feed (seeded demo events today; written by modules
@@ -665,78 +589,13 @@ export const notifications = pgTable(
   (t) => [index("notif_user_created_idx").on(t.userId, t.createdAt)],
 );
 
-export const notificationPreferences = pgTable(
-  "notification_preferences",
-  {
-    id: uuid("id").primaryKey(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id),
-    channel: notificationChannelEnum("channel").notNull(),
-    type: varchar("type", { length: 60 }).notNull(),
-    enabled: boolean("enabled").notNull().default(true),
-  },
-  (t) => [uniqueIndex("notif_pref_uniq").on(t.userId, t.channel, t.type)],
-);
-
-/* ============================================================= Billing */
-
-export const plans = pgTable("plans", {
-  id: uuid("id").primaryKey(),
-  name: planNameEnum("name").notNull().unique(),
-  price: numeric("price", { precision: 10, scale: 2 }).notNull(),
-  currency: varchar("currency", { length: 3 }).notNull(),
-  projectLimit: integer("project_limit"),
-  features: jsonb("features").notNull().default({}),
-  createdAt: ts().defaultNow(),
-});
-
-export const subscriptions = pgTable(
-  "subscriptions",
-  {
-    id: uuid("id").primaryKey(),
-    organizationId: uuid("organization_id")
-      .notNull()
-      .references(() => organizations.id),
-    planId: uuid("plan_id")
-      .notNull()
-      .references(() => plans.id),
-    status: subscriptionStatusEnum("status").notNull().default("active"),
-    currentPeriodEnd: ts().notNull(),
-    providerSubscriptionId: varchar("provider_subscription_id", { length: 120 }),
-    createdAt: ts().defaultNow(),
-    updatedAt: ts().defaultNow(),
-  },
-  (t) => [index("sub_org_idx").on(t.organizationId)],
-);
-
-export const invoices = pgTable(
-  "invoices",
-  {
-    id: uuid("id").primaryKey(),
-    organizationId: uuid("organization_id")
-      .notNull()
-      .references(() => organizations.id),
-    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
-    currency: varchar("currency", { length: 3 }).notNull(),
-    status: invoiceStatusEnum("status").notNull(),
-    issuedAt: ts().notNull(),
-    providerInvoiceId: varchar("provider_invoice_id", { length: 120 }),
-    createdAt: ts().defaultNow(),
-  },
-  (t) => [index("invoice_org_idx").on(t.organizationId)],
-);
-
 // Note: forward-declared iterations/milestones above are defined before `tasks`
 // because tasks references them; the table is hoisted by Drizzle's builder.
-export type _Refs = typeof iterations & typeof milestones;
 
 export const schema = {
   users,
   organizations,
-  permissions,
   roles,
-  rolePermissions,
   organizationMembers,
   invitations,
   projects,
@@ -749,7 +608,6 @@ export const schema = {
   tasks,
   spaces,
   pages,
-  pageRevisions,
   files,
   iterations,
   milestones,
@@ -757,14 +615,8 @@ export const schema = {
   actionItems,
   meetingParticipants,
   agreements,
-  agreementAttachments,
-  clientUsers,
-  clientShares,
+  activity,
   notifications,
-  notificationPreferences,
-  plans,
-  subscriptions,
-  invoices,
 };
 
 export type Schema = typeof schema;

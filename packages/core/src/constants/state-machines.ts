@@ -3,22 +3,12 @@
  * From `docs/tech/03-data-model.md` → "State Machines".
  */
 import type {
-  InvitationStatus,
   ProjectStatus,
   IterationStatus,
   MilestoneStatus,
   MeetingStatus,
   AgreementStatus,
-  ClientUserStatus,
-  SubscriptionStatus,
 } from "../enums";
-
-export const INVITATION_TRANSITIONS: Record<InvitationStatus, readonly InvitationStatus[]> = {
-  pending: ["accepted", "expired", "cancelled"],
-  accepted: [],
-  expired: [],
-  cancelled: [],
-};
 
 export const PROJECT_TRANSITIONS: Record<ProjectStatus, readonly ProjectStatus[]> = {
   active: ["on_hold", "archived"],
@@ -49,16 +39,4 @@ export const AGREEMENT_TRANSITIONS: Record<AgreementStatus, readonly AgreementSt
   accepted: [],
   rejected: [],
   expired: [],
-};
-
-export const CLIENT_USER_TRANSITIONS: Record<ClientUserStatus, readonly ClientUserStatus[]> = {
-  invited: ["active"],
-  active: ["disabled"],
-  disabled: ["active"],
-};
-
-export const SUBSCRIPTION_TRANSITIONS: Record<SubscriptionStatus, readonly SubscriptionStatus[]> = {
-  active: ["past_due"],
-  past_due: ["active", "canceled"],
-  canceled: [],
 };

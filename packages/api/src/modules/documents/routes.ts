@@ -10,6 +10,7 @@ import {
   spaceCreate,
   pageCreate,
   pageUpdate,
+  pageSearchQuery,
   contentSchema,
   paginationQuery,
   paginate,
@@ -144,9 +145,10 @@ documents.get("/documents/files", requirePermission("document:view"), async (c) 
 
 // ---- search ----
 documents.get("/documents/search", requirePermission("document:view"), async (c) => {
-  const q = (c.req.query("q") ?? "").toLowerCase();
+  const { q } = parseQuery(c.req.query(), pageSearchQuery);
+  const needle = (q ?? "").toLowerCase();
   const rows = (await docRepo.listPages(pidOf(c)))
-    .filter((p) => p.title.toLowerCase().includes(q))
+    .filter((p) => p.title.toLowerCase().includes(needle))
     .slice(0, 20);
   return data(c, rows);
 });

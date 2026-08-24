@@ -1,16 +1,18 @@
 /** Task routes — list (filtered), CRUD, statuses/labels/types.
  *  Task rows, config, and comments live in Postgres (db/task-repo.ts). */
 import { Hono } from "hono";
-import { z } from "zod";
 import * as taskRepo from "../../db/task-repo";
 import {
   taskCreate,
   taskUpdate,
   taskSchema,
-  taskLinkAdd,
+  taskLinkCreate,
   taskLinkSchema,
   commentCreate,
-  paginationQuery,
+  taskStatusCreate,
+  taskLabelCreate,
+  taskTypeCreate,
+  taskListQuery,
   paginate,
 } from "@pmin/core";
 import { badRequest, conflict, notFound } from "../../lib/errors";
@@ -23,16 +25,6 @@ import type { Vars, Ctx } from "../../lib/ctx";
 export const task = new Hono<{ Variables: Vars }>();
 
 task.use("*", projectContext);
-
-const taskListQuery = paginationQuery.extend({
-  statusId: z.string().uuid().optional(),
-  assigneeId: z.string().uuid().optional(),
-  labelId: z.string().uuid().optional(),
-  typeId: z.string().uuid().optional(),
-  priority: z.string().optional(),
-  iterationId: z.string().uuid().optional(),
-  q: z.string().optional(),
-});
 
 function projectIdOf(c: Ctx) {
   const t = currentTenant(c);
@@ -87,7 +79,7 @@ task.get("/tasks/statuses", requirePermission("task:view"), async (c) =>
 );
 task.post("/tasks/statuses", requirePermission("task:update"), async (c) => {
   const pid = projectIdOf(c);
-  const body = parseBody(await c.req.json(), z.object({ name: z.string(), color: z.string().optional() }));
+  const body = parseBody(await c.req.json(), taskStatusCreate);
   return created(c, await taskRepo.insertStatus({ projectId: pid, name: body.name, color: body.color ?? null }));
 });
 task.get("/tasks/labels", requirePermission("task:view"), async (c) =>
@@ -95,7 +87,7 @@ task.get("/tasks/labels", requirePermission("task:view"), async (c) =>
 );
 task.post("/tasks/labels", requirePermission("task:update"), async (c) => {
   const pid = projectIdOf(c);
-  const body = parseBody(await c.req.json(), z.object({ name: z.string(), color: z.string().optional() }));
+  const body = parseBody(await c.req.json(), taskLabelCreate);
   return created(c, await taskRepo.insertLabel({ projectId: pid, name: body.name, color: body.color ?? null }));
 });
 task.get("/tasks/types", requirePermission("task:view"), async (c) =>
@@ -103,14 +95,14 @@ task.get("/tasks/types", requirePermission("task:view"), async (c) =>
 );
 task.post("/tasks/types", requirePermission("task:update"), async (c) => {
   const pid = projectIdOf(c);
-  const body = parseBody(await c.req.json(), z.object({ name: z.string() }));
+  const body = parseBody(await c.req.json(), taskTypeCreate);
   return created(c, await taskRepo.insertType(pid, body.name));
 });
 
 // ---- cross-issue links (static sub-path BEFORE :id) ----
 task.post("/tasks/:id/links", requirePermission("task:update"), async (c) => {
   const t = await findTask(c);
-  const input = parseBody(await c.req.json(), taskLinkAdd);
+  const input = parseBody(await c.req.json(), taskLinkCreate);
   const link = await taskRepo.addTaskLink({
     projectId: projectIdOf(c),
     taskId: t.id,

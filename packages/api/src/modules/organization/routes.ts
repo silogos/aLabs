@@ -8,7 +8,7 @@ import {
   organizationCreate,
   organizationUpdate,
   memberUpdate,
-  invitationInput,
+  invitationCreate,
   invitationAction,
   paginationQuery,
   paginate,
@@ -122,7 +122,7 @@ organization.post(
   orgContext,
   requirePermission("member:create"),
   async (c) => {
-    const input = parseBody(await c.req.json(), invitationInput);
+    const input = parseBody(await c.req.json(), invitationCreate);
     const orgId = currentTenant(c).organizationId;
     const role =
       (await orgRepo.findRoleByName("workspace", input.roleName)) ??
