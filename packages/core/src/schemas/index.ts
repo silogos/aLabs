@@ -452,7 +452,10 @@ export const agreementSchema = z.object({
   currency: z.string().nullable(),
   startDate: iso.nullable(),
   endDate: iso.nullable(),
+  sentAt: iso.nullable(),
   signedAt: iso.nullable(),
+  owner: userSchema.nullable(),
+  terms: z.string().nullable(),
   createdAt: iso,
   updatedAt: iso,
 });
@@ -466,9 +469,13 @@ export const agreementCreate = z.object({
   currency: z.string().length(3).optional(),
   startDate: iso.optional(),
   endDate: iso.optional(),
+  ownerId: id.optional(),
+  terms: z.string().max(5000).optional(),
 });
 export const agreementUpdate = agreementCreate.partial().extend({
   status: AgreementStatus.optional(),
+  sentAt: iso.nullable().optional(),
+  signedAt: iso.nullable().optional(),
 });
 
 /* ---------------- Notification ---------------- */

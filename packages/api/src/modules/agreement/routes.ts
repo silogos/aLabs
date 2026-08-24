@@ -30,6 +30,8 @@ agreement.post("/agreements", requirePermission("agreement:create"), async (c) =
     currency: input.currency ?? null,
     startDate: input.startDate ?? null,
     endDate: input.endDate ?? null,
+    ownerId: input.ownerId ?? null,
+    terms: input.terms ?? null,
   });
   return created(c, a);
 });
@@ -45,10 +47,25 @@ agreement.patch("/agreements/:id", requirePermission("agreement:update"), async 
   if (input.status && input.status !== a.status) {
     if (!canTransition(AGREEMENT_TRANSITIONS, a.status, input.status)) throw conflict("Invalid status transition");
   }
-  const { signedAt, ...rest } = input;
+  const { status, sentAt, signedAt, startDate, ...rest } = input;
+  const now = new Date();
+  // lifecycle stamps: sending records when, acceptance counter-signs and
+  // takes effect (when no explicit dates came in from the caller)
+  const autoSentAt = status === "sent" && !a.sentAt ? now : undefined;
+  const autoSignedAt = status === "accepted" && !a.signedAt ? now : undefined;
+  const autoStartDate =
+    status === "accepted" && !a.startDate && startDate === undefined
+      ? now.toISOString().slice(0, 10)
+      : undefined;
   await miscRepo.patchAgreement(a.id, {
     ...rest,
-    signedAt: signedAt ? new Date(signedAt) : undefined,
+    ...(status !== undefined ? { status } : {}),
+    ...(startDate !== undefined ? { startDate } : {}),
+    ...(autoStartDate !== undefined ? { startDate: autoStartDate } : {}),
+    ...(sentAt !== undefined ? { sentAt: sentAt ? new Date(sentAt) : null } : {}),
+    ...(autoSentAt ? { sentAt: autoSentAt } : {}),
+    ...(signedAt !== undefined ? { signedAt: signedAt ? new Date(signedAt) : null } : {}),
+    ...(autoSignedAt ? { signedAt: autoSignedAt } : {}),
   });
   return data(c, await miscRepo.getAgreement(pidOf(c), a.id));
 });

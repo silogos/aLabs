@@ -23,6 +23,9 @@ import type {
   Meeting,
   ActionItem,
   MeetingType,
+  Agreement,
+  AgreementType,
+  AgreementStatus,
 } from "@pmin/core";
 
 /** PATCH /meetings/:id body — subset of Meeting fields (see meetingUpdate). */
@@ -240,6 +243,52 @@ export const api = {
   dashboard: (pid: string) =>
     req<{ data: Dashboard }>(`/projects/${pid}/reporting/dashboard`).then((x) => x.data),
 
+  /* ---- agreements ---- */
+  agreements: (pid: string) =>
+    req<{ data: Agreement[] }>(`/projects/${pid}/agreements`).then((x) => x.data),
+  createAgreement: (
+    pid: string,
+    body: {
+      title: string;
+      type?: AgreementType;
+      counterparty: string;
+      value?: number;
+      currency?: string;
+      startDate?: string;
+      endDate?: string;
+      ownerId?: string;
+      terms?: string;
+    },
+  ) =>
+    req<{ data: Agreement }>(`/projects/${pid}/agreements`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  updateAgreement: (
+    pid: string,
+    id: string,
+    body: Partial<{
+      title: string;
+      type: AgreementType;
+      counterparty: string;
+      value: number;
+      currency: string;
+      startDate: string;
+      endDate: string;
+      ownerId: string;
+      terms: string;
+      status: AgreementStatus;
+      sentAt: string | null;
+      signedAt: string | null;
+    }>,
+  ) =>
+    req<{ data: Agreement }>(`/projects/${pid}/agreements/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  deleteAgreement: (pid: string, id: string) =>
+    req<void>(`/projects/${pid}/agreements/${id}`, { method: "DELETE" }).then(() => undefined),
+
   /* ---- notifications ---- */
   notifications: () =>
     req<{ data: Notification[] }>("/notifications").then((x) => x.data),
@@ -271,5 +320,8 @@ export type {
   Meeting,
   ActionItem,
   MeetingType,
+  Agreement,
+  AgreementType,
+  AgreementStatus,
 };
 export { unwrap };

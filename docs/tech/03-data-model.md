@@ -441,7 +441,10 @@ Composite pk `(meeting_id, user_id)`.
 | currency      | varchar(3)       | null                         |
 | start_date    | date             | null                         |
 | end_date      | date             | null                         |
+| sent_at       | timestamptz      | null                         |
 | signed_at     | timestamptz      | null                         |
+| owner_id      | uuid             | fk users, null               |
+| terms         | text             | null                         |
 | created_at    | timestamptz      | not null default now         |
 | updated_at    | timestamptz      | not null default now         |
 | deleted_at    | timestamptz      | null                         |

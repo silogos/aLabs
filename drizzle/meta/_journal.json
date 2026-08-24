@@ -43,6 +43,13 @@
       "when": 1787505941747,
       "tag": "0005_calm_slayback",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787590193920,
+      "tag": "0006_funny_mister_sinister",
+      "breakpoints": true
     }
   ]
 }

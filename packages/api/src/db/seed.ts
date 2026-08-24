@@ -623,6 +623,128 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
     await miscRepo.patchMeeting(grooming.id, { status: "cancelled" });
   }
 
+  /* ---------------- Agreements — PG ---------------- */
+  // mirrors the prototype's seven demo agreements; term dates relative to
+  // runtime today so Active / Pending / Expiring-soon all have content.
+  if ((await miscRepo.listAgreements(atlas.id)).length === 0) {
+    const at = (offset: number) => new Date(`${dayIso(offset)}T12:00:00.000Z`);
+    const lifecycle = (
+      id: string,
+      status: "draft" | "sent" | "accepted" | "rejected" | "expired",
+      stamps: { sent?: number; signed?: number } = {},
+    ) =>
+      miscRepo.patchAgreement(id, {
+        status,
+        ...(stamps.sent !== undefined ? { sentAt: at(stamps.sent) } : {}),
+        ...(stamps.signed !== undefined ? { signedAt: at(stamps.signed) } : {}),
+      });
+
+    const msa = await miscRepo.insertAgreement({
+      projectId: atlas.id,
+      title: "Master Services Agreement",
+      type: "contract",
+      counterparty: "Acme Corporation",
+      value: 240000,
+      currency: "USD",
+      startDate: dayIso(-235),
+      endDate: dayIso(130),
+      ownerId: usersByShort.ay.id,
+      terms:
+        "Master terms governing all Atlas work — monthly net-15 billing, IP assignment on full payment, " +
+        "mutual indemnification capped at fees paid in the prior 12 months, and a 30-day cure period for material breach.",
+    });
+    await lifecycle(msa.id, "accepted", { sent: -265, signed: -252 });
+
+    const sow = await miscRepo.insertAgreement({
+      projectId: atlas.id,
+      title: "Platform 2.0 Statement of Work",
+      type: "sow",
+      counterparty: "Acme Corporation",
+      value: 180000,
+      currency: "USD",
+      startDate: dayIso(-150),
+      endDate: dayIso(45),
+      ownerId: usersByShort.ay.id,
+      terms:
+        "Fixed-fee SOW for the Atlas Platform 2.0 delivery across six monthly milestones. Acceptance criteria " +
+        "defined per epic; any scope change requires a written amendment. GA cutoff drives the final milestone.",
+    });
+    await lifecycle(sow.id, "accepted", { sent: -172, signed: -170 });
+
+    const nda = await miscRepo.insertAgreement({
+      projectId: atlas.id,
+      title: "Mutual Non-Disclosure Agreement",
+      type: "nda",
+      counterparty: "Globex Industries",
+      startDate: dayIso(-193),
+      endDate: dayIso(537),
+      ownerId: usersByShort.mk.id,
+      terms:
+        "Two-year mutual NDA covering evaluation of the analytics module for a potential Globex partnership. " +
+        "Standard carve-outs for residual knowledge and independently developed IP; confidential info marked in writing.",
+    });
+    await lifecycle(nda.id, "accepted", { sent: -198, signed: -193 });
+
+    const analytics = await miscRepo.insertAgreement({
+      projectId: atlas.id,
+      title: "Analytics Module Statement of Work",
+      type: "sow",
+      counterparty: "Contoso Ltd",
+      value: 96000,
+      currency: "USD",
+      ownerId: usersByShort.ay.id,
+      terms:
+        "Time-and-materials SOW for the reporting & analytics module — 480 hours over 12 weeks at the standard " +
+        "rate card (Appendix A). Awaiting Contoso counter-signature; work blocked until accepted.",
+    });
+    await lifecycle(analytics.id, "sent", { sent: -6 });
+
+    await miscRepo.insertAgreement({
+      projectId: atlas.id,
+      title: "Mobile Companion App Proposal",
+      type: "proposal",
+      counterparty: "Initech",
+      value: 54000,
+      currency: "USD",
+      ownerId: usersByShort.jb.id,
+      terms:
+        "Draft proposal for an iOS + Android companion app scoped off the Atlas API. Fixed price, 10-week build. " +
+        "Scope, timeline, and rate pending internal review before sending to Initech.",
+    });
+
+    const migration = await miscRepo.insertAgreement({
+      projectId: atlas.id,
+      title: "Data Migration SOW",
+      type: "sow",
+      counterparty: "Hooli",
+      value: 32000,
+      currency: "USD",
+      startDate: dayIso(-269),
+      endDate: dayIso(-176),
+      ownerId: usersByShort.mk.id,
+      terms:
+        "One-off data migration from the Hooli legacy CRM — completed and accepted. Retained for audit; " +
+        "no active obligations. Renewal not requested.",
+    });
+    await lifecycle(migration.id, "expired", { sent: -284, signed: -279 });
+
+    const sla = await miscRepo.insertAgreement({
+      projectId: atlas.id,
+      title: "Support & SLA Addendum",
+      type: "contract",
+      counterparty: "Acme Corporation",
+      value: 48000,
+      currency: "USD",
+      startDate: dayIso(-359),
+      endDate: dayIso(12),
+      ownerId: usersByShort.mk.id,
+      terms:
+        "Annual support addendum — 99.9% uptime SLA, 4-hour P1 response, 50 support hours/month included. " +
+        "Expires soon; renewal quote in flight.",
+    });
+    await lifecycle(sla.id, "accepted", { sent: -374, signed: -369 });
+  }
+
   /* ---------------- Comments (for the task drawer) ---------------- */
   if (!pgSeeded) {
     const ssoTask = parents.find((t) => t.title === "Implement OAuth2 SSO flow");

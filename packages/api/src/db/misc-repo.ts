@@ -230,24 +230,34 @@ export async function patchActionItem(
 
 type AgreementRow = typeof agreements.$inferSelect;
 
-const toAgreement = (r: AgreementRow): Agreement & { deletedAt: string | null } => ({
-  id: r.id,
-  projectId: r.projectId,
-  title: r.title,
-  type: r.type,
-  status: r.status,
-  counterparty: r.counterparty,
-  value: r.value === null ? null : Number(r.value),
-  currency: r.currency,
-  startDate: r.startDate,
-  endDate: r.endDate,
-  signedAt: iso(r.signedAt),
-  createdAt: r.createdAt.toISOString(),
-  updatedAt: r.updatedAt.toISOString(),
-  deletedAt: iso(r.deletedAt),
-});
+type AgreementWithOwner = Agreement & { owner: Agreement["owner"] } & { deletedAt: string | null };
 
-export type AgreementWithMeta = ReturnType<typeof toAgreement>;
+async function hydrateOwners(rows: AgreementRow[]): Promise<AgreementWithOwner[]> {
+  const ids = [...new Set(rows.map((r) => r.ownerId).filter((x): x is string => !!x))];
+  const users = ids.length ? await getUsersByIds(ids) : [];
+  const byId = new Map(users.map((u) => [u.id, u]));
+  return rows.map((r) => ({
+    id: r.id,
+    projectId: r.projectId,
+    title: r.title,
+    type: r.type,
+    status: r.status,
+    counterparty: r.counterparty,
+    value: r.value === null ? null : Number(r.value),
+    currency: r.currency,
+    startDate: r.startDate,
+    endDate: r.endDate,
+    sentAt: iso(r.sentAt),
+    signedAt: iso(r.signedAt),
+    owner: r.ownerId ? byId.get(r.ownerId) ?? null : null,
+    terms: r.terms,
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString(),
+    deletedAt: iso(r.deletedAt),
+  }));
+}
+
+export type AgreementWithMeta = Awaited<ReturnType<typeof hydrateOwners>>[number];
 
 export async function listAgreements(projectId: string): Promise<AgreementWithMeta[]> {
   const rows = await db
@@ -255,7 +265,7 @@ export async function listAgreements(projectId: string): Promise<AgreementWithMe
     .from(agreements)
     .where(and(eq(agreements.projectId, projectId), isNull(agreements.deletedAt)))
     .orderBy(agreements.createdAt);
-  return rows.map(toAgreement);
+  return hydrateOwners(rows);
 }
 
 export async function getAgreement(projectId: string, id: string): Promise<AgreementWithMeta | null> {
@@ -264,7 +274,7 @@ export async function getAgreement(projectId: string, id: string): Promise<Agree
     .from(agreements)
     .where(and(eq(agreements.id, id), eq(agreements.projectId, projectId), isNull(agreements.deletedAt)))
     .limit(1);
-  return row ? toAgreement(row) : null;
+  return row ? (await hydrateOwners([row]))[0]! : null;
 }
 
 export async function insertAgreement(input: {
@@ -276,6 +286,8 @@ export async function insertAgreement(input: {
   currency?: string | null;
   startDate?: string | null;
   endDate?: string | null;
+  ownerId?: string | null;
+  terms?: string | null;
 }): Promise<AgreementWithMeta> {
   const now = new Date();
   const [row] = await db
@@ -291,23 +303,30 @@ export async function insertAgreement(input: {
       currency: input.currency ?? null,
       startDate: input.startDate ?? null,
       endDate: input.endDate ?? null,
-      signedAt: null,
+      ownerId: input.ownerId ?? null,
+      terms: input.terms ?? null,
       createdAt: now,
       updatedAt: now,
     })
     .returning();
-  return toAgreement(row!);
+  return (await hydrateOwners([row!]))[0]!;
 }
 
 export async function patchAgreement(
   id: string,
   patch: {
     title?: string;
+    type?: Agreement["type"];
     status?: Agreement["status"];
+    counterparty?: string;
     value?: number | null;
+    currency?: string | null;
     startDate?: string | null;
     endDate?: string | null;
+    sentAt?: Date | null;
     signedAt?: Date | null;
+    ownerId?: string | null;
+    terms?: string | null;
   },
 ): Promise<void> {
   const { value, ...rest } = patch;
