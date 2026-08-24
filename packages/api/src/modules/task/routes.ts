@@ -17,19 +17,14 @@ import {
 } from "@pmin/core";
 import { badRequest, conflict, notFound } from "../../lib/errors";
 import { created, data, noContent, paginated } from "../../lib/responses";
-import { parseBody, parseQuery } from "../../lib/validate";
-import { projectContext, currentTenant } from "../../lib/tenant";
+import { parseJsonBody, parseQuery, pickDefined } from "../../lib/validate";
+import { projectContext, projectIdOf } from "../../lib/tenant";
 import { requirePermission } from "../../lib/permission";
 import type { Vars, Ctx } from "../../lib/ctx";
 
 export const task = new Hono<{ Variables: Vars }>();
 
 task.use("*", projectContext);
-
-function projectIdOf(c: Ctx) {
-  const t = currentTenant(c);
-  return t.projectId!;
-}
 
 // ---- list ----
 task.get("/tasks", requirePermission("task:view"), async (c) => {
@@ -43,7 +38,7 @@ task.get("/tasks", requirePermission("task:view"), async (c) => {
 task.post("/tasks", requirePermission("task:create"), async (c) => {
   const pid = projectIdOf(c);
   const user = c.get("user")!;
-  const input = parseBody(await c.req.json(), taskCreate);
+  const input = await parseJsonBody(c, taskCreate);
   const defaultStatus = await taskRepo.findDefaultStatus(pid);
   if (!defaultStatus) throw badRequest("Project has no default task status");
   const status = input.statusId ? await taskRepo.findStatus(pid, input.statusId) : defaultStatus;
@@ -79,7 +74,7 @@ task.get("/tasks/statuses", requirePermission("task:view"), async (c) =>
 );
 task.post("/tasks/statuses", requirePermission("task:update"), async (c) => {
   const pid = projectIdOf(c);
-  const body = parseBody(await c.req.json(), taskStatusCreate);
+  const body = await parseJsonBody(c, taskStatusCreate);
   return created(c, await taskRepo.insertStatus({ projectId: pid, name: body.name, color: body.color ?? null }));
 });
 task.get("/tasks/labels", requirePermission("task:view"), async (c) =>
@@ -87,7 +82,7 @@ task.get("/tasks/labels", requirePermission("task:view"), async (c) =>
 );
 task.post("/tasks/labels", requirePermission("task:update"), async (c) => {
   const pid = projectIdOf(c);
-  const body = parseBody(await c.req.json(), taskLabelCreate);
+  const body = await parseJsonBody(c, taskLabelCreate);
   return created(c, await taskRepo.insertLabel({ projectId: pid, name: body.name, color: body.color ?? null }));
 });
 task.get("/tasks/types", requirePermission("task:view"), async (c) =>
@@ -95,14 +90,14 @@ task.get("/tasks/types", requirePermission("task:view"), async (c) =>
 );
 task.post("/tasks/types", requirePermission("task:update"), async (c) => {
   const pid = projectIdOf(c);
-  const body = parseBody(await c.req.json(), taskTypeCreate);
+  const body = await parseJsonBody(c, taskTypeCreate);
   return created(c, await taskRepo.insertType(pid, body.name));
 });
 
 // ---- cross-issue links (static sub-path BEFORE :id) ----
 task.post("/tasks/:id/links", requirePermission("task:update"), async (c) => {
   const t = await findTask(c);
-  const input = parseBody(await c.req.json(), taskLinkCreate);
+  const input = await parseJsonBody(c, taskLinkCreate);
   const link = await taskRepo.addTaskLink({
     projectId: projectIdOf(c),
     taskId: t.id,
@@ -123,9 +118,8 @@ task.delete("/tasks/:id/links/:linkId", requirePermission("task:update"), async 
 // ---- comments ----
 task.post("/tasks/:id/comments", requirePermission("task:update"), async (c) => {
   const t = await findTask(c);
-  const input = parseBody(await c.req.json(), commentCreate);
-  await taskRepo.insertComment({ taskId: t.id, userId: c.get("user")!.id, body: input.body });
-  return created(c, (await taskRepo.listComments(t.id)).at(-1) ?? null);
+  const input = await parseJsonBody(c, commentCreate);
+  return created(c, await taskRepo.insertComment({ taskId: t.id, userId: c.get("user")!.id, body: input.body }));
 });
 
 task.get("/tasks/:id", requirePermission("task:view"), async (c) => {
@@ -134,7 +128,7 @@ task.get("/tasks/:id", requirePermission("task:view"), async (c) => {
 
 task.patch("/tasks/:id", requirePermission("task:update"), async (c) => {
   const t = await findTask(c);
-  const input = parseBody(await c.req.json(), taskUpdate);
+  const input = await parseJsonBody(c, taskUpdate);
   // optimistic concurrency
   if (input.updatedAt && input.updatedAt !== t.updatedAt) throw conflict("Task was modified");
   if (input.statusId) {
@@ -145,8 +139,7 @@ task.patch("/tasks/:id", requirePermission("task:update"), async (c) => {
     const found = await taskRepo.findLabels(projectIdOf(c), input.labelIds);
     if (found.length !== input.labelIds.length) throw badRequest("Unknown label id");
   }
-  const patch: Parameters<typeof taskRepo.patchTask>[2] = {};
-  for (const k of [
+  const patch: Parameters<typeof taskRepo.patchTask>[2] = pickDefined(input, [
     "title",
     "description",
     "statusId",
@@ -158,9 +151,7 @@ task.patch("/tasks/:id", requirePermission("task:update"), async (c) => {
     "iterationId",
     "milestoneId",
     "estimate",
-  ] as const) {
-    if (input[k] !== undefined) (patch as Record<string, unknown>)[k] = input[k];
-  }
+  ]);
   if (input.dueDate !== undefined) patch.dueDate = input.dueDate ? new Date(input.dueDate) : null;
   if (input.labelIds) patch.labelIds = input.labelIds;
   const updated = await taskRepo.patchTask(t.id, t.updatedAt!, patch);

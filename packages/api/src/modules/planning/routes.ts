@@ -6,24 +6,23 @@ import { iterationCreate, iterationUpdate, milestoneCreate, milestoneUpdate } fr
 import { ITERATION_TRANSITIONS, MILESTONE_TRANSITIONS, canTransition } from "@pmin/core";
 import { conflict, notFound } from "../../lib/errors";
 import { created, data, noContent } from "../../lib/responses";
-import { parseBody } from "../../lib/validate";
-import { projectContext, currentTenant } from "../../lib/tenant";
+import { parseJsonBody } from "../../lib/validate";
+import { projectContext, projectIdOf } from "../../lib/tenant";
 import { requirePermission } from "../../lib/permission";
-import type { Vars, Ctx } from "../../lib/ctx";
+import type { Vars } from "../../lib/ctx";
 
 export const planning = new Hono<{ Variables: Vars }>();
 planning.use("*", projectContext);
 
-const pidOf = (c: Ctx) => currentTenant(c).projectId!;
 
 // ---- iterations ----
 planning.get("/planning/iterations", requirePermission("planning:view"), async (c) =>
-  data(c, await planningRepo.listIterations(pidOf(c))),
+  data(c, await planningRepo.listIterations(projectIdOf(c))),
 );
 planning.post("/planning/iterations", requirePermission("planning:manage"), async (c) => {
-  const input = parseBody(await c.req.json(), iterationCreate);
+  const input = await parseJsonBody(c, iterationCreate);
   const it = await planningRepo.insertIteration({
-    projectId: pidOf(c),
+    projectId: projectIdOf(c),
     name: input.name,
     goal: input.goal ?? null,
     startDate: input.startDate,
@@ -33,8 +32,8 @@ planning.post("/planning/iterations", requirePermission("planning:manage"), asyn
 });
 planning.patch("/planning/iterations/:id", requirePermission("planning:manage"), async (c) => {
   const it = await planningRepo.getIteration(c.req.param("id"));
-  if (!it || it.projectId !== pidOf(c)) throw notFound();
-  const input = parseBody(await c.req.json(), iterationUpdate);
+  if (!it || it.projectId !== projectIdOf(c)) throw notFound();
+  const input = await parseJsonBody(c, iterationUpdate);
   if (input.status && input.status !== it.status) {
     if (!canTransition(ITERATION_TRANSITIONS, it.status, input.status))
       throw conflict(`Cannot transition iteration from ${it.status} to ${input.status}`);
@@ -45,12 +44,12 @@ planning.patch("/planning/iterations/:id", requirePermission("planning:manage"),
 
 // ---- milestones ----
 planning.get("/planning/milestones", requirePermission("planning:view"), async (c) =>
-  data(c, await planningRepo.listMilestones(pidOf(c))),
+  data(c, await planningRepo.listMilestones(projectIdOf(c))),
 );
 planning.post("/planning/milestones", requirePermission("planning:manage"), async (c) => {
-  const input = parseBody(await c.req.json(), milestoneCreate);
+  const input = await parseJsonBody(c, milestoneCreate);
   const m = await planningRepo.insertMilestone({
-    projectId: pidOf(c),
+    projectId: projectIdOf(c),
     name: input.name,
     description: input.description ?? null,
     dueDate: input.dueDate ?? null,
@@ -59,8 +58,8 @@ planning.post("/planning/milestones", requirePermission("planning:manage"), asyn
 });
 planning.patch("/planning/milestones/:id", requirePermission("planning:manage"), async (c) => {
   const m = await planningRepo.getMilestone(c.req.param("id"));
-  if (!m || m.projectId !== pidOf(c)) throw notFound();
-  const input = parseBody(await c.req.json(), milestoneUpdate);
+  if (!m || m.projectId !== projectIdOf(c)) throw notFound();
+  const input = await parseJsonBody(c, milestoneUpdate);
   if (input.status && input.status !== m.status) {
     if (!canTransition(MILESTONE_TRANSITIONS, m.status, input.status))
       throw conflict(`Cannot transition milestone from ${m.status} to ${input.status}`);
@@ -69,14 +68,14 @@ planning.patch("/planning/milestones/:id", requirePermission("planning:manage"),
   return data(c, updated!);
 });
 planning.delete("/planning/milestones/:id", requirePermission("planning:manage"), async (c) => {
-  const ok = await planningRepo.deleteMilestone(pidOf(c), c.req.param("id")!);
+  const ok = await planningRepo.deleteMilestone(projectIdOf(c), c.req.param("id")!);
   if (!ok) throw notFound();
   return noContent(c);
 });
 
 // ---- timeline (gantt) ----
 planning.get("/planning/timeline", requirePermission("planning:view"), async (c) => {
-  const pid = pidOf(c);
+  const pid = projectIdOf(c);
   const its = await planningRepo.listIterations(pid);
   const ms = await planningRepo.listMilestones(pid);
   const starts = its.map((i) => i.startDate).sort();

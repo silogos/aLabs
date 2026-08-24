@@ -5,11 +5,14 @@ import * as authRepo from "../db/auth-repo";
 import { unauthorized } from "./errors";
 import type { Vars } from "./ctx";
 
+/** The session cookie name — set by the auth routes, read here. */
+export const SESSION_COOKIE = "alabs_session";
+
 function extractToken(req: Request): string | null {
   const auth = req.headers.get("authorization");
   if (auth?.toLowerCase().startsWith("bearer ")) return auth.slice(7).trim();
   const cookie = req.headers.get("cookie") ?? "";
-  const m = cookie.match(/(?:^|;\s*)alabs_session=([^;]+)/);
+  const m = cookie.match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=([^;]+)`));
   if (m) return m[1]!;
   return null;
 }

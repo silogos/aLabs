@@ -24,6 +24,10 @@ export const client = postgres(url, { max: 10 });
 // matches docs/tech/03-data-model.md and drizzle.config.ts
 export const db = drizzle(client, { schema, casing: "snake_case" });
 
+/** The transaction handle passed to `db.transaction()` callbacks — repos use
+ *  it to run multi-write flows atomically. */
+export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 /** Locate the generated migrations: MIGRATIONS_DIR wins (Docker sets it);
  *  otherwise walk up from cwd until a drizzle/meta/_journal.json appears —
  *  covers `next dev` (cwd apps/web) and the standalone server (repo root). */

@@ -4,16 +4,14 @@
  *  joins); visits power the recents + landing-project rule. */
 import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
 import { db } from "./pg";
-import { projects, projectMembers, projectVisits, roles } from "@pmin/core/db";
-import { uuidv7, type Project, type ProjectMember, type Role, type User } from "@pmin/core";
-import { toRole } from "./org-repo";
-import { getUsersByIds } from "./auth-repo";
+import { projects, projectMembers, projectVisits, roles, taskStatuses, taskTypes } from "@pmin/core/db";
+import { DEFAULT_TASK_STATUSES, DEFAULT_TASK_TYPES, uuidv7, type Project, type ProjectMember, type User } from "@pmin/core";
+import { toRole, requireSystemRole } from "./org-repo";
+import { iso, userMap } from "./mapping";
 
 type ProjectRow = typeof projects.$inferSelect;
 type MemberRow = typeof projectMembers.$inferSelect;
 type RoleRow = typeof roles.$inferSelect;
-
-const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
 export type ProjectWithMeta = Project & { deletedAt: string | null };
 
@@ -106,6 +104,8 @@ export async function countActiveProjects(organizationId: string): Promise<numbe
   return row?.n ?? 0;
 }
 
+/** Plain insert — the seed path; API creates go through
+ *  `createProjectWithConfig` so config + membership land atomically. */
 export async function insertProject(input: {
   organizationId: string;
   name: string;
@@ -132,6 +132,71 @@ export async function insertProject(input: {
     })
     .returning();
   return toProject(row!);
+}
+
+/** Create a project together with its default task config (statuses + types,
+ *  05-seed-data.md) and the creator's "Project Admin" membership — one
+ *  transaction, so a half-created project is never observable. */
+export async function createProjectWithConfig(input: {
+  organizationId: string;
+  name: string;
+  slug: string;
+  key: string;
+  description?: string | null;
+  icon?: string | null;
+  creatorId: string;
+}): Promise<ProjectWithMeta> {
+  const adminRole = await requireSystemRole("project", "Project Admin");
+  return db.transaction(async (tx) => {
+    const now = new Date();
+    const [row] = await tx
+      .insert(projects)
+      .values({
+        id: uuidv7(),
+        organizationId: input.organizationId,
+        name: input.name,
+        slug: input.slug,
+        key: input.key,
+        description: input.description ?? null,
+        icon: input.icon ?? null,
+        status: "active",
+        visibility: "organization",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+
+    await tx.insert(taskStatuses).values(
+      DEFAULT_TASK_STATUSES.map((s) => ({
+        id: uuidv7(),
+        projectId: row!.id,
+        name: s.name,
+        order: s.order,
+        isDefault: s.isDefault,
+        createdAt: now,
+      })),
+    );
+    await tx.insert(taskTypes).values(
+      DEFAULT_TASK_TYPES.map((name) => ({
+        id: uuidv7(),
+        projectId: row!.id,
+        name,
+        createdAt: now,
+      })),
+    );
+
+    await tx.insert(projectMembers).values({
+      id: uuidv7(),
+      projectId: row!.id,
+      userId: input.creatorId,
+      roleId: adminRole.id,
+      status: "active",
+      joinedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return toProject(row!);
+  });
 }
 
 export async function updateProject(
@@ -183,8 +248,7 @@ export async function listProjectMembers(projectId: string): Promise<ProjectMemb
     .innerJoin(roles, eq(roles.id, projectMembers.roleId))
     .where(eq(projectMembers.projectId, projectId))
     .orderBy(projectMembers.createdAt);
-  const users = await getUsersByIds(rows.map((r) => r.member.userId));
-  const byId = new Map(users.map((u) => [u.id, u]));
+  const byId = await userMap(rows.map((r) => r.member.userId));
   return rows.map((r) => toMember(r.member, r.role, byId.get(r.member.userId)));
 }
 
@@ -199,8 +263,8 @@ export async function getProjectMemberRow(
     .where(and(eq(projectMembers.id, memberId), eq(projectMembers.projectId, projectId)))
     .limit(1);
   if (!row) return null;
-  const [user] = await getUsersByIds([row.member.userId]);
-  return toMember(row.member, row.role, user);
+  const byId = await userMap([row.member.userId]);
+  return toMember(row.member, row.role, byId.get(row.member.userId));
 }
 
 export async function hasProjectMember(projectId: string, userId: string): Promise<boolean> {
@@ -217,18 +281,22 @@ export async function insertProjectMember(input: {
   userId: string;
   roleId: string;
   status?: "active" | "pending" | "suspended";
-}): Promise<void> {
+}): Promise<string> {
   const now = new Date();
-  await db.insert(projectMembers).values({
-    id: uuidv7(),
-    projectId: input.projectId,
-    userId: input.userId,
-    roleId: input.roleId,
-    status: input.status ?? "active",
-    joinedAt: input.status === "pending" ? null : now,
-    createdAt: now,
-    updatedAt: now,
-  });
+  const [row] = await db
+    .insert(projectMembers)
+    .values({
+      id: uuidv7(),
+      projectId: input.projectId,
+      userId: input.userId,
+      roleId: input.roleId,
+      status: input.status ?? "active",
+      joinedAt: input.status === "pending" ? null : now,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning({ id: projectMembers.id });
+  return row!.id;
 }
 
 export async function updateProjectMember(

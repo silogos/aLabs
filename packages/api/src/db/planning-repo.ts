@@ -153,14 +153,17 @@ export async function insertMilestone(input: {
   return toMilestone(row!);
 }
 
-/** Hard delete — tasks referencing the milestone are unlinked first. */
+/** Hard delete — tasks referencing the milestone are unlinked first, both
+ *  writes in one transaction. */
 export async function deleteMilestone(projectId: string, id: string): Promise<boolean> {
-  await db.update(tasks).set({ milestoneId: null }).where(eq(tasks.milestoneId, id));
-  const rows = await db
-    .delete(milestones)
-    .where(and(eq(milestones.id, id), eq(milestones.projectId, projectId)))
-    .returning();
-  return rows.length > 0;
+  return db.transaction(async (tx) => {
+    await tx.update(tasks).set({ milestoneId: null }).where(eq(tasks.milestoneId, id));
+    const rows = await tx
+      .delete(milestones)
+      .where(and(eq(milestones.id, id), eq(milestones.projectId, projectId)))
+      .returning();
+    return rows.length > 0;
+  });
 }
 
 export async function patchMilestone(

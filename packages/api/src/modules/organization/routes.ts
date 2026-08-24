@@ -15,7 +15,7 @@ import {
 } from "@pmin/core";
 import { badRequest, notFound } from "../../lib/errors";
 import { created, data, noContent, paginated } from "../../lib/responses";
-import { parseBody, parseQuery } from "../../lib/validate";
+import { parseJsonBody, parseQuery } from "../../lib/validate";
 import { orgContext, currentTenant } from "../../lib/tenant";
 import { requireAuth } from "../../lib/auth";
 import { requirePermission } from "../../lib/permission";
@@ -33,7 +33,7 @@ organization.get("/", async (c) => {
 
 organization.post("/", async (c) => {
   const user = c.get("user")!;
-  const input = parseBody(await c.req.json(), organizationCreate);
+  const input = await parseJsonBody(c, organizationCreate);
   if (await orgRepo.slugTaken(input.slug)) throw badRequest("Slug already taken");
   const org = await orgRepo.insertOrganization({
     name: input.name,
@@ -43,8 +43,7 @@ organization.post("/", async (c) => {
     website: input.website ?? null,
   });
   // creator becomes Owner
-  const ownerRole = await orgRepo.findRoleByName("workspace", "Owner");
-  if (!ownerRole) throw new Error("workspace Owner role missing — seed incomplete");
+  const ownerRole = await orgRepo.requireSystemRole("workspace", "Owner");
   await orgRepo.insertMember({ organizationId: org.id, userId: user.id, roleId: ownerRole.id });
   return created(c, org);
 });
@@ -67,7 +66,7 @@ organization.delete(
 );
 
 organization.patch("/:organizationId", orgContext, requirePermission("organization:update"), async (c) => {
-  const input = parseBody(await c.req.json(), organizationUpdate);
+  const input = await parseJsonBody(c, organizationUpdate);
   const org = await orgRepo.updateOrganization(currentTenant(c).organizationId, input);
   return data(c, org);
 });
@@ -87,7 +86,7 @@ organization.patch(
     const member = await orgRepo.getOrgMember(orgId, c.req.param("memberId"));
     if (!member) throw notFound();
     if (member.role.scope !== "workspace") throw badRequest("Not a workspace membership");
-    const input = parseBody(await c.req.json(), memberUpdate);
+    const input = await parseJsonBody(c, memberUpdate);
     const role = await orgRepo.findRoleByName("workspace", input.roleName);
     if (!role) throw badRequest(`Unknown workspace role "${input.roleName}"`);
     // an org always keeps at least one active Owner
@@ -122,26 +121,25 @@ organization.post(
   orgContext,
   requirePermission("member:create"),
   async (c) => {
-    const input = parseBody(await c.req.json(), invitationCreate);
+    const input = await parseJsonBody(c, invitationCreate);
     const orgId = currentTenant(c).organizationId;
     const role =
       (await orgRepo.findRoleByName("workspace", input.roleName)) ??
-      (await orgRepo.findRoleByName("workspace", "Member"));
-    if (!role) throw new Error("workspace Member role missing — seed incomplete");
+      (await orgRepo.requireSystemRole("workspace", "Member"));
     if (await orgRepo.getActiveMemberByEmail(orgId, input.email))
       throw badRequest("Already a member");
     if (await orgRepo.hasPendingInvitation(orgId, input.email))
       throw badRequest("Invitation already pending");
-    await orgRepo.insertInvitation({
+    const invitation = await orgRepo.insertInvitation({
       organizationId: orgId,
       email: input.email,
       roleId: role.id,
+      roleName: role.name,
       expiresAt: new Date(Date.now() + 7 * 86400000),
       // admin-driven flow today; the token future-proofs email delivery
       token: randomBytes(24).toString("base64url"),
     });
-    const list = await orgRepo.listOrgInvitations(orgId);
-    return created(c, list.at(-1)!);
+    return created(c, invitation);
   },
 );
 
@@ -166,7 +164,7 @@ organization.patch(
     if (!invitation) throw notFound();
     if (invitation.status !== "pending")
       throw badRequest(`Invitation is already ${invitation.status}`);
-    const input = parseBody(await c.req.json(), invitationAction);
+    const input = await parseJsonBody(c, invitationAction);
     if (input.action === "cancel") {
       await orgRepo.updateInvitationStatus(invitation.id, "cancelled");
       return data(c, invitation);
@@ -178,8 +176,7 @@ organization.patch(
     if (!registered) throw badRequest("User must register before accepting this invitation");
     const role =
       (await orgRepo.findRoleByName("workspace", invitation.roleName)) ??
-      (await orgRepo.findRoleByName("workspace", "Member"));
-    if (!role) throw new Error("workspace role missing — seed incomplete");
+      (await orgRepo.requireSystemRole("workspace", "Member"));
     await orgRepo.insertMember({ organizationId: orgId, userId: registered.id, roleId: role.id });
     await orgRepo.updateInvitationStatus(invitation.id, "accepted");
     return data(c, invitation);

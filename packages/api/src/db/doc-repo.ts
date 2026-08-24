@@ -6,13 +6,11 @@ import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "./pg";
 import { spaces, pages, files } from "@pmin/core/db";
 import { uuidv7, type Space, type Page, type FileRef, type Content, type User } from "@pmin/core";
-import { getUsersByIds } from "./auth-repo";
+import { iso, userMap } from "./mapping";
 
 type SpaceRow = typeof spaces.$inferSelect;
 type PageRow = typeof pages.$inferSelect;
 type FileRow = typeof files.$inferSelect;
-
-const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
 /* ---------------- spaces ---------------- */
 
@@ -91,9 +89,7 @@ const toPage = (r: PageRow, editedBy?: User | null): PageWithMeta => ({
 
 /** Hydrate the embedded last-editor for a set of page rows. */
 async function withEditors(rows: PageRow[]): Promise<PageWithMeta[]> {
-  const ids = [...new Set(rows.map((r) => r.editedBy).filter((x): x is string => !!x))];
-  const users = await getUsersByIds(ids);
-  const byId = new Map(users.map((u) => [u.id, u]));
+  const byId = await userMap(rows.map((r) => r.editedBy));
   return rows.map((r) => toPage(r, r.editedBy ? byId.get(r.editedBy) ?? null : null));
 }
 
@@ -196,9 +192,7 @@ export async function listFiles(projectId: string): Promise<FileWithMeta[]> {
     .from(files)
     .where(and(eq(files.projectId, projectId), isNull(files.deletedAt)))
     .orderBy(asc(files.createdAt));
-  const ids = [...new Set(rows.map((r) => r.uploadedBy).filter((x): x is string => !!x))];
-  const users = await getUsersByIds(ids);
-  const byId = new Map(users.map((u) => [u.id, u]));
+  const byId = await userMap(rows.map((r) => r.uploadedBy));
   return rows.map((r) => toFile(r, r.uploadedBy ? byId.get(r.uploadedBy) ?? null : null));
 }
 

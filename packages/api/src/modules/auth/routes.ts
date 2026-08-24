@@ -10,7 +10,6 @@ import { Hono } from "hono";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { randomBytes } from "node:crypto";
 import * as authRepo from "../../db/auth-repo";
-import * as orgRepo from "../../db/org-repo";
 import {
   registerInput,
   loginInput,
@@ -18,18 +17,16 @@ import {
   resetPasswordInput,
 } from "@pmin/core";
 import { badRequest, unauthorized, ApiError } from "../../lib/errors";
-import { extractToken } from "../../lib/auth";
+import { extractToken, SESSION_COOKIE } from "../../lib/auth";
 import { hashPassword, verifyPassword } from "../../lib/passwords";
-import { data } from "../../lib/responses";
-import { parseBody } from "../../lib/validate";
+import { created, data } from "../../lib/responses";
+import { parseJsonBody } from "../../lib/validate";
 import type { Vars } from "../../lib/ctx";
-import type { User } from "@pmin/core";
 
 export const auth = new Hono<{ Variables: Vars }>();
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const RESET_TTL_MS = 60 * 60 * 1000;
-const SESSION_COOKIE = "alabs_session";
 
 /* ---------------- helpers ---------------- */
 
@@ -44,53 +41,27 @@ async function issueSession(c: Parameters<typeof setCookie>[0], userId: string) 
   return token;
 }
 
-/** Create a user + their personal workspace (org of one) — signup path shared
- * by register and Google SSO. See docs/foundation/04-plans-workspaces.md and
- * ADR 0007: personal orgs block invites and cap projects. */
-async function createUserWithWorkspace(input: {
-  name: string;
-  email: string;
-  image: string | null;
-  emailVerified: boolean;
-}): Promise<User> {
-  const user = await authRepo.insertUser(input);
-
-  const org = await orgRepo.insertOrganization({
-    name: `${input.name}'s Workspace`,
-    slug: `personal-${user.id.slice(-8)}`,
-    type: "personal",
-  });
-  const ownerRole = await orgRepo.findRoleByName("workspace", "Owner");
-  if (!ownerRole) throw new Error("workspace Owner role missing — seed incomplete");
-  await orgRepo.insertMember({ organizationId: org.id, userId: user.id, roleId: ownerRole.id });
-  return user;
-}
-
 /* ---------------- email + password ---------------- */
 
 auth.post("/register", async (c) => {
-  const input = parseBody(await c.req.json(), registerInput);
+  const input = await parseJsonBody(c, registerInput);
   const existing = await authRepo.getUserByEmail(input.email);
   if (existing) throw badRequest("Email already registered");
 
-  const user = await createUserWithWorkspace({
+  const user = await authRepo.createUserWithWorkspace({
     name: input.name,
     email: input.email,
     image: null,
     emailVerified: false,
-  });
-  await authRepo.insertAccount({
-    userId: user.id,
-    provider: "credential",
     passwordHash: await hashPassword(input.password),
   });
 
   const token = await issueSession(c, user.id);
-  return data(c, { user, token }, 201);
+  return created(c, { user, token });
 });
 
 auth.post("/login", async (c) => {
-  const input = parseBody(await c.req.json(), loginInput);
+  const input = await parseJsonBody(c, loginInput);
   const user = await authRepo.getUserByEmail(input.email);
   const account = user ? await authRepo.findAccount(user.id, "credential") : null;
   const ok = account?.passwordHash
@@ -118,7 +89,7 @@ auth.get("/me", async (c) => {
 /* ---------------- forgot / reset password ---------------- */
 
 auth.post("/forgot-password", async (c) => {
-  const input = parseBody(await c.req.json(), forgotPasswordInput);
+  const input = await parseJsonBody(c, forgotPasswordInput);
   const user = await authRepo.getUserByEmail(input.email);
 
   // Always 200 — never reveal whether the email exists.
@@ -143,7 +114,7 @@ auth.post("/forgot-password", async (c) => {
 });
 
 auth.post("/reset-password", async (c) => {
-  const input = parseBody(await c.req.json(), resetPasswordInput);
+  const input = await parseJsonBody(c, resetPasswordInput);
   const reset = await authRepo.findValidPasswordReset(input.token);
   if (!reset) throw badRequest("Invalid or expired reset token");
 
@@ -257,7 +228,7 @@ auth.get("/oauth/google/callback", async (c) => {
   // Upsert by email; link the Google account to the user.
   let user = await authRepo.getUserByEmail(profile.email);
   if (!user) {
-    user = await createUserWithWorkspace({
+    user = await authRepo.createUserWithWorkspace({
       name: profile.name ?? profile.email.split("@")[0]!,
       email: profile.email,
       image: profile.picture ?? null,

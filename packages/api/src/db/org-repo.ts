@@ -6,13 +6,13 @@ import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "./pg";
 import { organizations, roles, organizationMembers, invitations } from "@pmin/core/db";
 import { uuidv7, type Organization, type Role, type Member, type Invitation, type User } from "@pmin/core";
-import { getUserByEmail, getUsersByIds } from "./auth-repo";
+import { getUserByEmail } from "./auth-repo";
+import { iso, userMap } from "./mapping";
+import { ApiError } from "../lib/errors";
 
 type OrgRow = typeof organizations.$inferSelect;
 type RoleRow = typeof roles.$inferSelect;
 type MemberRow = typeof organizationMembers.$inferSelect;
-
-const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
 const toOrg = (r: OrgRow): Organization & { deletedAt: string | null } => ({
   id: r.id,
@@ -63,6 +63,17 @@ export async function findRoleByName(
     .where(and(eq(roles.scope, scope), eq(roles.name, name), isNull(roles.organizationId)))
     .limit(1);
   return row ? toRole(row) : null;
+}
+
+/** Find a system role or fail — a missing system role means the seed didn't
+ *  run, which is a server fault (500), not the caller's error. */
+export async function requireSystemRole(
+  scope: "workspace" | "project",
+  name: string,
+): Promise<Role> {
+  const role = await findRoleByName(scope, name);
+  if (!role) throw new ApiError("internal_error", `${scope} ${name} role missing — seed incomplete`);
+  return role;
 }
 
 export async function listRoles(): Promise<Role[]> {
@@ -210,8 +221,7 @@ export async function listOrgMembers(orgId: string): Promise<Member[]> {
     .innerJoin(roles, eq(roles.id, organizationMembers.roleId))
     .where(eq(organizationMembers.organizationId, orgId))
     .orderBy(asc(organizationMembers.createdAt));
-  const users = await getUsersByIds(rows.map((r) => r.member.userId));
-  const byId = new Map(users.map((u) => [u.id, u]));
+  const byId = await userMap(rows.map((r) => r.member.userId));
   return rows.map((r) => toMember(r.member, r.role, byId.get(r.member.userId)));
 }
 
@@ -225,8 +235,8 @@ export async function getOrgMember(orgId: string, memberId: string): Promise<Mem
     )
     .limit(1);
   if (!row) return null;
-  const [user] = await getUsersByIds([row.member.userId]);
-  return toMember(row.member, row.role, user);
+  const byId = await userMap([row.member.userId]);
+  return toMember(row.member, row.role, byId.get(row.member.userId));
 }
 
 export async function insertMember(input: {
@@ -354,22 +364,27 @@ export async function insertInvitation(input: {
   organizationId: string;
   email: string;
   roleId: string;
+  roleName: string;
   expiresAt: Date;
   /** Opaque token (email delivery is deferred; kept NOT NULL for that future). */
   token: string;
-}): Promise<void> {
+}): Promise<Invitation> {
   const now = new Date();
-  await db.insert(invitations).values({
-    id: uuidv7(),
-    organizationId: input.organizationId,
-    email: input.email.toLowerCase(),
-    roleId: input.roleId,
-    token: input.token,
-    expiresAt: input.expiresAt,
-    status: "pending",
-    createdAt: now,
-    updatedAt: now,
-  });
+  const [row] = await db
+    .insert(invitations)
+    .values({
+      id: uuidv7(),
+      organizationId: input.organizationId,
+      email: input.email.toLowerCase(),
+      roleId: input.roleId,
+      token: input.token,
+      expiresAt: input.expiresAt,
+      status: "pending",
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+  return toInvitation(row!, input.roleName);
 }
 
 export async function updateInvitationStatus(

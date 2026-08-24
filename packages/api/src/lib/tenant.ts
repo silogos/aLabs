@@ -69,3 +69,7 @@ export function currentTenant(c: Ctx) {
   if (!t) throw notFound();
   return t;
 }
+
+/** Tenant ids from the context — throws 404 when tenant resolution was skipped. */
+export const organizationIdOf = (c: Ctx) => currentTenant(c).organizationId;
+export const projectIdOf = (c: Ctx) => currentTenant(c).projectId!;

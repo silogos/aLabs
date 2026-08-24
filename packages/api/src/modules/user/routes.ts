@@ -9,22 +9,22 @@ import * as orgRepo from "../../db/org-repo";
 import * as projectRepo from "../../db/project-repo";
 import { notFound } from "../../lib/errors";
 import { data } from "../../lib/responses";
-import { parseBody } from "../../lib/validate";
+import { parseJsonBody } from "../../lib/validate";
 import { requireAuth } from "../../lib/auth";
 import type { Vars } from "../../lib/ctx";
 
-export const users = new Hono<{ Variables: Vars }>();
+export const user = new Hono<{ Variables: Vars }>();
 
-users.use("*", requireAuth);
+user.use("*", requireAuth);
 
-users.patch("/me", async (c) => {
+user.patch("/me", async (c) => {
   const user = c.get("user")!;
-  const input = parseBody(await c.req.json(), userUpdate);
+  const input = await parseJsonBody(c, userUpdate);
   // users live in Postgres — real UPDATE, response is the fresh row
   return data(c, await authRepo.updateUserProfile(user.id, input));
 });
 
-users.get("/me/recents", async (c) => {
+user.get("/me/recents", async (c) => {
   const user = c.get("user")!;
   const raw = Number(c.req.query("limit") ?? 3);
   const limit = Math.min(Math.max(Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 3, 1), projectRepo.HISTORY_CAP);
@@ -39,9 +39,9 @@ users.get("/me/recents", async (c) => {
   return data(c, out);
 });
 
-users.post("/me/recents", async (c) => {
+user.post("/me/recents", async (c) => {
   const user = c.get("user")!;
-  const input = parseBody(await c.req.json(), recentTouch);
+  const input = await parseJsonBody(c, recentTouch);
   const project = await projectRepo.getProject(input.projectId);
   // 404 (not 403) when the project or its org is outside the caller's reach.
   const org = project ? await orgRepo.getOrganization(project.organizationId) : null;

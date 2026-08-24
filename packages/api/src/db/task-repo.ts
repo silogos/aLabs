@@ -4,7 +4,7 @@
  *  its cursor envelope by paginating the fetched rows in memory (prototype
  *  volumes). */
 import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
-import { db } from "./pg";
+import { db, type Tx } from "./pg";
 import {
   tasks,
   taskStatuses,
@@ -15,14 +15,13 @@ import {
   taskComments,
 } from "@pmin/core/db";
 import { uuidv7, type Task, type TaskStatus, type TaskType, type TaskLabel, type TaskLink } from "@pmin/core";
+import { iso } from "./mapping";
 
 type TaskRow = typeof tasks.$inferSelect;
 type StatusRow = typeof taskStatuses.$inferSelect;
 type TypeRow = typeof taskTypes.$inferSelect;
 type LabelRow = typeof taskLabels.$inferSelect;
 type CommentRow = typeof taskComments.$inferSelect;
-
-const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
 export type TaskWithMeta = Task & { deletedAt: string | null };
 
@@ -272,38 +271,41 @@ export async function insertTask(input: {
   createdAt?: Date;
 }): Promise<TaskWithMeta> {
   const now = input.createdAt ?? new Date();
-  const [row] = await db
-    .insert(tasks)
-    .values({
-      id: uuidv7(),
-      projectId: input.projectId,
-      title: input.title,
-      description: input.description ?? null,
-      statusId: input.statusId,
-      assigneeId: input.assigneeId ?? null,
-      reporterId: input.reporterId ?? null,
-      priority: input.priority ?? "medium",
-      typeId: input.typeId ?? null,
-      parentId: input.parentId ?? null,
-      epicId: input.epicId ?? null,
-      iterationId: input.iterationId ?? null,
-      milestoneId: input.milestoneId ?? null,
-      dueDate: input.dueDate ?? null,
-      order: input.order ?? 0,
-      estimate: input.estimate ?? null,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .returning();
-  await setLabelLinks(row!.id, input.labelIds ?? []);
-  return (await withLabels([row!]))[0]!;
+  const row = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .insert(tasks)
+      .values({
+        id: uuidv7(),
+        projectId: input.projectId,
+        title: input.title,
+        description: input.description ?? null,
+        statusId: input.statusId,
+        assigneeId: input.assigneeId ?? null,
+        reporterId: input.reporterId ?? null,
+        priority: input.priority ?? "medium",
+        typeId: input.typeId ?? null,
+        parentId: input.parentId ?? null,
+        epicId: input.epicId ?? null,
+        iterationId: input.iterationId ?? null,
+        milestoneId: input.milestoneId ?? null,
+        dueDate: input.dueDate ?? null,
+        order: input.order ?? 0,
+        estimate: input.estimate ?? null,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+    await setLabelLinks(tx, row!.id, input.labelIds ?? []);
+    return row!;
+  });
+  return (await withLabels([row]))[0]!;
 }
 
 /** Replace the label set (delete + insert — small sets). */
-export async function setLabelLinks(taskId: string, labelIds: string[]): Promise<void> {
-  await db.delete(taskLabelLinks).where(eq(taskLabelLinks.taskId, taskId));
+async function setLabelLinks(tx: Tx, taskId: string, labelIds: string[]): Promise<void> {
+  await tx.delete(taskLabelLinks).where(eq(taskLabelLinks.taskId, taskId));
   if (labelIds.length === 0) return;
-  await db
+  await tx
     .insert(taskLabelLinks)
     .values(labelIds.map((labelId) => ({ taskId, labelId })))
     .onConflictDoNothing();
@@ -330,13 +332,17 @@ export async function patchTask(
     labelIds?: string[];
   },
 ): Promise<TaskWithMeta | null> {
-  const [row] = await db
-    .update(tasks)
-    .set({ ...patch, updatedAt: new Date() })
-    .where(and(eq(tasks.id, id), eq(tasks.updatedAt, new Date(expectedUpdatedAt))))
-    .returning();
+  const row = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .update(tasks)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(and(eq(tasks.id, id), eq(tasks.updatedAt, new Date(expectedUpdatedAt))))
+      .returning();
+    if (!row) return null;
+    if (patch.labelIds) await setLabelLinks(tx, row.id, patch.labelIds);
+    return row;
+  });
   if (!row) return null;
-  if (patch.labelIds) await setLabelLinks(row.id, patch.labelIds);
   return getTask(id);
 }
 
@@ -479,12 +485,16 @@ export async function insertComment(input: {
   userId: string;
   body: string;
   createdAt?: Date;
-}): Promise<void> {
-  await db.insert(taskComments).values({
-    id: uuidv7(),
-    taskId: input.taskId,
-    userId: input.userId,
-    body: input.body,
-    createdAt: input.createdAt ?? new Date(),
-  });
+}): Promise<Comment> {
+  const [row] = await db
+    .insert(taskComments)
+    .values({
+      id: uuidv7(),
+      taskId: input.taskId,
+      userId: input.userId,
+      body: input.body,
+      createdAt: input.createdAt ?? new Date(),
+    })
+    .returning();
+  return toComment(row!);
 }

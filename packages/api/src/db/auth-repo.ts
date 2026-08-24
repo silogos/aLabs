@@ -3,8 +3,17 @@
  *  @pmin/core (ISO date strings, camelCase); rows are mapped here. */
 import { and, asc, eq, gt, inArray, isNull } from "drizzle-orm";
 import { db } from "./pg";
-import { users, sessions, authAccounts, passwordResets } from "@pmin/core/db";
+import {
+  users,
+  sessions,
+  authAccounts,
+  passwordResets,
+  organizations,
+  roles,
+  organizationMembers,
+} from "@pmin/core/db";
 import { uuidv7, type User } from "@pmin/core";
+import { ApiError } from "../lib/errors";
 
 type UserRow = typeof users.$inferSelect;
 
@@ -22,11 +31,6 @@ const toUser = (r: UserRow): User => ({
 
 export const getUserByEmail = async (email: string): Promise<User | null> => {
   const [row] = await db.select().from(users).where(eq(users.email, email.toLowerCase())).limit(1);
-  return row ? toUser(row) : null;
-};
-
-export const getUserById = async (id: string): Promise<User | null> => {
-  const [row] = await db.select().from(users).where(eq(users.id, id)).limit(1);
   return row ? toUser(row) : null;
 };
 
@@ -122,6 +126,76 @@ export async function updateUserProfile(
     .where(eq(users.id, id))
     .returning();
   return toUser(row!);
+}
+
+/** Create a user + their personal workspace (org of one, creator = Owner) —
+ *  the signup path shared by register and Google SSO. Atomic: user, org,
+ *  membership, and the optional credential account commit together.
+ *  See docs/foundation/04-plans-workspaces.md and ADR 0007. */
+export async function createUserWithWorkspace(input: {
+  name: string;
+  email: string;
+  image?: string | null;
+  emailVerified?: boolean;
+  passwordHash?: string | null;
+}): Promise<User> {
+  return db.transaction(async (tx) => {
+    const now = new Date();
+    const [userRow] = await tx
+      .insert(users)
+      .values({
+        id: uuidv7(),
+        name: input.name,
+        email: input.email.toLowerCase(),
+        image: input.image ?? null,
+        emailVerified: input.emailVerified ?? false,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+    const user = toUser(userRow!);
+
+    const [org] = await tx
+      .insert(organizations)
+      .values({
+        id: uuidv7(),
+        name: `${input.name}'s Workspace`,
+        slug: `personal-${user.id.slice(-8)}`,
+        type: "personal",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+
+    const [ownerRole] = await tx
+      .select()
+      .from(roles)
+      .where(and(eq(roles.scope, "workspace"), eq(roles.name, "Owner"), isNull(roles.organizationId)))
+      .limit(1);
+    if (!ownerRole) throw new ApiError("internal_error", "workspace Owner role missing — seed incomplete");
+
+    await tx.insert(organizationMembers).values({
+      id: uuidv7(),
+      organizationId: org!.id,
+      userId: user.id,
+      roleId: ownerRole.id,
+      status: "active",
+      joinedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    if (input.passwordHash != null) {
+      await tx.insert(authAccounts).values({
+        id: uuidv7(),
+        userId: user.id,
+        provider: "credential",
+        passwordHash: input.passwordHash,
+        createdAt: now,
+      });
+    }
+    return user;
+  });
 }
 
 /* ---------------- sessions ---------------- */

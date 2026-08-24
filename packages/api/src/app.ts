@@ -7,6 +7,7 @@
  */
 import { Hono } from "hono";
 import { logger } from "hono/logger";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { readFile } from "node:fs/promises";
 import { basename, join, normalize } from "node:path";
 import { ApiError } from "./lib/errors";
@@ -17,7 +18,8 @@ import type { Vars } from "./lib/ctx";
 
 import { auth } from "./modules/auth/routes";
 import { organization } from "./modules/organization/routes";
-import { project, projectMembers } from "./modules/project/routes";
+import { project } from "./modules/project/routes";
+import { projectMembers } from "./modules/project/members";
 import { task } from "./modules/task/routes";
 import { documents } from "./modules/documents/routes";
 import { planning } from "./modules/planning/routes";
@@ -25,7 +27,7 @@ import { meeting } from "./modules/meeting/routes";
 import { agreement } from "./modules/agreement/routes";
 import { reporting } from "./modules/reporting/routes";
 import { notification } from "./modules/notification/routes";
-import { users } from "./modules/user/routes";
+import { user } from "./modules/user/routes";
 
 export const app = new Hono<{ Variables: Vars }>();
 
@@ -83,7 +85,7 @@ app.get("/", (c) =>
 );
 
 app.route("/auth", auth);
-app.route("/users", users);
+app.route("/users", user);
 app.route("/organizations", organization);
 app.route("/organizations/:organizationId/projects", project);
 app.route("/projects/:projectId", projectMembers);
@@ -98,7 +100,7 @@ app.route("/notifications", notification);
 // Standard error envelope for any thrown ApiError; everything else → 500.
 app.onError((err, c) => {
   if (err instanceof ApiError) {
-    return c.json(err.toJSON(), err.httpStatus as 400);
+    return c.json(err.toJSON(), err.httpStatus as ContentfulStatusCode);
   }
   console.error(err);
   return c.json(
@@ -108,5 +110,5 @@ app.onError((err, c) => {
 });
 
 app.notFound((c) =>
-  c.json({ error: { code: "not_found", message: "Route not found" } }, 404),
+  c.json(new ApiError("not_found", "Route not found").toJSON(), 404),
 );
