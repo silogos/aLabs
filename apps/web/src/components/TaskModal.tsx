@@ -1,7 +1,7 @@
 /** Create-issue modal — type picker + progressive fields (writes to tasks store). */
 import { useState } from "react";
 import { useApp } from "../store";
-import { useTasksVersion, TY, P, SPRINTS, EPIC_IDS, taskById, allTasks, createIssue, type TypeId, type PrioId } from "../views/tasks-store";
+import { useTasksVersion, TY, P, SPRINTS, EPIC_IDS, taskById, allTasks, createIssue, peopleOptions, type TypeId, type PrioId } from "../views/tasks-store";
 import { TyIcon } from "../views/tasks-ui";
 import { taskSerial } from "./ui";
 
@@ -97,7 +97,7 @@ export function TaskModal() {
           )}
           <label className="cr-f"><span>Assignee</span>
             <select className="fld" value={assignee} onChange={(e) => setAssignee(e.target.value)}>
-              {Object.keys(P).map((k) => <option key={k} value={k}>{P[k].name} · {P[k].role}</option>)}
+              {peopleOptions().map(([k, nm]) => <option key={k} value={k}>{nm}</option>)}
             </select>
           </label>
           <label className="cr-f"><span>Priority</span>

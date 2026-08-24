@@ -241,18 +241,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [projects, recents, switchProject, toast]);
 
-  // Swap the Tasks/Planning demo dataset to the active project's real rows
-  // (Atlas keeps its rich built-in demo set — see tasks-store.ts header).
+  // Hydrate the Tasks/Planning store from the active project's real rows —
+  // mutations write back through the API (see tasks-store.ts).
   const pid = project?.id;
   useEffect(() => {
     if (!project || !pid) return;
     let cancelled = false;
     void (async () => {
       try {
-        const [page, statuses, members] = await Promise.all([
+        const [page, statuses, members, types, labels, iterations, milestones] = await Promise.all([
           api.tasks(pid),
           api.statuses(pid),
           api.members(project.organizationId),
+          api.types(pid).catch(() => []),
+          api.labels(pid).catch(() => []),
+          api.iterations(pid).catch(() => []),
+          api.milestones(pid).catch(() => []),
         ]);
         if (cancelled) return;
         hydrateProject(
@@ -261,6 +265,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           page.items,
           statuses,
           members.map((m) => m.user),
+          { currentUserId: user?.id, types, labels, iterations, milestones },
         );
       } catch {
         /* offline/failure → keep the current dataset */
@@ -269,7 +274,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [pid, project?.key, project?.organizationId]);
+  }, [pid, project?.key, project?.organizationId, user?.id]);
 
   const value: AppState = {
     user,

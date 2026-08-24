@@ -11,6 +11,7 @@
  *   - timestamptz, stored UTC; created_at / updated_at / deleted_at
  *   - tenant columns: organization_id / project_id, indexed, not null
  */
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   pgTable,
   uuid,
@@ -344,6 +345,7 @@ export const tasks = pgTable(
     priority: taskPriorityEnum("priority").notNull().default("medium"),
     typeId: uuid("type_id").references(() => taskTypes.id),
     parentId: uuid("parent_id"),
+    epicId: uuid("epic_id").references((): AnyPgColumn => tasks.id),
     iterationId: uuid("iteration_id").references(() => iterations.id),
     milestoneId: uuid("milestone_id").references(() => milestones.id),
     dueDate: nullableTs(),

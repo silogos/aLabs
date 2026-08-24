@@ -2,7 +2,7 @@
  *  Reads from the tasks mock store; entry via store.openTask(id). */
 import { useState, useRef, useEffect } from "react";
 import { useApp } from "../store";
-import { useTasksVersion, taskById, subsOf, childrenOf, SPRINTS, ST, P, PRIO, PRIO_ORDER, EPIC_META, EPIC_IDS, who, progOf, ptsTotal, setField, toggleAc, toggleSubDone, addSubtask, addComment, removeRelationship, type TaskRow, type RelKey } from "../views/tasks-store";
+import { useTasksVersion, taskById, subsOf, childrenOf, SPRINTS, ST, P, PRIO, PRIO_ORDER, EPIC_META, EPIC_IDS, who, progOf, ptsTotal, setField, toggleAc, toggleSubDone, addSubtask, addComment, removeRelationship, type TaskRow, type RelKey, peopleOptions } from "../views/tasks-store";
 import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill } from "../views/tasks-ui";
 import { RichTextEditor } from "@pmin/editor";
 import type { Content } from "@pmin/core";
@@ -221,7 +221,7 @@ function TaskDetail({ t, onOpen, toast, openRelPicker, pid }: { t: TaskRow; onOp
       <aside className="dw-side">
         <div className="sp-card">
           <SpSelect k="Status" value={t.s} options={["backlog", "todo", "progress", "review", "done"].map((s) => [s, ST[s as keyof typeof ST][0]] as [string, string])} onChange={(v) => upd("s", v, "Updated")} />
-          <SpSelect k="Assignee" value={t.a} options={Object.keys(P).map((k) => [k, who(k)] as [string, string])} onChange={(v) => upd("a", v, "Updated")} />
+          <SpSelect k="Assignee" value={t.a} options={peopleOptions()} onChange={(v) => upd("a", v, "Updated")} />
           <div className="sp-row"><span className="sp-k">Reporter</span><div className="sp-v"><span className="sp-who"><AvKey id={t.rep || "ay"} size="sm" /> {rep ? rep.name : "—"}</span></div></div>
           <SpSelect k="Priority" value={t.p} options={PRIO_ORDER.map((k) => [k, PRIO[k]] as [string, string])} onChange={(v) => upd("p", v, "Updated")} />
           {t.ty !== "subtask" ? (

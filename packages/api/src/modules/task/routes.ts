@@ -9,6 +9,7 @@ import {
   taskSchema,
   taskLinkAdd,
   taskLinkSchema,
+  commentCreate,
   paginationQuery,
   paginate,
 } from "@pmin/core";
@@ -69,6 +70,7 @@ task.post("/tasks", requirePermission("task:create"), async (c) => {
     priority: input.priority ?? "medium",
     typeId: input.typeId ?? null,
     parentId: input.parentId ?? null,
+    epicId: input.epicId ?? null,
     iterationId: input.iterationId ?? null,
     milestoneId: input.milestoneId ?? null,
     dueDate: input.dueDate ? new Date(input.dueDate) : null,
@@ -126,6 +128,14 @@ task.delete("/tasks/:id/links/:linkId", requirePermission("task:update"), async 
   return noContent(c);
 });
 
+// ---- comments ----
+task.post("/tasks/:id/comments", requirePermission("task:update"), async (c) => {
+  const t = await findTask(c);
+  const input = parseBody(await c.req.json(), commentCreate);
+  await taskRepo.insertComment({ taskId: t.id, userId: c.get("user")!.id, body: input.body });
+  return created(c, (await taskRepo.listComments(t.id)).at(-1) ?? null);
+});
+
 task.get("/tasks/:id", requirePermission("task:view"), async (c) => {
   return data(c, await serializeTask(await findTask(c)));
 });
@@ -152,6 +162,7 @@ task.patch("/tasks/:id", requirePermission("task:update"), async (c) => {
     "priority",
     "typeId",
     "parentId",
+    "epicId",
     "iterationId",
     "milestoneId",
     "estimate",

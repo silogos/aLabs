@@ -5,7 +5,7 @@ import * as planningRepo from "../../db/planning-repo";
 import { iterationCreate, iterationUpdate, milestoneCreate, milestoneUpdate } from "@pmin/core";
 import { ITERATION_TRANSITIONS, MILESTONE_TRANSITIONS, canTransition } from "@pmin/core";
 import { conflict, notFound } from "../../lib/errors";
-import { created, data } from "../../lib/responses";
+import { created, data, noContent } from "../../lib/responses";
 import { parseBody } from "../../lib/validate";
 import { projectContext, currentTenant } from "../../lib/tenant";
 import { requirePermission } from "../../lib/permission";
@@ -67,6 +67,11 @@ planning.patch("/planning/milestones/:id", requirePermission("planning:manage"),
   }
   const updated = await planningRepo.patchMilestone(m.id, input);
   return data(c, updated!);
+});
+planning.delete("/planning/milestones/:id", requirePermission("planning:manage"), async (c) => {
+  const ok = await planningRepo.deleteMilestone(pidOf(c), c.req.param("id")!);
+  if (!ok) throw notFound();
+  return noContent(c);
 });
 
 // ---- timeline (gantt) ----

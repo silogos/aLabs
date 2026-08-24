@@ -230,6 +230,10 @@ export const taskLinkAdd = z.object({
   type: taskLinkType,
 });
 
+export const commentCreate = z.object({
+  body: z.string().min(1).max(5000),
+});
+
 export const taskSchema = z.object({
   id,
   projectId: id,
@@ -241,6 +245,7 @@ export const taskSchema = z.object({
   priority: TaskPriority,
   typeId: id.nullable(),
   parentId: id.nullable(),
+  epicId: id.nullable(),
   iterationId: id.nullable(),
   milestoneId: id.nullable(),
   dueDate: iso.nullable(),
@@ -261,6 +266,7 @@ export const taskCreate = z.object({
   assigneeId: id.nullable().optional(),
   typeId: id.nullable().optional(),
   parentId: id.nullable().optional(),
+  epicId: id.nullable().optional(),
   iterationId: id.nullable().optional(),
   milestoneId: id.nullable().optional(),
   dueDate: iso.nullable().optional(),

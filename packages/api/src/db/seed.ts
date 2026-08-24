@@ -792,6 +792,60 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
     await lifecycle(sla.id, "accepted", { sent: -374, signed: -369 });
   }
 
+  /* ---------------- Epics + epic links — additive backfill ---------------- */
+  // mirrors the prototype's epic layer (board epic grouping): four epic rows
+  // whose descriptions carry the goal text, then children linked via epic_id.
+  // Guarded by order/epicId so it no-ops once present.
+  {
+    const EPIC_SEED: {
+      order: number;
+      title: string;
+      goal: string;
+      owner: keyof typeof usersByShort;
+      status: "progress" | "todo";
+    }[] = [
+      { order: 200, title: "Identity & Access", goal: "SSO, MFA, RBAC and an immutable audit trail for org-wide security.", owner: "mk", status: "progress" },
+      { order: 201, title: "Billing & Payments", goal: "Subscription billing, invoicing and payment webhook resilience.", owner: "lc", status: "todo" },
+      { order: 202, title: "Search & Reporting", goal: "Trigram document search, dashboards and exportable reports.", owner: "dp", status: "progress" },
+      { order: 203, title: "Platform Foundation", goal: "Design-system migration, docs, notifications and platform infra.", owner: "jb", status: "progress" },
+    ];
+    const EPIC_LINKS: [number, number][] = [
+      [101, 200], [102, 203], [103, 201], [104, 203], [105, 200], [106, 202],
+      [107, 200], [108, 202], [109, 202], [116, 203], [117, 203], [118, 203],
+      [112, 200], [113, 203], [114, 200], [115, 203], [119, 203], [120, 203],
+    ];
+    const all = await taskRepo.listTasks(atlas.id);
+    const byOrder = new Map(all.map((t) => [t.order, t]));
+    const epicUuidByOrder = new Map<number, string>();
+    for (const e of EPIC_SEED) {
+      const existing = byOrder.get(e.order);
+      if (existing) {
+        epicUuidByOrder.set(e.order, existing.id);
+        continue;
+      }
+      const row = await taskRepo.insertTask({
+        projectId: atlas.id,
+        title: e.title,
+        description: e.goal,
+        statusId: statusByShort[e.status].id,
+        assigneeId: usersByShort[e.owner].id,
+        reporterId: aisha.id,
+        priority: "high",
+        typeId: typeByShort.epic.id,
+        order: e.order,
+      });
+      epicUuidByOrder.set(e.order, row.id);
+    }
+    for (const [childOrder, epicOrder] of EPIC_LINKS) {
+      const child = byOrder.get(childOrder);
+      if (child && !child.epicId) {
+        await taskRepo.patchTask(child.id, child.updatedAt, {
+          epicId: epicUuidByOrder.get(epicOrder)!,
+        });
+      }
+    }
+  }
+
   /* ---------------- Comments (for the task drawer) ---------------- */
   if (!pgSeeded) {
     const ssoTask = parents.find((t) => t.title === "Implement OAuth2 SSO flow");

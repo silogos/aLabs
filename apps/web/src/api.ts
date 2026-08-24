@@ -126,6 +126,13 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(body),
     }).then((x) => x.data),
+  deleteTask: (pid: string, id: string) =>
+    req<void>(`/projects/${pid}/tasks/${id}`, { method: "DELETE" }).then(() => undefined),
+  addComment: (pid: string, taskId: string, body: string) =>
+    req<{ data: Comment | null }>(`/projects/${pid}/tasks/${taskId}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
+    }).then((x) => x.data),
   addTaskLink: (
     pid: string,
     taskId: string,
@@ -196,8 +203,38 @@ export const api = {
   /* ---- planning ---- */
   iterations: (pid: string) =>
     req<{ data: Iteration[] }>(`/projects/${pid}/planning/iterations`).then((x) => x.data),
+  createIteration: (pid: string, body: { name: string; goal?: string; startDate: string; endDate: string }) =>
+    req<{ data: Iteration }>(`/projects/${pid}/planning/iterations`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  updateIteration: (
+    pid: string,
+    id: string,
+    body: Partial<{ name: string; goal: string; startDate: string; endDate: string; status: "planned" | "active" | "completed" }>,
+  ) =>
+    req<{ data: Iteration }>(`/projects/${pid}/planning/iterations/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
   milestones: (pid: string) =>
     req<{ data: Milestone[] }>(`/projects/${pid}/planning/milestones`).then((x) => x.data),
+  createMilestone: (pid: string, body: { name: string; description?: string; dueDate?: string | null }) =>
+    req<{ data: Milestone }>(`/projects/${pid}/planning/milestones`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  updateMilestone: (
+    pid: string,
+    id: string,
+    body: Partial<{ name: string; description: string; dueDate: string | null; status: "planned" | "reached" }>,
+  ) =>
+    req<{ data: Milestone }>(`/projects/${pid}/planning/milestones/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+  deleteMilestone: (pid: string, id: string) =>
+    req<void>(`/projects/${pid}/planning/milestones/${id}`, { method: "DELETE" }).then(() => undefined),
 
   /* ---- meetings ---- */
   meetings: (pid: string) =>

@@ -1,9 +1,9 @@
 /** Planning repository — Postgres (Drizzle) for iterations and milestones.
  *  The sprint/milestone aggregates (committed/completed points, task counts,
  *  progress) are stored values seeded with the demo, matching the widgets. */
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "./pg";
-import { iterations, milestones } from "@pmin/core/db";
+import { iterations, milestones, tasks } from "@pmin/core/db";
 import { uuidv7, type Iteration, type Milestone } from "@pmin/core";
 
 type IterationRow = typeof iterations.$inferSelect;
@@ -151,6 +151,16 @@ export async function insertMilestone(input: {
     })
     .returning();
   return toMilestone(row!);
+}
+
+/** Hard delete — tasks referencing the milestone are unlinked first. */
+export async function deleteMilestone(projectId: string, id: string): Promise<boolean> {
+  await db.update(tasks).set({ milestoneId: null }).where(eq(tasks.milestoneId, id));
+  const rows = await db
+    .delete(milestones)
+    .where(and(eq(milestones.id, id), eq(milestones.projectId, projectId)))
+    .returning();
+  return rows.length > 0;
 }
 
 export async function patchMilestone(

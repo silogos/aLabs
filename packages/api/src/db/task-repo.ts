@@ -169,6 +169,7 @@ const baseTask = (r: TaskRow): TaskWithMeta => ({
   priority: r.priority,
   typeId: r.typeId,
   parentId: r.parentId,
+  epicId: r.epicId,
   iterationId: r.iterationId,
   milestoneId: r.milestoneId,
   dueDate: iso(r.dueDate),
@@ -260,6 +261,7 @@ export async function insertTask(input: {
   priority?: Task["priority"];
   typeId?: string | null;
   parentId?: string | null;
+  epicId?: string | null;
   iterationId?: string | null;
   milestoneId?: string | null;
   dueDate?: Date | null;
@@ -283,6 +285,7 @@ export async function insertTask(input: {
       priority: input.priority ?? "medium",
       typeId: input.typeId ?? null,
       parentId: input.parentId ?? null,
+      epicId: input.epicId ?? null,
       iterationId: input.iterationId ?? null,
       milestoneId: input.milestoneId ?? null,
       dueDate: input.dueDate ?? null,
@@ -317,6 +320,8 @@ export async function patchTask(
     assigneeId?: string | null;
     priority?: Task["priority"];
     typeId?: string | null;
+    parentId?: string | null;
+    epicId?: string | null;
     iterationId?: string | null;
     milestoneId?: string | null;
     dueDate?: Date | null;

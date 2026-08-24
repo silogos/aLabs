@@ -124,7 +124,7 @@ export const VELOCITY = [
 ];
 
 /* ---- Planning helpers ---- */
-export const NOW_D = new Date("2025-03-24T00:00:00");
+export const NOW_D = new Date();
 export const pD = (s: string): Date => new Date(s + "T00:00:00");
 export function shortMD(d: Date | string): string {
   return (d instanceof Date ? d : pD(d)).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -151,6 +151,14 @@ export function donePts(sp: string): number {
 export function sprintRows(): { k: string; total: number }[] {
   return [...Object.keys(SPRINTS).map((k) => ({ k, total: iterTasks(k).length })), { k: "backlog", total: TASKS.filter((t) => !t.parent && t.ty !== "epic" && !t.sp).length }];
 }
+/** A valid sprint key for the current dataset — falls back to the active (or
+ *  newest) iteration when the held key predates hydration. */
+export function resolveSprint(key: string): string {
+  if (SPRINTS[key]) return key;
+  const keys = Object.keys(SPRINTS);
+  return keys.find((k) => SPRINTS[k].st === "active") ?? keys.at(-1) ?? key;
+}
+
 export const isPlannable = (sp: string): boolean => {
   const s = SPRINTS[sp];
   return !!s && (s.st === "planned" || s.st === "active");
@@ -189,6 +197,8 @@ const REL_REVERSE: Record<RelKey, RelKey> = { blocks: "blockedBy", blockedBy: "b
 
 export interface TaskRow {
   id: number;
+  /** API task uuid — present on hydrated/write-through rows */
+  uuid?: string;
   t: string;
   s: StatusId;
   a: string;
@@ -200,6 +210,8 @@ export interface TaskRow {
   sp?: string | null;
   lb: string[];
   due: string;
+  /** ISO due date kept alongside the display string for write-through */
+  dueIso?: string;
   pts: number;
   ac?: AcItem[];
   rel?: Relations;
@@ -255,11 +267,14 @@ let TASKS: TaskRow[] = structuredClone(DEMO_TASKS);
 interface ApiTaskLike {
   id: string;
   title: string;
+  description?: string | null;
   statusId: string;
   assigneeId: string | null;
   priority: string;
   typeId: string | null;
   parentId: string | null;
+  epicId?: string | null;
+  iterationId?: string | null;
   dueDate: string | null;
   order: number;
   estimate: number | null;
@@ -283,8 +298,88 @@ const dueFmt = (iso: string | null): string =>
 let API_PROJECT: string | null = null;
 let ACTIVE_PID: string | null = null;
 let UUID_BY_ORDER = new Map<number, string>();
+let CURRENT_USER = "";
+/** short→uuid for the seeded demo people (matched by name at hydrate time) */
+let SHORT_UUID = new Map<string, string>();
+const STATUS_ID_BY_SHORT = new Map<StatusId, string>();
+const STATUS_SHORT_BY_ID = new Map<string, StatusId>();
+const TYPE_ID_BY_TY = new Map<TypeId, string>();
+const LABEL_ID_BY_NAME = new Map<string, string>();
+const EPIC_UUID_BY_ORDER = new Map<number, string>();
+const PRIO_API: Record<PrioId, string> = { p1: "urgent", p2: "high", p3: "medium", p4: "low" };
+const API_PRIO: Record<string, PrioId> = { urgent: "p1", high: "p2", medium: "p3", low: "p4" };
+
+/** People for pickers: hydrated API members keyed by uuid (rows store uuids),
+ *  plus any demo person not present in the member list. */
+export function peopleOptions(): [string, string][] {
+  const apiNames = new Set(Object.values(API_PEOPLE).map((p) => p.name));
+  const opts: [string, string][] = [];
+  for (const [id, person] of Object.entries(API_PEOPLE)) opts.push([id, person.name]);
+  for (const k of Object.keys(P)) {
+    if (!apiNames.has(P[k]!.name)) opts.push([k, P[k]!.name]);
+  }
+  return opts;
+}
+const resolveUserUuid = (shortOrUuid: string): string | null =>
+  SHORT_UUID.get(shortOrUuid) ?? (API_PEOPLE[shortOrUuid] ? shortOrUuid : null) ?? (/^[0-9a-f-]{36}$/i.test(shortOrUuid) ? shortOrUuid : null);
+
+/** Fire-and-forget task patch (optimistic — the local row already changed). */
+function wtPatch(order: number, patch: Record<string, unknown>): void {
+  if (API_PROJECT !== "api") return;
+  const uuid = UUID_BY_ORDER.get(order);
+  if (!ACTIVE_PID || !uuid) return;
+  void api.updateTask(ACTIVE_PID, uuid, patch as never).catch(() => {});
+}
+/** Best-effort display date ("Aug 20") → ISO; keeps the year sane. */
+function dueToIso(display: string): string | null {
+  const m = /^(\w{3}) (\d{1,2})$/.exec(display.trim());
+  if (!m) return null;
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const mo = months.indexOf(m[1]!);
+  if (mo < 0) return null;
+  const now = new Date();
+  let year = now.getFullYear();
+  if (mo > now.getMonth() + 6) year -= 1; // "Dec 20" typed in January → past December
+  return `${year}-${String(mo + 1).padStart(2, "0")}-${String(Number(m[2])).padStart(2, "0")}T00:00:00.000Z`;
+}
 
 const orderOfUuid = (m: Map<string, number>, uuid: string): number => m.get(uuid) ?? -1;
+
+export interface HydrateExtras {
+  currentUserId?: string;
+  types?: { id: string; name: string }[];
+  labels?: { id: string; name: string }[];
+  iterations?: {
+    id: string;
+    name: string;
+    goal: string | null;
+    startDate: string;
+    endDate: string;
+    status: "planned" | "active" | "completed";
+    committedPoints: number;
+    completedPoints: number;
+  }[];
+  milestones?: {
+    id: string;
+    name: string;
+    description: string | null;
+    dueDate: string | null;
+    status: string;
+    progress: number;
+    totalTasks: number;
+    doneTasks: number;
+  }[];
+}
+
+const descFromApi = (raw: string | null): TaskRow["desc"] => {
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as TaskRow["desc"];
+    return parsed && parsed.type ? parsed : undefined;
+  } catch {
+    return { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: raw }] }] };
+  }
+};
 
 export function hydrateProject(
   projectKey: string,
@@ -292,24 +387,52 @@ export function hydrateProject(
   tasks: ApiTaskLike[],
   statuses: { id: string; name: string }[],
   users: { id: string; name: string }[],
+  extras: HydrateExtras = {},
 ): void {
+  void projectKey;
   registerPeople(users);
-  if (projectKey === "ATL") {
-    API_PROJECT = null;
-    UUID_BY_ORDER = new Map();
-    TASKS = structuredClone(DEMO_TASKS);
-    MILESTONES.length = 0;
-    MILESTONES.push(...DEMO_MILESTONES.map((m) => ({ ...m })));
-    notify();
-    return;
+  CURRENT_USER = extras.currentUserId ?? users[0]?.id ?? "";
+
+  // demo short ids → real user uuids (the seeded people share names)
+  SHORT_UUID = new Map(
+    Object.keys(P)
+      .map((k) => {
+        const u = users.find((x) => x.name === P[k]!.name);
+        return u ? ([k, u.id] as [string, string]) : null;
+      })
+      .filter((x): x is [string, string] => !!x),
+  );
+
+  STATUS_ID_BY_SHORT.clear();
+  STATUS_SHORT_BY_ID.clear();
+  for (const s of statuses) {
+    const short = STATUS_BY_NAME[s.name] ?? "todo";
+    STATUS_ID_BY_SHORT.set(short, s.id);
+    STATUS_SHORT_BY_ID.set(s.id, short);
   }
-  const statusMap = new Map(statuses.map((s) => [s.id, STATUS_BY_NAME[s.name] ?? "todo"]));
-  const orderByUuid = new Map(tasks.map((t) => [t.id, t.order]));
-  UUID_BY_ORDER = new Map(tasks.map((t) => [t.order, t.id]));
+  TYPE_ID_BY_TY.clear();
+  const TY_OF_NAME: Record<string, TypeId> = { Epic: "epic", Feature: "story", Story: "story", Task: "task", Bug: "bug" };
+  for (const t of extras.types ?? []) {
+    const short = TY_OF_NAME[t.name];
+    if (short) TYPE_ID_BY_TY.set(short, t.id);
+  }
+  LABEL_ID_BY_NAME.clear();
+  for (const l of extras.labels ?? []) LABEL_ID_BY_NAME.set(l.name, l.id);
+
   API_PROJECT = projectId ? "api" : null;
   ACTIVE_PID = projectId;
+  const orderByUuid = new Map(tasks.map((t) => [t.id, t.order]));
+  UUID_BY_ORDER = new Map(tasks.map((t) => [t.order, t.id]));
+  EPIC_UUID_BY_ORDER.clear();
+
+  // type short by uuid (task rows only carry typeId)
+  const TY_SHORT_BY_ID = new Map((extras.types ?? []).map((t) => [t.id, TY_OF_NAME[t.name] ?? "task"]));
+
+  const epicOrders: number[] = [];
   TASKS = tasks.map((t) => {
     const parent = t.parentId ? orderByUuid.get(t.parentId) : undefined;
+    const tyShort = t.typeId ? TY_SHORT_BY_ID.get(t.typeId) ?? "task" : "task";
+    if (tyShort === "epic" && !parent) epicOrders.push(t.order);
     const rel = { blocks: [] as number[], blockedBy: [] as number[], relates: [] as number[] };
     for (const l of t.links ?? []) {
       if (l.type === "blocks" && l.targetId === t.id) rel.blockedBy.push(orderOfUuid(orderByUuid, l.sourceId));
@@ -317,21 +440,81 @@ export function hydrateProject(
       else if (l.type === "relates_to")
         rel.relates.push(orderOfUuid(orderByUuid, l.sourceId === t.id ? l.targetId : l.sourceId));
     }
+    const epicOrder = t.epicId ? orderByUuid.get(t.epicId) : undefined;
+    const desc = descFromApi(t.description ?? null);
     return {
       id: t.order,
+      uuid: t.id,
       rel,
       t: t.title,
-      s: statusMap.get(t.statusId) ?? "todo",
+      s: STATUS_SHORT_BY_ID.get(t.statusId) ?? "todo",
       a: t.assigneeId ?? "",
       p: PRIO_MAP[t.priority] ?? "p3",
-      ty: parent !== undefined ? ("subtask" as TypeId) : ("task" as TypeId),
+      ty: parent !== undefined ? ("subtask" as TypeId) : tyShort,
       lb: t.labels.map((l) => l.name),
       due: dueFmt(t.dueDate),
-      pts: t.estimate ?? 0,
+      dueIso: t.dueDate ?? undefined,
+      desc,
       ...(parent !== undefined ? { parent } : {}),
+      ...(epicOrder !== undefined && !parent && tyShort !== "epic" ? { epic: epicOrder } : {}),
+      ...(t.iterationId && parent === undefined && tyShort !== "epic" ? { sp: t.iterationId } : {}),
+    } as TaskRow;
+  });
+
+  // epic meta from the epic rows themselves (goal lives in the description)
+  for (const k of Object.keys(EPIC_META).map(Number)) delete EPIC_META[k];
+  const EPIC_COLORS = ["v", "g", "b", "o", "m", "r"];
+  epicOrders.sort((a, b) => a - b);
+  epicOrders.forEach((order, i) => {
+    const row = TASKS.find((t) => t.id === order);
+    if (!row) return;
+    EPIC_UUID_BY_ORDER.set(order, UUID_BY_ORDER.get(order) ?? "");
+    EPIC_META[order] = {
+      own: row.a,
+      c: EPIC_COLORS[i % EPIC_COLORS.length] ?? "v",
+      goal: typeof row.desc?.content?.[0]?.content?.[0]?.text === "string" ? row.desc.content[0].content[0].text : "",
     };
   });
+  EPIC_IDS.length = 0;
+  EPIC_IDS.push(...Object.keys(EPIC_META).map(Number).sort((a, b) => a - b));
+
+  // sprints from iterations (keys are iteration uuids from here on)
+  for (const k of Object.keys(SPRINTS)) delete SPRINTS[k];
+  const iters = [...(extras.iterations ?? [])].sort((a, b) => a.startDate.localeCompare(b.startDate));
+  for (const it of iters) {
+    SPRINTS[it.id] = {
+      id: it.id,
+      name: it.name,
+      goal: it.goal ?? "",
+      start: shortMD(it.startDate),
+      end: shortMD(it.endDate),
+      from: it.startDate.slice(0, 10),
+      to: it.endDate.slice(0, 10),
+      st: it.status,
+      capacity: null,
+      ...(it.status === "completed" ? { committed: it.committedPoints, completed: it.completedPoints } : {}),
+    };
+  }
+
+  // milestones from the planning API (risk derived like the reports rule)
   MILESTONES.length = 0;
+  for (const m of extras.milestones ?? []) {
+    const risk =
+      m.status === "reached"
+        ? ("on_track" as const)
+        : m.dueDate && Date.now() - +new Date(m.dueDate) <= 14 * 864e5 && m.progress < 90
+          ? ("at_risk" as const)
+          : ("on_track" as const);
+    MILESTONES.push({ id: m.id, t: m.name, date: (m.dueDate ?? "").slice(0, 10), risk, done: m.doneTasks, total: m.totalTasks });
+  }
+  MILESTONES.sort((a, b) => pD(a.date).getTime() - pD(b.date).getTime());
+
+  // velocity from iterations
+  VELOCITY.length = 0;
+  for (const it of iters.slice(-5)) {
+    VELOCITY.push({ name: it.name.replace("Sprint ", "S"), committed: it.committedPoints, completed: it.completedPoints });
+  }
+
   notify();
 }
 
@@ -378,6 +561,20 @@ export function setField<K extends keyof TaskRow>(id: number, key: K, value: Tas
   const t = taskById(id);
   if (t) {
     t[key] = value;
+    // write-through: translate the store field to its API patch
+    if (key === "s") wtPatch(id, { statusId: STATUS_ID_BY_SHORT.get(value as StatusId) });
+    else if (key === "a") wtPatch(id, { assigneeId: value ? resolveUserUuid(String(value)) : null });
+    else if (key === "p") wtPatch(id, { priority: PRIO_API[value as PrioId] });
+    else if (key === "pts") wtPatch(id, { estimate: Number(value) || null });
+    else if (key === "sp") wtPatch(id, { iterationId: value ? String(value) : null });
+    else if (key === "epic")
+      wtPatch(id, { epicId: value != null ? (EPIC_UUID_BY_ORDER.get(Number(value)) ?? null) : null });
+    else if (key === "t") wtPatch(id, { title: String(value) });
+    else if (key === "due") {
+      const iso = dueToIso(String(value));
+      t.dueIso = iso ?? undefined;
+      wtPatch(id, iso ? { dueDate: iso } : { dueDate: null });
+    } else if (key === "desc") wtPatch(id, { description: JSON.stringify(value) });
     notify();
   }
 }
@@ -392,6 +589,7 @@ export function toggleSubDone(id: number): void {
   const t = taskById(id);
   if (t) {
     t.s = t.s === "done" ? "todo" : "done";
+    wtPatch(id, { statusId: STATUS_ID_BY_SHORT.get(t.s) });
     notify();
   }
 }
@@ -411,6 +609,25 @@ export function addSubtask(parentId: number): number {
     pts: 1,
     com: [],
   });
+  if (API_PROJECT === "api" && ACTIVE_PID) {
+    const parentUuid = UUID_BY_ORDER.get(parentId);
+    if (parentUuid) {
+      void api
+        .createTask(ACTIVE_PID, {
+          title: "New subtask",
+          parentId: parentUuid,
+          statusId: STATUS_ID_BY_SHORT.get("todo"),
+        })
+        .then((created) => {
+          const row = taskById(nextId);
+          if (row) {
+            row.uuid = created.id;
+            UUID_BY_ORDER.set(created.order, created.id);
+          }
+        })
+        .catch(() => {});
+    }
+  }
   notify();
   return nextId;
 }
@@ -418,7 +635,11 @@ export function addComment(id: number, text: string): void {
   const t = taskById(id);
   if (t) {
     t.com = t.com ?? [];
-    t.com.push({ by: "ay", when: "just now", text });
+    t.com.push({ by: CURRENT_USER || "ay", when: "just now", text });
+    const uuid = UUID_BY_ORDER.get(id);
+    if (API_PROJECT === "api" && ACTIVE_PID && uuid) {
+      void api.addComment(ACTIVE_PID, uuid, text).catch(() => {});
+    }
     notify();
   }
 }
@@ -487,6 +708,35 @@ export function createIssue(input: CreateInput): number {
   }
   if (input.ty === "epic") EPIC_META[nextId] = { own: input.assignee, c: "o", goal: "" };
   TASKS.unshift(o);
+  if (API_PROJECT === "api" && ACTIVE_PID) {
+    const body: Record<string, unknown> = {
+      title: input.title,
+      statusId: STATUS_ID_BY_SHORT.get(o.s),
+      priority: PRIO_API[input.priority],
+      assigneeId: input.assignee ? resolveUserUuid(input.assignee) : null,
+      estimate: input.pts || null,
+      ...(input.ty !== "subtask" ? { typeId: TYPE_ID_BY_TY.get(input.ty) } : {}),
+      ...(input.ty === "subtask" && input.parent != null
+        ? { parentId: UUID_BY_ORDER.get(input.parent) ?? null }
+        : {}),
+      ...(input.sp ? { iterationId: input.sp } : {}),
+      ...(input.epic && input.ty !== "subtask" ? { epicId: EPIC_UUID_BY_ORDER.get(input.epic) ?? null } : {}),
+      ...(input.due && dueToIso(input.due) ? { dueDate: dueToIso(input.due) } : {}),
+      ...(input.desc ? { description: JSON.stringify(o.desc) } : {}),
+      ...(input.labels.length
+        ? { labelIds: input.labels.map((l) => LABEL_ID_BY_NAME.get(l)).filter((x): x is string => !!x) }
+        : {}),
+    };
+    void api
+      .createTask(ACTIVE_PID, body as never)
+      .then((created) => {
+        o.uuid = created.id;
+        UUID_BY_ORDER.set(created.order, created.id);
+        if (input.ty === "epic") EPIC_UUID_BY_ORDER.set(nextId, created.id);
+        notify();
+      })
+      .catch(() => {});
+  }
   notify();
   return nextId;
 }
@@ -494,6 +744,7 @@ export function bulkSetStatus(ids: number[], s: StatusId): void {
   ids.forEach((id) => {
     const t = taskById(id);
     if (t && t.ty !== "epic") t.s = s;
+    wtPatch(id, { statusId: STATUS_ID_BY_SHORT.get(s) });
   });
   notify();
 }
@@ -501,19 +752,33 @@ export function bulkSetAssignee(ids: number[], whoId: string): void {
   ids.forEach((id) => {
     const t = taskById(id);
     if (t && t.ty !== "epic") t.a = whoId;
+    wtPatch(id, { assigneeId: whoId ? resolveUserUuid(whoId) : null });
   });
   notify();
 }
 export function bulkDelete(ids: number[]): void {
   TASKS = TASKS.filter((t) => !ids.includes(t.id));
+  if (API_PROJECT === "api" && ACTIVE_PID) {
+    for (const id of ids) {
+      const uuid = UUID_BY_ORDER.get(id);
+      if (uuid) void api.deleteTask(ACTIVE_PID, uuid).catch(() => {});
+    }
+  }
   notify();
 }
 
 /* ---- Sprint lifecycle mutators (Planning) ---- */
+/** Fire-and-forget iteration patch (optimistic). */
+function wtIter(sp: string, patch: Record<string, unknown>): void {
+  if (API_PROJECT !== "api" || !ACTIVE_PID) return;
+  void api.updateIteration(ACTIVE_PID, sp, patch as never).catch(() => {});
+}
+
 export function startIter(sp: string): void {
   const cur = Object.keys(SPRINTS).find((k) => SPRINTS[k].st === "active");
   if (cur && cur !== sp) completeIter(cur, true);
   SPRINTS[sp].st = "active";
+  wtIter(sp, { status: "active" });
   notify();
 }
 export function completeIter(sp: string, silent = false): string {
@@ -525,8 +790,12 @@ export function completeIter(sp: string, silent = false): string {
   s.committed = committed;
   s.completed = done;
   c.forEach((t) => {
-    if (t.s !== "done") t.sp = undefined;
+    if (t.s !== "done") {
+      t.sp = undefined;
+      wtPatch(t.id, { iterationId: null });
+    }
   });
+  wtIter(sp, { status: "completed", committedPoints: committed, completedPoints: done });
   notify();
   return silent ? "" : s.name + " completed · leftover returned to backlog";
 }
@@ -534,6 +803,7 @@ export function revertToPlanned(sp: string): void {
   const s = SPRINTS[sp];
   if (!s || s.st !== "active") return;
   s.st = "planned";
+  wtIter(sp, { status: "planned" }); // API may refuse (one-way machine) — local stands
   notify();
 }
 export function reopenToActive(sp: string): string {
@@ -548,6 +818,7 @@ export function reopenToActive(sp: string): string {
   s.st = "active";
   if ("committed" in s) delete s.committed;
   if ("completed" in s) delete s.completed;
+  wtIter(sp, { status: "active" }); // API may refuse — local stands
   notify();
   return s.name + " reopened · Active" + note;
 }
@@ -556,6 +827,7 @@ export function commitToSprint(id: number, sp: string): void {
   const t = taskById(id);
   if (t) {
     t.sp = sp;
+    wtPatch(id, { iterationId: sp });
     notify();
   }
 }
@@ -563,6 +835,7 @@ export function uncommitFromSprint(id: number): void {
   const t = taskById(id);
   if (t) {
     t.sp = undefined;
+    wtPatch(id, { iterationId: null });
     notify();
   }
 }
@@ -587,6 +860,7 @@ export function moveSprintDates(sp: string, fromISO: string, toISO: string): voi
   s.to = toISO;
   s.start = shortMD(pD(fromISO));
   s.end = shortMD(pD(toISO));
+  wtIter(sp, { startDate: fromISO, endDate: toISO });
   notify();
 }
 export interface CreateSprintInput {
@@ -597,7 +871,17 @@ export interface CreateSprintInput {
   capacity: number | null;
 }
 export function createSprint(input: CreateSprintInput): string {
-  const id = "s" + (Math.max(0, ...Object.keys(SPRINTS).map((k) => +k.slice(1))) + 1);
+  const id = crypto.randomUUID();
+  if (API_PROJECT === "api" && ACTIVE_PID) {
+    void api
+      .createIteration(ACTIVE_PID, {
+        name: input.name,
+        goal: input.goal || undefined,
+        startDate: input.fromISO,
+        endDate: input.toISO,
+      })
+      .catch(() => {});
+  }
   SPRINTS[id] = {
     id,
     name: input.name,
@@ -624,6 +908,7 @@ export function updateSprint(sp: string, input: CreateSprintInput): void {
   s.start = shortMD(pD(input.fromISO));
   s.end = shortMD(pD(input.toISO));
   s.capacity = input.capacity;
+  wtIter(sp, { name: input.name, goal: input.goal || null, startDate: input.fromISO, endDate: input.toISO });
   notify();
 }
 
@@ -634,9 +919,12 @@ export interface MilestoneInput {
   risk: "on_track" | "at_risk";
 }
 export function addMilestone(input: MilestoneInput): string {
-  const id = "ms" + (Math.max(0, ...MILESTONES.map((m) => +(m.id.slice(2)) || 0)) + 1);
+  const id = crypto.randomUUID();
   MILESTONES.push({ id, t: input.t, date: input.date, risk: input.risk, done: 0, total: 0 });
   MILESTONES.sort((a, b) => pD(a.date).getTime() - pD(b.date).getTime());
+  if (API_PROJECT === "api" && ACTIVE_PID) {
+    void api.createMilestone(ACTIVE_PID, { name: input.t, dueDate: input.date }).catch(() => {});
+  }
   notify();
   return id;
 }
@@ -645,14 +933,20 @@ export function updateMilestone(id: string, input: MilestoneInput): void {
   if (!m) return;
   m.t = input.t;
   m.date = input.date;
-  m.risk = input.risk;
+  m.risk = input.risk; // risk itself is display-only (derived) until the API grows a column
   MILESTONES.sort((a, b) => pD(a.date).getTime() - pD(b.date).getTime());
+  if (API_PROJECT === "api" && ACTIVE_PID && !id.startsWith("ms")) {
+    void api.updateMilestone(ACTIVE_PID, id, { name: input.t, dueDate: input.date }).catch(() => {});
+  }
   notify();
 }
 export function deleteMilestone(id: string): void {
   const i = MILESTONES.findIndex((x) => x.id === id);
   if (i >= 0) {
     MILESTONES.splice(i, 1);
+    if (API_PROJECT === "api" && ACTIVE_PID && !id.startsWith("ms")) {
+      void api.deleteMilestone(ACTIVE_PID, id).catch(() => {});
+    }
     notify();
   }
 }

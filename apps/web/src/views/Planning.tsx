@@ -20,6 +20,7 @@ import {
   committedPts,
   donePts,
   isPlannable,
+  resolveSprint,
   PRIO_ORDER,
   allTasks,
   taskById,
@@ -123,8 +124,9 @@ function BoardView({
   toast: (s: string) => void;
 }) {
   const sprintIds = Object.keys(SPRINTS);
-  const sp = SPRINTS[curSprint];
-  const plannable = isPlannable(curSprint);
+  const key = resolveSprint(curSprint);
+  const sp = SPRINTS[key]!;
+  const plannable = isPlannable(key);
 
   return (
     <div id="plan-iter">
@@ -134,7 +136,7 @@ function BoardView({
           return (
             <div
               key={k}
-              className={`iter-tab ${k === curSprint ? "on" : ""}`}
+              className={`iter-tab ${k === key ? "on" : ""}`}
               onClick={() => setCurSprint(k)}
             >
               <div className="it-name">
@@ -152,8 +154,8 @@ function BoardView({
       </div>
 
       <div className="plan-split">
-        <BacklogPane curSprint={curSprint} plannable={plannable} toast={toast} />
-        <SprintPane curSprint={curSprint} plannable={plannable} toast={toast} />
+        <BacklogPane curSprint={key} plannable={plannable} toast={toast} />
+        <SprintPane curSprint={key} plannable={plannable} toast={toast} />
       </div>
     </div>
   );
@@ -363,14 +365,15 @@ function BacklogPane({
   toast: (s: string) => void;
 }) {
   const { openTask } = useApp();
+  const v = useTasksVersion();
   const items = useMemo(
     () =>
       allTasks()
         .filter((t) => !t.parent && t.ty !== "epic" && !t.sp)
         .sort((a, b) => PRIO_ORDER.indexOf(a.p) - PRIO_ORDER.indexOf(b.p)),
-    [],
+    // v: hydration swaps the dataset after mount
+    [v],
   );
-  useTasksVersion();
   const unpointed = items.filter((t) => !t.pts).length;
 
   return (

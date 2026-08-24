@@ -50,6 +50,13 @@
       "when": 1787590193920,
       "tag": "0006_funny_mister_sinister",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787592748226,
+      "tag": "0007_giant_korath",
+      "breakpoints": true
     }
   ]
 }
