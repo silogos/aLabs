@@ -1,7 +1,7 @@
 /** Planning view — interactive two-pane sprint board + timeline + velocity.
  *  Reads the shared tasks board (queries.ts) so it stays in sync with the
  *  Tasks board/list/backlog via the `task.sp` field. */
-import { useState, useRef, useMemo, useEffect, type CSSProperties } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useApp } from "@/providers/app-provider";
 import { taskSerial } from "@/lib/serial";
 import {
@@ -112,7 +112,6 @@ function BoardView({
   const board = useBoard();
   const sprintIds = board.sprintIds;
   const key = board.resolveSprint(curSprint);
-  const sp = board.sprints[key];
   const plannable = board.isPlannable(key);
 
   return (
@@ -302,13 +301,7 @@ function SprintPane({
         <div className="panel-body flush sp-list">
           {tasks.length ? (
             tasks.map((t) => (
-              <SprintItem
-                key={t.id}
-                id={t.id}
-                plannable={plannable}
-                sprintName={s.name}
-                toast={toast}
-              />
+              <SprintItem key={t.id} id={t.id} plannable={plannable} toast={toast} />
             ))
           ) : (
             <div className="empty-plan">
@@ -326,12 +319,10 @@ function SprintPane({
 function SprintItem({
   id,
   plannable,
-  sprintName,
   toast,
 }: {
   id: number;
   plannable: boolean;
-  sprintName: string;
   toast: (s: string) => void;
 }) {
   const t = useBoard().taskById(id);

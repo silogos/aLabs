@@ -3,10 +3,9 @@
  *  activity) instead of hardcoded arrays. */
 import { planningService } from "@/services/planning";
 import { reportsService } from "@/services/reports";
-import { workspaceService } from "@/services/workspace";
 import { dateShort } from "@/lib/format";
 import type { Dashboard, Iteration, Milestone } from "@pmin/core";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "@/providers/app-provider";
 import { useMembers } from "@/hooks/use-members";
@@ -118,10 +117,6 @@ export function ReportsView() {
       100,
   );
   const activeSprint = sprints.find((s) => s.status === "active") ?? null;
-  const completion =
-    activeSprint && activeSprint.committedPoints > 0
-      ? Math.round((activeSprint.completedPoints / activeSprint.committedPoints) * 100)
-      : 0;
   const sprintDay = activeSprint
     ? Math.max(
         1,

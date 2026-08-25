@@ -2,7 +2,6 @@
  *  detail pane with agenda, notes, action items, and status actions. */
 import { meetingsService } from "@/services/meetings";
 import { tasksService } from "@/services/tasks";
-import { workspaceService } from "@/services/workspace";
 import type { ActionItem, Meeting, MeetingType, User } from "@pmin/core";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";

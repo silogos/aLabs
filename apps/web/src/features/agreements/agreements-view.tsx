@@ -1,7 +1,6 @@
 /** Agreements view — master/detail split + lifecycle timeline + new-agreement
  *  modal, on live API data (rows in Postgres, owner hydrated per project). */
 import { agreementsService } from "@/services/agreements";
-import { workspaceService } from "@/services/workspace";
 import type { Agreement, AgreementStatus, AgreementType, User } from "@pmin/core";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -124,7 +123,7 @@ export function AgreementsView() {
 
   const refresh = () => qc.invalidateQueries({ queryKey: qk.agreements(pid) });
 
-  const all = agreements ?? [];
+  const all = useMemo(() => agreements ?? [], [agreements]);
   const expiring = (a: Agreement) => {
     if (!a.endDate || a.status === "rejected" || a.status === "expired") return false;
     const d = +new Date(a.endDate + "T00:00:00") - Date.now();
