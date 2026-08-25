@@ -2,13 +2,9 @@
  *  Pick one of three relation types, search issues, link bidirectionally. */
 import { useState } from "react";
 import { useApp } from "@/providers/app-provider";
-import {
-  useTasksVersion,
-  taskById,
-  allTasks,
-  addRelationship,
-  type RelKey,
-} from "./store";
+import { useBoard } from "./queries";
+import { useTaskActions } from "./mutations";
+import type { RelKey } from "./model";
 import { TyIcon } from "./tasks-ui";
 import { taskSerial } from "@/lib/serial";
 import { Modal } from "@/components/ui/modal";
@@ -20,18 +16,19 @@ const TYPES: { key: RelKey; label: string }[] = [
 ];
 
 export function RelModal() {
-  useTasksVersion();
+  const board = useBoard();
+  const { addRelationship } = useTaskActions();
   const { relPickerId, closeRelPicker, toast } = useApp();
   const [type, setType] = useState<RelKey>("blockedBy");
   const [query, setQuery] = useState("");
 
-  const t = relPickerId ? taskById(Number(relPickerId)) : undefined;
+  const t = relPickerId ? board.taskById(Number(relPickerId)) : undefined;
   if (!t) return null;
 
   const close = () => closeRelPicker();
   const linked = t.rel?.[type] ?? [];
   const q = query.trim().toLowerCase();
-  const cands = allTasks()
+  const cands = board.rows
     .filter(
       (x) =>
         x.id !== t.id &&

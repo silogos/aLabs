@@ -52,3 +52,8 @@ export const milestoneCreate = z.object({
 export const milestoneUpdate = milestoneCreate.partial().extend({
   status: MilestoneStatus.optional(),
 });
+
+export type IterationCreateInput = z.input<typeof iterationCreate>;
+export type IterationUpdateInput = z.input<typeof iterationUpdate>;
+export type MilestoneCreateInput = z.input<typeof milestoneCreate>;
+export type MilestoneUpdateInput = z.input<typeof milestoneUpdate>;

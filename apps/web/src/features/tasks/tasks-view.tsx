@@ -1,48 +1,37 @@
 /** Tasks view — enterprise task management: Board / List / Tree. */
 import { useMemo, useState, useLayoutEffect, useRef, useCallback, type CSSProperties } from "react";
 import { useApp } from "@/providers/app-provider";
-import { taskSerial } from "@/lib/serial";
+import { usePeople } from "@/providers/people-provider";
+import { taskSerial, projKey } from "@/lib/serial";
 import {
-  useTasksVersion,
-  allTasks,
-  subsOf,
-  childrenOf,
+  COLS,
+  ST,
   late,
   ptsTotal,
   progOf,
-  taskById,
-  COLS,
-  SPRINTS,
-  ST,
-  P,
-  who,
-  EPIC_IDS,
-  EPIC_META,
-  bulkSetStatus,
-  bulkSetAssignee,
-  bulkDelete,
-  setField,
-  sprintRows,
-  sprintStatusLabel,
   type StatusId,
   type TaskRow,
-} from "./store";
+} from "./model";
+import { useBoard } from "./queries";
+import { useTaskActions } from "./mutations";
 import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill, EpicChip } from "./tasks-ui";
 
 type Mode = "board" | "table" | "backlog";
 type GroupBy = "none" | "sprint" | "epic" | "status" | "assignee";
 
-// Board sprint rows derive live from the store (reflects created/changed sprints).
-function sprintBoardRows(): { k: string; dot: string; name: string; meta: string }[] {
-  return sprintRows().map((r) => {
+// Board sprint rows derive live from the board data (reflects created/changed sprints).
+function sprintBoardRows(
+  board: ReturnType<typeof useBoard>,
+): { k: string; dot: string; name: string; meta: string }[] {
+  return board.sprintRows().map((r) => {
     if (r.k === "backlog")
       return { k: "backlog", dot: "hollow", name: "Backlog", meta: `${r.total} issues` };
-    const s = SPRINTS[r.k];
+    const s = board.sprints[r.k];
     return {
       k: r.k,
       dot: s.st === "active" ? "ok" : "",
       name: s.name,
-      meta: `${sprintStatusLabel(r.k)} · ${r.total}`,
+      meta: `${board.sprintStatusLabel(r.k)} · ${r.total}`,
     };
   });
 }
@@ -92,7 +81,9 @@ function usePopover(open: boolean, onClose: () => void) {
 }
 
 export function TasksView() {
-  const tver = useTasksVersion();
+  const board = useBoard();
+  const people = usePeople();
+  const { bulkSetStatus, bulkSetAssignee, bulkDelete } = useTaskActions();
   const { openTask, setCreateOpen } = useApp();
   const [mode, setMode] = useState<Mode>("board");
   const [search, setSearch] = useState("");
@@ -114,7 +105,8 @@ export function TasksView() {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [collapsedEpics, setCollapsedEpics] = useState<Set<string>>(new Set());
   const [collapsedBlNodes, setCollapsedBlNodes] = useState<Set<number>>(new Set());
-  const [boardSprints, setBoardSprints] = useState<Set<string>>(new Set(["s14", "s13", "backlog"]));
+  // null → all sprints shown until the user picks a subset
+  const [boardSprints, setBoardSprints] = useState<Set<string> | null>(null);
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState(1);
   const [sprintPop, setSprintPop] = useState(false);
@@ -126,16 +118,21 @@ export function TasksView() {
   const sprintPopState = usePopover(sprintPop, closePops);
   const colsPopState = usePopover(colsPop, closePops);
 
+  const shownSprints = useMemo(
+    () => boardSprints ?? new Set([...board.sprintIds, "backlog"]),
+    [boardSprints, board.sprintIds],
+  );
+
   const ql = search.trim().toLowerCase();
   const filtered = useMemo(
     () =>
-      allTasks().filter((t) => {
+      board.rows.filter((t) => {
         if (t.ty === "epic") return false;
         if (t.parent) return false;
         if (
           ql &&
           !(
-            `atl-${t.id}`.includes(ql) ||
+            `${projKey()}-${t.id}`.toLowerCase().includes(ql) ||
             t.t.toLowerCase().includes(ql) ||
             (t.lb || []).join(" ").toLowerCase().includes(ql)
           )
@@ -143,7 +140,7 @@ export function TasksView() {
           return false;
         return true;
       }),
-    [ql, tver],
+    [ql, board.rows],
   );
 
   const toggleSet = <T,>(set: Set<T>, val: T): Set<T> => {
@@ -246,7 +243,7 @@ export function TasksView() {
               </svg>
               Sprint{" "}
               <span className="cnt-badge">
-                {boardSprints.size === sprintBoardRows().length ? "All" : String(boardSprints.size)}
+                {shownSprints.size === sprintBoardRows(board).length ? "All" : String(shownSprints.size)}
               </span>
             </button>
             {sprintPop && (
@@ -256,13 +253,13 @@ export function TasksView() {
                 style={sprintPopState.style}
               >
                 <div className="cp-h">Board sprints</div>
-                {sprintBoardRows().map((r) => (
+                {sprintBoardRows(board).map((r) => (
                   <label key={r.k} className="cp-row">
                     <input
                       type="checkbox"
                       className="ck"
-                      checked={boardSprints.has(r.k)}
-                      onChange={() => setBoardSprints((s) => toggleSet(s, r.k))}
+                      checked={shownSprints.has(r.k)}
+                      onChange={() => setBoardSprints(toggleSet(shownSprints, r.k))}
                     />
                     <span className={`sp-dot ${r.dot}`} />
                     <span className="sp-name">{r.name}</span>
@@ -370,7 +367,7 @@ export function TasksView() {
       </div>
 
       {mode === "board" && (
-        <Board filtered={filtered} boardSprints={boardSprints} onOpen={openTask} />
+        <Board filtered={filtered} boardSprints={shownSprints} onOpen={openTask} />
       )}
       {mode === "table" && (
         <TableView
@@ -449,9 +446,9 @@ export function TasksView() {
             }}
           >
             <option value="">Assign to…</option>
-            {Object.keys(P).map((k) => (
+            {people.options().map(([k, nm]) => (
               <option key={k} value={k}>
-                {who(k)}
+                {nm}
               </option>
             ))}
           </select>
@@ -493,7 +490,8 @@ function Board({
   boardSprints: Set<string>;
   onOpen: (id: string) => void;
 }) {
-  useTasksVersion();
+  const board = useBoard();
+  const { setField } = useTaskActions();
   const { toast } = useApp();
   const [dragId, setDragId] = useState<number | null>(null);
   const [overCol, setOverCol] = useState<string | null>(null);
@@ -502,7 +500,7 @@ function Board({
   const drop = (statusId: StatusId, id: number | null) => {
     setOverCol(null);
     if (!id) return;
-    const t = taskById(id);
+    const t = board.taskById(id);
     if (!t || t.s === statusId) {
       setDragId(null);
       return;
@@ -533,7 +531,7 @@ function Board({
                   setOverCol(c.id);
                 }}
                 onDragLeave={() => setOverCol((x) => (x === c.id ? null : x))}
-                onDrop={(e) => drop(c.id, dragId)}
+                onDrop={() => drop(c.id, dragId)}
               >
                 {items.map((t) => (
                   <Card
@@ -572,7 +570,7 @@ function Card({
   onDragStart: () => void;
   onDragEnd: () => void;
 }) {
-  const subs = subsOf(t.id);
+  const subs = useBoard().subsOf(t.id);
   const subd = subs.filter((s) => s.s === "done").length;
   return (
     <div
@@ -617,21 +615,6 @@ function Card({
               <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
             {subd}/{subs.length}
-          </span>
-        )}
-        {(t.com || []).length > 0 && (
-          <span className="ic">
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            {(t.com || []).length}
           </span>
         )}
         <PtsPill pts={t.pts} />
@@ -684,7 +667,8 @@ function TableView(props: {
   onCheck: (id: number, on: boolean) => void;
   onOpen: (id: string) => void;
 }) {
-  useTasksVersion();
+  const board = useBoard();
+  const people = usePeople();
   const {
     filtered,
     colVis,
@@ -701,7 +685,6 @@ function TableView(props: {
     onCheck,
     onOpen,
   } = props;
-  const ver = useTasksVersion();
   const vis = COL_DEFS.filter((c) => colVis[c.k] || c.k === "summary");
 
   const sortList = (list: TaskRow[]) => {
@@ -732,14 +715,14 @@ function TableView(props: {
       const out: { key: string; label: string; meta?: { c: string }; items: TaskRow[] }[] = [
         { key: "none", label: "No epic", items: list.filter((t) => !t.epic) },
       ];
-      EPIC_IDS.forEach((eid) => {
-        const e = taskById(eid);
+      board.epicIds.forEach((eid) => {
+        const e = board.taskById(eid);
         const items = list.filter((t) => t.epic === eid);
         if (items.length)
           out.push({
             key: String(eid),
             label: e!.t,
-            meta: { c: (EPIC_META[eid] || { c: "m" }).c },
+            meta: { c: (board.epicMeta[eid] || { c: "m" }).c },
             items,
           });
       });
@@ -752,11 +735,15 @@ function TableView(props: {
       }).filter(Boolean) as { key: string; label: string; items: TaskRow[] }[];
     if (groupBy === "assignee") {
       const out: { key: string; label: string; items: TaskRow[] }[] = [];
-      Object.keys(P).forEach((k) => {
-        const items = list.filter((t) => t.a === k);
-        if (items.length) out.push({ key: k, label: who(k), items });
-      });
-      const none = list.filter((t) => !P[t.a]);
+      const seen = new Set<string>();
+      for (const t of list) {
+        if (t.a && !seen.has(t.a)) {
+          seen.add(t.a);
+          const items = list.filter((x) => x.a === t.a);
+          out.push({ key: t.a, label: people.who(t.a), items });
+        }
+      }
+      const none = list.filter((t) => !t.a);
       if (none.length) out.push({ key: "none", label: "Unassigned", items: none });
       return out;
     }
@@ -764,18 +751,18 @@ function TableView(props: {
     const out: {
       key: string;
       label: string;
-      sprint?: (typeof SPRINTS)[string];
+      sprint?: (typeof board.sprints)[string];
       items: TaskRow[];
     }[] = [];
-    Object.keys(SPRINTS).forEach((sp) => {
+    board.sprintIds.forEach((sp) => {
       const items = list.filter((t) => t.sp === sp);
-      if (items.length) out.push({ key: sp, label: SPRINTS[sp].name, sprint: SPRINTS[sp], items });
+      if (items.length)
+        out.push({ key: sp, label: board.sprints[sp]!.name, sprint: board.sprints[sp], items });
     });
     const none = list.filter((t) => !t.sp);
     if (none.length) out.push({ key: "none", label: "Backlog", items: none });
     return out;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, groupBy, sortBy, sortDir, ver]);
+  }, [filtered, groupBy, sortBy, sortDir, board, people]);
 
   const cellContent = (t: TaskRow, k: string) => {
     switch (k) {
@@ -796,13 +783,13 @@ function TableView(props: {
           <span className="cell-who">
             <AvKey id={t.a} size="sm" />
             <span className="small truncate" style={{ maxWidth: 84 }}>
-              {who(t.a).split(" ")[0]}
+              {people.who(t.a).split(" ")[0]}
             </span>
           </span>
         );
       case "sprint":
         return t.sp ? (
-          <span className="tag i">{SPRINTS[t.sp].name}</span>
+          <span className="tag i">{board.sprints[t.sp]?.name}</span>
         ) : (
           <span className="tiny faint">Backlog</span>
         );
@@ -869,7 +856,7 @@ function TableView(props: {
                 const prog = progOf(g.items);
                 const meta = "meta" in g ? (g as { meta?: { c: string } }).meta : undefined;
                 const sprint =
-                  "sprint" in g ? (g as { sprint?: (typeof SPRINTS)[string] }).sprint : undefined;
+                  "sprint" in g ? (g as { sprint?: (typeof board.sprints)[string] }).sprint : undefined;
                 return (
                   <FragmentRows key={gk}>
                     {showGroup && (
@@ -935,7 +922,7 @@ function TableView(props: {
                     )}
                     {gopen &&
                       g.items.map((t) => {
-                        const hasSubs = subsOf(t.id).length > 0;
+                        const hasSubs = board.subsOf(t.id).length > 0;
                         const open = expandedRows.has(t.id);
                         const sel = selected.has(t.id);
                         return (
@@ -1003,9 +990,9 @@ function TableView(props: {
                               </td>
                             </tr>
                             {open &&
-                              subsOf(t.id).map((s, i) => {
+                              board.subsOf(t.id).map((s, i) => {
                                 const ssel = selected.has(s.id);
-                                const last = i === subsOf(t.id).length - 1;
+                                const last = i === board.subsOf(t.id).length - 1;
                                 return (
                                   <tr
                                     key={s.id}
@@ -1086,7 +1073,7 @@ function Backlog(props: {
   onToggleNode: (id: number) => void;
   onOpen: (id: string) => void;
 }) {
-  useTasksVersion();
+  const board = useBoard();
   const { filtered, collapsedEpics, collapsedBlNodes, onToggleEpic, onToggleNode, onOpen } = props;
   const noEpic = filtered.filter((t) => !t.epic);
 
@@ -1107,10 +1094,10 @@ function Backlog(props: {
             />
           ) : (
             <div className="bl-tree">
-              {EPIC_IDS.map((eid) => {
-                const e = taskById(eid);
+              {board.epicIds.map((eid) => {
+                const e = board.taskById(eid);
                 if (!e) return null;
-                const ch = childrenOf(eid);
+                const ch = board.childrenOf(eid);
                 if (!ch.length) return null;
                 return (
                   <EpicNode
@@ -1163,7 +1150,7 @@ function EpicNode({
   onToggleNode: (id: number) => void;
   onOpen: (id: string) => void;
 }) {
-  const m = EPIC_META[eid] || { c: "m", own: "mk", goal: "" };
+  const m = useBoard().epicMeta[eid] || { c: "m", own: "", goal: "" };
   const prog = progOf(childTasks);
   return (
     <div className="bl-ep">
@@ -1288,12 +1275,13 @@ function BlIssueLi({
   onToggleNode: (id: number) => void;
   onOpen: (id: string) => void;
 }) {
-  const subs = subsOf(t.id);
+  const board = useBoard();
+  const subs = board.subsOf(t.id);
   const hasSubs = subs.length > 0;
   const nclosed = collapsedBlNodes.has(t.id);
   const sp =
     t.ty === "subtask" ? null : t.sp ? (
-      <span className="tag i">{SPRINTS[t.sp].name}</span>
+      <span className="tag i">{board.sprints[t.sp]?.name}</span>
     ) : (
       <span className="tiny faint">Backlog</span>
     );

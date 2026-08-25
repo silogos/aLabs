@@ -8,8 +8,6 @@
  *     first project by createdAt.
  *  Every switch POSTs /users/me/recents (server-persisted visit history). */
 import { authService } from "@/services/auth";
-import { planningService } from "@/services/planning";
-import { tasksService } from "@/services/tasks";
 import { workspaceService } from "@/services/workspace";
 import type { Organization, Project, User } from "@pmin/core";
 import {
@@ -26,7 +24,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { setActiveProjectKey } from "@/lib/serial";
 import { qk } from "@/lib/query-keys";
-import { hydrateProject } from "@/features/tasks/store";
 
 export type View =
   "dashboard" | "tasks" | "documents" | "planning" | "meetings" | "reports" | "agreements";
@@ -259,40 +256,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [projects, recents, switchProject, toast]);
 
-  // Hydrate the Tasks/Planning store from the active project's real rows —
-  // mutations write back through the API (see tasks-store.ts).
-  const pid = project?.id;
-  useEffect(() => {
-    if (!project || !pid) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const [page, statuses, members, types, labels, iterations, milestones] = await Promise.all([
-          tasksService.list(pid),
-          tasksService.statuses(pid),
-          workspaceService.members(project.organizationId),
-          tasksService.types(pid).catch(() => []),
-          tasksService.labels(pid).catch(() => []),
-          planningService.iterations(pid).catch(() => []),
-          planningService.milestones(pid).catch(() => []),
-        ]);
-        if (cancelled) return;
-        hydrateProject(
-          project.key,
-          project.id,
-          page.items,
-          statuses,
-          members.map((m) => m.user),
-          { currentUserId: user?.id, types, labels, iterations, milestones },
-        );
-      } catch {
-        /* offline/failure → keep the current dataset */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [pid, project?.key, project?.organizationId, user?.id]);
+  // Views own their data via React Query keyed on the active project (see
+  // features/*/queries.ts) — switching projects just busts the cache below.
 
   const value: AppState = {
     user,

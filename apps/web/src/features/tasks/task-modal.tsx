@@ -1,19 +1,11 @@
-/** Create-issue modal — type picker + progressive fields (writes to tasks store). */
+/** Create-issue modal — type picker + progressive fields (creates via the
+ *  tasks mutations, optimistic on the board cache). */
 import { useState } from "react";
 import { useApp } from "@/providers/app-provider";
-import {
-  useTasksVersion,
-  TY,
-  P,
-  SPRINTS,
-  EPIC_IDS,
-  taskById,
-  allTasks,
-  createIssue,
-  peopleOptions,
-  type TypeId,
-  type PrioId,
-} from "./store";
+import { usePeople } from "@/providers/people-provider";
+import { useBoard } from "./queries";
+import { useTaskActions } from "./mutations";
+import { TY, type TypeId, type PrioId } from "./model";
 import { TyIcon } from "./tasks-ui";
 import { taskSerial } from "@/lib/serial";
 import { Modal } from "@/components/ui/modal";
@@ -28,12 +20,14 @@ const PLACEHOLDERS: Record<TypeId, string> = {
 };
 
 export function TaskModal() {
-  useTasksVersion();
+  const board = useBoard();
+  const people = usePeople();
+  const { createIssue } = useTaskActions();
   const { setCreateOpen, toast, openTask } = useApp();
   const [ty, setTy] = useState<TypeId>("story");
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
-  const [assignee, setAssignee] = useState("mk");
+  const [assignee, setAssignee] = useState("");
   const [priority, setPriority] = useState<PrioId>("p3");
   const [sprint, setSprint] = useState("");
   const [epic, setEpic] = useState("");
@@ -46,7 +40,7 @@ export function TaskModal() {
 
   const submit = () => {
     if (!title.trim()) return;
-    const id = createIssue({
+    createIssue({
       ty,
       title: title.trim(),
       desc: desc.trim() || undefined,
@@ -56,16 +50,17 @@ export function TaskModal() {
       epic: ty === "epic" ? null : epic ? Number(epic) : null,
       parent: ty === "subtask" && parent ? Number(parent) : null,
       pts,
-      due: due || "Apr 05",
+      due: due || "",
       labels: labels
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
+    }).then((created) => {
+      close();
+      setTitle("");
+      toast(`Created ${taskSerial(created.order)} (${TY[ty].l})`);
+      setTimeout(() => openTask(String(created.order)), 120);
     });
-    close();
-    setTitle("");
-    toast(`Created ${taskSerial(id)} (${TY[ty].l})`);
-    setTimeout(() => openTask(String(id)), 120);
   };
 
   return (
@@ -119,7 +114,7 @@ export function TaskModal() {
               <span>Parent</span>
               <select className="fld" value={parent} onChange={(e) => setParent(e.target.value)}>
                 <option value="">Select parent…</option>
-                {allTasks()
+                {board.rows
                   .filter((t) => t.ty !== "epic" && t.ty !== "subtask")
                   .map((t) => (
                     <option key={t.id} value={t.id}>
@@ -133,8 +128,8 @@ export function TaskModal() {
               <span>Epic</span>
               <select className="fld" value={epic} onChange={(e) => setEpic(e.target.value)}>
                 <option value="">None</option>
-                {EPIC_IDS.map((e) => {
-                  const et = taskById(e);
+                {board.epicIds.map((e) => {
+                  const et = board.taskById(e);
                   return et ? (
                     <option key={e} value={e}>
                       {et.t}
@@ -147,7 +142,8 @@ export function TaskModal() {
           <label className="cr-f">
             <span>Assignee</span>
             <select className="fld" value={assignee} onChange={(e) => setAssignee(e.target.value)}>
-              {peopleOptions().map(([k, nm]) => (
+              <option value="">Unassigned</option>
+              {people.options().map(([k, nm]) => (
                 <option key={k} value={k}>
                   {nm}
                 </option>
@@ -178,9 +174,9 @@ export function TaskModal() {
               <span>Sprint</span>
               <select className="fld" value={sprint} onChange={(e) => setSprint(e.target.value)}>
                 <option value="">Backlog</option>
-                {Object.keys(SPRINTS).map((k) => (
+                {board.sprintIds.map((k) => (
                   <option key={k} value={k}>
-                    {SPRINTS[k].name}
+                    {board.sprints[k]?.name}
                   </option>
                 ))}
               </select>
@@ -216,7 +212,7 @@ export function TaskModal() {
               className="fld"
               value={due}
               onChange={(e) => setDue(e.target.value)}
-              placeholder="Apr 05"
+              placeholder="Aug 30"
             />
           </label>
         </div>

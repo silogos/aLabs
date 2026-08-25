@@ -1,43 +1,24 @@
 /** Task detail drawer — two-column workspace (main + side panel) + epic mode.
- *  Reads from the tasks mock store; entry via store.openTask(id). */
+ *  Reads from the board queries; entry via AppProvider.openTask(id). */
 import { documentsService } from "@/services/documents";
 import { useState, useRef, useEffect } from "react";
 import { useApp } from "@/providers/app-provider";
-import {
-  useTasksVersion,
-  taskById,
-  subsOf,
-  childrenOf,
-  SPRINTS,
-  ST,
-  P,
-  PRIO,
-  PRIO_ORDER,
-  EPIC_META,
-  EPIC_IDS,
-  who,
-  progOf,
-  ptsTotal,
-  setField,
-  toggleAc,
-  toggleSubDone,
-  addSubtask,
-  addComment,
-  removeRelationship,
-  type TaskRow,
-  type RelKey,
-  peopleOptions,
-} from "./store";
+import { usePeople } from "@/providers/people-provider";
+import { useBoard, useTaskDetail } from "./queries";
+import { useTaskActions } from "./mutations";
+import { PRIO, PRIO_ORDER, ST, progOf, ptsTotal, type RelKey, type TaskRow } from "./model";
 import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill } from "./tasks-ui";
 import { RichTextEditor } from "@pmin/editor";
 import type { Content } from "@pmin/core";
 import { taskSerial } from "@/lib/serial";
+import { timeAgo } from "@/lib/format";
 
 export function TaskDrawer({ id }: { id: string }) {
-  useTasksVersion();
+  const board = useBoard();
+  const { setField } = useTaskActions();
   const { closeTask, toast, openTask, openRelPicker, project } = useApp();
   const tid = Number(id);
-  const t = taskById(tid);
+  const t = board.taskById(tid);
   const titleRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (titleRef.current && t) titleRef.current.textContent = t.t;
@@ -73,8 +54,7 @@ export function TaskDrawer({ id }: { id: string }) {
                 setField(t.id, "t", v);
                 toast("Title updated");
               } else if (!v && titleRef.current) titleRef.current.textContent = t.t;
-            }}
-            onKeyDown={(e) => {
+            }}            onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
                 e.currentTarget.blur();
@@ -126,6 +106,10 @@ function TaskDetail({
   openRelPicker: (id: string) => void;
   pid: string;
 }) {
+  const board = useBoard();
+  const people = usePeople();
+  const { setField, toggleSubDone, addSubtask, addComment, removeRelationship } = useTaskActions();
+  const detail = useTaskDetail(t.uuid);
   const [cmt, setCmt] = useState("");
   const descTimer = useRef<number | undefined>(undefined);
   const onDescChange = (doc: Content) => {
@@ -135,17 +119,17 @@ function TaskDetail({
       toast("Description saved");
     }, 600);
   };
-  const rep = P[t.rep || "ay"];
+  const rep = people.personOf(t.rep);
 
-  const upd = (key: keyof TaskRow, value: unknown, label: string) => {
-    setField(t.id, key, value as TaskRow[typeof key]);
+  const upd = (key: string, value: unknown, label: string) => {
+    setField(t.id, key, value);
     toast(label);
   };
 
   const relRows: { label: string; id?: number; static?: string }[] = [];
   if (t.parent) relRows.push({ label: "Parent", id: t.parent });
   if (t.epic) relRows.push({ label: "Epic", id: t.epic });
-  const subs = subsOf(t.id);
+  const subs = board.subsOf(t.id);
   if (t.ty !== "subtask" && subs.length)
     relRows.push({ label: "Subtasks", static: `${subs.length} — listed above` });
   const rel = t.rel;
@@ -154,8 +138,7 @@ function TaskDetail({
     { key: "blocks", label: "Blocks", items: rel?.blocks ?? [] },
     { key: "relates", label: "Relates to", items: rel?.relates ?? [] },
   ];
-
-  const ac = t.ac || [];
+  const comments = detail.data?.comments ?? [];
 
   return (
     <div className="dw-grid">
@@ -173,27 +156,8 @@ function TaskDetail({
         </Section>
 
         {(t.ty === "story" || t.ty === "task" || t.ty === "bug") && (
-          <Section
-            title="Acceptance criteria"
-            meta={`${ac.filter((x) => x.done).length}/${ac.length}`}
-          >
-            {ac.length ? (
-              <ul className="ac-list">
-                {ac.map((x, i) => (
-                  <li key={i}>
-                    <input
-                      type="checkbox"
-                      className="ck"
-                      checked={x.done}
-                      onChange={() => toggleAc(t.id, i)}
-                    />
-                    <span className={x.done ? "done" : ""}>{x.text}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="muted tiny">No acceptance criteria yet.</p>
-            )}
+          <Section title="Acceptance criteria" meta="0/0">
+            <p className="muted tiny">No acceptance criteria yet.</p>
           </Section>
         )}
 
@@ -254,7 +218,7 @@ function TaskDetail({
             {relRows.length || relGroups.some((g) => g.items.length) ? (
               <div className="dw-rel">
                 {relRows.map((r, i) => {
-                  const c = r.id ? taskById(r.id) : undefined;
+                  const c = r.id ? board.taskById(r.id) : undefined;
                   return (
                     <div className="dw-rel-row" key={`ro-${i}`}>
                       <span className="dw-rel-k">{r.label}</span>
@@ -277,7 +241,7 @@ function TaskDetail({
                       </span>
                       <div className="dw-rel-list">
                         {g.items.map((oid) => {
-                          const c = taskById(oid);
+                          const c = board.taskById(oid);
                           if (!c) return null;
                           return (
                             <div className="dw-rel-li" key={oid}>
@@ -321,16 +285,16 @@ function TaskDetail({
           </Section>
         )}
 
-        <Section title={`Comments · ${(t.com || []).length}`}>
-          {(t.com || []).length ? (
+        <Section title={`Comments · ${comments.length}`}>
+          {comments.length ? (
             <div className="cmt-list">
-              {(t.com || []).map((m, i) => (
-                <div className="comment" key={i}>
-                  <AvKey id={m.by} />
+              {comments.map((m) => (
+                <div className="comment" key={m.id}>
+                  <AvKey id={m.userId} />
                   <div>
-                    <b>{who(m.by)}</b>
-                    <span className="when">{m.when}</span>
-                    <p>{m.text}</p>
+                    <b>{people.who(m.userId)}</b>
+                    <span className="when">{timeAgo(m.createdAt)}</span>
+                    <p>{m.body}</p>
                   </div>
                 </div>
               ))}
@@ -339,7 +303,7 @@ function TaskDetail({
             <p className="muted tiny">No comments yet.</p>
           )}
           <div className="cmt-box">
-            <AvKey id="ay" />
+            <AvKey id={t.a} />
             <input
               className="cmt-in"
               placeholder="Add a comment…"
@@ -347,7 +311,7 @@ function TaskDetail({
               onChange={(e) => setCmt(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && cmt.trim()) {
-                  addComment(t.id, cmt.trim());
+                  addComment(t.uuid!, cmt.trim());
                   setCmt("");
                 }
               }}
@@ -356,28 +320,10 @@ function TaskDetail({
         </Section>
 
         <Section
-          title={`Attachments · ${(t.att || []).length}`}
+          title="Attachments · 0"
           action={{ label: "+ Upload", onClick: () => toast("Upload attachment — coming soon") }}
         >
-          {(t.att || []).length ? (
-            <div className="att-list">
-              {(t.att || []).map((f, i) => (
-                <div className="att" key={i}>
-                  <span className="att-ic">
-                    {(f.n.split(".").pop() || "").toUpperCase().slice(0, 3)}
-                  </span>
-                  <div>
-                    <b>{f.n}</b>
-                    <span className="tiny muted">
-                      {f.sz} · {who(f.by)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="muted tiny">No attachments.</p>
-          )}
+          <p className="muted tiny">No attachments.</p>
         </Section>
 
         <Section title="Activity">
@@ -385,13 +331,14 @@ function TaskDetail({
             <li>
               <span className="act-d" />
               <div>
-                <b>{who(t.rep)}</b> created this <span className="muted">· Mar 12</span>
+                <b>{people.who(t.rep)}</b> created this{" "}
+                <span className="muted">· {t.desc ? "earlier" : "recently"}</span>
               </div>
             </li>
             <li>
               <span className="act-d" />
               <div>
-                <b>{who(t.a)}</b> was assigned <span className="muted">· Mar 13</span>
+                <b>{people.who(t.a)}</b> was assigned <span className="muted">· recently</span>
               </div>
             </li>
             <li>
@@ -417,14 +364,14 @@ function TaskDetail({
           <SpSelect
             k="Assignee"
             value={t.a}
-            options={peopleOptions()}
+            options={[["", "Unassigned"], ...people.options()]}
             onChange={(v) => upd("a", v, "Updated")}
           />
           <div className="sp-row">
             <span className="sp-k">Reporter</span>
             <div className="sp-v">
               <span className="sp-who">
-                <AvKey id={t.rep || "ay"} size="sm" /> {rep ? rep.name : "—"}
+                <AvKey id={t.rep} size="sm" /> {rep ? rep.name : "—"}
               </span>
             </div>
           </div>
@@ -440,7 +387,7 @@ function TaskDetail({
               value={t.sp || ""}
               options={[
                 ["", "Backlog"],
-                ...Object.keys(SPRINTS).map((k) => [k, SPRINTS[k].name] as [string, string]),
+                ...board.sprintIds.map((k) => [k, board.sprints[k]!.name] as [string, string]),
               ]}
               onChange={(v) => upd("sp", v || null, "Updated")}
             />
@@ -458,9 +405,9 @@ function TaskDetail({
               value={t.epic ? String(t.epic) : ""}
               options={[
                 ["", "None"],
-                ...EPIC_IDS.filter((e) => taskById(e)).map(
-                  (e) => [String(e), taskById(e)!.t] as [string, string],
-                ),
+                ...board.epicIds
+                  .filter((e) => board.taskById(e))
+                  .map((e) => [String(e), board.taskById(e)!.t] as [string, string]),
               ]}
               onChange={(v) => upd("epic", v ? Number(v) : undefined, "Updated")}
             />
@@ -564,10 +511,14 @@ function Section({
 
 /* ============================ EPIC DETAIL ============================ */
 function EpicDetail({ e, onOpen }: { e: TaskRow; onOpen: (id: string) => void }) {
-  const m = EPIC_META[e.id] || { c: "o", own: "mk", goal: "" };
-  const children = childrenOf(e.id);
+  const board = useBoard();
+  const people = usePeople();
+  const m = board.epicMeta[e.id] || { c: "o", own: "", goal: "" };
+  const children = board.childrenOf(e.id);
   const prog = progOf(children);
   const done = children.filter((c) => c.s === "done").length;
+  const activeStart =
+    board.sprints[board.sprintIds.find((k) => board.sprints[k]?.st === "active") ?? ""]?.start;
   return (
     <div className="epic-detail">
       <div className="epic-head">
@@ -577,7 +528,7 @@ function EpicDetail({ e, onOpen }: { e: TaskRow; onOpen: (id: string) => void })
         <div className="epic-owner">
           <AvKey id={m.own} />
           <span>
-            <b>{who(m.own)}</b> <span className="muted tiny">· owner</span>
+            <b>{people.who(m.own)}</b> <span className="muted tiny">· owner</span>
           </span>
           <StatusBadge s={e.s} />
         </div>
@@ -595,7 +546,7 @@ function EpicDetail({ e, onOpen }: { e: TaskRow; onOpen: (id: string) => void })
       </div>
       <div className="epic-tl">
         <span className="tiny muted">
-          Timeline · {SPRINTS.s14.start} → {e.due}, 2025
+          Timeline · {activeStart ?? "—"} → {e.due}
         </span>
       </div>
       <Section title="Child issues" meta={String(children.length)}>

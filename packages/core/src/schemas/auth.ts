@@ -34,3 +34,8 @@ export const userUpdate = z.object({
   name: z.string().min(1).max(100).optional(),
   image: z.string().nullable().optional(),
 });
+
+export type LoginInput = z.input<typeof loginInput>;
+export type RegisterInput = z.input<typeof registerInput>;
+export type ForgotPasswordInput = z.input<typeof forgotPasswordInput>;
+export type ResetPasswordInput = z.input<typeof resetPasswordInput>;

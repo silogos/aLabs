@@ -1,6 +1,8 @@
 /** Shared presentational bits for the Tasks module — mirror designs/app/alabs-app.html markup. */
-import type { PrioId, StatusId, TypeId } from "./store";
-import { ST, TY, taskById, who, personOf } from "./store";
+import type { PrioId, StatusId, TypeId } from "./model";
+import { ST, TY } from "./model";
+import { usePeople } from "@/providers/people-provider";
+import { useBoard } from "./queries";
 
 export function TyIcon({ ty, size = 13 }: { ty: TypeId; size?: number }) {
   const m = TY[ty] ?? TY.task;
@@ -26,8 +28,8 @@ export function TyTag({ ty }: { ty: TypeId }) {
   return <span className={`tag ${m.c}`}>{m.l}</span>;
 }
 
-export function AvKey({ id, size = "" }: { id: string; size?: "sm" | "" }) {
-  const p = personOf(id);
+export function AvKey({ id, size = "" }: { id?: string; size?: "sm" | "" }) {
+  const p = usePeople().personOf(id);
   if (!p) return <span className={`av b ${size}`}>?</span>;
   return <span className={`av ${p.color} ${size}`}>{p.initials}</span>;
 }
@@ -43,7 +45,7 @@ export function StatusBadge({ s }: { s: StatusId }) {
 }
 
 export function PrioBadge({ p }: { p: PrioId }) {
-  // label + class pulled from the shared .prio styles via the mock key
+  // label + class pulled from the shared .prio styles via the short key
   const labels: Record<PrioId, string> = { p1: "Urgent", p2: "High", p3: "Medium", p4: "Low" };
   return (
     <span className={`prio ${p}`}>
@@ -63,18 +65,16 @@ export function PtsPill({ pts }: { pts: number }) {
 }
 
 export function EpicChip({ epic, onJump }: { epic: number; onJump?: (id: number) => void }) {
-  const e = taskById(epic);
+  const board = useBoard();
+  const e = board.taskById(epic);
   if (!e) return null;
   return (
-    <span className={`epic-chip ${cForEpic(epic)}`} title={e.t} onClick={() => onJump?.(epic)}>
+    <span
+      className={`epic-chip ${board.epicMeta[epic]?.c ?? "o"}`}
+      title={e.t}
+      onClick={() => onJump?.(epic)}
+    >
       {e.t}
     </span>
   );
 }
-
-function cForEpic(epic: number): string {
-  const META: Record<number, string> = { 200: "v", 201: "g", 202: "b", 203: "o" };
-  return META[epic] ?? "o";
-}
-
-export { who };

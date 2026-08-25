@@ -2,16 +2,16 @@
 import { useMemo, useState } from "react";
 import { useApp, type View } from "@/providers/app-provider";
 import { taskSerial } from "@/lib/serial";
-import { useTasksVersion, allTasks } from "@/features/tasks/store";
+import { useBoard } from "@/features/tasks/queries";
 
 export function CommandPalette() {
-  useTasksVersion();
-  const { project, setCmdkOpen, setView, setCreateOpen, openTask } = useApp();
+  const board = useBoard();
+  const { setCmdkOpen, setView, setCreateOpen, openTask } = useApp();
   const [q, setQ] = useState("");
-  const tasks = allTasks().filter((t) => t.ty !== "epic" && t.ty !== "subtask");
 
   const groups = useMemo(() => {
     const ql = q.toLowerCase();
+    const tasks = board.rows.filter((t) => t.ty !== "epic" && t.ty !== "subtask");
     const nav: [string, View][] = [
       ["Go to Dashboard", "dashboard"],
       ["Go to Tasks", "tasks"],
@@ -50,18 +50,13 @@ export function CommandPalette() {
         items: filteredTasks.map(([l, id]) => ({ label: l, action: () => go("tasks", id) })),
       },
     ].filter((grp) => grp.items.length);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, tasks]);
+  }, [q, board.rows]);
 
   function go(v: View, taskId: string | null) {
     setCmdkOpen(false);
     setView(v);
     if (taskId) setTimeout(() => openTask(taskId), 80);
   }
-
-  // project still drives the workspace context; keep the reference so the hook
-  // dependency stays honest without re-querying the API for the task list.
-  void project;
 
   return (
     <div

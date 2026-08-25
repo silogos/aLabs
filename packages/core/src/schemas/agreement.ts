@@ -40,3 +40,6 @@ export const agreementUpdate = agreementCreate.partial().extend({
   sentAt: iso.nullable().optional(),
   signedAt: iso.nullable().optional(),
 });
+
+export type AgreementCreateInput = z.input<typeof agreementCreate>;
+export type AgreementUpdateInput = z.input<typeof agreementUpdate>;

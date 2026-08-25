@@ -128,3 +128,10 @@ export const taskListQuery = paginationQuery.extend({
   q: z.string().optional(),
 });
 export type TaskListQuery = z.infer<typeof taskListQuery>;
+
+/* ---- request-body types (single home: derived where the zod instance matches) ---- */
+export type TaskCreateInput = z.input<typeof taskCreate>;
+export type TaskUpdateInput = z.input<typeof taskUpdate>;
+export type TaskListFilters = Partial<z.input<typeof taskListQuery>>;
+export type TaskLinkCreateInput = z.input<typeof taskLinkCreate>;
+export type CommentCreateInput = z.input<typeof commentCreate>;

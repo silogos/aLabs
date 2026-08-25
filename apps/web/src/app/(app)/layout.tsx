@@ -1,11 +1,12 @@
 "use client";
 
 /** Authenticated app layout. Rendered client-only (mounted gate): the shell
- *  reads localStorage for tenant/sidebar prefs and hydrates a mutable tasks
- *  store — neither exists during SSR, so we skip server rendering of the
- *  tree entirely to avoid hydration mismatches. */
+ *  reads localStorage for tenant/sidebar prefs — none of that exists during
+ *  SSR, so we skip server rendering of the tree entirely to avoid hydration
+ *  mismatches. */
 import { useEffect, useState, type ReactNode } from "react";
 import { AppProvider } from "@/providers/app-provider";
+import { PeopleProvider } from "@/providers/people-provider";
 import { AppShell } from "@/components/app-shell";
 import { TaskOverlays } from "@/features/tasks/overlays";
 
@@ -25,8 +26,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <AppProvider>
-      <AppShell>{children}</AppShell>
-      <TaskOverlays />
+      <PeopleProvider>
+        <AppShell>{children}</AppShell>
+        <TaskOverlays />
+      </PeopleProvider>
     </AppProvider>
   );
 }

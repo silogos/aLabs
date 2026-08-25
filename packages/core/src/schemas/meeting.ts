@@ -59,3 +59,8 @@ export const meetingUpdate = meetingCreate.partial().extend({
   agenda: z.array(z.string()).optional(),
   notes: z.string().optional(),
 });
+
+export type MeetingCreateInput = z.input<typeof meetingCreate>;
+export type MeetingUpdateInput = z.input<typeof meetingUpdate>;
+export type ActionItemCreateInput = z.input<typeof actionItemCreate>;
+export type ActionItemUpdateInput = z.input<typeof actionItemUpdate>;

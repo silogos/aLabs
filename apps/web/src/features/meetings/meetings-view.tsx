@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/app-provider";
 import { useMembers } from "@/hooks/use-members";
 
-import { personOf } from "@/features/tasks/store";
+import { usePeople } from "@/providers/people-provider";
 import { AvKey } from "@/features/tasks/tasks-ui";
 import { taskSerial } from "@/lib/serial";
 import { dateShort, timeShort, dateTime, toLocalDate } from "@/lib/format";
@@ -618,7 +618,7 @@ function ActionItemRow({
 }) {
   const { toast } = useApp();
   const [busy, setBusy] = useState(false);
-  const who = personOf(a.assigneeId ?? undefined);
+  const who = usePeople().personOf(a.assigneeId ?? undefined);
   const serial = a.taskId ? serialOf(a.taskId) : null;
 
   const toggle = async () => {

@@ -61,3 +61,6 @@ export type FileRef = z.infer<typeof fileRefSchema>;
 
 /** GET /documents/search query. */
 export const pageSearchQuery = z.object({ q: z.string().optional() });
+
+export type PageCreateInput = z.input<typeof pageCreate>;
+export type PageUpdateInput = z.input<typeof pageUpdate>;

@@ -1,7 +1,12 @@
 /** Documents service — spaces, pages, files, uploads. */
-import { z } from "zod";
-import { pageCreate, pageUpdate } from "@pmin/core";
-import type { Space, Page, FileRef, Paginated } from "@pmin/core";
+import type {
+  Space,
+  Page,
+  FileRef,
+  Paginated,
+  PageCreateInput,
+  PageUpdateInput,
+} from "@pmin/core";
 import { req, upload } from "@/lib/http";
 
 export const documentsService = {
@@ -13,13 +18,13 @@ export const documentsService = {
   getPage: (pid: string, id: string) =>
     req<{ data: Page }>(`/projects/${pid}/documents/pages/${id}`).then((x) => x.data),
 
-  createPage: (pid: string, body: z.input<typeof pageCreate>) =>
+  createPage: (pid: string, body: PageCreateInput) =>
     req<{ data: Page }>(`/projects/${pid}/documents/pages`, {
       method: "POST",
       body: JSON.stringify(body),
     }).then((x) => x.data),
 
-  updatePage: (pid: string, id: string, patch: z.input<typeof pageUpdate>) =>
+  updatePage: (pid: string, id: string, patch: PageUpdateInput) =>
     req<{ data: Page }>(`/projects/${pid}/documents/pages/${id}`, {
       method: "PATCH",
       body: JSON.stringify(patch),

@@ -12,7 +12,6 @@ import { useApp } from "@/providers/app-provider";
 import { useMembers } from "@/hooks/use-members";
 
 import { qk } from "@/lib/query-keys";
-import { personOf } from "@/features/tasks/store";
 
 function Spark({ color, vals }: { color: string; vals: number[] }) {
   if (vals.length < 2) return null;
@@ -93,6 +92,10 @@ export function ReportsView() {
     queryFn: () => reportsService.activity(pid),
   });
   const { data: members } = useMembers(project?.organizationId);
+  const nameOf = useMemo(() => {
+    const byId = new Map((members ?? []).map((x) => [x.user.id, x.user.name]));
+    return (uid: string) => byId.get(uid) ?? "Unknown";
+  }, [members]);
 
 
   /* ---- derived series (all real: iteration points, sprint counts) ---- */
@@ -388,6 +391,7 @@ export function ReportsView() {
                 last3,
                 sayDo,
                 velocity,
+                nameOf,
               })}
             </div>
           </div>
@@ -408,6 +412,7 @@ type BodyCtx = {
   last3: Iteration[];
   sayDo: number;
   velocity: number;
+  nameOf: (uid: string) => string;
 };
 
 const KIND_LABEL: Record<string, string> = {
@@ -532,7 +537,7 @@ function reportBody(id: string, ctx: BodyCtx): React.ReactNode {
                 <span key={uid}>
                   {i > 0 && ", "}
                   <b>
-                    {personOf(uid)?.name ?? "Unknown"} ({n})
+                    {ctx.nameOf(uid)} ({n})
                   </b>
                 </span>
               ))}

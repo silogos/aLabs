@@ -1,7 +1,12 @@
 /** Planning service — iterations (sprints) and milestones. */
-import { z } from "zod";
-import { iterationCreate, iterationUpdate, milestoneCreate, milestoneUpdate } from "@pmin/core";
-import type { Iteration, Milestone } from "@pmin/core";
+import type {
+  Iteration,
+  Milestone,
+  IterationCreateInput,
+  IterationUpdateInput,
+  MilestoneCreateInput,
+  MilestoneUpdateInput,
+} from "@pmin/core";
 import { req } from "@/lib/http";
 
 export const planningService = {
@@ -9,13 +14,13 @@ export const planningService = {
   iterations: (pid: string) =>
     req<{ data: Iteration[] }>(`/projects/${pid}/planning/iterations`).then((x) => x.data),
 
-  createIteration: (pid: string, body: z.input<typeof iterationCreate>) =>
+  createIteration: (pid: string, body: IterationCreateInput) =>
     req<{ data: Iteration }>(`/projects/${pid}/planning/iterations`, {
       method: "POST",
       body: JSON.stringify(body),
     }).then((x) => x.data),
 
-  updateIteration: (pid: string, id: string, patch: z.input<typeof iterationUpdate>) =>
+  updateIteration: (pid: string, id: string, patch: IterationUpdateInput) =>
     req<{ data: Iteration }>(`/projects/${pid}/planning/iterations/${id}`, {
       method: "PATCH",
       body: JSON.stringify(patch),
@@ -25,13 +30,13 @@ export const planningService = {
   milestones: (pid: string) =>
     req<{ data: Milestone[] }>(`/projects/${pid}/planning/milestones`).then((x) => x.data),
 
-  createMilestone: (pid: string, body: z.input<typeof milestoneCreate>) =>
+  createMilestone: (pid: string, body: MilestoneCreateInput) =>
     req<{ data: Milestone }>(`/projects/${pid}/planning/milestones`, {
       method: "POST",
       body: JSON.stringify(body),
     }).then((x) => x.data),
 
-  updateMilestone: (pid: string, id: string, patch: z.input<typeof milestoneUpdate>) =>
+  updateMilestone: (pid: string, id: string, patch: MilestoneUpdateInput) =>
     req<{ data: Milestone }>(`/projects/${pid}/planning/milestones/${id}`, {
       method: "PATCH",
       body: JSON.stringify(patch),

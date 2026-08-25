@@ -11,7 +11,10 @@ export const qk = {
   members: (orgId: string | undefined) => ["members", orgId] as const,
 
   tasks: (pid: string) => ["tasks", pid] as const,
+  task: (pid: string, id: string) => ["tasks", pid, id] as const,
   statuses: (pid: string) => ["statuses", pid] as const,
+  types: (pid: string) => ["types", pid] as const,
+  labels: (pid: string) => ["labels", pid] as const,
   iterations: (pid: string) => ["iterations", pid] as const,
   milestones: (pid: string) => ["milestones", pid] as const,
 

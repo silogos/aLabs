@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     setBusy(true);
     setError(null);
     try {
-      const res = await authService.forgotPassword(email);
+      const res = await authService.forgotPassword({ email });
       setSentTo(email);
       setResetPath(res.resetPath ?? null);
     } catch (err) {
@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
     if (!sentTo) return;
     setBusy(true);
     try {
-      const res = await authService.forgotPassword(sentTo);
+      const res = await authService.forgotPassword({ email: sentTo });
       setResetPath(res.resetPath ?? null);
     } finally {
       setBusy(false);

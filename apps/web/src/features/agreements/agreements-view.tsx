@@ -9,7 +9,7 @@ import { useApp } from "@/providers/app-provider";
 import { useMembers } from "@/hooks/use-members";
 
 import { qk } from "@/lib/query-keys";
-import { personOf } from "@/features/tasks/store";
+import { usePeople } from "@/providers/people-provider";
 import { AvKey } from "@/features/tasks/tasks-ui";
 
 type Tone = "accent" | "violet" | "info" | "warn" | "neutral";
@@ -354,7 +354,7 @@ function AgreementDetail({
         : a.status === "expired"
           ? "Agreement expired"
           : "Counter-signed";
-  const owner = personOf(a.owner?.id);
+  const owner = usePeople().personOf(a.owner?.id);
   const ownerName = owner?.name ?? "Draft owner";
 
   const steps = [

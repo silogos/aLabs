@@ -1,43 +1,21 @@
 /** Planning view — interactive two-pane sprint board + timeline + velocity.
- *  Reads the shared tasks-store (SPRINTS/TASKS/MILESTONES) so it stays in sync
- *  with the Tasks board/list/backlog via the `task.sp` field. */
+ *  Reads the shared tasks board (queries.ts) so it stays in sync with the
+ *  Tasks board/list/backlog via the `task.sp` field. */
 import { useState, useRef, useMemo, useEffect, type CSSProperties } from "react";
 import { useApp } from "@/providers/app-provider";
 import { taskSerial } from "@/lib/serial";
 import {
-  useTasksVersion,
-  SPRINTS,
-  MILESTONES,
-  VELOCITY,
   NOW_D,
   shortMD,
   daysBetween,
   fmtISO,
-  pD,
   spStatusClass,
-  sprintStatusLabel,
-  iterTasks,
-  committedPts,
-  donePts,
-  isPlannable,
-  resolveSprint,
   PRIO_ORDER,
-  allTasks,
-  taskById,
-  startIter,
-  completeIter,
-  revertToPlanned,
-  reopenToActive,
-  commitToSprint,
-  uncommitFromSprint,
-  planSprintAuto,
-  createSprint,
-  updateSprint,
-  addMilestone,
-  updateMilestone,
-  deleteMilestone,
-} from "@/features/tasks/store";
+} from "@/features/tasks/model";
+import { useBoard } from "@/features/tasks/queries";
+import { usePlanningActions } from "@/features/tasks/mutations";
 import { TyIcon, StatusBadge, PrioBadge, AvKey } from "@/features/tasks/tasks-ui";
+import { Modal } from "@/components/ui/modal";
 
 type PlanView = "board" | "timeline" | "velocity";
 type Zoom = "day" | "week" | "month";
@@ -60,9 +38,8 @@ function colLabel(d: Date, zoom: Zoom): string {
 
 export function PlanningView() {
   const { toast } = useApp();
-  useTasksVersion(); // subscribe to store mutations
   const [planView, setPlanView] = useState<PlanView>("board");
-  const [curSprint, setCurSprint] = useState<string>("s14");
+  const [curSprint, setCurSprint] = useState<string>("");
   const [sprintModal, setSprintModal] = useState<{ editId?: string } | null>(null);
   const [msModal, setMsModal] = useState<{ editId?: string } | null>(null);
 
@@ -132,16 +109,17 @@ function BoardView({
   setCurSprint: (s: string) => void;
   toast: (s: string) => void;
 }) {
-  const sprintIds = Object.keys(SPRINTS);
-  const key = resolveSprint(curSprint);
-  const sp = SPRINTS[key]!;
-  const plannable = isPlannable(key);
+  const board = useBoard();
+  const sprintIds = board.sprintIds;
+  const key = board.resolveSprint(curSprint);
+  const sp = board.sprints[key];
+  const plannable = board.isPlannable(key);
 
   return (
     <div id="plan-iter">
       <div className="iter-tabs">
         {sprintIds.map((k) => {
-          const s = SPRINTS[k];
+          const s = board.sprints[k];
           return (
             <div
               key={k}
@@ -155,7 +133,7 @@ function BoardView({
                 </span>
               </div>
               <div className="it-meta">
-                {s.start} – {s.end} · {sprintStatusLabel(k)}
+                {s.start} – {s.end} · {board.sprintStatusLabel(k)}
               </div>
             </div>
           );
@@ -179,15 +157,27 @@ function SprintPane({
   plannable: boolean;
   toast: (s: string) => void;
 }) {
-  const s = SPRINTS[curSprint];
-  const tasks = iterTasks(curSprint);
-  const committed = committedPts(curSprint);
-  const cap = s.capacity;
+  const board = useBoard();
+  const { startIter, completeIter, revertToPlanned, reopenToActive, commitToSprint } =
+    usePlanningActions();
+  const s = board.sprints[curSprint];
+  const tasks = board.iterTasks(curSprint);
+  const committed = board.committedPts(curSprint);
+  const cap = s?.capacity ?? null;
   const pct = cap ? Math.min(100, Math.round((committed / cap) * 100)) : 0;
   const over = !!(cap && committed > cap);
   const avg = Math.round(
-    VELOCITY.reduce((n, d) => n + d.completed, 0) / Math.max(1, VELOCITY.length),
+    board.velocity.reduce((n, d) => n + d.completed, 0) / Math.max(1, board.velocity.length),
   );
+  if (!s) {
+    return (
+      <div id="plan-sprint">
+        <div className="card plan-pane">
+          <div className="empty-plan">No iterations yet — create the first one.</div>
+        </div>
+      </div>
+    );
+  }
 
   let action: React.ReactNode = null;
   if (s.st === "planned")
@@ -253,7 +243,7 @@ function SprintPane({
           const id = e.dataTransfer.getData("text/plain");
           if (id && plannable) {
             commitToSprint(+id, curSprint);
-            toast(taskSerial(id) + " → " + SPRINTS[curSprint].name);
+            toast(taskSerial(id) + " → " + s.name);
           }
         }}
       >
@@ -261,7 +251,7 @@ function SprintPane({
           <h3>{s.name}</h3>
           <span className={`status ${spStatusClass(s.st)}`}>
             <span className="d"></span>
-            {sprintStatusLabel(curSprint)}
+            {board.sprintStatusLabel(curSprint)}
           </span>
           <div className="right">{action}</div>
         </div>
@@ -344,8 +334,10 @@ function SprintItem({
   sprintName: string;
   toast: (s: string) => void;
 }) {
-  const t = taskById(id)!;
+  const t = useBoard().taskById(id);
+  const { uncommitFromSprint } = usePlanningActions();
   const { openTask } = useApp();
+  if (!t) return null;
   return (
     <div
       className="sprint-item"
@@ -395,14 +387,14 @@ function BacklogPane({
   toast: (s: string) => void;
 }) {
   const { openTask } = useApp();
-  const v = useTasksVersion();
+  const board = useBoard();
+  const { uncommitFromSprint, planSprintAuto, commitToSprint } = usePlanningActions();
   const items = useMemo(
     () =>
-      allTasks()
+      board.rows
         .filter((t) => !t.parent && t.ty !== "epic" && !t.sp)
         .sort((a, b) => PRIO_ORDER.indexOf(a.p) - PRIO_ORDER.indexOf(b.p)),
-    // v: hydration swaps the dataset after mount
-    [v],
+    [board.rows],
   );
   const unpointed = items.filter((t) => !t.pts).length;
 
@@ -461,11 +453,11 @@ function BacklogPane({
                   <button
                     className="btn subtle xs"
                     data-commit={t.id}
-                    title={`Move into ${SPRINTS[curSprint].name}`}
+                    title={`Move into ${board.sprints[curSprint]?.name ?? "sprint"}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       commitToSprint(t.id, curSprint);
-                      toast(taskSerial(t.id) + " → " + SPRINTS[curSprint].name);
+                      toast(taskSerial(t.id) + " → " + (board.sprints[curSprint]?.name ?? "sprint"));
                     }}
                   >
                     →
@@ -489,13 +481,16 @@ function BacklogPane({
 /* ---------------- Velocity ---------------- */
 
 function VelocityView() {
-  useTasksVersion();
-  const cur = {
-    name: SPRINTS.s14.name.replace("Sprint ", "S"),
-    committed: committedPts("s14"),
-    completed: donePts("s14"),
-  };
-  const data = [...VELOCITY, cur];
+  const board = useBoard();
+  const currentKey = board.sprintIds.find((k) => board.sprints[k]?.st === "active") ?? board.sprintIds.at(-1);
+  const cur = currentKey
+    ? {
+        name: (board.sprints[currentKey]!.name ?? "").replace("Sprint ", "S"),
+        committed: board.committedPts(currentKey),
+        completed: board.donePts(currentKey),
+      }
+    : null;
+  const data = cur ? [...board.velocity.filter((d) => d.name !== cur.name), cur] : board.velocity;
   const max = Math.max(1, ...data.map((d) => d.committed));
   const avg = Math.round(
     data.slice(0, -1).reduce((n, d) => n + d.completed, 0) / Math.max(1, data.length - 1),
@@ -641,7 +636,7 @@ function TimelineView({
 }) {
   const [zoom, setZoom] = useState<Zoom>("week");
   const [win, setWin] = useState<[Date, Date]>(() => fitWindow("week"));
-  useTasksVersion();
+  const board = useBoard();
 
   const applyZoom = (z: Zoom) => {
     setZoom(z);
@@ -685,19 +680,19 @@ function TimelineView({
     | { kind: "sprint"; k: string; l: string; sub: string; a: string; b: string; cls: string }
     | { kind: "ms"; id: string; l: string; sub: string; date: string; risk: string }
   )[] = [
-    ...Object.keys(SPRINTS).map((k) => {
-      const s = SPRINTS[k];
+    ...board.sprintIds.map((k) => {
+      const s = board.sprints[k];
       return {
         kind: "sprint" as const,
         k,
         l: s.name,
-        sub: sprintStatusLabel(k),
+        sub: board.sprintStatusLabel(k),
         a: s.from,
         b: s.to,
         cls: s.st === "active" ? "iter" : s.st === "completed" ? "done" : "task",
       };
     }),
-    ...MILESTONES.map((m) => ({
+    ...board.milestones.map((m) => ({
       kind: "ms" as const,
       id: m.id,
       l: m.t,
@@ -844,9 +839,11 @@ function SprintModal({
   onCreated: (id: string) => void;
 }) {
   const { toast } = useApp();
+  const board = useBoard();
+  const { createSprint, updateSprint } = usePlanningActions();
   const [win] = useState<[Date, Date]>(() => fitWindow("week"));
   const [minD, maxD] = [fmtISO(win[0]), fmtISO(win[1])];
-  const edit = editId ? SPRINTS[editId] : undefined;
+  const edit = editId ? board.sprints[editId] : undefined;
   const isEdit = !!edit;
   const [name, setName] = useState(edit?.name ?? "");
   const [goal, setGoal] = useState(
@@ -914,38 +911,31 @@ function SprintModal({
       onClose();
       toast(name.trim() + " updated · " + shortMD(startV) + " – " + shortMD(endV));
     } else {
-      const id = createSprint(payload);
       onClose();
-      toast(name.trim() + " created · Planned");
-      onCreated(id);
+      createSprint(payload)
+        .then((it) => {
+          toast(name.trim() + " created · Planned");
+          onCreated(it.id);
+        })
+        .catch(() => undefined); // createSprint already toasts on failure
     }
   };
 
   const statusCls = edit ? spStatusClass(edit.st) : "neutral";
-  const statusLbl = edit && editId ? sprintStatusLabel(editId) : "Planned";
+  const statusLbl = edit && editId ? board.sprintStatusLabel(editId) : "Planned";
 
   return (
     <div className="scrim show" onClick={onClose} data-od-id="new-sprint-modal">
-      <div className="modal show" onClick={(e) => e.stopPropagation()}>
-        <div className="mh">
-          <h3>{isEdit ? "Iteration details" : "New iteration"}</h3>
+      <Modal
+        title={isEdit ? "Iteration details" : "New iteration"}
+        onClose={onClose}
+        headerExtra={
           <span className={`status ${statusCls}`}>
             <span className="d"></span>
             {statusLbl}
           </span>
-          <button className="mh-x" onClick={onClose} title="Close">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        }
+      >
         <div className="mb">
           <label className="flab">Sprint name</label>
           <input
@@ -1035,7 +1025,7 @@ function SprintModal({
             {isEdit ? "Save changes" : "Create as Planned"}
           </button>
         </div>
-      </div>
+      </Modal>
     </div>
   );
 }
@@ -1051,9 +1041,11 @@ function MilestoneModal({
   onClose: () => void;
   toast: (s: string) => void;
 }) {
+  const board = useBoard();
+  const { addMilestone, updateMilestone, deleteMilestone } = usePlanningActions();
   const [win] = useState<[Date, Date]>(() => fitWindow("week"));
   const [minD, maxD] = [fmtISO(win[0]), fmtISO(win[1])];
-  const edit = editId ? MILESTONES.find((m) => m.id === editId) : undefined;
+  const edit = editId ? board.milestones.find((m) => m.id === editId) : undefined;
   const isEdit = !!edit;
   const [name, setName] = useState(edit?.t ?? "");
   const [date, setDate] = useState(edit?.date ?? "");
@@ -1091,15 +1083,16 @@ function MilestoneModal({
       onClose();
       toast(payload.t + " updated · " + shortMD(dv));
     } else {
-      addMilestone(payload);
       onClose();
-      toast(payload.t + " added · " + shortMD(dv));
+      addMilestone(payload)
+        .then(() => toast(payload.t + " added · " + shortMD(dv)))
+        .catch(() => undefined); // addMilestone already toasts on failure
     }
   };
 
   const remove = () => {
     if (!isEdit || !editId) return;
-    const m = MILESTONES.find((x) => x.id === editId);
+    const m = board.milestones.find((x) => x.id === editId);
     deleteMilestone(editId);
     onClose();
     toast((m?.t ?? "Milestone") + " deleted");
@@ -1107,26 +1100,16 @@ function MilestoneModal({
 
   return (
     <div className="scrim show" onClick={onClose} data-od-id="milestone-modal">
-      <div className="modal show" onClick={(e) => e.stopPropagation()}>
-        <div className="mh">
-          <h3>{isEdit ? "Milestone details" : "New milestone"}</h3>
+      <Modal
+        title={isEdit ? "Milestone details" : "New milestone"}
+        onClose={onClose}
+        headerExtra={
           <span className={`status ${risk === "at_risk" ? "warn" : "ok"}`}>
             <span className="d"></span>
             {risk === "at_risk" ? "At risk" : "On track"}
           </span>
-          <button className="mh-x" onClick={onClose} title="Close">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        }
+      >
         <div className="mb">
           <label className="flab">Name</label>
           <input
@@ -1206,7 +1189,7 @@ function MilestoneModal({
             {isEdit ? "Save changes" : "Create milestone"}
           </button>
         </div>
-      </div>
+      </Modal>
     </div>
   );
 }

@@ -1,15 +1,26 @@
 /**
  * Tasks service — rows, config (statuses/labels/types), comments, links.
- * Request bodies derive from the same zod schemas the API validates with.
+ * Request bodies derive from the same zod schemas the API validates with —
+ * the input types are computed in @pmin/core (where the zod instance lives)
+ * and re-exported here.
  */
-import { z } from "zod";
-import { taskCreate, taskUpdate, taskListQuery, taskLinkCreate, commentCreate } from "@pmin/core";
-import type { Task, TaskDetail, TaskStatus, TaskLabel, TaskType, Paginated } from "@pmin/core";
+import type {
+  Task,
+  TaskDetail,
+  TaskStatus,
+  TaskLabel,
+  TaskType,
+  Paginated,
+  TaskCreateInput,
+  TaskUpdateInput,
+  TaskListFilters,
+  TaskLinkCreateInput,
+  CommentCreateInput,
+} from "@pmin/core";
 import { req } from "@/lib/http";
 
-export type TaskCreateInput = z.input<typeof taskCreate>;
-export type TaskUpdateInput = z.input<typeof taskUpdate>;
-export type TaskFilters = Partial<z.input<typeof taskListQuery>>;
+export type { TaskCreateInput, TaskUpdateInput };
+export type TaskFilters = TaskListFilters;
 
 export const tasksService = {
   list: (pid: string, filters: TaskFilters = {}) => {
@@ -38,13 +49,13 @@ export const tasksService = {
   remove: (pid: string, id: string) =>
     req<void>(`/projects/${pid}/tasks/${id}`, { method: "DELETE" }).then(() => undefined),
 
-  addComment: (pid: string, taskId: string, body: z.input<typeof commentCreate>) =>
+  addComment: (pid: string, taskId: string, body: CommentCreateInput) =>
     req<{ data: TaskDetail["comments"][number] }>(`/projects/${pid}/tasks/${taskId}/comments`, {
       method: "POST",
       body: JSON.stringify(body),
     }).then((x) => x.data),
 
-  addLink: (pid: string, taskId: string, body: z.input<typeof taskLinkCreate>) =>
+  addLink: (pid: string, taskId: string, body: TaskLinkCreateInput) =>
     req<{ data: { id: string } }>(`/projects/${pid}/tasks/${taskId}/links`, {
       method: "POST",
       body: JSON.stringify(body),
