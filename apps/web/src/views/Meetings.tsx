@@ -1,9 +1,12 @@
 /** Meetings view — master/detail split on live API data: filterable list +
  *  detail pane with agenda, notes, action items, and status actions. */
+import { meetingsService } from "@/services/meetings";
+import { tasksService } from "@/services/tasks";
+import { workspaceService } from "@/services/workspace";
+import type { ActionItem, Meeting, MeetingType, User } from "@pmin/core";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../store";
-import { api, type Meeting, type ActionItem, type MeetingType, type User } from "../api";
 import { registerPeople, personOf } from "./tasks-store";
 import { AvKey } from "./tasks-ui";
 import { taskSerial } from "../components/ui";
@@ -49,17 +52,17 @@ export function Meetings() {
   const qc = useQueryClient();
   const { data: meetings, isLoading } = useQuery({
     queryKey: ["meetings", pid],
-    queryFn: () => api.meetings(pid),
+    queryFn: () => meetingsService.list(pid),
   });
   const { data: members } = useQuery({
     queryKey: ["members", project?.organizationId],
-    queryFn: () => api.members(project!.organizationId),
+    queryFn: () => workspaceService.members(project!.organizationId),
     enabled: !!project,
   });
   // task serials for linked action-item chips (taskId → board number)
   const { data: taskPage } = useQuery({
     queryKey: ["meeting-tasks", pid],
-    queryFn: () => api.tasks(pid),
+    queryFn: () => tasksService.list(pid),
   });
 
   useEffect(() => {
@@ -100,7 +103,7 @@ export function Meetings() {
 
   const setStatus = async (id: string, status: MeetStatus, label: string) => {
     try {
-      await api.updateMeeting(pid, id, { status });
+      await meetingsService.update(pid, id, { status });
       await refresh();
       toast(`Meeting ${label}`);
     } catch (e) {
@@ -110,7 +113,7 @@ export function Meetings() {
 
   const remove = async (id: string, title: string) => {
     try {
-      await api.deleteMeeting(pid, id);
+      await meetingsService.remove(pid, id);
       await refresh();
       toast(`"${title}" deleted`);
     } catch (e) {
@@ -439,7 +442,7 @@ function AgendaEditor({
   const save = async (next: string[]) => {
     setItems(next);
     try {
-      await api.updateMeeting(pid, m.id, { agenda: next });
+      await meetingsService.update(pid, m.id, { agenda: next });
       await refresh();
     } catch (e) {
       toast((e as Error).message);
@@ -549,7 +552,7 @@ function NotesEditor({
 
   const save = async () => {
     try {
-      await api.updateMeeting(pid, m.id, { notes: text });
+      await meetingsService.update(pid, m.id, { notes: text });
       await refresh();
       setEditing(false);
       toast("Notes saved");
@@ -629,7 +632,7 @@ function ActionItemRow({
   const toggle = async () => {
     setBusy(true);
     try {
-      await api.updateActionItem(pid, a.id, { done: !a.done });
+      await meetingsService.updateActionItem(pid, a.id, { done: !a.done });
       await refresh();
     } catch (e) {
       toast((e as Error).message);
@@ -641,12 +644,12 @@ function ActionItemRow({
   const convert = async () => {
     setBusy(true);
     try {
-      const task = await api.createTask(pid, {
+      const task = await tasksService.create(pid, {
         title: a.description,
         ...(a.assigneeId ? { assigneeId: a.assigneeId } : {}),
         ...(a.dueDate ? { dueDate: a.dueDate } : {}),
       });
-      await api.updateActionItem(pid, a.id, { taskId: task.id });
+      await meetingsService.updateActionItem(pid, a.id, { taskId: task.id });
       await refresh();
       toast(`Task ${taskSerial(task.order)} created from action item`);
     } catch (e) {
@@ -728,7 +731,7 @@ function AddActionItem({
   const submit = async () => {
     if (!desc.trim()) return;
     try {
-      await api.addActionItem(pid, m.id, {
+      await meetingsService.addActionItem(pid, m.id, {
         description: desc.trim(),
         ...(assignee ? { assigneeId: assignee } : {}),
         ...(due ? { dueDate: new Date(`${due}T00:00:00.000Z`).toISOString() } : {}),
@@ -822,7 +825,7 @@ function ScheduleModal({
       return;
     }
     try {
-      const m = await api.createMeeting(pid, {
+      const m = await meetingsService.create(pid, {
         title: title.trim(),
         type,
         scheduledAt: new Date(`${date}T${time}:00`).toISOString(),

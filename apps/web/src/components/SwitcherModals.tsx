@@ -2,12 +2,13 @@
  *  Project switcher (search + recents + this-org projects), Org switcher (search,
  *  lands on the org's derived landing project). Design: separated switchers,
  *  420px modals. Rows render live API data (store.tsx). */
+import { authService } from "@/services/auth";
+import { workspaceService } from "@/services/workspace";
+import type { Project } from "@pmin/core";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient, useQueries } from "@tanstack/react-query";
-import { api } from "../api";
 import { useApp } from "../store";
-import type { Project } from "../api";
 import { hueFor, projColor, CheckIcon, ChevRight } from "./navData";
 
 function SearchField({
@@ -146,7 +147,7 @@ function AccountModal() {
   const signOut = async () => {
     setNavModal(null);
     try {
-      await api.logout();
+      await authService.logout();
     } catch {
       /* session is cleared client-side regardless */
     }
@@ -282,7 +283,7 @@ function OrgSwitchModal() {
   const counts = useQueries({
     queries: all.map((o) => ({
       queryKey: ["projects", o.id],
-      queryFn: () => api.projects(o.id),
+      queryFn: () => workspaceService.projects(o.id),
     })),
   });
   const countByOrg = new Map(all.map((o, i) => [o.id, counts[i]?.data?.length ?? 0]));
@@ -314,7 +315,9 @@ function OrgSwitchModal() {
           </button>
         );
       })}
-      {list.length === 0 && <div className="switch-empty">No workspaces match &quot;{query}&quot;.</div>}
+      {list.length === 0 && (
+        <div className="switch-empty">No workspaces match &quot;{query}&quot;.</div>
+      )}
     </ModalShell>
   );
 }

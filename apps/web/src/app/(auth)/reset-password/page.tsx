@@ -1,8 +1,8 @@
 "use client";
 
+import { authService } from "@/services/auth";
 import { Suspense, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { api } from "@/api";
 import { BrandPanel } from "@/components/auth/BrandPanel";
 import {
   Alert,
@@ -33,7 +33,7 @@ function ResetForm() {
     setBusy(true);
     setError(null);
     try {
-      await api.resetPassword({ token, password });
+      await authService.resetPassword({ token, password });
       setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not reset the password");

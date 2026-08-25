@@ -1,8 +1,9 @@
 /** Shared nav model — sections, icons, and switcher helpers.
  *  Mirrors the design prototype (designs/app/alabs-app.html). Org/project rows
  *  render from live API data (store.tsx); row colors derive from the entity id. */
+import { documentsService } from "@/services/documents";
+import { tasksService } from "@/services/tasks";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../api";
 import type { ReactNode } from "react";
 import type { View } from "../store";
 import { useApp } from "../store";
@@ -102,12 +103,12 @@ export function useNavCounts() {
   const pid = project?.id;
   const tasksQ = useQuery({
     queryKey: ["count", "tasks", pid],
-    queryFn: () => api.tasks(pid!),
+    queryFn: () => tasksService.list(pid!),
     enabled: !!pid,
   });
   const docsQ = useQuery({
     queryKey: ["count", "docs", pid],
-    queryFn: () => api.pages(pid!),
+    queryFn: () => documentsService.listPages(pid!),
     enabled: !!pid,
   });
   return {

@@ -1,9 +1,11 @@
 /** Agreements view — master/detail split + lifecycle timeline + new-agreement
  *  modal, on live API data (rows in Postgres, owner hydrated per project). */
+import { agreementsService } from "@/services/agreements";
+import { workspaceService } from "@/services/workspace";
+import type { Agreement, AgreementStatus, AgreementType, User } from "@pmin/core";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../store";
-import { api, type Agreement, type AgreementType, type AgreementStatus, type User } from "../api";
 import { registerPeople, personOf } from "./tasks-store";
 import { AvKey } from "./tasks-ui";
 
@@ -108,11 +110,11 @@ export function Agreements() {
   const qc = useQueryClient();
   const { data: agreements, isLoading } = useQuery({
     queryKey: ["agreements", pid],
-    queryFn: () => api.agreements(pid),
+    queryFn: () => agreementsService.list(pid),
   });
   const { data: members } = useQuery({
     queryKey: ["members", project?.organizationId],
-    queryFn: () => api.members(project!.organizationId),
+    queryFn: () => workspaceService.members(project!.organizationId),
     enabled: !!project,
   });
 
@@ -154,7 +156,7 @@ export function Agreements() {
 
   async function act(id: string, to: AgreementStatus) {
     try {
-      await api.updateAgreement(pid, id, { status: to });
+      await agreementsService.update(pid, id, { status: to });
       await refresh();
       toast(`Agreement ${AGR_ST[to][0].toLowerCase()}`);
     } catch (e) {
@@ -163,7 +165,7 @@ export function Agreements() {
   }
   async function remove(id: string, title: string) {
     try {
-      await api.deleteAgreement(pid, id);
+      await agreementsService.remove(pid, id);
       await refresh();
       toast(`"${title}" deleted`);
     } catch (e) {
@@ -547,7 +549,7 @@ function NewAgreementModal({
     }
     setBusy(true);
     try {
-      const created = await api.createAgreement(pid, {
+      const created = await agreementsService.create(pid, {
         title,
         type: fTy,
         counterparty: fParty.trim() || "Unnamed client",

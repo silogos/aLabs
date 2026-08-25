@@ -1,7 +1,8 @@
 /** Documents view — space/page tree + a BlockNote-powered block editor with persistence. */
+import { documentsService } from "@/services/documents";
+import { workspaceService } from "@/services/workspace";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "../api";
 import { useApp } from "../store";
 import { initials, colorFor, timeAgo } from "../components/ui";
 import { RichTextEditor } from "@pmin/editor";
@@ -29,7 +30,7 @@ function PageEditor({ page, editMode }: { page: Page; editMode: boolean }) {
     window.clearTimeout(contentTimer.current);
     contentTimer.current = window.setTimeout(async () => {
       try {
-        await api.updatePage(pid, page.id, { content: doc });
+        await documentsService.updatePage(pid, page.id, { content: doc });
         void qc.invalidateQueries({ queryKey: ["pages", pid] });
       } catch (e) {
         toast("Couldn't save page: " + (e as Error).message);
@@ -43,7 +44,7 @@ function PageEditor({ page, editMode }: { page: Page; editMode: boolean }) {
     window.clearTimeout(titleTimer.current);
     titleTimer.current = window.setTimeout(async () => {
       try {
-        await api.updatePage(pid, page.id, { title: t.trim() || "Untitled" });
+        await documentsService.updatePage(pid, page.id, { title: t.trim() || "Untitled" });
         void qc.invalidateQueries({ queryKey: ["pages", pid] });
       } catch (e) {
         toast("Couldn't save title: " + (e as Error).message);
@@ -81,7 +82,7 @@ function PageEditor({ page, editMode }: { page: Page; editMode: boolean }) {
         placeholder="Write something…"
         onChange={handleContentChange}
         onOpenTask={(id) => openTask(String(id))}
-        uploadFile={(file) => api.uploadFile(pid, file)}
+        uploadFile={(file) => documentsService.uploadFile(pid, file)}
       />
     </>
   );
@@ -94,12 +95,21 @@ export function Documents() {
   const { project, toast } = useApp();
   const pid = project!.id;
   const qc = useQueryClient();
-  const { data: spaces } = useQuery({ queryKey: ["spaces", pid], queryFn: () => api.spaces(pid) });
-  const { data: pageData } = useQuery({ queryKey: ["pages", pid], queryFn: () => api.pages(pid) });
-  const { data: files } = useQuery({ queryKey: ["files", pid], queryFn: () => api.files(pid) });
+  const { data: spaces } = useQuery({
+    queryKey: ["spaces", pid],
+    queryFn: () => documentsService.spaces(pid),
+  });
+  const { data: pageData } = useQuery({
+    queryKey: ["pages", pid],
+    queryFn: () => documentsService.listPages(pid),
+  });
+  const { data: files } = useQuery({
+    queryKey: ["files", pid],
+    queryFn: () => documentsService.files(pid),
+  });
   const { data: members } = useQuery({
     queryKey: ["members", project?.organizationId],
-    queryFn: () => api.members(project!.organizationId),
+    queryFn: () => workspaceService.members(project!.organizationId),
     enabled: !!project,
   });
 
@@ -118,7 +128,11 @@ export function Documents() {
       return;
     }
     try {
-      const p = await api.createPage(pid, { spaceId: firstSpace, title: "Untitled", icon: "📄" });
+      const p = await documentsService.createPage(pid, {
+        spaceId: firstSpace,
+        title: "Untitled",
+        icon: "📄",
+      });
       await qc.invalidateQueries({ queryKey: ["pages", pid] });
       setActivePageId(p.id);
       toast("New page created");

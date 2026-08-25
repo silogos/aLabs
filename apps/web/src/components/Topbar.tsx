@@ -1,11 +1,14 @@
 /** Topbar — breadcrumb + notifications. */
 import { useApp } from "../store";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../api";
+import { notificationsService } from "@/services/notifications";
 
 export function Topbar({ title }: { title: string }) {
   const { project } = useApp();
-  const { data: notifs } = useQuery({ queryKey: ["notifications"], queryFn: api.notifications });
+  const { data: notifs } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: notificationsService.list,
+  });
   const unread = notifs?.filter((n) => !n.readAt).length ?? 0;
   const pName = project?.name ?? "…";
   const pIcon = project?.icon ?? pName[0];

@@ -7,6 +7,11 @@
  *     landing project: most-recently-visited project in that org, else the
  *     first project by createdAt.
  *  Every switch POSTs /users/me/recents (server-persisted visit history). */
+import { authService } from "@/services/auth";
+import { planningService } from "@/services/planning";
+import { tasksService } from "@/services/tasks";
+import { workspaceService } from "@/services/workspace";
+import type { Organization, Project, User } from "@pmin/core";
 import {
   createContext,
   useContext,
@@ -19,7 +24,6 @@ import {
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, type User, type Project, type Organization } from "./api";
 import { setActiveProjectKey } from "./components/ui";
 import { hydrateProject } from "./views/tasks-store";
 
@@ -138,9 +142,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [mNavOpen, setMNavOpen] = useState(false);
 
   const queryClient = useQueryClient();
-  const { data: user, error: meError } = useQuery({ queryKey: ["me"], queryFn: api.me });
-  const { data: orgs } = useQuery({ queryKey: ["orgs"], queryFn: api.orgs });
-  const { data: recents } = useQuery({ queryKey: ["recents"], queryFn: () => api.recents(5) });
+  const { data: user, error: meError } = useQuery({ queryKey: ["me"], queryFn: authService.me });
+  const { data: orgs } = useQuery({ queryKey: ["orgs"], queryFn: workspaceService.orgs });
+  const { data: recents } = useQuery({
+    queryKey: ["recents"],
+    queryFn: () => workspaceService.recents(5),
+  });
 
   // Session died server-side (expired, revoked by a password reset, DB reset):
   // the proxy only checks cookie presence, so sign out client-side first —
@@ -148,7 +155,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (meError && (meError as Error & { status?: number }).status === 401) {
       let cancelled = false;
-      void api
+      void authService
         .logout()
         .catch(() => {})
         .finally(() => {
@@ -165,7 +172,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const org = orgs?.find((o) => o.id === orgPref) ?? orgs?.[0];
   const { data: projects } = useQuery({
     queryKey: ["projects", org?.id],
-    queryFn: () => api.projects(org!.id),
+    queryFn: () => workspaceService.projects(org!.id),
     enabled: !!org,
   });
   const project = useMemo(
@@ -212,7 +219,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       router.push("/dashboard");
       if (!opts?.silent) toast(`Switched to ${p.name}`);
       // server-persisted visit history (fire-and-forget)
-      void api
+      void workspaceService
         .touchProject(p.id)
         .catch(() => {})
         .finally(() => queryClient.invalidateQueries({ queryKey: ["recents"] }));
@@ -258,13 +265,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void (async () => {
       try {
         const [page, statuses, members, types, labels, iterations, milestones] = await Promise.all([
-          api.tasks(pid),
-          api.statuses(pid),
-          api.members(project.organizationId),
-          api.types(pid).catch(() => []),
-          api.labels(pid).catch(() => []),
-          api.iterations(pid).catch(() => []),
-          api.milestones(pid).catch(() => []),
+          tasksService.list(pid),
+          tasksService.statuses(pid),
+          workspaceService.members(project.organizationId),
+          tasksService.types(pid).catch(() => []),
+          tasksService.labels(pid).catch(() => []),
+          planningService.iterations(pid).catch(() => []),
+          planningService.milestones(pid).catch(() => []),
         ]);
         if (cancelled) return;
         hydrateProject(

@@ -1,8 +1,8 @@
 "use client";
 
+import { authService } from "@/services/auth";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/api";
 import { BrandPanel } from "@/components/auth/BrandPanel";
 import {
   Alert,
@@ -36,7 +36,7 @@ export default function RegisterPage() {
     setBusy(true);
     setError(null);
     try {
-      await api.register({ name, email, password });
+      await authService.register({ name, email, password });
       router.replace("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create the account");

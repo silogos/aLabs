@@ -1,8 +1,8 @@
 "use client";
 
+import { authService } from "@/services/auth";
 import { Suspense, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { api } from "@/api";
 import { BrandPanel } from "@/components/auth/BrandPanel";
 import {
   Alert,
@@ -41,7 +41,7 @@ function LoginForm() {
     setBusy(true);
     setError(null);
     try {
-      await api.login({ email, password });
+      await authService.login({ email, password });
       router.replace("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed");

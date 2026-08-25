@@ -16,8 +16,8 @@
     "db:studio": "drizzle-kit studio",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "prettier --write apps/web",
+    "format:check": "prettier --check apps/web",
     "clean": "rm -rf apps/*/dist apps/*/.next packages/*/dist node_modules/.cache .turbo"
   },
   "devDependencies": {

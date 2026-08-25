@@ -1,8 +1,10 @@
 /** Dashboard view — KPIs, sprint health, my tasks, milestones, activity, workload. */
+import { planningService } from "@/services/planning";
+import { reportsService } from "@/services/reports";
+import { tasksService } from "@/services/tasks";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../api";
 import { useApp } from "../store";
 import {
   Avatar,
@@ -38,15 +40,18 @@ function Spark({ data, color }: { data: number[]; color: string }) {
 export function Dashboard() {
   const { project, user, setView, openTask } = useApp();
   const pid = project!.id;
-  const { data } = useQuery({ queryKey: ["dashboard", pid], queryFn: () => api.dashboard(pid) });
+  const { data } = useQuery({
+    queryKey: ["dashboard", pid],
+    queryFn: () => reportsService.dashboard(pid),
+  });
   const { data: statuses } = useQuery({
     queryKey: ["statuses", pid],
-    queryFn: () => api.statuses(pid),
+    queryFn: () => tasksService.statuses(pid),
   });
   const statusName = (id: string) => statuses?.find((s) => s.id === id)?.name ?? "—";
   const { data: myTasksPage } = useQuery({
     queryKey: ["tasks", pid, "me"],
-    queryFn: () => api.tasks(pid, { assigneeId: user?.id }),
+    queryFn: () => tasksService.list(pid, { assigneeId: user?.id }),
     enabled: !!user,
   });
 
@@ -65,8 +70,8 @@ export function Dashboard() {
         <div>
           <div className="h2">Welcome back, {user?.name?.split(" ")[0] ?? "Aisha"}</div>
           <div className="small muted" style={{ marginTop: 3 }}>
-            Here&apos;s how <b style={{ color: "var(--fg)" }}>{data.project.name}</b> is tracking today,{" "}
-            {todayLabel()}.
+            Here&apos;s how <b style={{ color: "var(--fg)" }}>{data.project.name}</b> is tracking
+            today, {todayLabel()}.
           </div>
         </div>
         <div className="row">
@@ -363,7 +368,10 @@ function Burndown({ data, total }: { data: { day: number; remaining: number }[];
 }
 
 function Milestones({ pid }: { pid: string }) {
-  const { data } = useQuery({ queryKey: ["milestones", pid], queryFn: () => api.milestones(pid) });
+  const { data } = useQuery({
+    queryKey: ["milestones", pid],
+    queryFn: () => planningService.milestones(pid),
+  });
   return (
     <div className="card">
       <div className="panel-head">

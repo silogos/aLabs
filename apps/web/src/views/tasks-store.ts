@@ -7,9 +7,10 @@
  * mutable store. `useTasksVersion()` + the mutators are the single integration
  * point when wiring real data.
  */
+import { planningService } from "@/services/planning";
+import { tasksService } from "@/services/tasks";
 import { useSyncExternalStore } from "react";
 import type { Content } from "@pmin/core";
-import { api } from "../api";
 
 export type StatusId = "backlog" | "todo" | "progress" | "review" | "done";
 export type TypeId = "epic" | "story" | "task" | "bug" | "subtask";
@@ -898,7 +899,7 @@ function wtPatch(order: number, patch: Record<string, unknown>): void {
   if (API_PROJECT !== "api") return;
   const uuid = UUID_BY_ORDER.get(order);
   if (!ACTIVE_PID || !uuid) return;
-  void api.updateTask(ACTIVE_PID, uuid, patch as never).catch(() => {});
+  void tasksService.update(ACTIVE_PID, uuid, patch as never).catch(() => {});
 }
 /** Best-effort display date ("Aug 20") → ISO; keeps the year sane. */
 function dueToIso(display: string): string | null {
@@ -1235,8 +1236,8 @@ export function addSubtask(parentId: number): number {
   if (API_PROJECT === "api" && ACTIVE_PID) {
     const parentUuid = UUID_BY_ORDER.get(parentId);
     if (parentUuid) {
-      void api
-        .createTask(ACTIVE_PID, {
+      void tasksService
+        .create(ACTIVE_PID, {
           title: "New subtask",
           parentId: parentUuid,
           statusId: STATUS_ID_BY_SHORT.get("todo"),
@@ -1261,7 +1262,7 @@ export function addComment(id: number, text: string): void {
     t.com.push({ by: CURRENT_USER || "ay", when: "just now", text });
     const uuid = UUID_BY_ORDER.get(id);
     if (API_PROJECT === "api" && ACTIVE_PID && uuid) {
-      void api.addComment(ACTIVE_PID, uuid, text).catch(() => {});
+      void tasksService.addComment(ACTIVE_PID, uuid, text).catch(() => {});
     }
     notify();
   }
@@ -1360,8 +1361,8 @@ export function createIssue(input: CreateInput): number {
           }
         : {}),
     };
-    void api
-      .createTask(ACTIVE_PID, body as never)
+    void tasksService
+      .create(ACTIVE_PID, body as never)
       .then((created) => {
         o.uuid = created.id;
         UUID_BY_ORDER.set(created.order, created.id);
@@ -1394,7 +1395,7 @@ export function bulkDelete(ids: number[]): void {
   if (API_PROJECT === "api" && ACTIVE_PID) {
     for (const id of ids) {
       const uuid = UUID_BY_ORDER.get(id);
-      if (uuid) void api.deleteTask(ACTIVE_PID, uuid).catch(() => {});
+      if (uuid) void tasksService.remove(ACTIVE_PID, uuid).catch(() => {});
     }
   }
   notify();
@@ -1404,7 +1405,7 @@ export function bulkDelete(ids: number[]): void {
 /** Fire-and-forget iteration patch (optimistic). */
 function wtIter(sp: string, patch: Record<string, unknown>): void {
   if (API_PROJECT !== "api" || !ACTIVE_PID) return;
-  void api.updateIteration(ACTIVE_PID, sp, patch as never).catch(() => {});
+  void planningService.updateIteration(ACTIVE_PID, sp, patch as never).catch(() => {});
 }
 
 export function startIter(sp: string): void {
@@ -1510,7 +1511,7 @@ export interface CreateSprintInput {
 export function createSprint(input: CreateSprintInput): string {
   const id = crypto.randomUUID();
   if (API_PROJECT === "api" && ACTIVE_PID) {
-    void api
+    void planningService
       .createIteration(ACTIVE_PID, {
         name: input.name,
         goal: input.goal || undefined,
@@ -1565,7 +1566,9 @@ export function addMilestone(input: MilestoneInput): string {
   MILESTONES.push({ id, t: input.t, date: input.date, risk: input.risk, done: 0, total: 0 });
   MILESTONES.sort((a, b) => pD(a.date).getTime() - pD(b.date).getTime());
   if (API_PROJECT === "api" && ACTIVE_PID) {
-    void api.createMilestone(ACTIVE_PID, { name: input.t, dueDate: input.date }).catch(() => {});
+    void planningService
+      .createMilestone(ACTIVE_PID, { name: input.t, dueDate: input.date })
+      .catch(() => {});
   }
   notify();
   return id;
@@ -1578,7 +1581,7 @@ export function updateMilestone(id: string, input: MilestoneInput): void {
   m.risk = input.risk; // risk itself is display-only (derived) until the API grows a column
   MILESTONES.sort((a, b) => pD(a.date).getTime() - pD(b.date).getTime());
   if (API_PROJECT === "api" && ACTIVE_PID && !id.startsWith("ms")) {
-    void api
+    void planningService
       .updateMilestone(ACTIVE_PID, id, { name: input.t, dueDate: input.date })
       .catch(() => {});
   }
@@ -1589,7 +1592,7 @@ export function deleteMilestone(id: string): void {
   if (i >= 0) {
     MILESTONES.splice(i, 1);
     if (API_PROJECT === "api" && ACTIVE_PID && !id.startsWith("ms")) {
-      void api.deleteMilestone(ACTIVE_PID, id).catch(() => {});
+      void planningService.deleteMilestone(ACTIVE_PID, id).catch(() => {});
     }
     notify();
   }
@@ -1614,17 +1617,17 @@ async function apiMirror(
   if (!pid || !taskUuid || !otherUuid) return;
   try {
     if (action === "add") {
-      await api.addTaskLink(pid, taskUuid, { targetId: otherUuid, type: API_TYPE[key] });
+      await tasksService.addLink(pid, taskUuid, { targetId: otherUuid, type: API_TYPE[key] });
     } else {
       // find the link row touching the pair, then delete it
-      const page = await api.tasks(pid, {});
+      const page = await tasksService.list(pid, {});
       const me = page.items.find((x) => x.id === taskUuid);
       const link = (me?.links ?? []).find(
         (l) =>
           (l.sourceId === taskUuid && l.targetId === otherUuid) ||
           (l.sourceId === otherUuid && l.targetId === taskUuid),
       );
-      if (link) await api.deleteTaskLink(pid, taskUuid, link.id);
+      if (link) await tasksService.removeLink(pid, taskUuid, link.id);
     }
   } catch {
     /* offline-tolerant: the local optimistic state stands */

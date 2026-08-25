@@ -1,10 +1,13 @@
 /** Reports view — Overview KPIs/charts and a standard-reports gallery, both
  *  generated from live data (dashboard, iterations, milestones, statuses,
  *  activity) instead of hardcoded arrays. */
+import { planningService } from "@/services/planning";
+import { reportsService } from "@/services/reports";
+import { workspaceService } from "@/services/workspace";
+import type { Dashboard, Iteration, Milestone } from "@pmin/core";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../store";
-import { api, type Iteration, type Milestone, type Dashboard } from "../api";
 import { registerPeople, personOf } from "./tasks-store";
 
 function Spark({ color, vals }: { color: string; vals: number[] }) {
@@ -75,27 +78,27 @@ export function Reports() {
 
   const { data: dash } = useQuery({
     queryKey: ["dashboard", pid],
-    queryFn: () => api.dashboard(pid),
+    queryFn: () => reportsService.dashboard(pid),
   });
   const { data: iterations } = useQuery({
     queryKey: ["iterations", pid],
-    queryFn: () => api.iterations(pid),
+    queryFn: () => planningService.iterations(pid),
   });
   const { data: milestones } = useQuery({
     queryKey: ["milestones", pid],
-    queryFn: () => api.milestones(pid),
+    queryFn: () => planningService.milestones(pid),
   });
   const { data: statuses } = useQuery({
     queryKey: ["progress", pid],
-    queryFn: () => api.reportProgress(pid),
+    queryFn: () => reportsService.progress(pid),
   });
   const { data: activity } = useQuery({
     queryKey: ["activity-full", pid],
-    queryFn: () => api.reportActivity(pid),
+    queryFn: () => reportsService.activity(pid),
   });
   const { data: members } = useQuery({
     queryKey: ["members", project?.organizationId],
-    queryFn: () => api.members(project!.organizationId),
+    queryFn: () => workspaceService.members(project!.organizationId),
     enabled: !!project,
   });
 

@@ -1,5 +1,6 @@
 /** Task detail drawer — two-column workspace (main + side panel) + epic mode.
  *  Reads from the tasks mock store; entry via store.openTask(id). */
+import { documentsService } from "@/services/documents";
 import { useState, useRef, useEffect } from "react";
 import { useApp } from "../store";
 import {
@@ -30,7 +31,6 @@ import {
 import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill } from "../views/tasks-ui";
 import { RichTextEditor } from "@pmin/editor";
 import type { Content } from "@pmin/core";
-import { api } from "../api";
 import { taskSerial } from "./ui";
 
 export function TaskDrawer({ id }: { id: string }) {
@@ -168,7 +168,7 @@ function TaskDetail({
             placeholder="Add a description… what does this issue need to do?"
             onChange={onDescChange}
             onOpenTask={(id) => onOpen(String(id))}
-            uploadFile={(file) => api.uploadFile(pid, file)}
+            uploadFile={(file) => documentsService.uploadFile(pid, file)}
           />
         </Section>
 

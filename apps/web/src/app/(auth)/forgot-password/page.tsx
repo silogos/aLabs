@@ -1,7 +1,7 @@
 "use client";
 
+import { authService } from "@/services/auth";
 import { useState, type FormEvent } from "react";
-import { api } from "@/api";
 import { BrandPanel } from "@/components/auth/BrandPanel";
 import { Alert, EmailInput, Field, LegalFoot, Link } from "@/components/auth/form";
 
@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     setBusy(true);
     setError(null);
     try {
-      const res = await api.forgotPassword(email);
+      const res = await authService.forgotPassword(email);
       setSentTo(email);
       setResetPath(res.resetPath ?? null);
     } catch (err) {
@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
     if (!sentTo) return;
     setBusy(true);
     try {
-      const res = await api.forgotPassword(sentTo);
+      const res = await authService.forgotPassword(sentTo);
       setResetPath(res.resetPath ?? null);
     } finally {
       setBusy(false);
