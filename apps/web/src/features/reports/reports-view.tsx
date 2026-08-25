@@ -4,11 +4,15 @@
 import { planningService } from "@/services/planning";
 import { reportsService } from "@/services/reports";
 import { workspaceService } from "@/services/workspace";
+import { dateShort } from "@/lib/format";
 import type { Dashboard, Iteration, Milestone } from "@pmin/core";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "@/providers/app-provider";
-import { registerPeople, personOf } from "@/features/tasks/store";
+import { useMembers } from "@/hooks/use-members";
+
+import { qk } from "@/lib/query-keys";
+import { personOf } from "@/features/tasks/store";
 
 function Spark({ color, vals }: { color: string; vals: number[] }) {
   if (vals.length < 2) return null;
@@ -30,14 +34,6 @@ function Spark({ color, vals }: { color: string; vals: number[] }) {
 }
 
 const CAL = "M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z";
-const dayFmt = (iso: string | null) =>
-  iso
-    ? new Date(iso.length === 10 ? iso + "T00:00:00" : iso).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      })
-    : "—";
-const todayFmt = () => new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 function Kpi({
   label,
@@ -77,34 +73,27 @@ export function ReportsView() {
   const [current, setCurrent] = useState<string>("status");
 
   const { data: dash } = useQuery({
-    queryKey: ["dashboard", pid],
+    queryKey: qk.dashboard(pid),
     queryFn: () => reportsService.dashboard(pid),
   });
   const { data: iterations } = useQuery({
-    queryKey: ["iterations", pid],
+    queryKey: qk.iterations(pid),
     queryFn: () => planningService.iterations(pid),
   });
   const { data: milestones } = useQuery({
-    queryKey: ["milestones", pid],
+    queryKey: qk.milestones(pid),
     queryFn: () => planningService.milestones(pid),
   });
   const { data: statuses } = useQuery({
-    queryKey: ["progress", pid],
+    queryKey: qk.progress(pid),
     queryFn: () => reportsService.progress(pid),
   });
   const { data: activity } = useQuery({
-    queryKey: ["activity-full", pid],
+    queryKey: qk.activity(pid),
     queryFn: () => reportsService.activity(pid),
   });
-  const { data: members } = useQuery({
-    queryKey: ["members", project?.organizationId],
-    queryFn: () => workspaceService.members(project!.organizationId),
-    enabled: !!project,
-  });
+  const { data: members } = useMembers(project?.organizationId);
 
-  useEffect(() => {
-    if (members) registerPeople(members.map((m) => m.user));
-  }, [members]);
 
   /* ---- derived series (all real: iteration points, sprint counts) ---- */
   const sprints = useMemo(
@@ -367,7 +356,7 @@ export function ReportsView() {
                   </div>
                 </div>
                 <div className="row between">
-                  <span className="tiny mono muted">Live · {todayFmt()}</span>
+                  <span className="tiny mono muted">Live · {dateShort(new Date().toISOString())}</span>
                   <span className="tiny" style={{ color: "var(--accent)" }}>
                     {x.id === current ? "Viewing" : "Open"} →
                   </span>
@@ -379,7 +368,7 @@ export function ReportsView() {
           <div className="card" data-od-id="report-viewer">
             <div className="panel-head">
               <h3>{r.t}</h3>
-              <span className="muted">Generated {todayFmt()}</span>
+              <span className="muted">Generated {dateShort(new Date().toISOString())}</span>
               <div className="right">
                 <button className="btn subtle sm" onClick={() => toast(`Exported ${r.t} · PDF`)}>
                   Export PDF
@@ -463,7 +452,7 @@ function reportBody(id: string, ctx: BodyCtx): React.ReactNode {
               return (
                 <tr key={m.id}>
                   <td>{m.name}</td>
-                  <td className="mono">{dayFmt(m.dueDate)}</td>
+                  <td className="mono">{dateShort(m.dueDate) || "—"}</td>
                   <td>
                     <div
                       className={`bar ${risk === "risk" ? "warn" : risk === "reached" ? "ok" : ""}`}
@@ -592,7 +581,7 @@ function reportBody(id: string, ctx: BodyCtx): React.ReactNode {
         {risky.length > 0 && (
           <>
             The <b>{risky[0]!.name}</b> milestone is <b>at risk</b>: {risky[0]!.progress}% complete,
-            due {dayFmt(risky[0]!.dueDate)}.
+            due {dateShort(risky[0]!.dueDate) || "—"}.
           </>
         )}
       </p>
@@ -630,7 +619,7 @@ function reportBody(id: string, ctx: BodyCtx): React.ReactNode {
           </svg>
           <span>
             <b>{m.name} at risk.</b> {m.progress}% complete with {m.doneTasks}/{m.totalTasks} tasks
-            done and the cutoff on {dayFmt(m.dueDate)}.
+            done and the cutoff on {dateShort(m.dueDate) || "—"}.
           </span>
         </div>
       ))}

@@ -2,11 +2,12 @@
 import { useApp } from "@/providers/app-provider";
 import { useQuery } from "@tanstack/react-query";
 import { notificationsService } from "@/services/notifications";
+import { qk } from "@/lib/query-keys";
 
 export function Topbar({ title }: { title: string }) {
   const { project } = useApp();
   const { data: notifs } = useQuery({
-    queryKey: ["notifications"],
+    queryKey: qk.notifications(),
     queryFn: notificationsService.list,
   });
   const unread = notifs?.filter((n) => !n.readAt).length ?? 0;

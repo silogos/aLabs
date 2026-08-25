@@ -6,7 +6,10 @@ import type { Agreement, AgreementStatus, AgreementType, User } from "@pmin/core
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/app-provider";
-import { registerPeople, personOf } from "@/features/tasks/store";
+import { useMembers } from "@/hooks/use-members";
+
+import { qk } from "@/lib/query-keys";
+import { personOf } from "@/features/tasks/store";
 import { AvKey } from "@/features/tasks/tasks-ui";
 
 type Tone = "accent" | "violet" | "info" | "warn" | "neutral";
@@ -109,24 +112,17 @@ export function AgreementsView() {
   const pid = project!.id;
   const qc = useQueryClient();
   const { data: agreements, isLoading } = useQuery({
-    queryKey: ["agreements", pid],
+    queryKey: qk.agreements(pid),
     queryFn: () => agreementsService.list(pid),
   });
-  const { data: members } = useQuery({
-    queryKey: ["members", project?.organizationId],
-    queryFn: () => workspaceService.members(project!.organizationId),
-    enabled: !!project,
-  });
+  const { data: members } = useMembers(project?.organizationId);
 
-  useEffect(() => {
-    if (members) registerPeople(members.map((m) => m.user));
-  }, [members]);
 
   const [filter, setFilter] = useState<Seg>("all");
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [show, setShow] = useState(false);
 
-  const refresh = () => qc.invalidateQueries({ queryKey: ["agreements", pid] });
+  const refresh = () => qc.invalidateQueries({ queryKey: qk.agreements(pid) });
 
   const all = agreements ?? [];
   const expiring = (a: Agreement) => {

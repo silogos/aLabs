@@ -10,7 +10,8 @@ import {
   type RelKey,
 } from "./store";
 import { TyIcon } from "./tasks-ui";
-import { taskSerial } from "@/components/ui";
+import { taskSerial } from "@/lib/serial";
+import { Modal } from "@/components/ui/modal";
 
 const TYPES: { key: RelKey; label: string }[] = [
   { key: "blockedBy", label: "Blocked by" },
@@ -48,26 +49,12 @@ export function RelModal() {
   };
 
   return (
-    <div className="modal rel-modal show" onClick={(e) => e.target === e.currentTarget && close()}>
-      <div className="mh">
-        <h3>Link issue</h3>
-        <span className="status neutral">
-          <span className="d" />
-          {taskSerial(t.id)}
-        </span>
-        <button className="x" onClick={close} style={{ marginLeft: "auto" }}>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+    <Modal title="Link issue" onClose={close} className="rel-modal" onBackdrop={close} headerExtra={
+      <span className="status neutral">
+        <span className="d" />
+        {taskSerial(t.id)}
+      </span>
+    }>
       <div className="mb">
         <div className="rp-type">
           {TYPES.map((o) => (
@@ -101,6 +88,6 @@ export function RelModal() {
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

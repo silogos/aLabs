@@ -24,7 +24,8 @@ import {
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { setActiveProjectKey } from "@/components/ui";
+import { setActiveProjectKey } from "@/lib/serial";
+import { qk } from "@/lib/query-keys";
 import { hydrateProject } from "@/features/tasks/store";
 
 export type View =
@@ -142,10 +143,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [mNavOpen, setMNavOpen] = useState(false);
 
   const queryClient = useQueryClient();
-  const { data: user, error: meError } = useQuery({ queryKey: ["me"], queryFn: authService.me });
-  const { data: orgs } = useQuery({ queryKey: ["orgs"], queryFn: workspaceService.orgs });
+  const { data: user, error: meError } = useQuery({ queryKey: qk.me(), queryFn: authService.me });
+  const { data: orgs } = useQuery({ queryKey: qk.orgs(), queryFn: workspaceService.orgs });
   const { data: recents } = useQuery({
-    queryKey: ["recents"],
+    queryKey: qk.recents(),
     queryFn: () => workspaceService.recents(5),
   });
 
@@ -171,7 +172,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const org = orgs?.find((o) => o.id === orgPref) ?? orgs?.[0];
   const { data: projects } = useQuery({
-    queryKey: ["projects", org?.id],
+    queryKey: qk.projects(org!.id),
     queryFn: () => workspaceService.projects(org!.id),
     enabled: !!org,
   });
@@ -183,7 +184,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [projects, projPref, recents],
   );
   // keep the module-level key in sync for taskSerial() (plain helpers, toasts)
-  if (project) setActiveProjectKey(project.key);
+  useEffect(() => {
+    if (project) setActiveProjectKey(project.key);
+  }, [project?.key]);
 
   const setView = useCallback(
     (v: View) => {
@@ -222,7 +225,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       void workspaceService
         .touchProject(p.id)
         .catch(() => {})
-        .finally(() => queryClient.invalidateQueries({ queryKey: ["recents"] }));
+        .finally(() => queryClient.invalidateQueries({ queryKey: qk.recents() }));
     },
     [queryClient, router, toast],
   );

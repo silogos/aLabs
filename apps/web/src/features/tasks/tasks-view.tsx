@@ -1,7 +1,7 @@
 /** Tasks view — enterprise task management: Board / List / Tree. */
 import { useMemo, useState, useLayoutEffect, useRef, useCallback, type CSSProperties } from "react";
 import { useApp } from "@/providers/app-provider";
-import { taskSerial } from "@/components/ui";
+import { taskSerial } from "@/lib/serial";
 import {
   useTasksVersion,
   allTasks,

@@ -4,7 +4,11 @@ import { workspaceService } from "@/services/workspace";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/app-provider";
-import { initials, colorFor, timeAgo } from "@/components/ui";
+import { useMembers } from "@/hooks/use-members";
+
+import { initials, colorFor } from "@/components/ui/avatar";
+import { timeAgo } from "@/lib/format";
+import { qk } from "@/lib/query-keys";
 import { RichTextEditor } from "@pmin/editor";
 import type { Content, Page } from "@pmin/core";
 
@@ -31,7 +35,7 @@ function PageEditor({ page, editMode }: { page: Page; editMode: boolean }) {
     contentTimer.current = window.setTimeout(async () => {
       try {
         await documentsService.updatePage(pid, page.id, { content: doc });
-        void qc.invalidateQueries({ queryKey: ["pages", pid] });
+        void qc.invalidateQueries({ queryKey: qk.pages(pid) });
       } catch (e) {
         toast("Couldn't save page: " + (e as Error).message);
       }
@@ -45,7 +49,7 @@ function PageEditor({ page, editMode }: { page: Page; editMode: boolean }) {
     titleTimer.current = window.setTimeout(async () => {
       try {
         await documentsService.updatePage(pid, page.id, { title: t.trim() || "Untitled" });
-        void qc.invalidateQueries({ queryKey: ["pages", pid] });
+        void qc.invalidateQueries({ queryKey: qk.pages(pid) });
       } catch (e) {
         toast("Couldn't save title: " + (e as Error).message);
       }
@@ -96,22 +100,18 @@ export function DocumentsView() {
   const pid = project!.id;
   const qc = useQueryClient();
   const { data: spaces } = useQuery({
-    queryKey: ["spaces", pid],
+    queryKey: qk.spaces(pid),
     queryFn: () => documentsService.spaces(pid),
   });
   const { data: pageData } = useQuery({
-    queryKey: ["pages", pid],
+    queryKey: qk.pages(pid),
     queryFn: () => documentsService.listPages(pid),
   });
   const { data: files } = useQuery({
-    queryKey: ["files", pid],
+    queryKey: qk.files(pid),
     queryFn: () => documentsService.files(pid),
   });
-  const { data: members } = useQuery({
-    queryKey: ["members", project?.organizationId],
-    queryFn: () => workspaceService.members(project!.organizationId),
-    enabled: !!project,
-  });
+  const { data: members } = useMembers(project?.organizationId);
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [activePageId, setActivePageId] = useState<string | null>(null);
@@ -133,7 +133,7 @@ export function DocumentsView() {
         title: "Untitled",
         icon: "📄",
       });
-      await qc.invalidateQueries({ queryKey: ["pages", pid] });
+      await qc.invalidateQueries({ queryKey: qk.pages(pid) });
       setActivePageId(p.id);
       toast("New page created");
     } catch (e) {

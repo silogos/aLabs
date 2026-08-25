@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { View } from "@/providers/app-provider";
 import { useApp } from "@/providers/app-provider";
+import { qk } from "@/lib/query-keys";
 
 /* ---------- nav sections (sidebar + mobile sheet render from this) ---------- */
 
@@ -102,12 +103,12 @@ export function useNavCounts() {
   const { project } = useApp();
   const pid = project?.id;
   const tasksQ = useQuery({
-    queryKey: ["count", "tasks", pid],
+    queryKey: qk.tasks(pid!),
     queryFn: () => tasksService.list(pid!),
     enabled: !!pid,
   });
   const docsQ = useQuery({
-    queryKey: ["count", "docs", pid],
+    queryKey: qk.pages(pid!),
     queryFn: () => documentsService.listPages(pid!),
     enabled: !!pid,
   });

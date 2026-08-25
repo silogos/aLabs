@@ -7,9 +7,13 @@ import type { ActionItem, Meeting, MeetingType, User } from "@pmin/core";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/app-provider";
-import { registerPeople, personOf } from "@/features/tasks/store";
+import { useMembers } from "@/hooks/use-members";
+
+import { personOf } from "@/features/tasks/store";
 import { AvKey } from "@/features/tasks/tasks-ui";
-import { taskSerial } from "@/components/ui";
+import { taskSerial } from "@/lib/serial";
+import { dateShort, timeShort, dateTime, toLocalDate } from "@/lib/format";
+import { qk } from "@/lib/query-keys";
 
 type MeetStatus = Meeting["status"];
 type Seg = "upcoming" | "past" | "all";
@@ -27,11 +31,6 @@ const MSTATUS: Record<MeetStatus, { label: string; tone: string }> = {
   cancelled: { label: "Cancelled", tone: "neutral" },
 };
 
-const dateFmt = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-const timeFmt = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
-const whenFmt = (iso: string) => `${dateFmt(iso)} · ${timeFmt(iso)}`;
 
 function AvStack({ ids }: { ids: string[] }) {
   const shown = ids.slice(0, 4);
@@ -51,23 +50,16 @@ export function MeetingsView() {
   const pid = project!.id;
   const qc = useQueryClient();
   const { data: meetings, isLoading } = useQuery({
-    queryKey: ["meetings", pid],
+    queryKey: qk.meetings(pid),
     queryFn: () => meetingsService.list(pid),
   });
-  const { data: members } = useQuery({
-    queryKey: ["members", project?.organizationId],
-    queryFn: () => workspaceService.members(project!.organizationId),
-    enabled: !!project,
-  });
+  const { data: members } = useMembers(project?.organizationId);
   // task serials for linked action-item chips (taskId → board number)
   const { data: taskPage } = useQuery({
-    queryKey: ["meeting-tasks", pid],
+    queryKey: qk.tasks(pid),
     queryFn: () => tasksService.list(pid),
   });
 
-  useEffect(() => {
-    if (members) registerPeople(members.map((m) => m.user));
-  }, [members]);
 
   const [seg, setSeg] = useState<Seg>("upcoming");
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -75,8 +67,8 @@ export function MeetingsView() {
 
   // meeting-tasks too: convert-to-task changes serials the chips render from
   const refresh = async () => {
-    await qc.invalidateQueries({ queryKey: ["meetings", pid] });
-    await qc.invalidateQueries({ queryKey: ["meeting-tasks", pid] });
+    await qc.invalidateQueries({ queryKey: qk.meetings(pid) });
+    await qc.invalidateQueries({ queryKey: qk.tasks(pid) });
   };
 
   const all = meetings ?? [];
@@ -200,7 +192,7 @@ export function MeetingsView() {
                         <rect x="3" y="4" width="18" height="18" rx="2" />
                         <path d="M16 2v4M8 2v4M3 10h18" />
                       </svg>
-                      {whenFmt(it.scheduledAt)}
+                      {dateTime(it.scheduledAt)}
                     </span>
                     {it.duration != null && (
                       <span className="ic">
@@ -337,7 +329,7 @@ function MeetingDetail({
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <path d="M16 2v4M8 2v4M3 10h18" />
             </svg>
-            {whenFmt(m.scheduledAt)} · {m.duration ?? 30} min
+            {dateTime(m.scheduledAt)} · {m.duration ?? 30} min
           </span>
           {m.location && (
             <span className="fact">
@@ -690,7 +682,7 @@ function ActionItemRow({
               <span>·</span>
             </>
           )}
-          {a.dueDate && <span>Due {dateFmt(a.dueDate)}</span>}
+          {a.dueDate && <span>Due {dateShort(a.dueDate)}</span>}
           {a.done && (
             <span className="status ok">
               <span className="d"></span>Done
@@ -805,11 +797,9 @@ function ScheduleModal({
     return d;
   };
   const [w] = useState(defaultWhen);
-  const fmtLocal = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const [title, setTitle] = useState("");
   const [type, setType] = useState<MeetingType>("other");
-  const [date, setDate] = useState(fmtLocal(w));
+  const [date, setDate] = useState(toLocalDate(w));
   const [time, setTime] = useState(`${String(w.getHours()).padStart(2, "0")}:00`);
   const [duration, setDuration] = useState("30");
   const [location, setLocation] = useState("");
@@ -834,7 +824,7 @@ function ScheduleModal({
         participantIds: picked,
       });
       onClose();
-      toast(`"${m.title}" scheduled · ${dateFmt(m.scheduledAt)} ${timeFmt(m.scheduledAt)}`);
+      toast(`"${m.title}" scheduled · ${dateShort(m.scheduledAt)} ${timeShort(m.scheduledAt)}`);
       await onCreated(m.id);
     } catch (e) {
       toast((e as Error).message);

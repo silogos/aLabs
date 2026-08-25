@@ -3,7 +3,7 @@
  *  with the Tasks board/list/backlog via the `task.sp` field. */
 import { useState, useRef, useMemo, useEffect, type CSSProperties } from "react";
 import { useApp } from "@/providers/app-provider";
-import { taskSerial } from "@/components/ui";
+import { taskSerial } from "@/lib/serial";
 import {
   useTasksVersion,
   SPRINTS,

@@ -6,18 +6,11 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "@/providers/app-provider";
-import {
-  Avatar,
-  Prio,
-  StatusPill,
-  TypeTag,
-  colorFor,
-  dueLabel,
-  initials,
-  isOverdue,
-  taskSerial,
-  timeAgo,
-} from "@/components/ui";
+import { Avatar, colorFor, initials } from "@/components/ui/avatar";
+import { Prio, StatusPill, TypeTag } from "@/components/ui/badges";
+import { taskSerial } from "@/lib/serial";
+import { dateShort, isOverdue, timeAgo } from "@/lib/format";
+import { qk } from "@/lib/query-keys";
 
 function Spark({ data, color }: { data: number[]; color: string }) {
   const max = Math.max(...data, 1);
@@ -41,16 +34,16 @@ export function DashboardView() {
   const { project, user, setView, openTask } = useApp();
   const pid = project!.id;
   const { data } = useQuery({
-    queryKey: ["dashboard", pid],
+    queryKey: qk.dashboard(pid),
     queryFn: () => reportsService.dashboard(pid),
   });
   const { data: statuses } = useQuery({
-    queryKey: ["statuses", pid],
+    queryKey: qk.statuses(pid),
     queryFn: () => tasksService.statuses(pid),
   });
   const statusName = (id: string) => statuses?.find((s) => s.id === id)?.name ?? "—";
   const { data: myTasksPage } = useQuery({
-    queryKey: ["tasks", pid, "me"],
+    queryKey: qk.tasks(pid),
     queryFn: () => tasksService.list(pid, { assigneeId: user?.id }),
     enabled: !!user,
   });
@@ -194,7 +187,7 @@ export function DashboardView() {
                     className={`mono tiny ${isOverdue(t.dueDate) ? "" : ""}`}
                     style={{ color: isOverdue(t.dueDate) ? "var(--danger)" : "var(--faint)" }}
                   >
-                    {dueLabel(t.dueDate)}
+                    {dateShort(t.dueDate)}
                   </span>
                 </div>
               ))}
@@ -369,7 +362,7 @@ function Burndown({ data, total }: { data: { day: number; remaining: number }[];
 
 function Milestones({ pid }: { pid: string }) {
   const { data } = useQuery({
-    queryKey: ["milestones", pid],
+    queryKey: qk.milestones(pid),
     queryFn: () => planningService.milestones(pid),
   });
   return (
@@ -398,7 +391,7 @@ function Milestones({ pid }: { pid: string }) {
               <div className="ms-body">
                 <b>{m.name}</b>
                 <small>
-                  Due {dueLabel(m.dueDate)} · {m.doneTasks}/{m.totalTasks} tasks
+                  Due {dateShort(m.dueDate)} · {m.doneTasks}/{m.totalTasks} tasks
                 </small>
                 <div className={`bar ${tone === "ok" ? "ok" : tone === "warn" ? "warn" : ""}`}>
                   <i style={{ width: `${m.progress}%` }}></i>

@@ -15,7 +15,8 @@ import {
   type PrioId,
 } from "./store";
 import { TyIcon } from "./tasks-ui";
-import { taskSerial } from "@/components/ui";
+import { taskSerial } from "@/lib/serial";
+import { Modal } from "@/components/ui/modal";
 
 const CREATE_TYPES: TypeId[] = ["story", "task", "bug", "epic", "subtask"];
 const PLACEHOLDERS: Record<TypeId, string> = {
@@ -68,29 +69,18 @@ export function TaskModal() {
   };
 
   return (
-    <div
-      className="modal create-modal show"
-      onClick={(e) => e.target === e.currentTarget && close()}
-    >
-      <div className="mh">
-        <h3>Create issue</h3>
+    <Modal
+      title="Create issue"
+      onClose={close}
+      onBackdrop={close}
+      className="create-modal"
+      headerExtra={
         <span className="status neutral">
           <span className="d" />
           Draft
         </span>
-        <button className="x" onClick={close} style={{ marginLeft: "auto" }}>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+      }
+    >
       <div className="mb">
         <div className="cr-type">
           {CREATE_TYPES.map((c) => (
@@ -240,6 +230,6 @@ export function TaskModal() {
           Create {TY[ty].l}
         </button>
       </div>
-    </div>
+    </Modal>
   );
 }

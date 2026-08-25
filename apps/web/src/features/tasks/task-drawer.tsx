@@ -31,7 +31,7 @@ import {
 import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill } from "./tasks-ui";
 import { RichTextEditor } from "@pmin/editor";
 import type { Content } from "@pmin/core";
-import { taskSerial } from "@/components/ui";
+import { taskSerial } from "@/lib/serial";
 
 export function TaskDrawer({ id }: { id: string }) {
   useTasksVersion();

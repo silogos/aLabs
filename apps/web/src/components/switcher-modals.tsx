@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient, useQueries } from "@tanstack/react-query";
 import { useApp } from "@/providers/app-provider";
+import { qk } from "@/lib/query-keys";
 import { hueFor, projColor, CheckIcon, ChevRight } from "@/components/nav-data";
 
 function SearchField({
@@ -282,7 +283,7 @@ function OrgSwitchModal() {
   const all = orgs ?? [];
   const counts = useQueries({
     queries: all.map((o) => ({
-      queryKey: ["projects", o.id],
+      queryKey: qk.projects(o.id),
       queryFn: () => workspaceService.projects(o.id),
     })),
   });
