@@ -1,4 +1,4 @@
-/** Documents view — space/page tree + a BlockNote-powered block editor with persistence. */
+/** Documents view — space/page tree + a Tiptap-powered rich text editor with persistence. */
 import { documentsService } from "@/services/documents";
 import { workspaceService } from "@/services/workspace";
 import { useRef, useState } from "react";
@@ -70,7 +70,7 @@ function PageEditor({ page, editMode }: { page: Page; editMode: boolean }) {
       </h1>
       <div className="byline">
         <span className={`av sm ${colorFor(page.editedBy?.id ?? "marco")}`}>
-          {initials(page.editedBy?.name ?? "Marco Keller")}
+          {initials(page.editedBy?.name ?? "—")}
         </span>
         <span>
           Edited by <b style={{ color: "var(--fg)" }}>{page.editedBy?.name ?? "Marco Keller"}</b> ·{" "}
@@ -114,6 +114,7 @@ export function DocumentsView() {
   const { data: members } = useMembers(project?.organizationId);
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [treeQ, setTreeQ] = useState("");
   const [activePageId, setActivePageId] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(true);
 
@@ -145,11 +146,13 @@ export function DocumentsView() {
     <section className="view active">
       <div className="toolbar">
         <button className="btn subtle sm">All spaces</button>
-        <button className="chip btn on">Engineering</button>
-        <button className="chip btn">Product</button>
-        <button className="chip btn">Design</button>
+        {(spaces ?? []).map((s, i) => (
+          <button key={s.id} className={`chip btn ${i === 0 ? "on" : ""}`}>
+            {s.name}
+          </button>
+        ))}
         <div style={{ marginLeft: "auto" }} className="row">
-          <button className="btn ghost sm" onClick={() => toast("Import — pick a file")}>
+          <button className="btn ghost sm" onClick={() => toast("Import — coming soon")}>
             Import
           </button>
           <button className="btn primary sm" onClick={newPage}>
@@ -174,11 +177,13 @@ export function DocumentsView() {
                 <path d="m21 21-4.3-4.3" />
               </svg>
             </span>
-            <input placeholder="Search documents…" />
+            <input placeholder="Search documents…" value={treeQ} onChange={(e) => setTreeQ(e.target.value)} />
           </div>
           {(spaces ?? []).map((s) => {
             const isCol = collapsed[s.id];
-            const sp = apiPages.filter((p) => p.spaceId === s.id);
+            const sp = apiPages.filter(
+              (p) => p.spaceId === s.id && p.title.toLowerCase().includes(treeQ.toLowerCase()),
+          );
             return (
               <div className={`space ${isCol ? "collapsed" : ""}`} key={s.id}>
                 <div
@@ -227,7 +232,7 @@ export function DocumentsView() {
               <b>{active?.title ?? "—"}</b>
             </div>
             <div className="right">
-              <button className="tbtn" title="Star">
+              <button className="tbtn" title="Star" onClick={() => toast("Star — coming soon")}>
                 <svg
                   width="16"
                   height="16"
@@ -239,7 +244,7 @@ export function DocumentsView() {
                   <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
                 </svg>
               </button>
-              <button className="tbtn" title="Share">
+              <button className="tbtn" title="Share" onClick={() => toast("Share — coming soon")}>
                 <svg
                   width="16"
                   height="16"
@@ -254,7 +259,7 @@ export function DocumentsView() {
                   <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
                 </svg>
               </button>
-              <button className="tbtn" title="History">
+              <button className="tbtn" title="History" onClick={() => toast("History — coming soon")}>
                 <svg
                   width="16"
                   height="16"
@@ -329,7 +334,7 @@ export function DocumentsView() {
           <span
             className="link"
             style={{ marginLeft: "auto" }}
-            onClick={() => toast("Upload — pick a file")}
+            onClick={() => toast("Upload — coming soon")}
           >
             Upload
           </span>

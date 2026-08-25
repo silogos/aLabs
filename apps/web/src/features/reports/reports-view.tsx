@@ -139,7 +139,7 @@ export function ReportsView() {
       )
     : 0;
 
-  const exportFmt = (fmt: string) => toast(`Exported · ${fmt.toUpperCase()}`);
+  const exportFmt = (fmt: string) => toast(`${fmt.toUpperCase()} export — coming soon`);
 
   const REPORTS = [
     { id: "status", t: "Status report", sub: "Weekly project snapshot · auto-generated" },
@@ -373,10 +373,10 @@ export function ReportsView() {
               <h3>{r.t}</h3>
               <span className="muted">Generated {dateShort(new Date().toISOString())}</span>
               <div className="right">
-                <button className="btn subtle sm" onClick={() => toast(`Exported ${r.t} · PDF`)}>
+                <button className="btn subtle sm" onClick={() => toast(`PDF export — coming soon`)}>
                   Export PDF
                 </button>
-                <button className="btn subtle sm" onClick={() => toast(`Exported ${r.t} · CSV`)}>
+                <button className="btn subtle sm" onClick={() => toast(`CSV export — coming soon`)}>
                   Export CSV
                 </button>
               </div>

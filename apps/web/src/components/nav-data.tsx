@@ -115,8 +115,6 @@ export function useNavCounts() {
   return {
     tasks: tasksQ.data?.items.length ?? null,
     documents: docsQ.data?.items.length ?? null,
-    meetings: 3,
-    agreements: 7,
   } as Partial<Record<View, number | null>>;
 }
 

@@ -183,7 +183,7 @@ export function AgreementsView() {
             ))}
           </div>
           <div style={{ marginLeft: "auto" }} className="row">
-            <button className="btn subtle sm" onClick={() => toast("Exported agreements · CSV")}>
+            <button className="btn subtle sm" onClick={() => toast("CSV export — coming soon")}>
               <svg
                 width="13"
                 height="13"
@@ -309,6 +309,7 @@ export function AgreementsView() {
         <NewAgreementModal
           pid={pid}
           members={members?.map((x) => x.user) ?? []}
+          counterparties={[...new Set(all.map((a) => a.counterparty).filter(Boolean))]}
           onClose={() => setShow(false)}
           onCreated={async (id) => {
             await refresh();
@@ -516,11 +517,13 @@ function AgreementDetail({
 function NewAgreementModal({
   pid,
   members,
+  counterparties,
   onClose,
   onCreated,
 }: {
   pid: string;
   members: User[];
+  counterparties: string[];
   onClose: () => void;
   onCreated: (id: string) => void | Promise<void>;
 }) {
@@ -649,11 +652,9 @@ function NewAgreementModal({
           </div>
         </div>
         <datalist id="agr-clients">
-          <option>Acme Corporation</option>
-          <option>Contoso Ltd</option>
-          <option>Globex Industries</option>
-          <option>Initech</option>
-          <option>Hooli</option>
+          {counterparties.map((c) => (
+            <option key={c}>{c}</option>
+          ))}
         </datalist>
 
         <div className="frow">

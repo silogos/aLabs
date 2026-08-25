@@ -17,8 +17,8 @@ export function MobileNav() {
   const { mNavOpen, setMNavOpen, setNavModal, setView, view, user, project, org, toast } = useApp();
   const [sheetView, setSheetView] = useState<"menu" | "acct">("menu");
   const counts = useNavCounts();
-  const name = user?.name ?? "Aisha Yusuf";
-  const email = user?.email ?? "aisha@northwind.io";
+  const name = user?.name ?? "…";
+  const email = user?.email ?? "";
 
   // Reopen always lands on Menu (matches the hamburger intent).
   useEffect(() => {

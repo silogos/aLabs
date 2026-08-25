@@ -1,5 +1,9 @@
 /** Dashboard view — KPIs, sprint health, my tasks, milestones, activity, workload. */
 import { planningService } from "@/services/planning";
+import { notificationsService } from "@/services/notifications";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
+import { timeAgo } from "@/lib/format";
 import { reportsService } from "@/services/reports";
 import { tasksService } from "@/services/tasks";
 import { useState } from "react";
@@ -9,8 +13,7 @@ import { useApp } from "@/providers/app-provider";
 import { Avatar, colorFor, initials } from "@/components/ui/avatar";
 import { Prio, StatusPill, TypeTag } from "@/components/ui/badges";
 import { taskSerial } from "@/lib/serial";
-import { dateShort, isOverdue, timeAgo } from "@/lib/format";
-import { qk } from "@/lib/query-keys";
+import { dateShort, isOverdue } from "@/lib/format";
 
 function Spark({ data, color }: { data: number[]; color: string }) {
   const max = Math.max(...data, 1);
@@ -261,9 +264,6 @@ export function DashboardView() {
   );
 }
 
-function statusNameUnused() {
-  return "";
-}
 function todayLabel() {
   return new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
@@ -461,6 +461,21 @@ interface Notif {
   body: ReactNode;
 }
 
+const NOTIF_KIND: Record<string, NotifKind> = {
+  mention: "mention",
+  comment: "reply",
+  assign: "assign",
+  assignment: "assign",
+  review: "review",
+  due: "due",
+  due_soon: "due",
+  reply: "reply",
+  invite: "invite",
+  invitation: "invite",
+  deadline: "deadline",
+  milestone: "deadline",
+};
+
 const NOTIF_ICONS: Record<NotifKind, ReactNode> = {
   mention: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -507,97 +522,35 @@ const NOTIF_ICONS: Record<NotifKind, ReactNode> = {
   ),
 };
 
-const INITIAL_NOTIFS: Notif[] = [
-  {
-    id: "mention",
-    kind: "mention",
-    unread: true,
-    time: "8m",
-    body: (
-      <>
-        <b>Marco K.</b> mentioned you on <span className="ref">ATL-101</span>
-        <span className="quote">“Can you review the SSO token refresh logic before the demo?”</span>
-      </>
-    ),
-  },
-  {
-    id: "assign",
-    kind: "assign",
-    unread: true,
-    time: "25m",
-    body: (
-      <>
-        <b>Sara R.</b> assigned <span className="ref">ATL-122</span> to you ·{" "}
-        <span style={{ color: "var(--danger)" }}>P1</span>
-      </>
-    ),
-  },
-  {
-    id: "review",
-    kind: "review",
-    unread: true,
-    time: "1h",
-    body: (
-      <>
-        <b>Diego P.</b> requested your review on <b>Audit-log spec</b>
-      </>
-    ),
-  },
-  {
-    id: "due",
-    kind: "due",
-    unread: true,
-    time: "2h",
-    body: (
-      <>
-        <span className="ref">ATL-108</span> is due <b style={{ color: "var(--warn)" }}>tomorrow</b>
-      </>
-    ),
-  },
-  {
-    id: "reply",
-    kind: "reply",
-    unread: false,
-    time: "3h",
-    body: (
-      <>
-        <b>Lin C.</b> replied in <b>Sprint planning</b>
-      </>
-    ),
-  },
-  {
-    id: "invite",
-    kind: "invite",
-    unread: false,
-    time: "5h",
-    body: (
-      <>
-        <b>Jonas B.</b> invited you to <b>SSO design sync</b>
-      </>
-    ),
-  },
-  {
-    id: "deadline",
-    kind: "deadline",
-    unread: false,
-    time: "6h",
-    body: (
-      <>
-        Sprint 14 ends in <b>4 days</b>
-      </>
-    ),
-  },
-];
 
 function NotificationsCard() {
   const { toast } = useApp();
-  const [items, setItems] = useState<Notif[]>(INITIAL_NOTIFS);
+  const qc = useQueryClient();
+  const { data: raw } = useQuery({
+    queryKey: qk.notifications(),
+    queryFn: notificationsService.list,
+  });
+  const items: Notif[] = (raw ?? []).slice(0, 7).map((n) => ({
+    id: n.id,
+    kind: NOTIF_KIND[n.type] ?? "mention",
+    unread: !n.readAt,
+    time: timeAgo(n.createdAt),
+    body: (
+      <>
+        <b>{n.title}</b>
+        {n.body && <span className="quote">{n.body}</span>}
+      </>
+    ),
+  }));
   const unread = items.filter((n) => n.unread).length;
 
   const markAll = () => {
     if (unread === 0) return;
-    setItems((xs) => xs.map((n) => ({ ...n, unread: false })));
-    toast("Marked all as read");
+    notificationsService
+      .markAllRead()
+      .then(() => qc.invalidateQueries({ queryKey: qk.notifications() }))
+      .then(() => toast("Marked all as read"))
+      .catch(() => toast("Couldn't mark as read"));
   };
 
   return (
@@ -613,6 +566,7 @@ function NotificationsCard() {
       </div>
       <div className="panel-body flush">
         <div className="notif-list">
+          {items.length === 0 && <div className="muted tiny" style={{ padding: "14px 16px" }}>No notifications yet.</div>}
           {items.map((n) => (
             <div key={n.id} className={`notif-item ${n.unread ? "unread" : "read"}`}>
               <span className="notif-dot" />

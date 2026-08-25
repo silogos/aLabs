@@ -141,8 +141,8 @@ export function Sidebar() {
             </span>
           )}
           <span className="meta">
-            <b>{user?.name ?? "Aisha Yusuf"}</b>
-            <small>Product Manager</small>
+            <b>{user?.name ?? "…"}</b>
+            <small>Member</small>
           </span>
           <svg
             className="chev"

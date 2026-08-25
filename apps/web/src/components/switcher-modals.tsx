@@ -143,8 +143,8 @@ function AccountModal() {
   const { user, org, setNavModal, toast } = useApp();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const name = user?.name ?? "Aisha Yusuf";
-  const email = user?.email ?? "aisha@northwind.io";
+  const name = user?.name ?? "…";
+  const email = user?.email ?? "";
   const signOut = async () => {
     setNavModal(null);
     try {
