@@ -1,0 +1,119 @@
+/* Design tokens — split from the former monolithic src/styles.css (cascade order preserved: tokens → app → views). */
+/* ============================================================
+   aLabs — Workspace prototype
+   Direction: tech/utility × modern-minimal (Linear · GitHub lineage)
+   Tokens mirror designs/auth/auth.css + designs/index.html verbatim
+   ============================================================ */
+:root {
+  --bg: oklch(98.4% 0.002 250);
+  --surface: oklch(100% 0 0);
+  --surface-2: oklch(96.6% 0.003 250);
+  --surface-3: oklch(94% 0.004 250);
+  --overlay: oklch(14% 0.014 250 / 72%);
+
+  --fg: oklch(22% 0.013 250);
+  --fg-strong: oklch(14% 0.015 250);
+  --muted: oklch(52% 0.012 250);
+  --faint: oklch(64% 0.01 250);
+
+  --border: oklch(91% 0.004 250);
+  --border-strong: oklch(85% 0.007 250);
+
+  --rail: oklch(19% 0.013 255);
+  --rail-2: oklch(23% 0.014 255);
+  --rail-fg: oklch(74% 0.012 255);
+  --rail-faint: oklch(46% 0.012 255);
+
+  --accent: oklch(54% 0.18 258);
+  --accent-hover: oklch(48% 0.19 258);
+  --accent-soft: oklch(96% 0.03 258);
+  --accent-fg: oklch(99% 0.01 258);
+
+  --ok: oklch(58% 0.13 150);
+  --ok-bg: oklch(96% 0.04 150);
+  --warn: oklch(66% 0.14 70);
+  --warn-bg: oklch(96% 0.05 70);
+  --danger: oklch(56% 0.19 25);
+  --danger-bg: oklch(96% 0.04 25);
+  --info: oklch(58% 0.12 240);
+  --info-bg: oklch(96% 0.04 240);
+  --violet: oklch(54% 0.14 300);
+  --violet-bg: oklch(96% 0.04 300);
+
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-lg: 12px;
+  --sidebar-w: 236px;
+  --topbar-h: 52px;
+
+  --font:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "IBM Plex Mono", Menlo, Consolas, monospace;
+
+  --shadow-pop: 0 8px 30px rgba(20, 24, 40, 0.14), 0 2px 8px rgba(20, 24, 40, 0.08);
+  --shadow-card: 0 1px 2px rgba(20, 24, 40, 0.05);
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 13.5px/1.45 var(--font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+::selection {
+  background: var(--accent-soft);
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.mono {
+  font-family: var(--mono);
+  font-feature-settings: "tnum" 1;
+}
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,3 +1,4 @@
+/* Auth screens — split-pane layout. Tokens live in styles/tokens.css (imported by the root layout); this file only styles the auth surfaces. */
 /* ============================================================
    Helix · Auth module
    Shares the platform's design language (tech/utility ×
@@ -8,60 +9,6 @@
    vocabulary). Right = focused, centered auth surface.
    ============================================================ */
 
-:root {
-  /* surfaces — neutral, slightly cool, easy on eyes for long sessions */
-  --bg: oklch(98.4% 0.002 250);
-  --surface: oklch(100% 0 0);
-  --surface-2: oklch(96.6% 0.003 250);
-  --surface-3: oklch(94% 0.004 250);
-
-  /* ink */
-  --fg: oklch(22% 0.013 250);
-  --fg-strong: oklch(14% 0.015 250);
-  --muted: oklch(52% 0.012 250);
-  --faint: oklch(64% 0.01 250);
-
-  /* lines */
-  --border: oklch(91% 0.004 250);
-  --border-strong: oklch(85% 0.007 250);
-
-  /* brand panel — derived from the app's dark rail */
-  --rail: oklch(19% 0.013 255);
-  --rail-2: oklch(23% 0.014 255);
-  --rail-3: oklch(28% 0.015 255);
-  --rail-fg: oklch(78% 0.012 255);
-  --rail-faint: oklch(50% 0.012 255);
-
-  /* one decisive accent — enterprise indigo */
-  --accent: oklch(54% 0.18 258);
-  --accent-hover: oklch(48% 0.19 258);
-  --accent-soft: oklch(96% 0.03 258);
-  --accent-fg: oklch(99% 0.01 258);
-  --accent-glow: oklch(58% 0.18 268);
-
-  /* status — restrained tinted */
-  --ok: oklch(58% 0.13 150);
-  --ok-bg: oklch(96% 0.04 150);
-  --warn: oklch(66% 0.14 70);
-  --warn-bg: oklch(96% 0.05 70);
-  --danger: oklch(56% 0.19 25);
-  --danger-bg: oklch(96% 0.04 25);
-  --info: oklch(58% 0.12 240);
-  --info-bg: oklch(96% 0.04 240);
-
-  --radius: 8px;
-  --radius-sm: 6px;
-  --radius-lg: 12px;
-
-  --font:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "IBM Plex Mono", Menlo, Consolas, monospace;
-
-  --shadow-pop: 0 8px 30px rgba(20, 24, 40, 0.14), 0 2px 8px rgba(20, 24, 40, 0.08);
-  --shadow-card: 0 1px 2px rgba(20, 24, 40, 0.05);
-
-  --brand-w: 46%;
-}
 
 *,
 *::before,

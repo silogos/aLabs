@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
-import "../styles.css";
+import "../styles/tokens.css";
+import "../styles/app.css";
+import "../styles/views.css";
 import "@pmin/editor/editor.css";
 
 export const metadata: Metadata = {
