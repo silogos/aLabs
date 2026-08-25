@@ -1,5 +1,5 @@
 /** Toast stack. */
-import { useApp } from "../store";
+import { useApp } from "@/providers/app-provider";
 
 export function Toasts() {
   const { toasts } = useApp();

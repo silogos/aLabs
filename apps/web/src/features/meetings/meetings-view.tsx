@@ -6,10 +6,10 @@ import { workspaceService } from "@/services/workspace";
 import type { ActionItem, Meeting, MeetingType, User } from "@pmin/core";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useApp } from "../store";
-import { registerPeople, personOf } from "./tasks-store";
-import { AvKey } from "./tasks-ui";
-import { taskSerial } from "../components/ui";
+import { useApp } from "@/providers/app-provider";
+import { registerPeople, personOf } from "@/features/tasks/store";
+import { AvKey } from "@/features/tasks/tasks-ui";
+import { taskSerial } from "@/components/ui";
 
 type MeetStatus = Meeting["status"];
 type Seg = "upcoming" | "past" | "all";
@@ -46,7 +46,7 @@ function AvStack({ ids }: { ids: string[] }) {
   );
 }
 
-export function Meetings() {
+export function MeetingsView() {
   const { project, toast, setView } = useApp();
   const pid = project!.id;
   const qc = useQueryClient();

@@ -3,8 +3,8 @@ import { documentsService } from "@/services/documents";
 import { workspaceService } from "@/services/workspace";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useApp } from "../store";
-import { initials, colorFor, timeAgo } from "../components/ui";
+import { useApp } from "@/providers/app-provider";
+import { initials, colorFor, timeAgo } from "@/components/ui";
 import { RichTextEditor } from "@pmin/editor";
 import type { Content, Page } from "@pmin/core";
 
@@ -91,7 +91,7 @@ function PageEditor({ page, editMode }: { page: Page; editMode: boolean }) {
 /* ------------------------------------------------------------------ *
  * View
  * ------------------------------------------------------------------ */
-export function Documents() {
+export function DocumentsView() {
   const { project, toast } = useApp();
   const pid = project!.id;
   const qc = useQueryClient();

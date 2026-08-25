@@ -5,8 +5,8 @@ import { documentsService } from "@/services/documents";
 import { tasksService } from "@/services/tasks";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import type { View } from "../store";
-import { useApp } from "../store";
+import type { View } from "@/providers/app-provider";
+import { useApp } from "@/providers/app-provider";
 
 /* ---------- nav sections (sidebar + mobile sheet render from this) ---------- */
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { Agreements } from "@/views/Agreements";
+import { AgreementsView } from "@/features/agreements/agreements-view";
 
 export default function AgreementsPage() {
-  return <Agreements />;
+  return <AgreementsView />;
 }

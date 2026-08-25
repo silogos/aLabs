@@ -5,7 +5,7 @@ import { tasksService } from "@/services/tasks";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useApp } from "../store";
+import { useApp } from "@/providers/app-provider";
 import {
   Avatar,
   Prio,
@@ -17,7 +17,7 @@ import {
   isOverdue,
   taskSerial,
   timeAgo,
-} from "../components/ui";
+} from "@/components/ui";
 
 function Spark({ data, color }: { data: number[]; color: string }) {
   const max = Math.max(...data, 1);
@@ -37,7 +37,7 @@ function Spark({ data, color }: { data: number[]; color: string }) {
   );
 }
 
-export function Dashboard() {
+export function DashboardView() {
   const { project, user, setView, openTask } = useApp();
   const pid = project!.id;
   const { data } = useQuery({

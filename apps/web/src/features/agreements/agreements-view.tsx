@@ -5,9 +5,9 @@ import { workspaceService } from "@/services/workspace";
 import type { Agreement, AgreementStatus, AgreementType, User } from "@pmin/core";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useApp } from "../store";
-import { registerPeople, personOf } from "./tasks-store";
-import { AvKey } from "./tasks-ui";
+import { useApp } from "@/providers/app-provider";
+import { registerPeople, personOf } from "@/features/tasks/store";
+import { AvKey } from "@/features/tasks/tasks-ui";
 
 type Tone = "accent" | "violet" | "info" | "warn" | "neutral";
 type Seg = "all" | "active" | "pending" | "expiring";
@@ -104,7 +104,7 @@ function AgrIcon({ ic, size, sw }: { ic: string; size: number; sw: number }) {
   );
 }
 
-export function Agreements() {
+export function AgreementsView() {
   const { project, toast } = useApp();
   const pid = project!.id;
   const qc = useQueryClient();

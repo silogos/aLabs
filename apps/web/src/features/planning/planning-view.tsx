@@ -2,8 +2,8 @@
  *  Reads the shared tasks-store (SPRINTS/TASKS/MILESTONES) so it stays in sync
  *  with the Tasks board/list/backlog via the `task.sp` field. */
 import { useState, useRef, useMemo, useEffect, type CSSProperties } from "react";
-import { useApp } from "../store";
-import { taskSerial } from "../components/ui";
+import { useApp } from "@/providers/app-provider";
+import { taskSerial } from "@/components/ui";
 import {
   useTasksVersion,
   SPRINTS,
@@ -36,8 +36,8 @@ import {
   addMilestone,
   updateMilestone,
   deleteMilestone,
-} from "./tasks-store";
-import { TyIcon, StatusBadge, PrioBadge, AvKey } from "./tasks-ui";
+} from "@/features/tasks/store";
+import { TyIcon, StatusBadge, PrioBadge, AvKey } from "@/features/tasks/tasks-ui";
 
 type PlanView = "board" | "timeline" | "velocity";
 type Zoom = "day" | "week" | "month";
@@ -58,7 +58,7 @@ function colLabel(d: Date, zoom: Zoom): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export function Planning() {
+export function PlanningView() {
   const { toast } = useApp();
   useTasksVersion(); // subscribe to store mutations
   const [planView, setPlanView] = useState<PlanView>("board");

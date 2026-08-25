@@ -1,16 +1,16 @@
 /** Link-issue picker — opens from a task drawer's Relationships "+ Add link".
  *  Pick one of three relation types, search issues, link bidirectionally. */
 import { useState } from "react";
-import { useApp } from "../store";
+import { useApp } from "@/providers/app-provider";
 import {
   useTasksVersion,
   taskById,
   allTasks,
   addRelationship,
   type RelKey,
-} from "../views/tasks-store";
-import { TyIcon } from "../views/tasks-ui";
-import { taskSerial } from "./ui";
+} from "./store";
+import { TyIcon } from "./tasks-ui";
+import { taskSerial } from "@/components/ui";
 
 const TYPES: { key: RelKey; label: string }[] = [
   { key: "blockedBy", label: "Blocked by" },

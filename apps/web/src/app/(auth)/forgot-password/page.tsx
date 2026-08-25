@@ -2,8 +2,8 @@
 
 import { authService } from "@/services/auth";
 import { useState, type FormEvent } from "react";
-import { BrandPanel } from "@/components/auth/BrandPanel";
-import { Alert, EmailInput, Field, LegalFoot, Link } from "@/components/auth/form";
+import { BrandPanel } from "@/features/auth/brand-panel";
+import { Alert, EmailInput, Field, LegalFoot, Link } from "@/features/auth/auth-form";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

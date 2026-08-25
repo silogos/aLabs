@@ -1,7 +1,7 @@
 "use client";
 
-import { Tasks } from "@/views/Tasks";
+import { TasksView } from "@/features/tasks/tasks-view";
 
 export default function TasksPage() {
-  return <Tasks />;
+  return <TasksView />;
 }

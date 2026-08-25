@@ -8,8 +8,8 @@ import type { Project } from "@pmin/core";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient, useQueries } from "@tanstack/react-query";
-import { useApp } from "../store";
-import { hueFor, projColor, CheckIcon, ChevRight } from "./navData";
+import { useApp } from "@/providers/app-provider";
+import { hueFor, projColor, CheckIcon, ChevRight } from "@/components/nav-data";
 
 function SearchField({
   value,
@@ -322,7 +322,7 @@ function OrgSwitchModal() {
   );
 }
 
-export function NavModals() {
+export function SwitcherModals() {
   const { navModal } = useApp();
   if (!navModal) return null;
   return (

@@ -1,7 +1,7 @@
 /** Tasks view — enterprise task management: Board / List / Tree. */
 import { useMemo, useState, useLayoutEffect, useRef, useCallback, type CSSProperties } from "react";
-import { useApp } from "../store";
-import { taskSerial } from "../components/ui";
+import { useApp } from "@/providers/app-provider";
+import { taskSerial } from "@/components/ui";
 import {
   useTasksVersion,
   allTasks,
@@ -26,7 +26,7 @@ import {
   sprintStatusLabel,
   type StatusId,
   type TaskRow,
-} from "./tasks-store";
+} from "./store";
 import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill, EpicChip } from "./tasks-ui";
 
 type Mode = "board" | "table" | "backlog";
@@ -91,7 +91,7 @@ function usePopover(open: boolean, onClose: () => void) {
   return { btnRef, popRef, style };
 }
 
-export function Tasks() {
+export function TasksView() {
   const tver = useTasksVersion();
   const { openTask, setCreateOpen } = useApp();
   const [mode, setMode] = useState<Mode>("board");

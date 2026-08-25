@@ -1,8 +1,8 @@
 /** Sidebar rail — brand, project switcher pill, nav sections, collapse + account.
  *  Design: superadmin-style header, labeled sections, bottom collapse button,
  *  switchers open centered modals (see SwitcherModals.tsx). */
-import { useApp } from "../store";
-import { NAV_SECTIONS, NAV_ICONS, hueFor, projColor, ChevDown, useNavCounts } from "./navData";
+import { useApp } from "@/providers/app-provider";
+import { NAV_SECTIONS, NAV_ICONS, hueFor, projColor, ChevDown, useNavCounts } from "@/components/nav-data";
 
 export function Sidebar() {
   const { view, setView, user, project, setNavModal, setMNavOpen, collapsed, setCollapsed } =

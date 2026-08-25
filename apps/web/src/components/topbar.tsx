@@ -1,5 +1,5 @@
 /** Topbar — breadcrumb + notifications. */
-import { useApp } from "../store";
+import { useApp } from "@/providers/app-provider";
 import { useQuery } from "@tanstack/react-query";
 import { notificationsService } from "@/services/notifications";
 

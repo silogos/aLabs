@@ -1,7 +1,7 @@
 "use client";
 
-import { Meetings } from "@/views/Meetings";
+import { MeetingsView } from "@/features/meetings/meetings-view";
 
 export default function MeetingsPage() {
-  return <Meetings />;
+  return <MeetingsView />;
 }

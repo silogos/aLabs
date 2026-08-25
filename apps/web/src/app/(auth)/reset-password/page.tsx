@@ -3,7 +3,7 @@
 import { authService } from "@/services/auth";
 import { Suspense, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BrandPanel } from "@/components/auth/BrandPanel";
+import { BrandPanel } from "@/features/auth/brand-panel";
 import {
   Alert,
   Field,
@@ -11,7 +11,7 @@ import {
   Link,
   PasswordInput,
   StrengthMeter,
-} from "@/components/auth/form";
+} from "@/features/auth/auth-form";
 
 function ResetForm() {
   const router = useRouter();

@@ -1,7 +1,7 @@
 "use client";
 
-import { Planning } from "@/views/Planning";
+import { PlanningView } from "@/features/planning/planning-view";
 
 export default function PlanningPage() {
-  return <Planning />;
+  return <PlanningView />;
 }

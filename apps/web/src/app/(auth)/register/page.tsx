@@ -3,7 +3,7 @@
 import { authService } from "@/services/auth";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { BrandPanel } from "@/components/auth/BrandPanel";
+import { BrandPanel } from "@/features/auth/brand-panel";
 import {
   Alert,
   Divider,
@@ -16,7 +16,7 @@ import {
   StrengthMeter,
   SwitchFoot,
   TextInput,
-} from "@/components/auth/form";
+} from "@/features/auth/auth-form";
 
 export default function RegisterPage() {
   const router = useRouter();

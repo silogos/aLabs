@@ -2,7 +2,7 @@
  *  Reads from the tasks mock store; entry via store.openTask(id). */
 import { documentsService } from "@/services/documents";
 import { useState, useRef, useEffect } from "react";
-import { useApp } from "../store";
+import { useApp } from "@/providers/app-provider";
 import {
   useTasksVersion,
   taskById,
@@ -27,11 +27,11 @@ import {
   type TaskRow,
   type RelKey,
   peopleOptions,
-} from "../views/tasks-store";
-import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill } from "../views/tasks-ui";
+} from "./store";
+import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill } from "./tasks-ui";
 import { RichTextEditor } from "@pmin/editor";
 import type { Content } from "@pmin/core";
-import { taskSerial } from "./ui";
+import { taskSerial } from "@/components/ui";
 
 export function TaskDrawer({ id }: { id: string }) {
   useTasksVersion();

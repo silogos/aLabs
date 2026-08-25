@@ -5,8 +5,9 @@
  *  store — neither exists during SSR, so we skip server rendering of the
  *  tree entirely to avoid hydration mismatches. */
 import { useEffect, useState, type ReactNode } from "react";
-import { AppProvider } from "@/store";
-import { AppShell } from "@/components/AppShell";
+import { AppProvider } from "@/providers/app-provider";
+import { AppShell } from "@/components/app-shell";
+import { TaskOverlays } from "@/features/tasks/overlays";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -25,6 +26,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <AppProvider>
       <AppShell>{children}</AppShell>
+      <TaskOverlays />
     </AppProvider>
   );
 }

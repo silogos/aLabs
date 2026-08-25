@@ -7,8 +7,8 @@ import { workspaceService } from "@/services/workspace";
 import type { Dashboard, Iteration, Milestone } from "@pmin/core";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useApp } from "../store";
-import { registerPeople, personOf } from "./tasks-store";
+import { useApp } from "@/providers/app-provider";
+import { registerPeople, personOf } from "@/features/tasks/store";
 
 function Spark({ color, vals }: { color: string; vals: number[] }) {
   if (vals.length < 2) return null;
@@ -70,7 +70,7 @@ function Kpi({
   );
 }
 
-export function Reports() {
+export function ReportsView() {
   const { project, toast } = useApp();
   const pid = project!.id;
   const [tab, setTab] = useState<"overview" | "reports">("overview");

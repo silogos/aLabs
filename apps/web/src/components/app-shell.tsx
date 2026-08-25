@@ -1,17 +1,16 @@
-/** App shell — sidebar + topbar + routed view + global overlays. The active
- *  view comes from the URL (store derives it from the pathname); this
- *  component renders the persistent chrome around whatever page is routed. */
+/** App shell — sidebar + topbar + routed view + feature-less global overlays.
+ *  The active view comes from the URL (provider derives it from the pathname);
+ *  this component renders the persistent chrome around whatever page is routed.
+ *  Task overlays live in features/tasks/overlays and are mounted by the (app)
+ *  layout, keeping this shell free of feature imports. */
 import { useEffect, type ReactNode } from "react";
-import { useApp, type View } from "../store";
-import { Sidebar } from "./Sidebar";
-import { Topbar } from "./Topbar";
-import { TaskDrawer } from "./TaskDrawer";
-import { TaskModal } from "./TaskModal";
-import { RelModal } from "./RelModal";
-import { CommandPalette } from "./CommandPalette";
-import { Toasts } from "./Toasts";
-import { NavModals } from "./SwitcherModals";
-import { MobileNav } from "./MobileNav";
+import { useApp, type View } from "@/providers/app-provider";
+import { Sidebar } from "@/components/sidebar";
+import { Topbar } from "@/components/topbar";
+import { CommandPalette } from "@/components/command-palette";
+import { Toasts } from "@/components/toasts";
+import { SwitcherModals } from "@/components/switcher-modals";
+import { MobileNav } from "@/components/mobile-nav";
 
 const TITLES: Record<View, string> = {
   dashboard: "Dashboard",
@@ -114,12 +113,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           setCmdkOpen(false);
         }}
       />
-      <NavModals />
+      <SwitcherModals />
       <MobileNav />
-      {taskId && <TaskDrawer id={taskId} />}
-      {relPickerId && <RelModal />}
-      {createOpen && <TaskModal />}
-      {cmdkOpen && <CommandPalette />}
+      <CommandPalette />
       <Toasts />
     </div>
   );

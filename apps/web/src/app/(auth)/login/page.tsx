@@ -3,7 +3,7 @@
 import { authService } from "@/services/auth";
 import { Suspense, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BrandPanel } from "@/components/auth/BrandPanel";
+import { BrandPanel } from "@/features/auth/brand-panel";
 import {
   Alert,
   Divider,
@@ -14,7 +14,7 @@ import {
   Link,
   PasswordInput,
   SwitchFoot,
-} from "@/components/auth/form";
+} from "@/features/auth/auth-form";
 
 const AUTH_ERROR_TEXT: Record<string, string> = {
   google_not_configured:

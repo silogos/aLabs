@@ -24,8 +24,8 @@ import {
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { setActiveProjectKey } from "./components/ui";
-import { hydrateProject } from "./views/tasks-store";
+import { setActiveProjectKey } from "@/components/ui";
+import { hydrateProject } from "@/features/tasks/store";
 
 export type View =
   "dashboard" | "tasks" | "documents" | "planning" | "meetings" | "reports" | "agreements";
