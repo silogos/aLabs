@@ -3,13 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { api } from "@/api";
 import { BrandPanel } from "@/components/auth/BrandPanel";
-import {
-  Alert,
-  EmailInput,
-  Field,
-  LegalFoot,
-  Link,
-} from "@/components/auth/form";
+import { Alert, EmailInput, Field, LegalFoot, Link } from "@/components/auth/form";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -60,8 +54,8 @@ export default function ForgotPasswordPage() {
               <h1>Check your email</h1>
               <div className="email-chip">{sentTo}</div>
               <p className="sub">
-                If an account exists for this address, a password reset link is on its way. The
-                link expires in 1 hour.
+                If an account exists for this address, a password reset link is on its way. The link
+                expires in 1 hour.
               </p>
 
               {resetPath && (

@@ -29,11 +29,7 @@ export function Avatar({
 }) {
   const label = name ?? user?.name ?? "?";
   const cls = user ? colorFor(user.id) : "b";
-  return (
-    <span className={`av ${cls} ${size}`}>
-      {initials(label)}
-    </span>
-  );
+  return <span className={`av ${cls} ${size}`}>{initials(label)}</span>;
 }
 
 export const PRIORITY_CLASS: Record<TaskPriority, string> = {

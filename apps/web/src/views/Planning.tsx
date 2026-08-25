@@ -52,7 +52,9 @@ function fitWindow(zoom: Zoom): [Date, Date] {
 function colLabel(d: Date, zoom: Zoom): string {
   if (zoom === "month") return d.toLocaleDateString("en-US", { month: "short" });
   if (zoom === "day")
-    return d.getDate() === 1 ? d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : String(d.getDate());
+    return d.getDate() === 1
+      ? d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      : String(d.getDate());
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
@@ -76,7 +78,14 @@ export function Planning() {
         </div>
         <div style={{ marginLeft: "auto" }} className="row">
           <button className="btn primary sm" onClick={() => setSprintModal({})}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M12 5v14M5 12h14" />
             </svg>
             New iteration
@@ -176,7 +185,9 @@ function SprintPane({
   const cap = s.capacity;
   const pct = cap ? Math.min(100, Math.round((committed / cap) * 100)) : 0;
   const over = !!(cap && committed > cap);
-  const avg = Math.round(VELOCITY.reduce((n, d) => n + d.completed, 0) / Math.max(1, VELOCITY.length));
+  const avg = Math.round(
+    VELOCITY.reduce((n, d) => n + d.completed, 0) / Math.max(1, VELOCITY.length),
+  );
 
   let action: React.ReactNode = null;
   if (s.st === "planned")
@@ -256,7 +267,13 @@ function SprintPane({
         </div>
         <div className="sp-meta">
           <div className="sp-goal">
-            <svg className="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <svg
+              className="ci"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            >
               <circle cx="12" cy="12" r="10" />
               <path d="M12 16v-4M12 8h.01" />
             </svg>
@@ -268,8 +285,15 @@ function SprintPane({
                 <span className="tiny mono muted">
                   Committed · {committed} / {cap} pts · avg velocity {avg}
                 </span>
-                <span className="tiny mono" style={{ color: `var(--${over ? "warn" : "ok"})`, fontWeight: 600 }}>
-                  {over ? `over by ${committed - cap} pts` : committed === cap ? "at capacity" : `room for ${cap - committed}`}
+                <span
+                  className="tiny mono"
+                  style={{ color: `var(--${over ? "warn" : "ok"})`, fontWeight: 600 }}
+                >
+                  {over
+                    ? `over by ${committed - cap} pts`
+                    : committed === cap
+                      ? "at capacity"
+                      : `room for ${cap - committed}`}
                 </span>
               </div>
               <div className={`bar ${over ? "warn" : "ok"}`} style={{ height: 8 }}>
@@ -288,7 +312,13 @@ function SprintPane({
         <div className="panel-body flush sp-list">
           {tasks.length ? (
             tasks.map((t) => (
-              <SprintItem key={t.id} id={t.id} plannable={plannable} sprintName={s.name} toast={toast} />
+              <SprintItem
+                key={t.id}
+                id={t.id}
+                plannable={plannable}
+                sprintName={s.name}
+                toast={toast}
+              />
             ))
           ) : (
             <div className="empty-plan">
@@ -446,7 +476,9 @@ function BacklogPane({
               </div>
             ))
           ) : (
-            <div className="empty-plan">Backlog is empty — every work item is committed to a sprint.</div>
+            <div className="empty-plan">
+              Backlog is empty — every work item is committed to a sprint.
+            </div>
           )}
         </div>
       </div>
@@ -458,10 +490,16 @@ function BacklogPane({
 
 function VelocityView() {
   useTasksVersion();
-  const cur = { name: SPRINTS.s14.name.replace("Sprint ", "S"), committed: committedPts("s14"), completed: donePts("s14") };
+  const cur = {
+    name: SPRINTS.s14.name.replace("Sprint ", "S"),
+    committed: committedPts("s14"),
+    completed: donePts("s14"),
+  };
   const data = [...VELOCITY, cur];
   const max = Math.max(1, ...data.map((d) => d.committed));
-  const avg = Math.round(data.slice(0, -1).reduce((n, d) => n + d.completed, 0) / Math.max(1, data.length - 1));
+  const avg = Math.round(
+    data.slice(0, -1).reduce((n, d) => n + d.completed, 0) / Math.max(1, data.length - 1),
+  );
   const [tipIdx, setTipIdx] = useState<number | null>(null);
   const groupRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [tipPos, setTipPos] = useState<{ left: number; top: number } | null>(null);
@@ -470,8 +508,22 @@ function VelocityView() {
   const isCur = d === cur;
   const pct = d && d.committed ? Math.round((d.completed / d.committed) * 100) : 0;
   const delta = d ? d.completed - d.committed : 0;
-  const note = d ? (isCur ? "In progress · not final" : delta >= 0 ? delta > 0 ? `Exceeded by ${delta}` : "Met commitment" : `${Math.abs(delta)} pts short`) : "";
-  const col = d ? (isCur ? "var(--info)" : delta >= 0 ? "var(--ok)" : "var(--warn)") : "var(--muted)";
+  const note = d
+    ? isCur
+      ? "In progress · not final"
+      : delta >= 0
+        ? delta > 0
+          ? `Exceeded by ${delta}`
+          : "Met commitment"
+        : `${Math.abs(delta)} pts short`
+    : "";
+  const col = d
+    ? isCur
+      ? "var(--info)"
+      : delta >= 0
+        ? "var(--ok)"
+        : "var(--warn)"
+    : "var(--muted)";
 
   return (
     <div id="plan-velocity">
@@ -480,7 +532,9 @@ function VelocityView() {
           <h3>Velocity</h3>
           <span className="muted">Hover a sprint for detail</span>
           <div className="right">
-            <span className="tiny mono muted">avg {avg} pts · last {data.length}</span>
+            <span className="tiny mono muted">
+              avg {avg} pts · last {data.length}
+            </span>
           </div>
         </div>
         <div className="panel-body">
@@ -499,8 +553,14 @@ function VelocityView() {
                 }}
                 onMouseLeave={() => setTipIdx(null)}
               >
-                <div className="vel-bar plan" style={{ height: `${Math.round((dd.committed / max) * 100)}%` }} />
-                <div className="vel-bar act" style={{ height: `${Math.round((dd.completed / max) * 100)}%` }} />
+                <div
+                  className="vel-bar plan"
+                  style={{ height: `${Math.round((dd.committed / max) * 100)}%` }}
+                />
+                <div
+                  className="vel-bar act"
+                  style={{ height: `${Math.round((dd.completed / max) * 100)}%` }}
+                />
               </div>
             ))}
           </div>
@@ -512,20 +572,17 @@ function VelocityView() {
             ))}
           </div>
           <div className="row" style={{ gap: 14, marginTop: 14, justifyContent: "center" }}>
-            <span className="tiny mono" style={{ color: "var(--muted)" }}>▮ Committed</span>
-            <span className="tiny mono" style={{ color: "var(--accent)" }}>▮ Completed</span>
+            <span className="tiny mono" style={{ color: "var(--muted)" }}>
+              ▮ Committed
+            </span>
+            <span className="tiny mono" style={{ color: "var(--accent)" }}>
+              ▮ Completed
+            </span>
           </div>
         </div>
       </div>
       {d && tipPos && (
-        <VelTip
-          d={d}
-          isCur={isCur}
-          pct={pct}
-          note={note}
-          col={col}
-          anchor={tipPos}
-        />
+        <VelTip d={d} isCur={isCur} pct={pct} note={note} col={col} anchor={tipPos} />
       )}
     </div>
   );
@@ -592,7 +649,10 @@ function TimelineView({
   };
   const shift = (dir: number) => {
     const span = Math.round((win[1].getTime() - win[0].getTime()) / DAY_MS);
-    setWin([new Date(win[0].getTime() + dir * span * DAY_MS), new Date(win[1].getTime() + dir * span * DAY_MS)]);
+    setWin([
+      new Date(win[0].getTime() + dir * span * DAY_MS),
+      new Date(win[1].getTime() + dir * span * DAY_MS),
+    ]);
   };
 
   const [winStart, winEnd] = win;
@@ -600,17 +660,26 @@ function TimelineView({
   const step = zoom === "day" ? 1 : zoom === "week" ? 7 : 30;
   const cols: Date[] = useMemo(() => {
     const out: Date[] = [];
-    let d = zoom === "month" ? new Date(winStart.getFullYear(), winStart.getMonth(), 1) : new Date(winStart);
+    let d =
+      zoom === "month"
+        ? new Date(winStart.getFullYear(), winStart.getMonth(), 1)
+        : new Date(winStart);
     let guard = 0;
     while (d <= winEnd && guard++ < 400) {
       out.push(new Date(d));
-      d = zoom === "month" ? new Date(d.getFullYear(), d.getMonth() + 1, 1) : new Date(d.getTime() + step * DAY_MS);
+      d =
+        zoom === "month"
+          ? new Date(d.getFullYear(), d.getMonth() + 1, 1)
+          : new Date(d.getTime() + step * DAY_MS);
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [winStart.getTime(), winEnd.getTime(), zoom]);
 
-  const todayPct = Math.max(0, Math.min(100, (daysBetween(fmtISO(winStart), fmtISO(NOW_D)) / spanDays) * 100));
+  const todayPct = Math.max(
+    0,
+    Math.min(100, (daysBetween(fmtISO(winStart), fmtISO(NOW_D)) / spanDays) * 100),
+  );
 
   const rows: (
     | { kind: "sprint"; k: string; l: string; sub: string; a: string; b: string; cls: string }
@@ -628,7 +697,14 @@ function TimelineView({
         cls: s.st === "active" ? "iter" : s.st === "completed" ? "done" : "task",
       };
     }),
-    ...MILESTONES.map((m) => ({ kind: "ms" as const, id: m.id, l: m.t, sub: shortMD(m.date), date: m.date, risk: m.risk })),
+    ...MILESTONES.map((m) => ({
+      kind: "ms" as const,
+      id: m.id,
+      l: m.t,
+      sub: shortMD(m.date),
+      date: m.date,
+      risk: m.risk,
+    })),
   ];
 
   return (
@@ -646,11 +722,28 @@ function TimelineView({
           <span className="range-lbl">
             {shortMD(winStart)} – {shortMD(winEnd)}
           </span>
-          <button className="btn ghost xs" onClick={() => shift(-1)}>‹</button>
-          <button className="btn ghost xs" onClick={() => setWin(fitWindow(zoom))}>Today</button>
-          <button className="btn ghost xs" onClick={() => shift(1)}>›</button>
-          <button className="btn primary xs" title="Add a milestone" onClick={() => onOpenMilestone()}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <button className="btn ghost xs" onClick={() => shift(-1)}>
+            ‹
+          </button>
+          <button className="btn ghost xs" onClick={() => setWin(fitWindow(zoom))}>
+            Today
+          </button>
+          <button className="btn ghost xs" onClick={() => shift(1)}>
+            ›
+          </button>
+          <button
+            className="btn primary xs"
+            title="Add a milestone"
+            onClick={() => onOpenMilestone()}
+          >
+            <svg
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
               <path d="M12 5v14M5 12h14" />
             </svg>
             Milestone
@@ -661,7 +754,10 @@ function TimelineView({
         <div className="gantt-grid">
           <div className="gantt-axis">
             <div className="lbl">Work item</div>
-            <div className="gantt-weeks" style={{ gridTemplateColumns: `repeat(${cols.length},1fr)` }}>
+            <div
+              className="gantt-weeks"
+              style={{ gridTemplateColumns: `repeat(${cols.length},1fr)` }}
+            >
               {cols.map((c, i) => {
                 const isToday =
                   zoom === "month"
@@ -686,12 +782,19 @@ function TimelineView({
                 {r.kind === "ms" ? (
                   <div
                     className={`gantt-ms ${r.risk === "at_risk" ? "warn" : "ms"}`}
-                    style={{ left: `${Math.max(0, Math.min(100, (daysBetween(fmtISO(winStart), r.date) / spanDays) * 100))}%` }}
+                    style={{
+                      left: `${Math.max(0, Math.min(100, (daysBetween(fmtISO(winStart), r.date) / spanDays) * 100))}%`,
+                    }}
                     title={`${r.l} · ${r.sub} · click to edit`}
                     onClick={() => onOpenMilestone(r.id)}
                   />
                 ) : (
-                  <GanttBar r={r} winStart={winStart} spanDays={spanDays} onClick={() => onOpenSprint(r.k)} />
+                  <GanttBar
+                    r={r}
+                    winStart={winStart}
+                    spanDays={spanDays}
+                    onClick={() => onOpenSprint(r.k)}
+                  />
                 )}
               </div>
             </div>
@@ -731,19 +834,32 @@ function GanttBar({
 
 /* ---------------- Create sprint modal ---------------- */
 
-function SprintModal({ editId, onClose, onCreated }: { editId?: string; onClose: () => void; onCreated: (id: string) => void }) {
+function SprintModal({
+  editId,
+  onClose,
+  onCreated,
+}: {
+  editId?: string;
+  onClose: () => void;
+  onCreated: (id: string) => void;
+}) {
   const { toast } = useApp();
   const [win] = useState<[Date, Date]>(() => fitWindow("week"));
   const [minD, maxD] = [fmtISO(win[0]), fmtISO(win[1])];
   const edit = editId ? SPRINTS[editId] : undefined;
   const isEdit = !!edit;
   const [name, setName] = useState(edit?.name ?? "");
-  const [goal, setGoal] = useState(edit && edit.goal && edit.goal !== "No goal set" ? edit.goal : "");
+  const [goal, setGoal] = useState(
+    edit && edit.goal && edit.goal !== "No goal set" ? edit.goal : "",
+  );
   const [start, setStart] = useState(edit?.from ?? "");
   const [end, setEnd] = useState(edit?.to ?? "");
   const [cap, setCap] = useState(edit?.capacity ? String(edit.capacity) : "");
   const [nameErr, setNameErr] = useState(false);
-  const [dateErr, setDateErr] = useState<{ msg: string; which: "start" | "end" | null }>({ msg: "", which: null });
+  const [dateErr, setDateErr] = useState<{ msg: string; which: "start" | "end" | null }>({
+    msg: "",
+    which: null,
+  });
 
   // default dates — create mode only
   useEffect(() => {
@@ -786,7 +902,13 @@ function SprintModal({ editId, onClose, onCreated }: { editId?: string; onClose:
       return;
     }
     const capacity = parseInt(cap, 10) || null;
-    const payload = { name: name.trim(), goal: goal.trim(), fromISO: startV, toISO: endV, capacity };
+    const payload = {
+      name: name.trim(),
+      goal: goal.trim(),
+      fromISO: startV,
+      toISO: endV,
+      capacity,
+    };
     if (isEdit && editId) {
       updateSprint(editId, payload);
       onClose();
@@ -812,44 +934,106 @@ function SprintModal({ editId, onClose, onCreated }: { editId?: string; onClose:
             {statusLbl}
           </span>
           <button className="mh-x" onClick={onClose} title="Close">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
         <div className="mb">
           <label className="flab">Sprint name</label>
-          <input className={`fld ${nameErr ? "err" : ""}`} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Sprint 16" autoFocus />
+          <input
+            className={`fld ${nameErr ? "err" : ""}`}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Sprint 16"
+            autoFocus
+          />
           {nameErr && <div className="fld-err show">Please enter a name.</div>}
 
-          <label className="flab" style={{ marginTop: 12 }}>Goal</label>
-          <textarea className="fld" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="One-sentence outcome for this sprint" rows={2} />
+          <label className="flab" style={{ marginTop: 12 }}>
+            Goal
+          </label>
+          <textarea
+            className="fld"
+            value={goal}
+            onChange={(e) => setGoal(e.target.value)}
+            placeholder="One-sentence outcome for this sprint"
+            rows={2}
+          />
 
           <div className="frow" style={{ marginTop: 12 }}>
             <div>
               <label className="flab">Start date</label>
-              <input type="date" className={`fld ${dateErr.which === "start" ? "err" : ""}`} value={start} min={minD} max={maxD} onChange={(e) => setStart(e.target.value)} />
+              <input
+                type="date"
+                className={`fld ${dateErr.which === "start" ? "err" : ""}`}
+                value={start}
+                min={minD}
+                max={maxD}
+                onChange={(e) => setStart(e.target.value)}
+              />
             </div>
             <div>
               <label className="flab">End date</label>
-              <input type="date" className={`fld ${dateErr.which === "end" ? "err" : ""}`} value={end} min={minD} max={maxD} onChange={(e) => setEnd(e.target.value)} />
+              <input
+                type="date"
+                className={`fld ${dateErr.which === "end" ? "err" : ""}`}
+                value={end}
+                min={minD}
+                max={maxD}
+                onChange={(e) => setEnd(e.target.value)}
+              />
             </div>
           </div>
-          {dateErr.msg && <div className="fld-err show" style={{ marginBottom: 0 }}>{dateErr.msg}</div>}
+          {dateErr.msg && (
+            <div className="fld-err show" style={{ marginBottom: 0 }}>
+              {dateErr.msg}
+            </div>
+          )}
           <div className="sp-range-hint">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
             </svg>
             Within timeline · {shortMD(win[0])} – {shortMD(win[1])}
           </div>
 
           <label className="flab">Capacity (story points, optional)</label>
-          <input type="number" className="fld" value={cap} onChange={(e) => setCap(e.target.value)} placeholder="e.g. 40" min={0} />
+          <input
+            type="number"
+            className="fld"
+            value={cap}
+            onChange={(e) => setCap(e.target.value)}
+            placeholder="e.g. 40"
+            min={0}
+          />
         </div>
         <div className="mf">
-          <span className="left-meta">{isEdit && edit ? `${edit.start} – ${edit.end}${edit.capacity ? " · " + edit.capacity + " pts cap" : ""}` : "Created as Planned · nothing is committed yet"}</span>
-          <button className="btn ghost" onClick={onClose}>Cancel</button>
-          <button className="btn primary" onClick={submit}>{isEdit ? "Save changes" : "Create as Planned"}</button>
+          <span className="left-meta">
+            {isEdit && edit
+              ? `${edit.start} – ${edit.end}${edit.capacity ? " · " + edit.capacity + " pts cap" : ""}`
+              : "Created as Planned · nothing is committed yet"}
+          </span>
+          <button className="btn ghost" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="btn primary" onClick={submit}>
+            {isEdit ? "Save changes" : "Create as Planned"}
+          </button>
         </div>
       </div>
     </div>
@@ -858,7 +1042,15 @@ function SprintModal({ editId, onClose, onCreated }: { editId?: string; onClose:
 
 /* ---------------- Milestone modal (add/edit/delete) ---------------- */
 
-function MilestoneModal({ editId, onClose, toast }: { editId?: string; onClose: () => void; toast: (s: string) => void }) {
+function MilestoneModal({
+  editId,
+  onClose,
+  toast,
+}: {
+  editId?: string;
+  onClose: () => void;
+  toast: (s: string) => void;
+}) {
   const [win] = useState<[Date, Date]>(() => fitWindow("week"));
   const [minD, maxD] = [fmtISO(win[0]), fmtISO(win[1])];
   const edit = editId ? MILESTONES.find((m) => m.id === editId) : undefined;
@@ -923,24 +1115,56 @@ function MilestoneModal({ editId, onClose, toast }: { editId?: string; onClose: 
             {risk === "at_risk" ? "At risk" : "On track"}
           </span>
           <button className="mh-x" onClick={onClose} title="Close">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
         <div className="mb">
           <label className="flab">Name</label>
-          <input className={`fld ${nameErr ? "err" : ""}`} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Security hardening" autoFocus />
+          <input
+            className={`fld ${nameErr ? "err" : ""}`}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Security hardening"
+            autoFocus
+          />
           {nameErr && <div className="fld-err show">Please enter a name.</div>}
 
-          <label className="flab" style={{ marginTop: 12 }}>Target date</label>
-          <input type="date" className={`fld ${dateErr ? "err" : ""}`} value={date} min={minD} max={maxD} onChange={(e) => setDate(e.target.value)} />
+          <label className="flab" style={{ marginTop: 12 }}>
+            Target date
+          </label>
+          <input
+            type="date"
+            className={`fld ${dateErr ? "err" : ""}`}
+            value={date}
+            min={minD}
+            max={maxD}
+            onChange={(e) => setDate(e.target.value)}
+          />
           {dateErr ? (
-            <div className="fld-err show" style={{ marginBottom: 0 }}>{dateErr}</div>
+            <div className="fld-err show" style={{ marginBottom: 0 }}>
+              {dateErr}
+            </div>
           ) : (
             <div className="sp-range-hint">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4M12 8h.01" />
               </svg>
               Within timeline · {shortMD(win[0])} – {shortMD(win[1])}
             </div>
@@ -948,17 +1172,39 @@ function MilestoneModal({ editId, onClose, toast }: { editId?: string; onClose: 
 
           <label className="flab">Status</label>
           <div className="seg">
-            <button type="button" className={risk === "on_track" ? "on" : ""} onClick={() => setRisk("on_track")}>On track</button>
-            <button type="button" className={risk === "at_risk" ? "on" : ""} onClick={() => setRisk("at_risk")}>At risk</button>
+            <button
+              type="button"
+              className={risk === "on_track" ? "on" : ""}
+              onClick={() => setRisk("on_track")}
+            >
+              On track
+            </button>
+            <button
+              type="button"
+              className={risk === "at_risk" ? "on" : ""}
+              onClick={() => setRisk("at_risk")}
+            >
+              At risk
+            </button>
           </div>
         </div>
         <div className="mf">
-          <span className="left-meta">{isEdit && edit ? `${shortMD(edit.date)}${edit.risk === "at_risk" ? " · At risk" : " · On track"}` : "A point in time on the timeline"}</span>
+          <span className="left-meta">
+            {isEdit && edit
+              ? `${shortMD(edit.date)}${edit.risk === "at_risk" ? " · At risk" : " · On track"}`
+              : "A point in time on the timeline"}
+          </span>
           {isEdit && (
-            <button className="btn ghost" style={{ color: "var(--danger)" }} onClick={remove}>Delete</button>
+            <button className="btn ghost" style={{ color: "var(--danger)" }} onClick={remove}>
+              Delete
+            </button>
           )}
-          <button className="btn ghost" onClick={onClose}>Cancel</button>
-          <button className="btn primary" onClick={submit}>{isEdit ? "Save changes" : "Create milestone"}</button>
+          <button className="btn ghost" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="btn primary" onClick={submit}>
+            {isEdit ? "Save changes" : "Create milestone"}
+          </button>
         </div>
       </div>
     </div>

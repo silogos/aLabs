@@ -23,13 +23,32 @@ export function CommandPalette() {
     ];
     const filteredNav = nav.filter(([l]) => l.toLowerCase().includes(ql));
     const filteredTasks = tasks
-      .filter((t) => (`${taskSerial(t.id)}`).toLowerCase().includes(ql) || t.t.toLowerCase().includes(ql))
+      .filter(
+        (t) => `${taskSerial(t.id)}`.toLowerCase().includes(ql) || t.t.toLowerCase().includes(ql),
+      )
       .slice(0, 6)
       .map((t) => [`${taskSerial(t.id)} · ${t.t}`, String(t.id)] as [string, string]);
     return [
-      { g: "Navigate", items: filteredNav.map(([l, v]) => ({ label: l, action: () => go(v, null) })) },
-      { g: "Create", items: [{ label: "New task", action: () => { setCreateOpen(true); setCmdkOpen(false); } }] },
-      { g: "Tasks", items: filteredTasks.map(([l, id]) => ({ label: l, action: () => go("tasks", id) })) },
+      {
+        g: "Navigate",
+        items: filteredNav.map(([l, v]) => ({ label: l, action: () => go(v, null) })),
+      },
+      {
+        g: "Create",
+        items: [
+          {
+            label: "New task",
+            action: () => {
+              setCreateOpen(true);
+              setCmdkOpen(false);
+            },
+          },
+        ],
+      },
+      {
+        g: "Tasks",
+        items: filteredTasks.map(([l, id]) => ({ label: l, action: () => go("tasks", id) })),
+      },
     ].filter((grp) => grp.items.length);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, tasks]);
@@ -45,14 +64,40 @@ export function CommandPalette() {
   void project;
 
   return (
-    <div className="modal cmdk show" onClick={(e) => e.target === e.currentTarget && setCmdkOpen(false)}>
+    <div
+      className="modal cmdk show"
+      onClick={(e) => e.target === e.currentTarget && setCmdkOpen(false)}
+    >
       <div className="field">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ color: "var(--faint)" }}>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          style={{ color: "var(--faint)" }}
+        >
           <circle cx="11" cy="11" r="7" />
           <path d="m21 21-4.3-4.3" />
         </svg>
-        <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Type a command or search…" />
-        <span className="kbd" style={{ font: "11px var(--mono)", color: "var(--faint)", border: "1px solid var(--border)", background: "var(--surface-2)", borderRadius: 4, padding: "1px 5px" }}>
+        <input
+          autoFocus
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Type a command or search…"
+        />
+        <span
+          className="kbd"
+          style={{
+            font: "11px var(--mono)",
+            color: "var(--faint)",
+            border: "1px solid var(--border)",
+            background: "var(--surface-2)",
+            borderRadius: 4,
+            padding: "1px 5px",
+          }}
+        >
           esc
         </span>
       </div>
@@ -63,7 +108,14 @@ export function CommandPalette() {
             <div className="grp">{grp.g}</div>
             {grp.items.map((it, i) => (
               <div key={i} className="ritem" onClick={it.action}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
                 <span>{it.label}</span>

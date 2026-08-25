@@ -15,10 +15,14 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "clean": "rm -rf apps/*/dist apps/*/.next packages/*/dist node_modules/.cache .turbo"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.10",
+    "prettier": "^3.9.6",
     "turbo": "^2",
     "typescript": "^5"
   },

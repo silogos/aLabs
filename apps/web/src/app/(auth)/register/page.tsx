@@ -97,8 +97,8 @@ export default function RegisterPage() {
             <StrengthMeter value={password} />
 
             <label className="check-row">
-              <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} />I
-              agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+              <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} />
+              I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
             </label>
 
             <button
@@ -108,7 +108,14 @@ export default function RegisterPage() {
             >
               <span className="spinner"></span>
               <span className="lbl-txt">Create account</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
             </button>

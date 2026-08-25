@@ -6,7 +6,17 @@ export function TyIcon({ ty, size = 13 }: { ty: TypeId; size?: number }) {
   const m = TY[ty] ?? TY.task;
   return (
     <span className={`ty-ic ${m.c}`}>
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" dangerouslySetInnerHTML={{ __html: m.ic }} />
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        dangerouslySetInnerHTML={{ __html: m.ic }}
+      />
     </span>
   );
 }

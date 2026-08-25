@@ -24,7 +24,8 @@ const MSTATUS: Record<MeetStatus, { label: string; tone: string }> = {
   cancelled: { label: "Cancelled", tone: "neutral" },
 };
 
-const dateFmt = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const dateFmt = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 const timeFmt = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
 const whenFmt = (iso: string) => `${dateFmt(iso)} · ${timeFmt(iso)}`;
@@ -78,7 +79,11 @@ export function Meetings() {
   const all = meetings ?? [];
   const items = useMemo(() => {
     const inSeg = all.filter((m) =>
-      seg === "all" ? true : seg === "upcoming" ? m.status === "scheduled" : m.status !== "scheduled",
+      seg === "all"
+        ? true
+        : seg === "upcoming"
+          ? m.status === "scheduled"
+          : m.status !== "scheduled",
     );
     return inSeg.sort((a, b) =>
       seg === "past"
@@ -124,8 +129,19 @@ export function Meetings() {
           ))}
         </div>
         <div style={{ marginLeft: "auto" }} className="row">
-          <button className="btn primary sm" data-od-id="meet-schedule" onClick={() => setScheduleOpen(true)}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <button
+            className="btn primary sm"
+            data-od-id="meet-schedule"
+            onClick={() => setScheduleOpen(true)}
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M12 5v14M5 12h14" />
             </svg>
             Schedule meeting
@@ -141,9 +157,15 @@ export function Meetings() {
             <span className="muted">{items.length} total</span>
           </div>
           <div className="panel-body flush">
-            {isLoading && <div className="tiny faint" style={{ padding: "16px 14px" }}>Loading…</div>}
+            {isLoading && (
+              <div className="tiny faint" style={{ padding: "16px 14px" }}>
+                Loading…
+              </div>
+            )}
             {!isLoading && items.length === 0 && (
-              <div className="tiny faint" style={{ padding: "16px 14px" }}>No meetings here.</div>
+              <div className="tiny faint" style={{ padding: "16px 14px" }}>
+                No meetings here.
+              </div>
             )}
             {items.map((it) => {
               const ity = MTYPE[it.type ?? "other"];
@@ -164,7 +186,14 @@ export function Meetings() {
                   <div className="mt-title">{it.title}</div>
                   <div className="mt-meta">
                     <span className="ic">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                      >
                         <rect x="3" y="4" width="18" height="18" rx="2" />
                         <path d="M16 2v4M8 2v4M3 10h18" />
                       </svg>
@@ -172,7 +201,14 @@ export function Meetings() {
                     </span>
                     {it.duration != null && (
                       <span className="ic">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                        >
                           <circle cx="12" cy="12" r="10" />
                           <path d="M12 6v6l4 2" />
                         </svg>
@@ -269,10 +305,16 @@ function MeetingDetail({
           </div>
           {m.status === "scheduled" && (
             <div className="row" style={{ gap: 6 }}>
-              <button className="btn subtle sm" onClick={() => onStatus(m.id, "completed", "marked completed")}>
+              <button
+                className="btn subtle sm"
+                onClick={() => onStatus(m.id, "completed", "marked completed")}
+              >
                 Mark completed
               </button>
-              <button className="btn ghost sm" onClick={() => onStatus(m.id, "cancelled", "cancelled")}>
+              <button
+                className="btn ghost sm"
+                onClick={() => onStatus(m.id, "cancelled", "cancelled")}
+              >
                 Cancel meeting
               </button>
             </div>
@@ -281,7 +323,14 @@ function MeetingDetail({
         <h2>{m.title}</h2>
         <div className="meet-facts">
           <span className="fact">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            >
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <path d="M16 2v4M8 2v4M3 10h18" />
             </svg>
@@ -289,7 +338,14 @@ function MeetingDetail({
           </span>
           {m.location && (
             <span className="fact">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
                 <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" />
                 <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
               </svg>
@@ -332,7 +388,9 @@ function MeetingDetail({
         </span>
       </div>
 
-      {m.actionItems.length === 0 && <div className="tiny faint">No action items yet for this meeting.</div>}
+      {m.actionItems.length === 0 && (
+        <div className="tiny faint">No action items yet for this meeting.</div>
+      )}
       {m.actionItems.map((a) => (
         <ActionItemRow
           key={a.id}
@@ -346,7 +404,10 @@ function MeetingDetail({
 
       <AddActionItem m={m} pid={pid} members={members} refresh={refresh} />
 
-      <div className="row" style={{ gap: 8, marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+      <div
+        className="row"
+        style={{ gap: 8, marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}
+      >
         <button
           className="btn ghost sm"
           style={{ color: "var(--danger)", marginLeft: "auto" }}
@@ -361,7 +422,15 @@ function MeetingDetail({
 
 /* ---------------- agenda ---------------- */
 
-function AgendaEditor({ m, pid, refresh }: { m: Meeting; pid: string; refresh: () => Promise<void> }) {
+function AgendaEditor({
+  m,
+  pid,
+  refresh,
+}: {
+  m: Meeting;
+  pid: string;
+  refresh: () => Promise<void>;
+}) {
   const { toast } = useApp();
   const [items, setItems] = useState<string[]>(m.agenda ?? []);
   const [draft, setDraft] = useState("");
@@ -394,12 +463,19 @@ function AgendaEditor({ m, pid, refresh }: { m: Meeting; pid: string; refresh: (
         <span className="muted tiny">{items.length} items</span>
       </div>
       <ol className="agenda">
-        {items.length === 0 && <li style={{ color: "var(--muted)" }}>No agenda yet — add the first item below.</li>}
+        {items.length === 0 && (
+          <li style={{ color: "var(--muted)" }}>No agenda yet — add the first item below.</li>
+        )}
         {items.map((a, i) => (
           <li key={i}>
             <span style={{ flex: 1 }}>{a}</span>
             <span className="row" style={{ gap: 2 }}>
-              <button className="btn ghost xs" title="Move up" onClick={() => move(i, -1)} disabled={i === 0}>
+              <button
+                className="btn ghost xs"
+                title="Move up"
+                onClick={() => move(i, -1)}
+                disabled={i === 0}
+              >
                 ↑
               </button>
               <button
@@ -453,7 +529,15 @@ function AgendaEditor({ m, pid, refresh }: { m: Meeting; pid: string; refresh: (
 
 /* ---------------- notes ---------------- */
 
-function NotesEditor({ m, pid, refresh }: { m: Meeting; pid: string; refresh: () => Promise<void> }) {
+function NotesEditor({
+  m,
+  pid,
+  refresh,
+}: {
+  m: Meeting;
+  pid: string;
+  refresh: () => Promise<void>;
+}) {
   const { toast } = useApp();
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(m.notes ?? "");
@@ -574,7 +658,13 @@ function ActionItemRow({
 
   return (
     <div className={`act-item ${a.done ? "done" : ""}`}>
-      <input type="checkbox" className="ckbox ck" checked={a.done} disabled={busy} onChange={() => void toggle()} />
+      <input
+        type="checkbox"
+        className="ckbox ck"
+        checked={a.done}
+        disabled={busy}
+        onChange={() => void toggle()}
+      />
       <div className="ai-body">
         <div className="ai-top">
           <b>{a.description}</b>
@@ -606,7 +696,12 @@ function ActionItemRow({
         </div>
       </div>
       {!a.done && !a.taskId && (
-        <button className="btn ghost sm" disabled={busy} onClick={() => void convert()} title="Create a task from this action item">
+        <button
+          className="btn ghost sm"
+          disabled={busy}
+          onClick={() => void convert()}
+          title="Create a task from this action item"
+        >
           → Task
         </button>
       )}
@@ -660,7 +755,12 @@ function AddActionItem({
           if (e.key === "Enter") void submit();
         }}
       />
-      <select className="fld" style={{ height: 30, width: 130 }} value={assignee} onChange={(e) => setAssignee(e.target.value)}>
+      <select
+        className="fld"
+        style={{ height: 30, width: 130 }}
+        value={assignee}
+        onChange={(e) => setAssignee(e.target.value)}
+      >
         <option value="">Unassigned</option>
         {members.map((u) => (
           <option key={u.id} value={u.id}>
@@ -744,7 +844,14 @@ function ScheduleModal({
         <div className="mh">
           <h3>Schedule meeting</h3>
           <button className="mh-x" onClick={onClose} title="Close">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
@@ -766,7 +873,11 @@ function ScheduleModal({
           <div className="frow" style={{ marginTop: 12 }}>
             <div>
               <label className="flab">Type</label>
-              <select className="fld" value={type} onChange={(e) => setType(e.target.value as MeetingType)}>
+              <select
+                className="fld"
+                value={type}
+                onChange={(e) => setType(e.target.value as MeetingType)}
+              >
                 {(Object.keys(MTYPE) as MeetingType[]).map((t) => (
                   <option key={t} value={t}>
                     {MTYPE[t].label}
@@ -790,11 +901,21 @@ function ScheduleModal({
           <div className="frow" style={{ marginTop: 12 }}>
             <div>
               <label className="flab">Date</label>
-              <input type="date" className="fld" value={date} onChange={(e) => setDate(e.target.value)} />
+              <input
+                type="date"
+                className="fld"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
             </div>
             <div>
               <label className="flab">Time</label>
-              <input type="time" className="fld" value={time} onChange={(e) => setTime(e.target.value)} />
+              <input
+                type="time"
+                className="fld"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+              />
             </div>
           </div>
 
@@ -814,7 +935,12 @@ function ScheduleModal({
           <div className="stack" style={{ gap: 6, maxHeight: 150, overflow: "auto" }}>
             {members.map((u) => (
               <label key={u.id} className="row" style={{ gap: 9, fontSize: 13, cursor: "pointer" }}>
-                <input type="checkbox" className="ck" checked={picked.includes(u.id)} onChange={() => toggle(u.id)} />
+                <input
+                  type="checkbox"
+                  className="ck"
+                  checked={picked.includes(u.id)}
+                  onChange={() => toggle(u.id)}
+                />
                 <AvKey id={u.id} size="sm" />
                 <span>{u.name}</span>
               </label>

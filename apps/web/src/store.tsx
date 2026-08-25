@@ -23,7 +23,8 @@ import { api, type User, type Project, type Organization } from "./api";
 import { setActiveProjectKey } from "./components/ui";
 import { hydrateProject } from "./views/tasks-store";
 
-export type View = "dashboard" | "tasks" | "documents" | "planning" | "meetings" | "reports" | "agreements";
+export type View =
+  "dashboard" | "tasks" | "documents" | "planning" | "meetings" | "reports" | "agreements";
 export type NavModal = "acct" | "proj" | "org" | null;
 
 /** URL per view — the route is the source of truth (no view in storage). */
@@ -38,7 +39,8 @@ export const VIEW_PATH: Record<View, string> = {
 };
 
 const viewFromPath = (p: string): View =>
-  (Object.entries(VIEW_PATH).find(([, path]) => path === p)?.[0] as View | undefined) ?? "dashboard";
+  (Object.entries(VIEW_PATH).find(([, path]) => path === p)?.[0] as View | undefined) ??
+  "dashboard";
 
 interface Toast {
   id: number;
@@ -108,7 +110,10 @@ const lsDel = (k: string) => {
 };
 
 /** Landing rule: most-recently-visited project in this org → else first by createdAt. */
-export function landingProject(projects: Project[], recents: RecentEntry[] | undefined): Project | undefined {
+export function landingProject(
+  projects: Project[],
+  recents: RecentEntry[] | undefined,
+): Project | undefined {
   for (const r of recents ?? []) {
     const p = projects.find((x) => x.id === r.project.id);
     if (p) return p;
@@ -164,7 +169,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     enabled: !!org,
   });
   const project = useMemo(
-    () => (projects?.length ? projects.find((p) => p.id === projPref) ?? landingProject(projects, recents) : undefined),
+    () =>
+      projects?.length
+        ? (projects.find((p) => p.id === projPref) ?? landingProject(projects, recents))
+        : undefined,
     [projects, projPref, recents],
   );
   // keep the module-level key in sync for taskSerial() (plain helpers, toasts)

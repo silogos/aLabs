@@ -156,8 +156,7 @@ export const api = {
   /* ---- documents ---- */
   spaces: (pid: string) =>
     req<{ data: Space[] }>(`/projects/${pid}/documents/spaces`).then((x) => x.data),
-  pages: (pid: string) =>
-    req<Paginated<Page>>(`/projects/${pid}/documents/pages?limit=100`),
+  pages: (pid: string) => req<Paginated<Page>>(`/projects/${pid}/documents/pages?limit=100`),
   page: (pid: string, id: string) =>
     req<{ data: Page }>(`/projects/${pid}/documents/pages/${id}`).then((x) => x.data),
   updatePage: (pid: string, id: string, body: Partial<Page>) =>
@@ -176,7 +175,7 @@ export const api = {
   files: (pid: string) => {
     // files live under documents/files (not in the catalog but provided)
     return req<{ data: FileRef[] } | FileRef[]>(`/projects/${pid}/documents/files`).then(
-      (x) => ((x as { data?: FileRef[] }).data ?? (x as FileRef[])),
+      (x) => (x as { data?: FileRef[] }).data ?? (x as FileRef[]),
     );
   },
   /** Upload an image via multipart; returns the served URL (`/uploads/<id>`). */
@@ -203,7 +202,10 @@ export const api = {
   /* ---- planning ---- */
   iterations: (pid: string) =>
     req<{ data: Iteration[] }>(`/projects/${pid}/planning/iterations`).then((x) => x.data),
-  createIteration: (pid: string, body: { name: string; goal?: string; startDate: string; endDate: string }) =>
+  createIteration: (
+    pid: string,
+    body: { name: string; goal?: string; startDate: string; endDate: string },
+  ) =>
     req<{ data: Iteration }>(`/projects/${pid}/planning/iterations`, {
       method: "POST",
       body: JSON.stringify(body),
@@ -211,7 +213,13 @@ export const api = {
   updateIteration: (
     pid: string,
     id: string,
-    body: Partial<{ name: string; goal: string; startDate: string; endDate: string; status: "planned" | "active" | "completed" }>,
+    body: Partial<{
+      name: string;
+      goal: string;
+      startDate: string;
+      endDate: string;
+      status: "planned" | "active" | "completed";
+    }>,
   ) =>
     req<{ data: Iteration }>(`/projects/${pid}/planning/iterations/${id}`, {
       method: "PATCH",
@@ -219,7 +227,10 @@ export const api = {
     }).then((x) => x.data),
   milestones: (pid: string) =>
     req<{ data: Milestone[] }>(`/projects/${pid}/planning/milestones`).then((x) => x.data),
-  createMilestone: (pid: string, body: { name: string; description?: string; dueDate?: string | null }) =>
+  createMilestone: (
+    pid: string,
+    body: { name: string; description?: string; dueDate?: string | null },
+  ) =>
     req<{ data: Milestone }>(`/projects/${pid}/planning/milestones`, {
       method: "POST",
       body: JSON.stringify(body),
@@ -227,14 +238,21 @@ export const api = {
   updateMilestone: (
     pid: string,
     id: string,
-    body: Partial<{ name: string; description: string; dueDate: string | null; status: "planned" | "reached" }>,
+    body: Partial<{
+      name: string;
+      description: string;
+      dueDate: string | null;
+      status: "planned" | "reached";
+    }>,
   ) =>
     req<{ data: Milestone }>(`/projects/${pid}/planning/milestones/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),
     }).then((x) => x.data),
   deleteMilestone: (pid: string, id: string) =>
-    req<void>(`/projects/${pid}/planning/milestones/${id}`, { method: "DELETE" }).then(() => undefined),
+    req<void>(`/projects/${pid}/planning/milestones/${id}`, { method: "DELETE" }).then(
+      () => undefined,
+    ),
 
   /* ---- meetings ---- */
   meetings: (pid: string) =>
@@ -261,7 +279,11 @@ export const api = {
     }).then((x) => x.data),
   deleteMeeting: (pid: string, id: string) =>
     req<void>(`/projects/${pid}/meetings/${id}`, { method: "DELETE" }).then(() => undefined),
-  addActionItem: (pid: string, meetingId: string, body: { description: string; assigneeId?: string; dueDate?: string }) =>
+  addActionItem: (
+    pid: string,
+    meetingId: string,
+    body: { description: string; assigneeId?: string; dueDate?: string },
+  ) =>
     req<{ data: ActionItem }>(`/projects/${pid}/meetings/${meetingId}/action-items`, {
       method: "POST",
       body: JSON.stringify(body),
@@ -269,7 +291,13 @@ export const api = {
   updateActionItem: (
     pid: string,
     id: string,
-    body: Partial<{ description: string; assigneeId: string; dueDate: string; done: boolean; taskId: string }>,
+    body: Partial<{
+      description: string;
+      assigneeId: string;
+      dueDate: string;
+      done: boolean;
+      taskId: string;
+    }>,
   ) =>
     req<{ data: ActionItem }>(`/projects/${pid}/action-items/${id}`, {
       method: "PATCH",
@@ -333,8 +361,7 @@ export const api = {
     req<void>(`/projects/${pid}/agreements/${id}`, { method: "DELETE" }).then(() => undefined),
 
   /* ---- notifications ---- */
-  notifications: () =>
-    req<{ data: Notification[] }>("/notifications").then((x) => x.data),
+  notifications: () => req<{ data: Notification[] }>("/notifications").then((x) => x.data),
 };
 
 export interface Comment {

@@ -5,7 +5,8 @@ import { useApp } from "../store";
 import { NAV_SECTIONS, NAV_ICONS, hueFor, projColor, ChevDown, useNavCounts } from "./navData";
 
 export function Sidebar() {
-  const { view, setView, user, project, setNavModal, setMNavOpen, collapsed, setCollapsed } = useApp();
+  const { view, setView, user, project, setNavModal, setMNavOpen, collapsed, setCollapsed } =
+    useApp();
   const counts = useNavCounts();
 
   return (
@@ -19,7 +20,13 @@ export function Sidebar() {
           <span className="logo" aria-label="aLabs">
             <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
               <path d="M3 40 H27 M45 40 H61" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
-              <path d="M27 40 L31 43 L36 13 L40 47 L45 40" stroke="var(--accent)" strokeWidth="6" strokeLinejoin="round" strokeLinecap="round" />
+              <path
+                d="M27 40 L31 43 L36 13 L40 47 L45 40"
+                stroke="var(--accent)"
+                strokeWidth="6"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
             </svg>
           </span>
           <span className="meta">
@@ -35,7 +42,15 @@ export function Sidebar() {
             aria-label="Open menu"
             onClick={() => setMNavOpen(true)}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.9"
+              strokeLinecap="round"
+            >
               <path d="M3 6h18M3 12h18M3 18h18" />
             </svg>
           </button>
@@ -50,7 +65,10 @@ export function Sidebar() {
           title="Switch project"
           onClick={() => setNavModal("proj")}
         >
-          <span className="pdot" style={project ? { background: projColor(hueFor(project.id)) } : undefined}>
+          <span
+            className="pdot"
+            style={project ? { background: projColor(hueFor(project.id)) } : undefined}
+          >
             {project?.icon ?? project?.name[0] ?? "…"}
           </span>
           <span className="ws-meta">
@@ -92,12 +110,26 @@ export function Sidebar() {
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           onClick={() => setCollapsed(!collapsed)}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M15 6l-6 6 6 6" />
           </svg>
           <span className="lbl">{collapsed ? "Expand" : "Collapse"}</span>
         </button>
-        <button className="user" data-od-id="user-menu" onClick={() => setNavModal("acct")} title="Account">
+        <button
+          className="user"
+          data-od-id="user-menu"
+          onClick={() => setNavModal("acct")}
+          title="Account"
+        >
           {user ? (
             <span className="av">
               {user.name[0]}
@@ -112,7 +144,16 @@ export function Sidebar() {
             <b>{user?.name ?? "Aisha Yusuf"}</b>
             <small>Product Manager</small>
           </span>
-          <svg className="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--rail-faint)" }}>
+          <svg
+            className="chev"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            style={{ color: "var(--rail-faint)" }}
+          >
             <path d="M9 6l6 6-6 6" />
           </svg>
         </button>

@@ -57,7 +57,11 @@ function ResetForm() {
             <p className="sub">
               Your password has been updated and all previous sessions were signed out.
             </p>
-            <button className="btn primary full lg" style={{ marginTop: 18 }} onClick={() => router.replace("/login")}>
+            <button
+              className="btn primary full lg"
+              style={{ marginTop: 18 }}
+              onClick={() => router.replace("/login")}
+            >
               Continue to sign in
             </button>
           </div>

@@ -2,7 +2,13 @@
  *  Pick one of three relation types, search issues, link bidirectionally. */
 import { useState } from "react";
 import { useApp } from "../store";
-import { useTasksVersion, taskById, allTasks, addRelationship, type RelKey } from "../views/tasks-store";
+import {
+  useTasksVersion,
+  taskById,
+  allTasks,
+  addRelationship,
+  type RelKey,
+} from "../views/tasks-store";
 import { TyIcon } from "../views/tasks-ui";
 import { taskSerial } from "./ui";
 
@@ -45,15 +51,31 @@ export function RelModal() {
     <div className="modal rel-modal show" onClick={(e) => e.target === e.currentTarget && close()}>
       <div className="mh">
         <h3>Link issue</h3>
-        <span className="status neutral"><span className="d" />{taskSerial(t.id)}</span>
+        <span className="status neutral">
+          <span className="d" />
+          {taskSerial(t.id)}
+        </span>
         <button className="x" onClick={close} style={{ marginLeft: "auto" }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
         </button>
       </div>
       <div className="mb">
         <div className="rp-type">
           {TYPES.map((o) => (
-            <button key={o.key} className={`rp-t${type === o.key ? " on" : ""}`} onClick={() => setType(o.key)}>
+            <button
+              key={o.key}
+              className={`rp-t${type === o.key ? " on" : ""}`}
+              onClick={() => setType(o.key)}
+            >
               {o.label}
             </button>
           ))}

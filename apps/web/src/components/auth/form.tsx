@@ -145,6 +145,7 @@ export function PasswordInput({
 
 export function GoogleButton({ label }: { label: string }) {
   return (
+    // eslint-disable-next-line @next/next/no-html-link-for-pages -- full-page nav to a server OAuth route
     <a className="btn oauth-btn full" href="/api/auth/oauth/google">
       <span className="gi">
         <svg viewBox="0 0 24 24">
@@ -270,7 +271,11 @@ export function StrengthMeter({ value }: { value: string }) {
 /* ---- chrome bits ---- */
 
 export function Divider({ label }: { label: string }) {
-  return <div className="divider"><span>{label}</span></div>;
+  return (
+    <div className="divider">
+      <span>{label}</span>
+    </div>
+  );
 }
 
 export function SwitchFoot({ text, link }: { text: string; link: ReactNode }) {

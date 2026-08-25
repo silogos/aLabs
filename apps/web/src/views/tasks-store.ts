@@ -57,10 +57,26 @@ export const who = (id: string | undefined): string => personOf(id)?.name ?? "Un
 
 export const TY: Record<TypeId, { l: string; c: string; ic: string }> = {
   epic: { l: "Epic", c: "v", ic: '<path d="M12 3 21 12 12 21 3 12Z"/><path d="M12 9v6"/>' },
-  story: { l: "Story", c: "g", ic: '<path d="M6 4h8l5 5v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M14 4v5h5"/>' },
-  task: { l: "Task", c: "b", ic: '<rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/>' },
-  bug: { l: "Bug", c: "r", ic: '<path d="M7 12a5 5 0 0 1 10 0v3a5 5 0 0 1-10 0Z"/><path d="M12 7V4M9 5 7.5 3.5M15 5l1.5-1.5M5 11h2M17 11h2M5.5 16 7 15.5M18.5 16 17 15.5"/>' },
-  subtask: { l: "Subtask", c: "m", ic: '<rect x="5" y="9" width="13" height="10" rx="1.5"/><path d="M9 9V7a2 2 0 0 1 2-2h6"/><path d="m9 13 1.3 1.3L13 11.5"/>' },
+  story: {
+    l: "Story",
+    c: "g",
+    ic: '<path d="M6 4h8l5 5v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M14 4v5h5"/>',
+  },
+  task: {
+    l: "Task",
+    c: "b",
+    ic: '<rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  },
+  bug: {
+    l: "Bug",
+    c: "r",
+    ic: '<path d="M7 12a5 5 0 0 1 10 0v3a5 5 0 0 1-10 0Z"/><path d="M12 7V4M9 5 7.5 3.5M15 5l1.5-1.5M5 11h2M17 11h2M5.5 16 7 15.5M18.5 16 17 15.5"/>',
+  },
+  subtask: {
+    l: "Subtask",
+    c: "m",
+    ic: '<rect x="5" y="9" width="13" height="10" rx="1.5"/><path d="M9 9V7a2 2 0 0 1 2-2h6"/><path d="m9 13 1.3 1.3L13 11.5"/>',
+  },
 };
 
 export const ST: Record<StatusId, [string, string]> = {
@@ -97,9 +113,40 @@ export interface Sprint {
   completed?: number; // frozen cache when completed
 }
 export const SPRINTS: Record<string, Sprint> = {
-  s13: { id: "s13", name: "Sprint 13", goal: "Auth foundations + billing scaffold — MFA enrollment, password rate-limiting, and the billing-webhook path stubbed.", start: "Mar 03", end: "Mar 16", from: "2025-03-03", to: "2025-03-16", st: "completed", committed: 48, completed: 45 },
-  s14: { id: "s14", name: "Sprint 14", goal: "Ship OAuth2 SSO behind a feature flag and land the immutable audit-log store. Client-portal scaffolding visible but read-only.", start: "Mar 17", end: "Mar 31", from: "2025-03-17", to: "2025-03-31", st: "active", capacity: 52 },
-  s15: { id: "s15", name: "Sprint 15", goal: "Client portal read-only views + reporting export to PDF/CSV.", start: "Apr 01", end: "Apr 14", from: "2025-04-01", to: "2025-04-14", st: "planned", capacity: 48 },
+  s13: {
+    id: "s13",
+    name: "Sprint 13",
+    goal: "Auth foundations + billing scaffold — MFA enrollment, password rate-limiting, and the billing-webhook path stubbed.",
+    start: "Mar 03",
+    end: "Mar 16",
+    from: "2025-03-03",
+    to: "2025-03-16",
+    st: "completed",
+    committed: 48,
+    completed: 45,
+  },
+  s14: {
+    id: "s14",
+    name: "Sprint 14",
+    goal: "Ship OAuth2 SSO behind a feature flag and land the immutable audit-log store. Client-portal scaffolding visible but read-only.",
+    start: "Mar 17",
+    end: "Mar 31",
+    from: "2025-03-17",
+    to: "2025-03-31",
+    st: "active",
+    capacity: 52,
+  },
+  s15: {
+    id: "s15",
+    name: "Sprint 15",
+    goal: "Client portal read-only views + reporting export to PDF/CSV.",
+    start: "Apr 01",
+    end: "Apr 14",
+    from: "2025-04-01",
+    to: "2025-04-14",
+    st: "planned",
+    capacity: 48,
+  },
 };
 export interface Milestone {
   id: string;
@@ -127,17 +174,29 @@ export const VELOCITY = [
 export const NOW_D = new Date();
 export const pD = (s: string): Date => new Date(s + "T00:00:00");
 export function shortMD(d: Date | string): string {
-  return (d instanceof Date ? d : pD(d)).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return (d instanceof Date ? d : pD(d)).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 }
 export function daysBetween(a: string, b: string): number {
   return Math.round((pD(b).getTime() - pD(a).getTime()) / 86400000);
 }
 export function fmtISO(d: Date): string {
-  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(d.getDate()).padStart(2, "0")
+  );
 }
-export const spStatusClass = (st: SprintStatus): string => ({ planned: "neutral", active: "info", completed: "ok" }[st] || "neutral");
-export const sprintStatusLabel = (sp: string): string => ({ planned: "Planned", active: "Active", completed: "Completed" }[SPRINTS[sp].st]);
-export const iterTasks = (sp: string): TaskRow[] => TASKS.filter((t) => !t.parent && t.ty !== "epic" && t.sp === sp);
+export const spStatusClass = (st: SprintStatus): string =>
+  ({ planned: "neutral", active: "info", completed: "ok" })[st] || "neutral";
+export const sprintStatusLabel = (sp: string): string =>
+  ({ planned: "Planned", active: "Active", completed: "Completed" })[SPRINTS[sp].st];
+export const iterTasks = (sp: string): TaskRow[] =>
+  TASKS.filter((t) => !t.parent && t.ty !== "epic" && t.sp === sp);
 export function committedPts(sp: string): number {
   const s = SPRINTS[sp];
   if (s && s.st === "completed") return s.committed || 0;
@@ -149,7 +208,10 @@ export function donePts(sp: string): number {
   return ptsTotal(iterTasks(sp).filter((t) => t.s === "done"));
 }
 export function sprintRows(): { k: string; total: number }[] {
-  return [...Object.keys(SPRINTS).map((k) => ({ k, total: iterTasks(k).length })), { k: "backlog", total: TASKS.filter((t) => !t.parent && t.ty !== "epic" && !t.sp).length }];
+  return [
+    ...Object.keys(SPRINTS).map((k) => ({ k, total: iterTasks(k).length })),
+    { k: "backlog", total: TASKS.filter((t) => !t.parent && t.ty !== "epic" && !t.sp).length },
+  ];
 }
 /** A valid sprint key for the current dataset — falls back to the active (or
  *  newest) iteration when the held key predates hydration. */
@@ -165,10 +227,22 @@ export const isPlannable = (sp: string): boolean => {
 };
 
 export const EPIC_META: Record<number, { own: string; c: string; goal: string }> = {
-  200: { own: "mk", c: "v", goal: "SSO, MFA, RBAC and an immutable audit trail for org-wide security." },
-  201: { own: "lc", c: "g", goal: "Subscription billing, invoicing and payment webhook resilience." },
+  200: {
+    own: "mk",
+    c: "v",
+    goal: "SSO, MFA, RBAC and an immutable audit trail for org-wide security.",
+  },
+  201: {
+    own: "lc",
+    c: "g",
+    goal: "Subscription billing, invoicing and payment webhook resilience.",
+  },
   202: { own: "dp", c: "b", goal: "Trigram document search, dashboards and exportable reports." },
-  203: { own: "jb", c: "o", goal: "Design-system migration, docs, notifications and platform infra." },
+  203: {
+    own: "jb",
+    c: "o",
+    goal: "Design-system migration, docs, notifications and platform infra.",
+  },
 };
 export const EPIC_IDS = [200, 201, 202, 203];
 
@@ -193,7 +267,11 @@ export interface Relations {
 }
 export type RelKey = "blocks" | "blockedBy" | "relates";
 /** Reverse of each relation: blocks↔blockedBy, relates↔relates. */
-const REL_REVERSE: Record<RelKey, RelKey> = { blocks: "blockedBy", blockedBy: "blocks", relates: "relates" };
+const REL_REVERSE: Record<RelKey, RelKey> = {
+  blocks: "blockedBy",
+  blockedBy: "blocks",
+  relates: "relates",
+};
 
 export interface TaskRow {
   id: number;
@@ -222,40 +300,530 @@ export interface TaskRow {
 
 const DEMO_TASKS: TaskRow[] = [
   /* ----- Executable issues (101-120) ----- */
-  { id: 101, t: "Implement OAuth2 SSO flow", s: "progress", a: "mk", rep: "ay", p: "p2", ty: "story", epic: 200, sp: "s14", lb: ["sso", "security"], due: "Mar 24", pts: 8, ac: [{ text: "Spec out scopes & claims", done: true }, { text: "Authorization-code + PKCE", done: true }, { text: "Token refresh rotation", done: false }, { text: "IdP sandbox sign-off", done: false }], rel: { blocks: [], blockedBy: [105], relates: [] }, com: [{ by: "mk", when: "2h ago", text: "Blocked on the IdP sandbox credentials — chasing Ops. PKCE verifier is done." }, { by: "sr", when: "yesterday", text: "Added a regression test for expired refresh tokens. Clean on staging." }], att: [{ n: "oauth-sequence.png", sz: "240 KB", by: "mk" }] },
-  { id: 102, t: "Board drag-and-drop performance", s: "progress", a: "lc", rep: "lc", p: "p3", ty: "task", epic: 203, sp: "s14", lb: ["frontend"], due: "Mar 23", pts: 5, ac: [{ text: "Profile with 500 cards", done: true }, { text: "Virtualize off-screen columns", done: false }], com: [], att: [] },
-  { id: 103, t: "Fix flaky CI test on billing webhook", s: "review", a: "dp", rep: "mk", p: "p1", ty: "bug", epic: 201, sp: "s14", lb: ["ci", "billing"], due: "Mar 22", pts: 3, ac: [{ text: "Reproduce reliably", done: true }, { text: "Stabilise test fixtures", done: false }], com: [{ by: "dp", when: "5h ago", text: "Root cause: clock skew between workers. Freezing the clock in the harness." }], att: [] },
-  { id: 104, t: "Design system: migrate tokens to OKLch", s: "todo", a: "jb", rep: "jb", p: "p3", ty: "task", epic: 203, sp: "s14", lb: ["design"], due: "Mar 26", pts: 5, ac: [{ text: "Audit hex usages", done: false }], com: [], att: [] },
-  { id: 105, t: "Audit log: immutable event store", s: "todo", a: "mk", rep: "ay", p: "p2", ty: "story", epic: 200, sp: "s14", lb: ["security", "backend"], due: "Mar 28", pts: 8, ac: [{ text: "Append-only table design", done: false }, { text: "PII redaction rules", done: false }], rel: { blocks: [101], blockedBy: [], relates: [] }, com: [], att: [] },
-  { id: 106, t: "Dashboard KPI sparkline component", s: "todo", a: "lc", rep: "ay", p: "p4", ty: "task", epic: 202, lb: ["frontend"], due: "Mar 27", pts: 3, ac: [], com: [], att: [] },
-  { id: 107, t: "Role-based access at project level", s: "progress", a: "mk", rep: "ay", p: "p2", ty: "story", epic: 200, sp: "s14", lb: ["security"], due: "Apr 02", pts: 8, ac: [{ text: "Permission matrix", done: true }, { text: "Middleware guards", done: true }, { text: "UI for role assignment", done: false }], rel: { blocks: [], blockedBy: [], relates: [] }, com: [], att: [] },
-  { id: 108, t: "Search index for documents (PG trigram)", s: "review", a: "dp", rep: "dp", p: "p3", ty: "story", epic: 202, sp: "s14", lb: ["search", "backend"], due: "Mar 25", pts: 5, ac: [{ text: "pg_trgm migration", done: true }, { text: "Reindex job", done: false }], rel: { blocks: [], blockedBy: [], relates: [117] }, com: [], att: [] },
-  { id: 109, t: "Iteration planning: velocity chart", s: "todo", a: "lc", rep: "ay", p: "p3", ty: "story", epic: 202, lb: ["planning"], due: "Mar 29", pts: 3, ac: [], rel: { blocks: [], blockedBy: [116], relates: [] }, com: [], att: [] },
-  { id: 117, t: "API: pagination contract (cursor)", s: "review", a: "dp", rep: "mk", p: "p2", ty: "task", epic: 203, sp: "s14", lb: ["api", "backend"], due: "Mar 24", pts: 3, ac: [], rel: { blocks: [], blockedBy: [], relates: [108] }, com: [], att: [] },
-  { id: 116, t: "Backlog grooming: triage queue", s: "todo", a: "ay", rep: "ay", p: "p3", ty: "task", epic: 203, lb: ["process"], due: "Mar 22", pts: 2, ac: [], rel: { blocks: [109], blockedBy: [], relates: [] }, com: [], att: [] },
-  { id: 118, t: "Notification digest: daily email", s: "todo", a: "lc", rep: "ay", p: "p4", ty: "story", epic: 203, lb: ["notifications"], due: "Apr 01", pts: 3, ac: [], rel: { blocks: [], blockedBy: [], relates: [113] }, com: [], att: [] },
-  { id: 112, t: "Reset password rate limiting", s: "done", a: "sr", rep: "mk", p: "p1", ty: "bug", epic: 200, sp: "s13", lb: ["security", "auth"], due: "Mar 14", pts: 3, ac: [{ text: "Add sliding window", done: true }], rel: { blocks: [], blockedBy: [], relates: [] }, com: [], att: [] },
-  { id: 113, t: "Meeting notes: attach tasks", s: "done", a: "lc", rep: "ay", p: "p4", ty: "task", epic: 203, sp: "s13", lb: ["meetings"], due: "Mar 12", pts: 2, ac: [], rel: { blocks: [], blockedBy: [], relates: [118] }, com: [], att: [] },
-  { id: 114, t: "MFA: TOTP enrollment UX", s: "done", a: "sr", rep: "ay", p: "p2", ty: "story", epic: 200, sp: "s13", lb: ["security", "auth"], due: "Mar 13", pts: 5, ac: [], com: [], att: [] },
-  { id: 115, t: "Empty states across modules", s: "done", a: "jb", rep: "jb", p: "p4", ty: "task", epic: 203, sp: "s13", lb: ["design"], due: "Mar 16", pts: 2, ac: [], com: [], att: [] },
-  { id: 119, t: "Write release notes for v2.0", s: "todo", a: "ay", rep: "ay", p: "p3", ty: "task", epic: 203, lb: ["docs"], due: "Mar 27", pts: 2, ac: [], com: [], att: [] },
-  { id: 120, t: "Stakeholder demo prep", s: "todo", a: "ay", rep: "mk", p: "p2", ty: "task", epic: 203, lb: ["process"], due: "Mar 25", pts: 2, ac: [], com: [], att: [] },
+  {
+    id: 101,
+    t: "Implement OAuth2 SSO flow",
+    s: "progress",
+    a: "mk",
+    rep: "ay",
+    p: "p2",
+    ty: "story",
+    epic: 200,
+    sp: "s14",
+    lb: ["sso", "security"],
+    due: "Mar 24",
+    pts: 8,
+    ac: [
+      { text: "Spec out scopes & claims", done: true },
+      { text: "Authorization-code + PKCE", done: true },
+      { text: "Token refresh rotation", done: false },
+      { text: "IdP sandbox sign-off", done: false },
+    ],
+    rel: { blocks: [], blockedBy: [105], relates: [] },
+    com: [
+      {
+        by: "mk",
+        when: "2h ago",
+        text: "Blocked on the IdP sandbox credentials — chasing Ops. PKCE verifier is done.",
+      },
+      {
+        by: "sr",
+        when: "yesterday",
+        text: "Added a regression test for expired refresh tokens. Clean on staging.",
+      },
+    ],
+    att: [{ n: "oauth-sequence.png", sz: "240 KB", by: "mk" }],
+  },
+  {
+    id: 102,
+    t: "Board drag-and-drop performance",
+    s: "progress",
+    a: "lc",
+    rep: "lc",
+    p: "p3",
+    ty: "task",
+    epic: 203,
+    sp: "s14",
+    lb: ["frontend"],
+    due: "Mar 23",
+    pts: 5,
+    ac: [
+      { text: "Profile with 500 cards", done: true },
+      { text: "Virtualize off-screen columns", done: false },
+    ],
+    com: [],
+    att: [],
+  },
+  {
+    id: 103,
+    t: "Fix flaky CI test on billing webhook",
+    s: "review",
+    a: "dp",
+    rep: "mk",
+    p: "p1",
+    ty: "bug",
+    epic: 201,
+    sp: "s14",
+    lb: ["ci", "billing"],
+    due: "Mar 22",
+    pts: 3,
+    ac: [
+      { text: "Reproduce reliably", done: true },
+      { text: "Stabilise test fixtures", done: false },
+    ],
+    com: [
+      {
+        by: "dp",
+        when: "5h ago",
+        text: "Root cause: clock skew between workers. Freezing the clock in the harness.",
+      },
+    ],
+    att: [],
+  },
+  {
+    id: 104,
+    t: "Design system: migrate tokens to OKLch",
+    s: "todo",
+    a: "jb",
+    rep: "jb",
+    p: "p3",
+    ty: "task",
+    epic: 203,
+    sp: "s14",
+    lb: ["design"],
+    due: "Mar 26",
+    pts: 5,
+    ac: [{ text: "Audit hex usages", done: false }],
+    com: [],
+    att: [],
+  },
+  {
+    id: 105,
+    t: "Audit log: immutable event store",
+    s: "todo",
+    a: "mk",
+    rep: "ay",
+    p: "p2",
+    ty: "story",
+    epic: 200,
+    sp: "s14",
+    lb: ["security", "backend"],
+    due: "Mar 28",
+    pts: 8,
+    ac: [
+      { text: "Append-only table design", done: false },
+      { text: "PII redaction rules", done: false },
+    ],
+    rel: { blocks: [101], blockedBy: [], relates: [] },
+    com: [],
+    att: [],
+  },
+  {
+    id: 106,
+    t: "Dashboard KPI sparkline component",
+    s: "todo",
+    a: "lc",
+    rep: "ay",
+    p: "p4",
+    ty: "task",
+    epic: 202,
+    lb: ["frontend"],
+    due: "Mar 27",
+    pts: 3,
+    ac: [],
+    com: [],
+    att: [],
+  },
+  {
+    id: 107,
+    t: "Role-based access at project level",
+    s: "progress",
+    a: "mk",
+    rep: "ay",
+    p: "p2",
+    ty: "story",
+    epic: 200,
+    sp: "s14",
+    lb: ["security"],
+    due: "Apr 02",
+    pts: 8,
+    ac: [
+      { text: "Permission matrix", done: true },
+      { text: "Middleware guards", done: true },
+      { text: "UI for role assignment", done: false },
+    ],
+    rel: { blocks: [], blockedBy: [], relates: [] },
+    com: [],
+    att: [],
+  },
+  {
+    id: 108,
+    t: "Search index for documents (PG trigram)",
+    s: "review",
+    a: "dp",
+    rep: "dp",
+    p: "p3",
+    ty: "story",
+    epic: 202,
+    sp: "s14",
+    lb: ["search", "backend"],
+    due: "Mar 25",
+    pts: 5,
+    ac: [
+      { text: "pg_trgm migration", done: true },
+      { text: "Reindex job", done: false },
+    ],
+    rel: { blocks: [], blockedBy: [], relates: [117] },
+    com: [],
+    att: [],
+  },
+  {
+    id: 109,
+    t: "Iteration planning: velocity chart",
+    s: "todo",
+    a: "lc",
+    rep: "ay",
+    p: "p3",
+    ty: "story",
+    epic: 202,
+    lb: ["planning"],
+    due: "Mar 29",
+    pts: 3,
+    ac: [],
+    rel: { blocks: [], blockedBy: [116], relates: [] },
+    com: [],
+    att: [],
+  },
+  {
+    id: 117,
+    t: "API: pagination contract (cursor)",
+    s: "review",
+    a: "dp",
+    rep: "mk",
+    p: "p2",
+    ty: "task",
+    epic: 203,
+    sp: "s14",
+    lb: ["api", "backend"],
+    due: "Mar 24",
+    pts: 3,
+    ac: [],
+    rel: { blocks: [], blockedBy: [], relates: [108] },
+    com: [],
+    att: [],
+  },
+  {
+    id: 116,
+    t: "Backlog grooming: triage queue",
+    s: "todo",
+    a: "ay",
+    rep: "ay",
+    p: "p3",
+    ty: "task",
+    epic: 203,
+    lb: ["process"],
+    due: "Mar 22",
+    pts: 2,
+    ac: [],
+    rel: { blocks: [109], blockedBy: [], relates: [] },
+    com: [],
+    att: [],
+  },
+  {
+    id: 118,
+    t: "Notification digest: daily email",
+    s: "todo",
+    a: "lc",
+    rep: "ay",
+    p: "p4",
+    ty: "story",
+    epic: 203,
+    lb: ["notifications"],
+    due: "Apr 01",
+    pts: 3,
+    ac: [],
+    rel: { blocks: [], blockedBy: [], relates: [113] },
+    com: [],
+    att: [],
+  },
+  {
+    id: 112,
+    t: "Reset password rate limiting",
+    s: "done",
+    a: "sr",
+    rep: "mk",
+    p: "p1",
+    ty: "bug",
+    epic: 200,
+    sp: "s13",
+    lb: ["security", "auth"],
+    due: "Mar 14",
+    pts: 3,
+    ac: [{ text: "Add sliding window", done: true }],
+    rel: { blocks: [], blockedBy: [], relates: [] },
+    com: [],
+    att: [],
+  },
+  {
+    id: 113,
+    t: "Meeting notes: attach tasks",
+    s: "done",
+    a: "lc",
+    rep: "ay",
+    p: "p4",
+    ty: "task",
+    epic: 203,
+    sp: "s13",
+    lb: ["meetings"],
+    due: "Mar 12",
+    pts: 2,
+    ac: [],
+    rel: { blocks: [], blockedBy: [], relates: [118] },
+    com: [],
+    att: [],
+  },
+  {
+    id: 114,
+    t: "MFA: TOTP enrollment UX",
+    s: "done",
+    a: "sr",
+    rep: "ay",
+    p: "p2",
+    ty: "story",
+    epic: 200,
+    sp: "s13",
+    lb: ["security", "auth"],
+    due: "Mar 13",
+    pts: 5,
+    ac: [],
+    com: [],
+    att: [],
+  },
+  {
+    id: 115,
+    t: "Empty states across modules",
+    s: "done",
+    a: "jb",
+    rep: "jb",
+    p: "p4",
+    ty: "task",
+    epic: 203,
+    sp: "s13",
+    lb: ["design"],
+    due: "Mar 16",
+    pts: 2,
+    ac: [],
+    com: [],
+    att: [],
+  },
+  {
+    id: 119,
+    t: "Write release notes for v2.0",
+    s: "todo",
+    a: "ay",
+    rep: "ay",
+    p: "p3",
+    ty: "task",
+    epic: 203,
+    lb: ["docs"],
+    due: "Mar 27",
+    pts: 2,
+    ac: [],
+    com: [],
+    att: [],
+  },
+  {
+    id: 120,
+    t: "Stakeholder demo prep",
+    s: "todo",
+    a: "ay",
+    rep: "mk",
+    p: "p2",
+    ty: "task",
+    epic: 203,
+    lb: ["process"],
+    due: "Mar 25",
+    pts: 2,
+    ac: [],
+    com: [],
+    att: [],
+  },
   /* ----- Epics ----- */
-  { id: 200, t: "Identity & Access", s: "progress", a: "mk", p: "p1", ty: "epic", lb: ["security"], due: "Apr 30", pts: 0 },
-  { id: 201, t: "Billing & Payments", s: "todo", a: "lc", p: "p2", ty: "epic", lb: ["billing"], due: "May 14", pts: 0 },
-  { id: 202, t: "Search & Reporting", s: "progress", a: "dp", p: "p2", ty: "epic", lb: ["search"], due: "Apr 18", pts: 0 },
-  { id: 203, t: "Platform Foundation", s: "progress", a: "jb", p: "p3", ty: "epic", lb: ["platform"], due: "Apr 05", pts: 0 },
+  {
+    id: 200,
+    t: "Identity & Access",
+    s: "progress",
+    a: "mk",
+    p: "p1",
+    ty: "epic",
+    lb: ["security"],
+    due: "Apr 30",
+    pts: 0,
+  },
+  {
+    id: 201,
+    t: "Billing & Payments",
+    s: "todo",
+    a: "lc",
+    p: "p2",
+    ty: "epic",
+    lb: ["billing"],
+    due: "May 14",
+    pts: 0,
+  },
+  {
+    id: 202,
+    t: "Search & Reporting",
+    s: "progress",
+    a: "dp",
+    p: "p2",
+    ty: "epic",
+    lb: ["search"],
+    due: "Apr 18",
+    pts: 0,
+  },
+  {
+    id: 203,
+    t: "Platform Foundation",
+    s: "progress",
+    a: "jb",
+    p: "p3",
+    ty: "epic",
+    lb: ["platform"],
+    due: "Apr 05",
+    pts: 0,
+  },
   /* ----- Subtasks ----- */
-  { id: 301, t: "Spec out scopes & claims", s: "done", a: "mk", p: "p3", ty: "subtask", parent: 101, lb: [], due: "Mar 20", pts: 1, com: [] },
-  { id: 302, t: "Wire authorization-code grant", s: "progress", a: "mk", p: "p2", ty: "subtask", parent: 101, lb: [], due: "Mar 23", pts: 3, com: [] },
-  { id: 303, t: "Token refresh rotation", s: "todo", a: "sr", p: "p3", ty: "subtask", parent: 101, lb: [], due: "Mar 25", pts: 2, com: [] },
-  { id: 304, t: "Profile with 500 cards", s: "done", a: "lc", p: "p3", ty: "subtask", parent: 102, lb: [], due: "Mar 19", pts: 1, com: [] },
-  { id: 305, t: "Virtualize off-screen columns", s: "todo", a: "lc", p: "p3", ty: "subtask", parent: 102, lb: [], due: "Mar 24", pts: 2, com: [] },
-  { id: 306, t: "Permission matrix doc", s: "done", a: "mk", p: "p2", ty: "subtask", parent: 107, lb: [], due: "Mar 18", pts: 2, com: [] },
-  { id: 307, t: "Middleware guards", s: "progress", a: "mk", p: "p2", ty: "subtask", parent: 107, lb: [], due: "Mar 27", pts: 3, com: [] },
-  { id: 308, t: "UI for role assignment", s: "todo", a: "jb", p: "p3", ty: "subtask", parent: 107, lb: [], due: "Apr 01", pts: 3, com: [] },
-  { id: 309, t: "Stabilise test fixtures", s: "progress", a: "dp", p: "p1", ty: "subtask", parent: 103, lb: [], due: "Mar 23", pts: 2, com: [] },
-  { id: 310, t: "pg_trgm migration", s: "done", a: "dp", p: "p3", ty: "subtask", parent: 108, lb: [], due: "Mar 20", pts: 2, com: [] },
+  {
+    id: 301,
+    t: "Spec out scopes & claims",
+    s: "done",
+    a: "mk",
+    p: "p3",
+    ty: "subtask",
+    parent: 101,
+    lb: [],
+    due: "Mar 20",
+    pts: 1,
+    com: [],
+  },
+  {
+    id: 302,
+    t: "Wire authorization-code grant",
+    s: "progress",
+    a: "mk",
+    p: "p2",
+    ty: "subtask",
+    parent: 101,
+    lb: [],
+    due: "Mar 23",
+    pts: 3,
+    com: [],
+  },
+  {
+    id: 303,
+    t: "Token refresh rotation",
+    s: "todo",
+    a: "sr",
+    p: "p3",
+    ty: "subtask",
+    parent: 101,
+    lb: [],
+    due: "Mar 25",
+    pts: 2,
+    com: [],
+  },
+  {
+    id: 304,
+    t: "Profile with 500 cards",
+    s: "done",
+    a: "lc",
+    p: "p3",
+    ty: "subtask",
+    parent: 102,
+    lb: [],
+    due: "Mar 19",
+    pts: 1,
+    com: [],
+  },
+  {
+    id: 305,
+    t: "Virtualize off-screen columns",
+    s: "todo",
+    a: "lc",
+    p: "p3",
+    ty: "subtask",
+    parent: 102,
+    lb: [],
+    due: "Mar 24",
+    pts: 2,
+    com: [],
+  },
+  {
+    id: 306,
+    t: "Permission matrix doc",
+    s: "done",
+    a: "mk",
+    p: "p2",
+    ty: "subtask",
+    parent: 107,
+    lb: [],
+    due: "Mar 18",
+    pts: 2,
+    com: [],
+  },
+  {
+    id: 307,
+    t: "Middleware guards",
+    s: "progress",
+    a: "mk",
+    p: "p2",
+    ty: "subtask",
+    parent: 107,
+    lb: [],
+    due: "Mar 27",
+    pts: 3,
+    com: [],
+  },
+  {
+    id: 308,
+    t: "UI for role assignment",
+    s: "todo",
+    a: "jb",
+    p: "p3",
+    ty: "subtask",
+    parent: 107,
+    lb: [],
+    due: "Apr 01",
+    pts: 3,
+    com: [],
+  },
+  {
+    id: 309,
+    t: "Stabilise test fixtures",
+    s: "progress",
+    a: "dp",
+    p: "p1",
+    ty: "subtask",
+    parent: 103,
+    lb: [],
+    due: "Mar 23",
+    pts: 2,
+    com: [],
+  },
+  {
+    id: 310,
+    t: "pg_trgm migration",
+    s: "done",
+    a: "dp",
+    p: "p3",
+    ty: "subtask",
+    parent: 108,
+    lb: [],
+    due: "Mar 20",
+    pts: 2,
+    com: [],
+  },
 ];
 let TASKS: TaskRow[] = structuredClone(DEMO_TASKS);
 
@@ -321,7 +889,9 @@ export function peopleOptions(): [string, string][] {
   return opts;
 }
 const resolveUserUuid = (shortOrUuid: string): string | null =>
-  SHORT_UUID.get(shortOrUuid) ?? (API_PEOPLE[shortOrUuid] ? shortOrUuid : null) ?? (/^[0-9a-f-]{36}$/i.test(shortOrUuid) ? shortOrUuid : null);
+  SHORT_UUID.get(shortOrUuid) ??
+  (API_PEOPLE[shortOrUuid] ? shortOrUuid : null) ??
+  (/^[0-9a-f-]{36}$/i.test(shortOrUuid) ? shortOrUuid : null);
 
 /** Fire-and-forget task patch (optimistic — the local row already changed). */
 function wtPatch(order: number, patch: Record<string, unknown>): void {
@@ -334,7 +904,20 @@ function wtPatch(order: number, patch: Record<string, unknown>): void {
 function dueToIso(display: string): string | null {
   const m = /^(\w{3}) (\d{1,2})$/.exec(display.trim());
   if (!m) return null;
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   const mo = months.indexOf(m[1]!);
   if (mo < 0) return null;
   const now = new Date();
@@ -377,7 +960,10 @@ const descFromApi = (raw: string | null): TaskRow["desc"] => {
     const parsed = JSON.parse(raw) as TaskRow["desc"];
     return parsed && parsed.type ? parsed : undefined;
   } catch {
-    return { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: raw }] }] };
+    return {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "text", text: raw }] }],
+    };
   }
 };
 
@@ -411,7 +997,13 @@ export function hydrateProject(
     STATUS_SHORT_BY_ID.set(s.id, short);
   }
   TYPE_ID_BY_TY.clear();
-  const TY_OF_NAME: Record<string, TypeId> = { Epic: "epic", Feature: "story", Story: "story", Task: "task", Bug: "bug" };
+  const TY_OF_NAME: Record<string, TypeId> = {
+    Epic: "epic",
+    Feature: "story",
+    Story: "story",
+    Task: "task",
+    Bug: "bug",
+  };
   for (const t of extras.types ?? []) {
     const short = TY_OF_NAME[t.name];
     if (short) TYPE_ID_BY_TY.set(short, t.id);
@@ -426,17 +1018,21 @@ export function hydrateProject(
   EPIC_UUID_BY_ORDER.clear();
 
   // type short by uuid (task rows only carry typeId)
-  const TY_SHORT_BY_ID = new Map((extras.types ?? []).map((t) => [t.id, TY_OF_NAME[t.name] ?? "task"]));
+  const TY_SHORT_BY_ID = new Map(
+    (extras.types ?? []).map((t) => [t.id, TY_OF_NAME[t.name] ?? "task"]),
+  );
 
   const epicOrders: number[] = [];
   TASKS = tasks.map((t) => {
     const parent = t.parentId ? orderByUuid.get(t.parentId) : undefined;
-    const tyShort = t.typeId ? TY_SHORT_BY_ID.get(t.typeId) ?? "task" : "task";
+    const tyShort = t.typeId ? (TY_SHORT_BY_ID.get(t.typeId) ?? "task") : "task";
     if (tyShort === "epic" && !parent) epicOrders.push(t.order);
     const rel = { blocks: [] as number[], blockedBy: [] as number[], relates: [] as number[] };
     for (const l of t.links ?? []) {
-      if (l.type === "blocks" && l.targetId === t.id) rel.blockedBy.push(orderOfUuid(orderByUuid, l.sourceId));
-      else if (l.type === "blocks" && l.sourceId === t.id) rel.blocks.push(orderOfUuid(orderByUuid, l.targetId));
+      if (l.type === "blocks" && l.targetId === t.id)
+        rel.blockedBy.push(orderOfUuid(orderByUuid, l.sourceId));
+      else if (l.type === "blocks" && l.sourceId === t.id)
+        rel.blocks.push(orderOfUuid(orderByUuid, l.targetId));
       else if (l.type === "relates_to")
         rel.relates.push(orderOfUuid(orderByUuid, l.sourceId === t.id ? l.targetId : l.sourceId));
     }
@@ -472,15 +1068,24 @@ export function hydrateProject(
     EPIC_META[order] = {
       own: row.a,
       c: EPIC_COLORS[i % EPIC_COLORS.length] ?? "v",
-      goal: typeof row.desc?.content?.[0]?.content?.[0]?.text === "string" ? row.desc.content[0].content[0].text : "",
+      goal:
+        typeof row.desc?.content?.[0]?.content?.[0]?.text === "string"
+          ? row.desc.content[0].content[0].text
+          : "",
     };
   });
   EPIC_IDS.length = 0;
-  EPIC_IDS.push(...Object.keys(EPIC_META).map(Number).sort((a, b) => a - b));
+  EPIC_IDS.push(
+    ...Object.keys(EPIC_META)
+      .map(Number)
+      .sort((a, b) => a - b),
+  );
 
   // sprints from iterations (keys are iteration uuids from here on)
   for (const k of Object.keys(SPRINTS)) delete SPRINTS[k];
-  const iters = [...(extras.iterations ?? [])].sort((a, b) => a.startDate.localeCompare(b.startDate));
+  const iters = [...(extras.iterations ?? [])].sort((a, b) =>
+    a.startDate.localeCompare(b.startDate),
+  );
   for (const it of iters) {
     SPRINTS[it.id] = {
       id: it.id,
@@ -492,7 +1097,9 @@ export function hydrateProject(
       to: it.endDate.slice(0, 10),
       st: it.status,
       capacity: null,
-      ...(it.status === "completed" ? { committed: it.committedPoints, completed: it.completedPoints } : {}),
+      ...(it.status === "completed"
+        ? { committed: it.committedPoints, completed: it.completedPoints }
+        : {}),
     };
   }
 
@@ -505,14 +1112,25 @@ export function hydrateProject(
         : m.dueDate && Date.now() - +new Date(m.dueDate) <= 14 * 864e5 && m.progress < 90
           ? ("at_risk" as const)
           : ("on_track" as const);
-    MILESTONES.push({ id: m.id, t: m.name, date: (m.dueDate ?? "").slice(0, 10), risk, done: m.doneTasks, total: m.totalTasks });
+    MILESTONES.push({
+      id: m.id,
+      t: m.name,
+      date: (m.dueDate ?? "").slice(0, 10),
+      risk,
+      done: m.doneTasks,
+      total: m.totalTasks,
+    });
   }
   MILESTONES.sort((a, b) => pD(a.date).getTime() - pD(b.date).getTime());
 
   // velocity from iterations
   VELOCITY.length = 0;
   for (const it of iters.slice(-5)) {
-    VELOCITY.push({ name: it.name.replace("Sprint ", "S"), committed: it.committedPoints, completed: it.completedPoints });
+    VELOCITY.push({
+      name: it.name.replace("Sprint ", "S"),
+      committed: it.committedPoints,
+      completed: it.completedPoints,
+    });
   }
 
   notify();
@@ -520,8 +1138,10 @@ export function hydrateProject(
 
 /* ---- read helpers ---- */
 export const taskById = (id: number): TaskRow | undefined => TASKS.find((t) => t.id === id);
-export const subsOf = (id: number): TaskRow[] => TASKS.filter((t) => t.parent === id).sort((a, b) => a.id - b.id);
-export const childrenOf = (id: number): TaskRow[] => TASKS.filter((t) => t.epic === id && t.ty !== "subtask");
+export const subsOf = (id: number): TaskRow[] =>
+  TASKS.filter((t) => t.parent === id).sort((a, b) => a.id - b.id);
+export const childrenOf = (id: number): TaskRow[] =>
+  TASKS.filter((t) => t.epic === id && t.ty !== "subtask");
 export const isWork = (t: TaskRow): boolean => !t.parent && t.ty !== "epic";
 export const allTasks = (): TaskRow[] => TASKS;
 /** Overdue = due date before today, not done. ("Aug 20"-style display dates
@@ -563,12 +1183,15 @@ export function setField<K extends keyof TaskRow>(id: number, key: K, value: Tas
     t[key] = value;
     // write-through: translate the store field to its API patch
     if (key === "s") wtPatch(id, { statusId: STATUS_ID_BY_SHORT.get(value as StatusId) });
-    else if (key === "a") wtPatch(id, { assigneeId: value ? resolveUserUuid(String(value)) : null });
+    else if (key === "a")
+      wtPatch(id, { assigneeId: value ? resolveUserUuid(String(value)) : null });
     else if (key === "p") wtPatch(id, { priority: PRIO_API[value as PrioId] });
     else if (key === "pts") wtPatch(id, { estimate: Number(value) || null });
     else if (key === "sp") wtPatch(id, { iterationId: value ? String(value) : null });
     else if (key === "epic")
-      wtPatch(id, { epicId: value != null ? (EPIC_UUID_BY_ORDER.get(Number(value)) ?? null) : null });
+      wtPatch(id, {
+        epicId: value != null ? (EPIC_UUID_BY_ORDER.get(Number(value)) ?? null) : null,
+      });
     else if (key === "t") wtPatch(id, { title: String(value) });
     else if (key === "due") {
       const iso = dueToIso(String(value));
@@ -698,7 +1321,11 @@ export function createIssue(input: CreateInput): number {
     att: [],
     ac: [],
   };
-  if (input.desc) o.desc = { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: input.desc }] }] };
+  if (input.desc)
+    o.desc = {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "text", text: input.desc }] }],
+    };
   if (input.ty === "subtask") {
     if (input.parent) o.parent = input.parent;
   } else {
@@ -720,11 +1347,17 @@ export function createIssue(input: CreateInput): number {
         ? { parentId: UUID_BY_ORDER.get(input.parent) ?? null }
         : {}),
       ...(input.sp ? { iterationId: input.sp } : {}),
-      ...(input.epic && input.ty !== "subtask" ? { epicId: EPIC_UUID_BY_ORDER.get(input.epic) ?? null } : {}),
+      ...(input.epic && input.ty !== "subtask"
+        ? { epicId: EPIC_UUID_BY_ORDER.get(input.epic) ?? null }
+        : {}),
       ...(input.due && dueToIso(input.due) ? { dueDate: dueToIso(input.due) } : {}),
       ...(input.desc ? { description: JSON.stringify(o.desc) } : {}),
       ...(input.labels.length
-        ? { labelIds: input.labels.map((l) => LABEL_ID_BY_NAME.get(l)).filter((x): x is string => !!x) }
+        ? {
+            labelIds: input.labels
+              .map((l) => LABEL_ID_BY_NAME.get(l))
+              .filter((x): x is string => !!x),
+          }
         : {}),
     };
     void api
@@ -844,7 +1477,9 @@ export function planSprintAuto(sp: string): string {
   const cap = SPRINTS[sp].capacity || 40;
   let pts = committedPts(sp);
   let n = 0;
-  const items = TASKS.filter((t) => !t.parent && t.ty !== "epic" && !t.sp).sort((a, b) => PRIO_ORDER.indexOf(a.p) - PRIO_ORDER.indexOf(b.p));
+  const items = TASKS.filter((t) => !t.parent && t.ty !== "epic" && !t.sp).sort(
+    (a, b) => PRIO_ORDER.indexOf(a.p) - PRIO_ORDER.indexOf(b.p),
+  );
   for (const t of items) {
     if (pts + (t.pts || 0) > cap) break;
     t.sp = sp;
@@ -852,7 +1487,9 @@ export function planSprintAuto(sp: string): string {
     n++;
   }
   notify();
-  return n ? `Planned ${n} item${n !== 1 ? "s" : ""} into ${SPRINTS[sp].name}` : "Nothing to plan — backlog empty or capacity reached";
+  return n
+    ? `Planned ${n} item${n !== 1 ? "s" : ""} into ${SPRINTS[sp].name}`
+    : "Nothing to plan — backlog empty or capacity reached";
 }
 export function moveSprintDates(sp: string, fromISO: string, toISO: string): void {
   const s = SPRINTS[sp];
@@ -908,7 +1545,12 @@ export function updateSprint(sp: string, input: CreateSprintInput): void {
   s.start = shortMD(pD(input.fromISO));
   s.end = shortMD(pD(input.toISO));
   s.capacity = input.capacity;
-  wtIter(sp, { name: input.name, goal: input.goal || null, startDate: input.fromISO, endDate: input.toISO });
+  wtIter(sp, {
+    name: input.name,
+    goal: input.goal || null,
+    startDate: input.fromISO,
+    endDate: input.toISO,
+  });
   notify();
 }
 
@@ -936,7 +1578,9 @@ export function updateMilestone(id: string, input: MilestoneInput): void {
   m.risk = input.risk; // risk itself is display-only (derived) until the API grows a column
   MILESTONES.sort((a, b) => pD(a.date).getTime() - pD(b.date).getTime());
   if (API_PROJECT === "api" && ACTIVE_PID && !id.startsWith("ms")) {
-    void api.updateMilestone(ACTIVE_PID, id, { name: input.t, dueDate: input.date }).catch(() => {});
+    void api
+      .updateMilestone(ACTIVE_PID, id, { name: input.t, dueDate: input.date })
+      .catch(() => {});
   }
   notify();
 }
@@ -950,7 +1594,6 @@ export function deleteMilestone(id: string): void {
     notify();
   }
 }
-
 
 /** Mirror a relationship mutation to the API (hydrated projects only). */
 const API_TYPE: Record<RelKey, "blocks" | "blocked_by" | "relates_to"> = {

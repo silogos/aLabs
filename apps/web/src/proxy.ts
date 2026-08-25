@@ -8,9 +8,7 @@ export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasSession = request.cookies.has("alabs_session");
 
-  const isPublicPage = PUBLIC_PAGES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
+  const isPublicPage = PUBLIC_PAGES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   if (!hasSession && !isPublicPage) {
     const url = request.nextUrl.clone();

@@ -35,7 +35,14 @@ export const NAV_SECTIONS: NavSection[] = [
 ];
 
 const I = (p: ReactNode) => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+  <svg
+    width="17"
+    height="17"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+  >
     {p}
   </svg>
 );
@@ -93,8 +100,16 @@ export const NAV_ICONS: Record<View, ReactNode> = {
 export function useNavCounts() {
   const { project } = useApp();
   const pid = project?.id;
-  const tasksQ = useQuery({ queryKey: ["count", "tasks", pid], queryFn: () => api.tasks(pid!), enabled: !!pid });
-  const docsQ = useQuery({ queryKey: ["count", "docs", pid], queryFn: () => api.pages(pid!), enabled: !!pid });
+  const tasksQ = useQuery({
+    queryKey: ["count", "tasks", pid],
+    queryFn: () => api.tasks(pid!),
+    enabled: !!pid,
+  });
+  const docsQ = useQuery({
+    queryKey: ["count", "docs", pid],
+    queryFn: () => api.pages(pid!),
+    enabled: !!pid,
+  });
   return {
     tasks: tasksQ.data?.items.length ?? null,
     documents: docsQ.data?.items.length ?? null,
@@ -115,19 +130,43 @@ export const hueFor = (id: string) => {
 export const projColor = (hue: number) => `oklch(48% .1 ${hue})`;
 
 export const CheckIcon = (
-  <svg className="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+  <svg
+    className="chk"
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+  >
     <path d="M20 6L9 17l-5-5" />
   </svg>
 );
 
 export const ChevRight = (cls = "chev") => (
-  <svg className={cls} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg
+    className={cls}
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
     <path d="M9 6l6 6-6 6" />
   </svg>
 );
 
 export const ChevDown = (cls = "chev") => (
-  <svg className={cls} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg
+    className={cls}
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
     <path d="M6 9l6 6 6-6" />
   </svg>
 );

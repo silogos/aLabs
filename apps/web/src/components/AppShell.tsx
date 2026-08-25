@@ -62,7 +62,16 @@ export function AppShell({ children }: { children: ReactNode }) {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [setCmdkOpen, closeTask, setCreateOpen, closeRelPicker, mNavOpen, navModal, setMNavOpen, setNavModal]);
+  }, [
+    setCmdkOpen,
+    closeTask,
+    setCreateOpen,
+    closeRelPicker,
+    mNavOpen,
+    navModal,
+    setMNavOpen,
+    setNavModal,
+  ]);
 
   if (!project) {
     return (

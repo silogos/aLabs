@@ -148,7 +148,14 @@ export function Documents() {
         <aside className="doc-tree">
           <div className="tree-search">
             <span className="ico">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
                 <circle cx="11" cy="11" r="7" />
                 <path d="m21 21-4.3-4.3" />
               </svg>
@@ -160,10 +167,19 @@ export function Documents() {
             const sp = apiPages.filter((p) => p.spaceId === s.id);
             return (
               <div className={`space ${isCol ? "collapsed" : ""}`} key={s.id}>
-                <div className="space-h" onClick={() => setCollapsed((c) => ({ ...c, [s.id]: !c[s.id] }))}>
+                <div
+                  className="space-h"
+                  onClick={() => setCollapsed((c) => ({ ...c, [s.id]: !c[s.id] }))}
+                >
                   <span className="emo">{s.icon ?? "📄"}</span>
                   {s.name}
-                  <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    className="chev"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M6 9l6 6 6-6" />
                   </svg>
                 </div>
@@ -198,12 +214,26 @@ export function Documents() {
             </div>
             <div className="right">
               <button className="tbtn" title="Star">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
                   <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
                 </svg>
               </button>
               <button className="tbtn" title="Share">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
                   <circle cx="18" cy="5" r="3" />
                   <circle cx="6" cy="12" r="3" />
                   <circle cx="18" cy="19" r="3" />
@@ -211,13 +241,24 @@ export function Documents() {
                 </svg>
               </button>
               <button className="tbtn" title="History">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
                   <path d="M3 3v5h5M3.1 9a9 9 0 1 0 2.1-3.6L3 8" />
                   <path d="M12 7v5l3 2" />
                 </svg>
               </button>
               {(members ?? []).slice(0, 3).map((m) => (
-                <span key={m.user.id} className={`av sm ${colorFor(m.user.id)}`} title={m.user.name}>
+                <span
+                  key={m.user.id}
+                  className={`av sm ${colorFor(m.user.id)}`}
+                  title={m.user.name}
+                >
                   {initials(m.user.name)}
                 </span>
               ))}
@@ -228,12 +269,26 @@ export function Documents() {
                 title="Toggle edit / preview"
               >
                 {editMode ? (
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  >
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                 ) : (
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  >
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                     <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z" />
                   </svg>
@@ -257,7 +312,11 @@ export function Documents() {
       <div style={{ marginTop: 16 }}>
         <div className="section-title">
           <h2>Files & attachments</h2>
-          <span className="link" style={{ marginLeft: "auto" }} onClick={() => toast("Upload — pick a file")}>
+          <span
+            className="link"
+            style={{ marginLeft: "auto" }}
+            onClick={() => toast("Upload — pick a file")}
+          >
             Upload
           </span>
         </div>

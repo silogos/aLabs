@@ -94,19 +94,27 @@ function LoginForm() {
             </Link>
           </div>
 
-          <button className={`btn primary full lg ${busy ? "loading" : ""}`} type="submit" disabled={busy}>
+          <button
+            className={`btn primary full lg ${busy ? "loading" : ""}`}
+            type="submit"
+            disabled={busy}
+          >
             <span className="spinner"></span>
             <span className="lbl-txt">Sign in</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
           </button>
         </form>
 
-        <SwitchFoot
-          text="Don't have an account?"
-          link={<Link href="/register">Create one</Link>}
-        />
+        <SwitchFoot text="Don't have an account?" link={<Link href="/register">Create one</Link>} />
 
         <LegalFoot />
       </div>
