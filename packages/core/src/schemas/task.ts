@@ -58,6 +58,15 @@ export const taskLinkCreate = z.object({
   type: taskLinkType,
 });
 
+export const commentSchema = z.object({
+  id,
+  taskId: id,
+  userId: id,
+  body: z.string(),
+  createdAt: iso,
+});
+export type Comment = z.infer<typeof commentSchema>;
+
 export const commentCreate = z.object({
   body: z.string().min(1).max(5000),
 });
@@ -85,6 +94,9 @@ export const taskSchema = z.object({
   links: z.array(taskLinkSchema).default([]),
 });
 export type Task = z.infer<typeof taskSchema>;
+
+/** GET /tasks/:id — task with its subtasks and comments. */
+export type TaskDetail = Task & { subtasks: Task[]; comments: Comment[] };
 
 export const taskCreate = z.object({
   title: z.string().min(1).max(255),
