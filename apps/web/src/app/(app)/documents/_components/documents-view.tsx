@@ -118,10 +118,31 @@ export function DocumentsView() {
   const [activePageId, setActivePageId] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(true);
   const [confirmDel, setConfirmDel] = useState<Page | null>(null);
+  const [spaceModal, setSpaceModal] = useState(false);
+  const [spaceName2, setSpaceName2] = useState("");
+  const [spaceErr, setSpaceErr] = useState(false);
 
   const apiPages: Page[] = pageData?.items ?? [];
   const active = apiPages.find((p) => p.id === activePageId) ?? apiPages[0] ?? null;
   const spaceName = (sid: string) => spaces?.find((s) => s.id === sid)?.name ?? "—";
+
+  const createSpace = async () => {
+    const name = spaceName2.trim();
+    if (!name) {
+      setSpaceErr(true);
+      return;
+    }
+    try {
+      await documentsService.createSpace(pid, { name, icon: "📁" });
+      await qc.invalidateQueries({ queryKey: qk.spaces(pid) });
+      setSpaceModal(false);
+      setSpaceName2("");
+      setSpaceErr(false);
+      toast(`Space “${name}” created`);
+    } catch (e) {
+      toast("Couldn't create space: " + (e as Error).message);
+    }
+  };
 
   const deletePage = async () => {
     const p = confirmDel;
@@ -138,9 +159,10 @@ export function DocumentsView() {
   };
 
   const newPage = async () => {
-    // Projects created before spaces were auto-seeded (and any future
-    // space-less project) get a General space on first page creation.
-    let firstSpace = (spaces ?? [])[0]?.id;
+    // New documents land in the active document's space; projects created
+    // before spaces were auto-seeded (and any space-less project) get a
+    // General space on first page creation.
+    let firstSpace = active?.spaceId ?? (spaces ?? [])[0]?.id;
     if (!firstSpace) {
       try {
         const s = await documentsService.createSpace(pid, { name: "General", icon: "📁" });
@@ -269,6 +291,19 @@ export function DocumentsView() {
               </div>
             );
           })}
+          <button className="tree-add" onClick={() => setSpaceModal(true)}>
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            New space
+          </button>
         </aside>
 
         <div className="doc-main">
@@ -422,6 +457,41 @@ export function DocumentsView() {
               onClick={deletePage}
             >
               Delete
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {spaceModal && (
+        <Modal
+          title="New space"
+          onClose={() => setSpaceModal(false)}
+          onBackdrop={() => setSpaceModal(false)}
+        >
+          <div className="mb">
+            <label className="flab">Space name</label>
+            <input
+              className={`fld ${spaceErr ? "err" : ""}`}
+              autoFocus
+              value={spaceName2}
+              onChange={(e) => {
+                setSpaceName2(e.target.value);
+                setSpaceErr(false);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && createSpace()}
+              placeholder="e.g. Engineering"
+            />
+            {spaceErr && <div className="fld-err show">Please enter a name.</div>}
+            <p className="muted tiny" style={{ marginTop: 8 }}>
+              Spaces group documents in the tree — they act as folders.
+            </p>
+          </div>
+          <div className="mf">
+            <button className="btn ghost" onClick={() => setSpaceModal(false)}>
+              Cancel
+            </button>
+            <button className="btn primary" onClick={createSpace}>
+              Create space
             </button>
           </div>
         </Modal>
