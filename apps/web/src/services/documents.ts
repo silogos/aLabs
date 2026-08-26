@@ -6,12 +6,19 @@ import type {
   Paginated,
   PageCreateInput,
   PageUpdateInput,
+  SpaceCreateInput,
 } from "@pmin/core";
 import { req, upload } from "@/lib/http";
 
 export const documentsService = {
   spaces: (pid: string) =>
     req<{ data: Space[] }>(`/projects/${pid}/documents/spaces`).then((x) => x.data),
+
+  createSpace: (pid: string, body: SpaceCreateInput) =>
+    req<{ data: Space }>(`/projects/${pid}/documents/spaces`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
 
   listPages: (pid: string) => req<Paginated<Page>>(`/projects/${pid}/documents/pages?limit=100`),
 

@@ -123,10 +123,18 @@ export function DocumentsView() {
   const spaceName = (sid: string) => spaces?.find((s) => s.id === sid)?.name ?? "—";
 
   const newPage = async () => {
-    const firstSpace = (spaces ?? [])[0]?.id;
+    // Projects created before spaces were auto-seeded (and any future
+    // space-less project) get a General space on first page creation.
+    let firstSpace = (spaces ?? [])[0]?.id;
     if (!firstSpace) {
-      toast("Create a space first");
-      return;
+      try {
+        const s = await documentsService.createSpace(pid, { name: "General", icon: "📁" });
+        await qc.invalidateQueries({ queryKey: qk.spaces(pid) });
+        firstSpace = s.id;
+      } catch (e) {
+        toast("Couldn't create space: " + (e as Error).message);
+        return;
+      }
     }
     try {
       const p = await documentsService.createPage(pid, {

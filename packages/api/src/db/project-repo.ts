@@ -4,7 +4,7 @@
  *  joins); visits power the recents + landing-project rule. */
 import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
 import { db } from "./pg";
-import { projects, projectMembers, projectVisits, roles, taskStatuses, taskTypes } from "@pmin/core/db";
+import { projects, projectMembers, projectVisits, roles, spaces, taskStatuses, taskTypes } from "@pmin/core/db";
 import { DEFAULT_TASK_STATUSES, DEFAULT_TASK_TYPES, uuidv7, type Project, type ProjectMember, type User } from "@pmin/core";
 import { toRole, requireSystemRole } from "./org-repo";
 import { iso, userMap } from "./mapping";
@@ -184,6 +184,16 @@ export async function createProjectWithConfig(input: {
         createdAt: now,
       })),
     );
+    // every project starts with one space — the documents UI needs somewhere
+    // to put the first page (only the demo Atlas project gets richer seeds)
+    await tx.insert(spaces).values({
+      id: uuidv7(),
+      projectId: row!.id,
+      name: "General",
+      icon: "📁",
+      order: 0,
+      createdAt: now,
+    });
 
     await tx.insert(projectMembers).values({
       id: uuidv7(),
