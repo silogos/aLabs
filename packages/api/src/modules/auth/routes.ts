@@ -16,7 +16,7 @@ import {
   forgotPasswordInput,
   resetPasswordInput,
 } from "@pmin/core";
-import { badRequest, unauthorized, ApiError } from "../../lib/errors";
+import { badRequest, unauthorized } from "../../lib/errors";
 import { extractToken, SESSION_COOKIE } from "../../lib/auth";
 import { hashPassword, verifyPassword } from "../../lib/passwords";
 import { created, data } from "../../lib/responses";
@@ -159,10 +159,7 @@ const googleRedirectUri = () => `${webUrl()}/api/auth/oauth/google/callback`;
 auth.get("/oauth/google", (c) => {
   const cfg = googleConfig();
   if (!cfg) {
-    throw new ApiError(
-      "service_unavailable",
-      "Google SSO is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.",
-    );
+    return c.redirect(`${webUrl()}/login?authError=google_not_configured`);
   }
 
   const state = randomBytes(24).toString("base64url");
@@ -186,7 +183,14 @@ auth.get("/oauth/google/callback", async (c) => {
   const code = c.req.query("code");
   const error = c.req.query("error");
   const state = c.req.query("state");
-  if (error) return fail(error);
+  // Google redirects back with `error` when the user cancels the consent
+  // screen (access_denied) or when the provider rejects the request. Map the
+  // known value to a friendly reason and collapse anything else to a generic
+  // one — never echo the raw provider string into the redirect URL.
+  if (error) {
+    const reason = error === "access_denied" ? "google_canceled" : "google_error";
+    return fail(reason);
+  }
   if (!code || !state) return fail("missing_code_or_state");
 
   const stateExpiresAt = oauthStates.get(state);
@@ -208,14 +212,23 @@ auth.get("/oauth/google/callback", async (c) => {
       redirect_uri: googleRedirectUri(),
     }),
   });
-  if (!tokenRes.ok) return fail("token_exchange_failed");
+  if (!tokenRes.ok) {
+    console.error(`[auth] google token exchange failed: ${tokenRes.status} ${tokenRes.statusText}`);
+    return fail("token_exchange_failed");
+  }
   const { access_token } = (await tokenRes.json()) as { access_token?: string };
-  if (!access_token) return fail("token_exchange_failed");
+  if (!access_token) {
+    console.error("[auth] google token exchange returned no access_token");
+    return fail("token_exchange_failed");
+  }
 
   const profileRes = await fetch(GOOGLE_USERINFO_URL, {
     headers: { Authorization: `Bearer ${access_token}` },
   });
-  if (!profileRes.ok) return fail("userinfo_failed");
+  if (!profileRes.ok) {
+    console.error(`[auth] google userinfo failed: ${profileRes.status} ${profileRes.statusText}`);
+    return fail("userinfo_failed");
+  }
   const profile = (await profileRes.json()) as {
     sub: string;
     email?: string;

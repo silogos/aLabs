@@ -1,7 +1,7 @@
 "use client";
 
 import { authService } from "@/services/auth";
-import { Suspense, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BrandPanel } from "../_components/brand-panel";
 import {
@@ -24,9 +24,11 @@ const AUTH_ERROR_TEXT: Record<string, string> = {
   token_exchange_failed: "Google rejected the sign-in. Please try again.",
   userinfo_failed: "Could not reach Google to confirm your account. Please try again.",
   email_missing: "Your Google account has no email address exposed.",
+  google_error: "Google rejected the sign-in. Please try again.",
 };
 
 const GENERIC_AUTH_ERROR = "Sign-in failed. Please try again.";
+const GOOGLE_CANCELED_TEXT = "Google sign-in was canceled.";
 
 function LoginForm() {
   const router = useRouter();
@@ -36,14 +38,29 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(
-    authError ? (AUTH_ERROR_TEXT[authError] ?? GENERIC_AUTH_ERROR) : null,
+    authError && authError !== "google_canceled"
+      ? (AUTH_ERROR_TEXT[authError] ?? GENERIC_AUTH_ERROR)
+      : null,
+  );
+  const [notice, setNotice] = useState<string | null>(
+    authError === "google_canceled" ? GOOGLE_CANCELED_TEXT : null,
   );
   const [busy, setBusy] = useState(false);
+
+  // The OAuth callback redirects back with ?authError=…; drop the param from
+  // the URL once it's been read so it doesn't survive back-nav or reappear on
+  // a retry.
+  useEffect(() => {
+    if (params.get("authError")) {
+      router.replace("/login");
+    }
+  }, [params, router]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    setNotice(null);
     try {
       await authService.login({ email, password });
       router.replace("/dashboard");
@@ -67,6 +84,12 @@ function LoginForm() {
         </div>
 
         <Divider label="or sign in with email" />
+
+        {notice && (
+          <div style={{ marginTop: 14 }}>
+            <Alert kind="info">{notice}</Alert>
+          </div>
+        )}
 
         {error && (
           <div style={{ marginTop: 14 }}>
