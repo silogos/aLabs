@@ -199,7 +199,9 @@ export function DocumentsView() {
                   onClick={() => setCollapsed((c) => ({ ...c, [s.id]: !c[s.id] }))}
                 >
                   <span className="emo">{s.icon ?? "📄"}</span>
-                  {s.name}
+                  <span className="lbl" title={s.name}>
+                    {s.name}
+                  </span>
                   <svg
                     className="chev"
                     viewBox="0 0 24 24"
@@ -218,7 +220,9 @@ export function DocumentsView() {
                       onClick={() => setActivePageId(p.id)}
                     >
                       <span className="emo">{p.icon ?? "📄"}</span>
-                      {p.title}
+                      <span className="lbl" title={p.title}>
+                        {p.title}
+                      </span>
                     </div>
                   ))}
                   {sp.length === 0 && !isCol && (

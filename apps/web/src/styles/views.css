@@ -246,6 +246,14 @@
   width: 16px;
   text-align: center;
 }
+.space-h .lbl,
+.page-item .lbl {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .space-h .chev {
   margin-left: auto;
   color: var(--faint);
