@@ -1,6 +1,6 @@
 # aLabs
 
-A documentation-first project management platform — **Atlas Platform 2.0**.
+A documentation-first project management platform.
 
 Unifies delivery (tasks, planning), knowledge (documents), and client
 communication in one place. Built on the design in [`designs/app/alabs-app.html`](./designs/app/alabs-app.html)

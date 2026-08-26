@@ -67,7 +67,7 @@ app.get("/uploads/*", async (c) => {
 app.get("/", (c) =>
   c.json({
     name: "aLabs API",
-    product: "Atlas Platform 2.0",
+    product: "aLabs",
     version: "0.1.0",
     ok: true,
     endpoints: [

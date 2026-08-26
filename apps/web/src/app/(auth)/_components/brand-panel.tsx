@@ -12,7 +12,7 @@ export function BrandPanel() {
 
       <div className="bp-body">
         <span className="bp-eyebrow">
-          <span className="d"></span>aLabs · Atlas Platform
+          <span className="d"></span>aLabs
         </span>
         <h2 className="bp-headline">
           Plan, build, and ship — in <em>one workspace</em>.
