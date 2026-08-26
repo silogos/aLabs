@@ -8,6 +8,13 @@
  */
 import { z } from "zod";
 
+/* ---- shared primitives ---- */
+
+/** ISO-8601 date-time string (Dates serialize to this on the wire). */
+export const iso = z.string();
+/** UUID string. */
+export const id = z.string().uuid();
+
 /* ---- pagination ---- */
 
 export const paginationQuery = z.object({
@@ -16,13 +23,6 @@ export const paginationQuery = z.object({
 });
 export type PaginationQuery = z.infer<typeof paginationQuery>;
 
-export function paginated<T extends z.ZodTypeAny>(item: T) {
-  return z.object({
-    items: z.array(item),
-    nextCursor: z.string().nullable(),
-    hasMore: z.boolean(),
-  });
-}
 export type Paginated<T> = { items: T[]; nextCursor: string | null; hasMore: boolean };
 
 export function paginate<T extends { id: string; createdAt: string }>(
@@ -49,12 +49,6 @@ function encodeCursor(createdAt: string, id: string): string {
   return encodeURIComponent(JSON.stringify({ t: createdAt, i: id }));
 }
 
-/* ---- single resource ---- */
-
-export function data<T extends z.ZodTypeAny>(item: T) {
-  return z.object({ data: item });
-}
-
 /* ---- error envelope ---- */
 
 export const errorCode = z.enum([
@@ -66,17 +60,9 @@ export const errorCode = z.enum([
   "unprocessable",
   "rate_limited",
   "internal_error",
+  "service_unavailable",
 ]);
 export type ErrorCode = z.infer<typeof errorCode>;
-
-export const errorEnvelope = z.object({
-  error: z.object({
-    code: errorCode,
-    message: z.string(),
-    details: z.record(z.unknown()).optional(),
-  }),
-});
-export type ErrorEnvelope = z.infer<typeof errorEnvelope>;
 
 export const ERROR_STATUS: Record<ErrorCode, number> = {
   validation_error: 400,
@@ -87,6 +73,7 @@ export const ERROR_STATUS: Record<ErrorCode, number> = {
   unprocessable: 422,
   rate_limited: 429,
   internal_error: 500,
+  service_unavailable: 503,
 };
 
 /** State-machine helper: returns true if `to` is in `transitions[from]`. */

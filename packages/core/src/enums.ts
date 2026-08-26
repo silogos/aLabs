@@ -18,17 +18,12 @@ export type ProjectStatus = "active" | "on_hold" | "archived";
 export type ProjectVisibility = "organization" | "private";
 export type TaskPriority = "low" | "medium" | "high" | "urgent";
 export type IterationStatus = "planned" | "active" | "completed";
+export type TaskLinkType = "blocks" | "blocked_by" | "relates_to";
 export type MilestoneStatus = "planned" | "reached";
 export type MeetingType = "standup" | "review" | "planning" | "client" | "other";
 export type MeetingStatus = "scheduled" | "completed" | "cancelled";
 export type AgreementType = "sow" | "nda" | "contract" | "proposal" | "other";
 export type AgreementStatus = "draft" | "sent" | "accepted" | "rejected" | "expired";
-export type ClientUserStatus = "invited" | "active" | "disabled";
-export type ClientShareResource = "tasks" | "milestones" | "reports" | "documents";
-export type NotificationChannel = "in_app" | "email";
-export type PlanName = "free" | "professional" | "enterprise";
-export type SubscriptionStatus = "active" | "past_due" | "canceled";
-export type InvoiceStatus = "paid" | "pending" | "failed";
 
 /* ---- pg enums (mirror DB precisely) ---- */
 
@@ -44,6 +39,7 @@ export const organizationTypeEnum = pgEnum("organization_type", ["personal", "te
 export const projectStatusEnum = pgEnum("project_status", ["active", "on_hold", "archived"]);
 export const projectVisibilityEnum = pgEnum("project_visibility", ["organization", "private"]);
 export const taskPriorityEnum = pgEnum("task_priority", ["low", "medium", "high", "urgent"]);
+export const taskLinkTypeEnum = pgEnum("task_link_type", ["blocks", "blocked_by", "relates_to"]);
 export const iterationStatusEnum = pgEnum("iteration_status", ["planned", "active", "completed"]);
 export const milestoneStatusEnum = pgEnum("milestone_status", ["planned", "reached"]);
 export const meetingTypeEnum = pgEnum("meeting_type", [
@@ -68,21 +64,6 @@ export const agreementStatusEnum = pgEnum("agreement_status", [
   "rejected",
   "expired",
 ]);
-export const clientUserStatusEnum = pgEnum("client_user_status", ["invited", "active", "disabled"]);
-export const clientShareResourceEnum = pgEnum("client_share_resource", [
-  "tasks",
-  "milestones",
-  "reports",
-  "documents",
-]);
-export const notificationChannelEnum = pgEnum("notification_channel", ["in_app", "email"]);
-export const planNameEnum = pgEnum("plan_name", ["free", "professional", "enterprise"]);
-export const subscriptionStatusEnum = pgEnum("subscription_status", [
-  "active",
-  "past_due",
-  "canceled",
-]);
-export const invoiceStatusEnum = pgEnum("invoice_status", ["paid", "pending", "failed"]);
 
 /* ---- zod-friendly enum objects (re-exported for schema validation) ---- */
 
@@ -101,9 +82,3 @@ export const MeetingType = z.enum(["standup", "review", "planning", "client", "o
 export const MeetingStatus = z.enum(["scheduled", "completed", "cancelled"]);
 export const AgreementType = z.enum(["sow", "nda", "contract", "proposal", "other"]);
 export const AgreementStatus = z.enum(["draft", "sent", "accepted", "rejected", "expired"]);
-export const ClientUserStatus = z.enum(["invited", "active", "disabled"]);
-export const ClientShareResource = z.enum(["tasks", "milestones", "reports", "documents"]);
-export const NotificationChannel = z.enum(["in_app", "email"]);
-export const PlanName = z.enum(["free", "professional", "enterprise"]);
-export const SubscriptionStatus = z.enum(["active", "past_due", "canceled"]);
-export const InvoiceStatus = z.enum(["paid", "pending", "failed"]);

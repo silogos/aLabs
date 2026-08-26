@@ -1,6 +1,6 @@
 # Authentication Domain
 
-Version: 1.0.0
+Version: 1.1.0
 
 Status: MVP
 
@@ -362,6 +362,54 @@ GET
 
 ---
 
+## Google SSO — Start
+
+GET
+
+```http
+/auth/oauth/google
+```
+
+Redirects to Google's consent screen. Requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (returns 503 otherwise).
+
+---
+
+## Google SSO — Callback
+
+GET
+
+```http
+/auth/oauth/google/callback
+```
+
+Google redirects here with `?code&state`. Exchanges the code, upserts the user by email, creates a session, and redirects to the web app (`WEB_URL`).
+
+---
+
+## Forgot Password
+
+POST
+
+```http
+/auth/forgot-password
+```
+
+Body: `{ "email": "..." }`. Always returns 200 (never reveals whether the email exists). Emails a one-hour, single-use reset token — logged to the console until an email provider is selected; returned as `resetPath` outside production so the flow is testable.
+
+---
+
+## Reset Password
+
+POST
+
+```http
+/auth/reset-password
+```
+
+Body: `{ "token": "...", "password": "..." }` (min 8 chars). Invalidates all of the user's sessions.
+
+---
+
 # Error Handling
 
 Examples
@@ -431,18 +479,21 @@ Scalability
 
 Not included in MVP.
 
-- Forgot Password
-- Reset Password
 - Email Verification
 - Magic Link
-- Google Login
 - GitHub Login
 - Microsoft Login
 - Two-Factor Authentication (2FA)
-- Single Sign-On (SSO)
+- Single Sign-On (SAML/OIDC, enterprise)
 - Passkeys
 - Session Management UI
 - Device History
+
+Implemented past MVP (v1.1):
+
+- Forgot Password
+- Reset Password
+- Google Login
 
 ---
 

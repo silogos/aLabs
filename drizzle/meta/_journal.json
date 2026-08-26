@@ -1,0 +1,69 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1787439899099,
+      "tag": "0000_serious_gamora",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787450109579,
+      "tag": "0001_youthful_hardball",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787480879278,
+      "tag": "0002_perpetual_callisto",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787481694380,
+      "tag": "0003_absurd_gressill",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787483814727,
+      "tag": "0004_fluffy_fabian_cortez",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787505941747,
+      "tag": "0005_calm_slayback",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787590193920,
+      "tag": "0006_funny_mister_sinister",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787592748226,
+      "tag": "0007_giant_korath",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787606283566,
+      "tag": "0008_serious_mesmero",
+      "breakpoints": true
+    }
+  ]
+}

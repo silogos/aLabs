@@ -248,6 +248,12 @@ export function RichTextEditor({
     onUpdate: ({ editor }) => onChange?.(editor.getJSON() as Content),
   });
 
+  // `useEditor` captures its options at mount — toggling the `editable` prop
+  // on re-render must be synced to the live instance explicitly.
+  useEffect(() => {
+    editor?.setEditable(editable);
+  }, [editable, editor]);
+
   /* Task-pill click → open the task in-app (DOM delegation on the wrapper). */
   useEffect(() => {
     const root = wrapperRef.current;

@@ -11,7 +11,7 @@ Depends On:
 
 # Overview
 
-A modular monolith deployed as two applications, `api` and `web`, over a single shared `core` package, backed by PostgreSQL. Everything is Dockerized so the same build runs in SaaS and self-hosted Enterprise.
+A modular monolith deployed as a single application — a Next.js server that renders the web UI and hosts the Hono API in-process under `/api` — over shared `core` and `api` packages, backed by PostgreSQL. Everything is Dockerized so the same build runs in SaaS and self-hosted Enterprise.
 
 ---
 
@@ -19,8 +19,8 @@ A modular monolith deployed as two applications, `api` and `web`, over a single 
 
 | Layer       | Choice              |
 | ----------- | ------------------- |
-| Frontend    | React 19, TypeScript, Vite |
-| Backend     | Hono                |
+| Frontend    | Next.js (App Router), React 19, TypeScript |
+| Backend     | Hono, mounted in-process by Next.js (`@pmin/api`) |
 | Database    | PostgreSQL          |
 | ORM         | Drizzle             |
 | Auth        | Better Auth         |
@@ -36,10 +36,11 @@ A modular monolith deployed as two applications, `api` and `web`, over a single 
 ```text
 pmin/
 ├── apps/
-│   ├── api/            Hono REST API
-│   └── web/            React + Vite dashboard
+│   └── web/            Next.js app (UI + in-process API mount)
 ├── packages/
-│   └── core/           Shared domain: types, zod schemas, Drizzle schema, enums
+│   ├── api/            Hono REST API (host-agnostic library)
+│   ├── core/           Shared domain: types, zod schemas, Drizzle schema, enums
+│   └── editor/         Tiptap editor package
 ├── docker-compose.yml
 ├── turbo.json
 └── pnpm-workspace.yaml
@@ -53,7 +54,7 @@ Split a package out of `core` only when something needs independent consumption 
 
 # Module Mapping
 
-Each domain and module is a folder under `apps/api/src/modules/<module>`:
+Each domain and module is a folder under `packages/api/src/modules/<module>`:
 
 ```text
 modules/<module>/
@@ -113,8 +114,9 @@ Database-level Row-Level Security is **not** enabled in v1. It is a future defen
 
 # Frontend
 
-- React 19 + Vite.
-- React Query for server state.
+- Next.js App Router with React 19; views render as client components (React Query for server state, client-only app shell).
+- Real URLs per view (`/dashboard` … `/agreements`); auth screens at `/login`, `/register`, `/forgot-password`, `/reset-password`.
+- The API is mounted in-process: `app/api/[[...route]]` strips the `/api` prefix and delegates to the Hono app — one origin, cookie sessions by construction.
 - A tenant switcher sets the active organization/project.
 - Route guards mirror API permission keys.
 
@@ -122,7 +124,7 @@ Database-level Row-Level Security is **not** enabled in v1. It is a future defen
 
 # Deployment
 
-- `docker-compose` runs `api`, `web`, and `postgres`.
+- `docker-compose` runs `web` (Next.js standalone — UI + API in one process) and, later, `postgres`.
 - Self-hosted Enterprise uses the same compose stack.
 - SaaS hosting provider to be selected.
 

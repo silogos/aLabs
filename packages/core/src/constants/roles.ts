@@ -6,7 +6,7 @@
  *
  * From `docs/tech/05-seed-data.md`.
  */
-import { ALL_PERMISSIONS, PERMISSION_GROUPS, type PermissionKey } from "./permissions.js";
+import { ALL_PERMISSIONS, PERMISSION_GROUPS, type PermissionKey } from "./permissions";
 
 export type SystemRoleName =
   | "Owner"

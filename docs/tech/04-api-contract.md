@@ -183,6 +183,26 @@ POST   /auth/logout
 GET    /auth/me
 ```
 
+## User
+
+```http
+PATCH  /users/me
+GET    /users/me/recents?limit=3
+POST   /users/me/recents
+```
+
+`GET /users/me/recents` — the caller's recently visited projects,
+most-recent-first. `limit` defaults to 3, max 5. Each item embeds its org:
+
+```json
+{ "data": [ { "project": { "id": "…", "key": "ATL" }, "organization": { "id": "…", "name": "Northwind" }, "visitedAt": "…" } ] }
+```
+
+`POST /users/me/recents` — touch a project (body `{ "projectId": "uuid" }`);
+upserts `visited_at` and returns `{ project }`. The server keeps at most 5
+visits per user. Auth-only (identity-level, cross-org by nature): a project
+outside the caller's orgs returns `404`, never `403`.
+
 ## Organization
 
 ```http
@@ -190,15 +210,15 @@ GET    /organizations
 POST   /organizations
 GET    /organizations/:organizationId
 PATCH  /organizations/:organizationId
+DELETE /organizations/:organizationId   (soft delete, owner-only)
 
 GET    Org/members
-POST   Org/members
-PATCH  Org/members/:id
+PATCH  Org/members/:id                 (change workspace role)
 DELETE Org/members/:id
 
-POST   Org/invitations
+POST   Org/invitations                 (invite by email — the membership flow)
 GET    Org/invitations
-PATCH  Org/invitations/:id          (accept / cancel)
+PATCH  Org/invitations/:id             (accept / cancel; accept requires a registered user)
 ```
 
 ## Project
@@ -211,8 +231,8 @@ PATCH  /projects/:projectId
 DELETE /projects/:projectId
 
 GET    Prj/members
-POST   Prj/members
-PATCH  Prj/members/:id
+POST   Prj/members                     (invite an org member by email → pending)
+PATCH  Prj/members/:id                 (change project role / accept invitation)
 DELETE Prj/members/:id
 ```
 

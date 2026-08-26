@@ -4,23 +4,29 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@pmin/api": "workspace:*",
     "@pmin/core": "workspace:*",
     "@pmin/editor": "workspace:*",
     "@tanstack/react-query": "^5",
+    "next": "^16.3.2",
     "react": "^19",
-    "react-dom": "^19"
+    "react-dom": "^19",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^5",
-    "typescript": "^5",
-    "vite": "^7"
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.2",
+    "eslint-config-prettier": "^10.1.8",
+    "typescript": "^5"
   }
 }

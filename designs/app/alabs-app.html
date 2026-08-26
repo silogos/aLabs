@@ -1,14 +1,12 @@
-
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet" />
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&amp;display=swap" rel="stylesheet">
 <title>aLabs · Atlas Platform 2.0</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
 /* ============================================================
    aLabs — Workspace prototype
@@ -74,29 +72,29 @@ input,textarea,select{font:inherit;color:inherit}
 .truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ---------- App shell ---------- */
-.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;grid-template-rows:minmax(0,1fr);height:100vh;overflow:hidden}
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;grid-template-rows:minmax(0,1fr);height:100vh;height:100dvh;overflow:hidden}
 
 .sidebar{background:var(--rail);color:var(--rail-fg);display:flex;flex-direction:column;border-right:1px solid oklch(12% 0.01 255);min-width:0;position:relative}
-.brand-row{display:flex;gap:10px;margin:10px;align-items:stretch}
-.brand{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 15px;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;container-type:inline-size}
-.brand .logo{width:16.5cqi;height:16.5cqi;flex:none;display:grid;place-items:center}
-.brand .logo svg{width:72%;height:72%;display:block}
-.brand b{font-size:8.7cqi;letter-spacing:-.01em;font-weight:650}
-.brand .badge{flex:none;font-size:5cqi;line-height:1;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--accent);background:color-mix(in oklch,var(--accent) 13%,transparent);border:1px solid color-mix(in oklch,var(--accent) 26%,transparent);padding:1.1cqi 1.7cqi;border-radius:5px}
-.rail-toggle-wrap{flex:none;display:grid;place-items:center;padding:0 13px;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;transition:border-color .12s,background .12s}
-.rail-toggle-wrap:hover{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.05)}
-.rail-toggle{background:transparent;border:none;color:var(--rail-fg);display:grid;place-items:center;cursor:pointer;padding:0;transition:color .12s}
-.rail-toggle:hover{color:#fff}
-.rail-toggle svg{transition:transform .16s}
+.brand-row{display:flex;gap:10px;margin:11px;align-items:stretch}
+.brand{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:12px 13px;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px}
+.brand .logo{width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:7px;background:color-mix(in oklch,var(--accent) 22%,transparent);border:1px solid color-mix(in oklch,var(--accent) 40%,transparent)}
+.brand .logo svg{width:17px;height:17px;display:block}
+.brand .meta{min-width:0;line-height:1.15}
+.brand .meta b{display:block;font-size:12.5px;letter-spacing:-.01em;font-weight:650;color:#fff}
+.brand .meta small{display:block;font-size:10px;color:var(--rail-faint);text-transform:uppercase;letter-spacing:.09em;font-weight:600}
+.collapse-btn{display:flex;align-items:center;gap:9px;width:100%;padding:7px 8px;border-radius:6px;background:transparent;border:none;color:var(--rail-fg);font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;margin:0 0 4px;transition:background .12s,color .12s}
+.collapse-btn:hover{background:rgba(255,255,255,.05);color:#fff}
+.collapse-btn svg{flex:none;opacity:.9;transition:transform .16s}
 .app.collapsed{--sidebar-w:62px}
-.app.collapsed .brand b,.app.collapsed .brand .badge,.app.collapsed .ws-switch .meta,.app.collapsed .nav-item span,.app.collapsed .nav-label,.app.collapsed .user .meta,.app.collapsed .nav-item .count{display:none}
+.app.collapsed .brand .meta,.app.collapsed .ws-switch .meta,.app.collapsed .nav-item span,.app.collapsed .nav-label,.app.collapsed .user .meta,.app.collapsed .nav-item .count,.app.collapsed .collapse-btn .lbl{display:none}
 .app.collapsed .brand-row{margin:6px}
-.app.collapsed .brand{padding:8px;border-radius:8px}
-.app.collapsed .rail-toggle-wrap{display:none}
-.app.collapsed .brand .logo{width:30px;height:30px}
+.app.collapsed .brand{padding:8px;border:none;justify-content:center;cursor:pointer}
+.app.collapsed .brand .logo{width:34px;height:34px;border-radius:8px}
+.app.collapsed .brand .logo svg{width:21px;height:21px}
+.app.collapsed .collapse-btn{justify-content:center}
+.app.collapsed .collapse-btn svg{transform:rotate(180deg)}
 .app.collapsed .nav-item{justify-content:center}.app.collapsed .user{justify-content:center}
 .app.collapsed .ws-switch{justify-content:center;padding:6px}.app.collapsed .ws-switch .dot{margin:0}
-.app.collapsed .brand{cursor:pointer}
 
 .ws-switch{margin:0;border:none;border-radius:0;background:transparent;display:flex;align-items:center;gap:9px;padding:9px 14px;color:#e9eaf0;width:100%}
 .ws-switch:hover{background:rgba(255,255,255,.05)}
@@ -106,9 +104,9 @@ input,textarea,select{font:inherit;color:inherit}
 .ws-switch .meta small{font-size:10px;color:var(--rail-faint)}
 .ws-switch svg{color:var(--rail-faint)}
 
-.nav-group{padding:6px 8px}
-.nav-label{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--rail-faint);padding:8px 8px 4px;font-weight:600}
-.nav-item{display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;border-radius:6px;color:var(--rail-fg);font-size:13px;font-weight:500;position:relative;transition:background .12s,color .12s}
+.nav-group{padding:4px 8px}
+.nav-label{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--rail-faint);padding:10px 8px 4px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:9px;width:100%;padding:7px 8px;border-radius:6px;color:var(--rail-fg);font-size:13px;font-weight:500;position:relative;transition:background .12s,color .12s}
 .nav-item:hover{background:rgba(255,255,255,.05);color:#fff}
 .nav-item.active{background:rgba(120,130,255,.16);color:#fff}
 .nav-item.active::before{content:"";position:absolute;left:-8px;top:6px;bottom:6px;width:2px;background:var(--accent);border-radius:2px}
@@ -132,30 +130,13 @@ input,textarea,select{font:inherit;color:inherit}
 .user .chev{transition:transform .14s,color .12s}
 .user.on .chev{transform:rotate(90deg);color:#fff!important}
 .user .av .pres{position:absolute;right:-2px;bottom:-2px;width:11px;height:11px;border-radius:50%;border:2px solid var(--rail);background:var(--ok);transition:background .12s}
-.me-pop{position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:var(--rail-2);border:1px solid rgba(255,255,255,.09);border-radius:var(--radius);box-shadow:var(--shadow-pop);z-index:120;padding:6px;opacity:0;pointer-events:none;transform:translateY(6px) scale(.98);transform-origin:bottom left;transition:opacity .13s,transform .13s}
-.me-pop.show{opacity:1;pointer-events:auto;transform:none}
-.me-id{display:flex;align-items:center;gap:10px;padding:8px 8px 6px}
-.me-id .av{width:38px;height:38px;font-size:14px;background:oklch(52% 0.14 290);border:none}
-.me-id .txt{min-width:0}
-.me-id .txt b{display:block;font-size:13px;color:#fff;font-weight:600;line-height:1.2}
-.me-id .txt small{display:block;font-size:11px;color:var(--rail-faint);margin-top:2px}
-.me-sep{height:1px;background:rgba(255,255,255,.07);margin:6px 2px}
-.me-grp{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--rail-faint);padding:6px 8px 3px;font-weight:600}
+/* account + workspace switcher now use centered modals (popover styles removed) */
 .me-row{display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border-radius:6px;color:var(--rail-fg);font-size:12.5px;font-weight:500;text-align:left;background:transparent;border:none;cursor:pointer;font-family:inherit;transition:background .1s,color .1s}
 .me-row:hover{background:rgba(255,255,255,.06);color:#fff}
 .me-row svg{flex:none;opacity:.85}
 .me-row.danger{color:oklch(78% 0.16 25)}
 .me-row.danger:hover{background:oklch(30% 0.07 25);color:#fff}
-.ws-wrap{position:relative}
-.proj-pop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--rail-2);border:1px solid rgba(255,255,255,.09);border-radius:var(--radius);box-shadow:var(--shadow-pop);z-index:120;padding:6px;opacity:0;pointer-events:none;transform:translateY(-6px) scale(.98);transform-origin:top left;transition:opacity .13s,transform .13s}
-.proj-pop.show{opacity:1;pointer-events:auto;transform:none}
-.sw-item{display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border-radius:6px;color:var(--rail-fg);font-size:12.5px;font-weight:500;text-align:left;background:transparent;border:none;cursor:pointer;font-family:inherit;transition:background .1s,color .1s}
-.sw-item:hover{background:rgba(255,255,255,.06);color:#fff}
-.sw-item .pdot{width:20px;height:20px;border-radius:5px;flex:none;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
-.sw-item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--rail-fg)}
-.sw-item.cur .nm{color:#fff}
-.sw-item .chk{color:var(--accent);opacity:0;flex:none}
-.sw-item.cur .chk{opacity:1}
+.ws-wrap{position:relative;padding:0 8px}
 
 /* Main */
 .main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg);position:relative;z-index:1}
@@ -344,7 +325,7 @@ table.dt{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;m
 .comment p{font-size:12.5px;color:var(--fg);margin-top:2px;line-height:1.5}
 
 /* Modal / Cmdk */
-.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.97);z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-pop);width:560px;max-width:92vw;max-height:84vh;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .14s,transform .14s}
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.97);z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-pop);width:560px;max-width:92vw;max-height:84vh;max-height:84dvh;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .14s,transform .14s}
 .modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
 .modal .mh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
 .modal .mh h3{font-size:14px;font-weight:650}
@@ -352,6 +333,65 @@ table.dt{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;m
 .modal .mh .x:hover{background:var(--surface-2);color:var(--fg)}
 .modal .mb{padding:16px;overflow:auto}
 .modal .mf{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;justify-content:flex-end;background:var(--surface-2)}
+/* rail workspace pill (entry to switcher modal) */
+.ws-pill{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:var(--rail-fg);cursor:pointer;font-family:inherit;margin-bottom:8px;transition:background .12s,border-color .12s}
+.ws-pill:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.13)}
+.ws-pill .pdot{width:22px;height:22px;border-radius:6px;flex:none;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+.ws-pill .ws-meta{flex:1;min-width:0;text-align:left;overflow:hidden}
+.ws-pill .ws-meta b{display:block;font-size:12.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-pill .chev{color:var(--rail-faint);flex:none;transition:transform .14s}
+.app.collapsed .ws-pill{padding:9px;justify-content:center}
+.app.collapsed .ws-pill .ws-meta,.app.collapsed .ws-pill .chev{display:none}
+/* account + switcher modals */
+.acct-id{display:flex;align-items:center;gap:12px;padding:11px 12px;background:var(--surface-2);border-radius:10px;margin-bottom:14px}
+.acct-id .av{width:40px;height:40px;font-size:14px;background:oklch(52% 0.14 290);border:none}
+.acct-id .tx{min-width:0}
+.acct-id .tx b{display:block;font-size:13.5px;font-weight:650;color:var(--fg-strong);line-height:1.2}
+.acct-id .tx small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.acct-entry{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);text-align:left;cursor:pointer;font-family:inherit;margin-bottom:10px;transition:border-color .12s,background .12s,box-shadow .12s}
+.acct-entry:hover{border-color:color-mix(in oklab,var(--accent) 55%,var(--border));box-shadow:0 0 0 3px color-mix(in oklab,var(--accent) 12%,transparent)}
+.acct-entry .ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;background:color-mix(in oklab,var(--accent) 14%,var(--surface));color:var(--accent);flex:none}
+.acct-entry .tx{flex:1;min-width:0}
+.acct-entry .tx b{display:block;font-size:13px;font-weight:600;color:var(--fg-strong)}
+.acct-entry .tx small{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.acct-entry .ch{color:var(--muted);flex:none}
+.mrow{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:8px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;color:var(--fg);text-align:left;transition:background .1s}
+.mrow:hover{background:var(--surface-2)}
+.mrow svg{flex:none;opacity:.8;color:var(--muted)}
+.mrow.danger{color:oklch(54% 0.19 25)}
+.mrow.danger svg{color:oklch(54% 0.19 25)}
+.mrow.danger:hover{background:oklch(96% 0.05 25)}
+.acct-sep{height:1px;background:var(--border);margin:6px 0}
+.switch-search{display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);margin-bottom:10px}
+.switch-search svg{flex:none;color:var(--muted)}
+.switch-search input{flex:1;border:none;outline:none;background:none;font-family:inherit;font-size:13px;color:var(--fg);min-width:0}
+.switch-search input::placeholder{color:var(--muted)}
+.switch-lbl{font-size:10px;font-weight:650;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:9px 9px 5px}
+.sw-row{display:flex;align-items:center;gap:9px;width:100%;padding:8px 9px;border-radius:7px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--fg);text-align:left;transition:background .1s,color .1s}
+.sw-row:hover{background:var(--surface)}
+.sw-row.on{background:color-mix(in oklab,var(--accent) 15%,var(--surface-2));color:var(--fg-strong)}
+.sw-row .pdot{width:20px;height:20px;border-radius:5px;flex:none;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+.sw-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sw-row .sub{font-size:11px;color:var(--muted);font-weight:400}
+.sw-row .chk{color:var(--accent);opacity:0;flex:none}
+.sw-row.on .chk{opacity:1}
+.switch-empty{padding:30px 16px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.55}
+/* mobile top-bar context (desktop: hidden, shown ≤880px) */
+.m-bar{display:none;align-items:center;gap:9px;min-width:0;flex:1;padding:6px 8px;border-radius:9px}
+.m-bar .pdot{width:26px;height:26px;border-radius:7px;flex:none;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff}
+.m-bar .ctx{min-width:0;flex:1;text-align:left;overflow:hidden;line-height:1.2}
+.m-bar .ctx b{display:block;font-size:13.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-ctrl{display:none;align-items:center;gap:4px;flex:none}
+.m-srow{display:flex;align-items:center;gap:11px;width:100%;padding:9px 11px;margin-bottom:4px;border-radius:7px;background:transparent;border:none;cursor:pointer;font-family:inherit;color:var(--rail-fg);text-align:left;transition:background .1s}
+.m-srow:hover{background:rgba(255,255,255,.06)}
+#m-body .ws-pill{background:transparent;border:none;padding:9px 11px;margin-bottom:4px;border-radius:7px;transition:background .1s}
+#m-body .ws-pill:hover{background:rgba(255,255,255,.06);border:none}
+.m-srow .ic{flex:none;color:var(--rail-faint);display:grid;place-items:center}
+.m-srow .tx{min-width:0;flex:1;line-height:1.25}
+.m-srow .tx b{display:block;font-size:13px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-srow .tx small{display:block;font-size:10.5px;color:var(--rail-faint);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-srow .chev{color:var(--rail-faint);flex:none}
+
 .cmdk{width:600px;max-width:92vw;border-radius:12px;overflow:hidden}
 .cmdk .field{display:flex;align-items:center;gap:9px;padding:13px 15px;border-bottom:1px solid var(--border)}
 .cmdk input{flex:1;border:none;outline:none;font-size:14.5px;background:none;color:var(--fg)}
@@ -586,18 +626,146 @@ table.dt{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;m
 .be-table-add button:hover{color:var(--fg-strong);border-color:var(--border-strong)}
 .doc-table th[contenteditable],.doc-table td[contenteditable]{outline:none}
 
-/* ============ RESPONSIVE: collapse rail ============ */
+/* ============ SETTINGS ============ */
+#settings-root{max-width:1000px}
+#settings-root .card{margin-bottom:14px;overflow:hidden}
+.shead{margin-bottom:16px;display:flex;align-items:flex-start;gap:12px}
+.shead .shead-txt{flex:1;min-width:0}
+.shead h2{font-size:15px;font-weight:650;color:var(--fg-strong)}
+.shead p{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+.shead .right{display:flex;gap:8px;flex:none;flex-wrap:wrap;align-items:center}
+.srow{display:grid;grid-template-columns:232px 1fr;gap:16px;padding:15px 16px;border-top:1px solid var(--border);align-items:center}
+.srow:first-child{border-top:none}
+@media(max-width:620px){.srow{grid-template-columns:1fr}}
+.srow .sk b{display:block;font-weight:600;color:var(--fg-strong);font-size:12.5px}
+.srow .sk small{display:block;font-size:11.5px;color:var(--muted);margin-top:3px;font-weight:400;line-height:1.45}
+.srow .sv{min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* role badge */
+.rolebadge{display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap}
+.rolebadge.owner{background:oklch(95% 0.05 300);color:oklch(42% 0.13 300)}
+.rolebadge.admin{background:var(--accent-soft);color:var(--accent)}
+.rolebadge.member{background:var(--surface-3);color:var(--muted)}
+/* member + invite tables */
+.member-tbl .tbl-scroll{overflow-x:auto}
+.member-tbl table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:660px}
+.member-tbl thead th{background:var(--surface-2);text-align:left;font-size:11px;font-weight:600;color:var(--muted);padding:0 16px;height:38px;border-bottom:1px solid var(--border);white-space:nowrap}
+.member-tbl tbody td{padding:0 16px;height:54px;border-bottom:1px solid var(--border);vertical-align:middle}
+.member-tbl tbody tr:last-child td{border-bottom:none}
+.member-tbl tbody tr{transition:background .08s;cursor:pointer}
+.member-tbl tbody tr:hover{background:var(--surface-2)}
+.mc{display:flex;align-items:center;gap:10px;min-width:0}
+.mc .mc-txt{min-width:0;line-height:1.2}
+.mc .mc-nm{font-weight:600;color:var(--fg-strong);font-size:12.5px;display:flex;align-items:center;gap:6px}
+.mc .mc-you{font:600 9px var(--mono);background:var(--surface-3);color:var(--muted);padding:1px 5px;border-radius:4px}
+.mc .mc-em{font-size:11.5px;color:var(--muted);margin-top:1px}
+.m-actions{width:40px;text-align:center}
+.m-actions button{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:var(--muted);margin:0 auto}
+.m-actions button:hover{background:var(--surface-3);color:var(--fg-strong)}
+/* floating action menu */
+.m-float{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius);box-shadow:var(--shadow-pop);padding:5px;min-width:212px}
+.m-float .m-grp{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:600;padding:6px 9px 3px}
+.m-float .m-row{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;font-size:12.5px;color:var(--fg);cursor:pointer;width:100%;text-align:left;font-weight:500}
+.m-float .m-row:hover{background:var(--surface-2)}
+.m-float .m-row.danger{color:var(--danger)}
+.m-float .m-row.danger:hover{background:var(--danger-bg)}
+.m-float .m-row svg{flex:none}
+.m-float .m-sep{height:1px;background:var(--border);margin:5px 2px}
+/* toggle */
+.sw{position:relative;display:inline-flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+.sw input{position:absolute;opacity:0;width:0;height:0}
+.sw .track{width:34px;height:20px;border-radius:999px;background:var(--surface-3);border:1px solid var(--border-strong);position:relative;transition:background .15s,border-color .15s;flex:none}
+.sw .track::after{content:"";position:absolute;top:1px;left:1px;width:16px;height:16px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.18);transition:transform .15s}
+.sw input:checked+.track{background:var(--accent);border-color:var(--accent)}
+.sw input:checked+.track::after{transform:translateX(14px)}
+/* logo */
+.logo-box{width:56px;height:56px;border-radius:11px;background:linear-gradient(135deg,oklch(54% 0.16 258),oklch(50% 0.15 290));display:grid;place-items:center;color:#fff;font-weight:800;font-size:20px;border:1px solid var(--border);flex:none}
+/* domains */
+/* roles */
+.role-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:760px){.role-cards{grid-template-columns:1fr}}
+.role-card{border:1px solid var(--border);border-radius:var(--radius-lg);padding:15px;background:var(--surface)}
+.rc-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.rc-desc{font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:12px}
+.rc-cnt{font-size:11.5px;color:var(--faint);font-weight:500}
+.perm-tbl-wrap{overflow-x:auto}
+.perm-tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:520px}
+.perm-tbl th{font-size:11px;font-weight:600;color:var(--muted);text-align:center;padding:10px 8px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.perm-tbl th:first-child{text-align:left;padding-left:16px}
+.perm-tbl td{padding:11px 8px;border-bottom:1px solid var(--border);text-align:center;color:var(--fg)}
+.perm-tbl td:first-child{text-align:left;padding-left:16px;font-weight:500;color:var(--fg-strong)}
+.perm-tbl tbody tr:last-child td{border-bottom:none}
+.perm-yes{color:var(--ok);display:inline-grid;place-items:center}
+.perm-no{color:var(--faint);opacity:.45;display:inline-grid;place-items:center}
+/* audit */
+.audit-tbl .tbl-scroll{overflow-x:auto}
+.audit-tbl table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:600px}
+.audit-tbl thead th{background:var(--surface-2);text-align:left;font-size:11px;font-weight:600;color:var(--muted);padding:0 16px;height:38px;border-bottom:1px solid var(--border)}
+.audit-tbl tbody td{padding:0 16px;height:46px;border-bottom:1px solid var(--border);vertical-align:middle}
+.audit-tbl tbody tr:last-child td{border-bottom:none}
+.audit-tbl tbody tr:hover{background:var(--surface-2)}
+.audit-tbl .ip{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.audit-tbl .ev{color:var(--fg)}
+.audit-tbl .tg{color:var(--fg-strong);font-weight:500}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.danger:hover{filter:brightness(.95)}
+.btn.danger.ghost{background:transparent;color:oklch(48% 0.17 25);border-color:oklch(82% 0.08 25)}
+.btn.danger.ghost:hover{background:var(--danger-bg);color:oklch(42% 0.18 25)}
+/* member drawer */
+.md-stat{display:flex;align-items:center;gap:8px;padding:11px 0;border-top:1px solid var(--border)}
+.md-stat:first-of-type{border-top:none}
+.md-stat .k{font-size:12px;color:var(--muted);width:128px;flex:none}
+.md-stat .v{font-size:12.5px;color:var(--fg-strong);font-weight:500;display:flex;align-items:center;gap:7px}
+.md-role-opts{display:flex;flex-direction:column;gap:5px}
+.md-role-opt{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .1s,background .1s}
+.md-role-opt:hover{border-color:var(--border-strong);background:var(--surface-2)}
+.md-role-opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.md-role-opt .rolebadge{margin-top:2px;flex:none}
+.md-role-opt .ro-txt b{display:block;font-size:12.5px;font-weight:600;color:var(--fg-strong)}
+.md-role-opt .ro-txt small{font-size:11px;color:var(--muted);line-height:1.45;display:block;margin-top:2px}
+.md-feed-item{display:flex;gap:9px;padding:9px 0;border-top:1px solid var(--border)}
+.md-feed-item:first-child{border-top:none}
+.md-feed-d{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none;margin-top:6px}
+.md-feed-d.muted{background:var(--faint)}
+.md-feed-txt{font-size:12px;color:var(--fg);line-height:1.5}
+.md-feed-txt b{font-weight:600}
+.md-feed-txt .when{font-size:11px;color:var(--faint);font-family:var(--mono);margin-left:4px}
+
+/* mobile bottom-sheet nav (desktop: hidden) */
+.m-trigger{display:none;align-items:center;justify-content:center;width:38px;height:38px;border-radius:9px;background:transparent;border:none;color:var(--rail-fg);cursor:pointer;flex:none}
+.m-trigger:hover{background:rgba(255,255,255,.07);color:#fff}
+.m-sheet{position:fixed;left:0;right:0;bottom:0;z-index:100;background:var(--rail);color:var(--rail-fg);border-top:1px solid rgba(255,255,255,.1);border-radius:16px 16px 0 0;box-shadow:0 -14px 44px rgba(0,0,0,.3);transform:translateY(100%);transition:transform .26s cubic-bezier(.23,1,.32,1);max-height:80vh;max-height:80dvh;display:flex;flex-direction:column}
+.m-sheet.show{transform:translateY(0)}
+.m-handle{width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,.2);margin:9px auto 3px;flex:none}
+.m-head{display:flex;align-items:center;gap:8px;padding:2px 12px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.m-title{margin:0;font-size:14px;font-weight:650;color:#fff;letter-spacing:-.01em}
+
+.m-head .x{margin-left:auto;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--rail-fg)}
+.m-head .x:hover{background:rgba(255,255,255,.07);color:#fff}
+.m-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;padding:4px 8px 18px;-webkit-overflow-scrolling:touch}
+.m-lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--rail-faint);padding:12px 10px 4px;font-weight:600}
+.m-acct{display:flex;align-items:center;gap:10px;width:100%;padding:10px;margin:8px 0 2px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background .12s,border-color .12s}
+.m-acct:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14)}
+.m-acct .chev{color:var(--rail-faint);flex:none;transition:transform .15s ease,color .12s}
+.m-acct.open{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.16)}
+.m-acct.open .chev{transform:rotate(90deg);color:#fff}
+.m-acct .av{width:36px;height:36px;font-size:13px;border-radius:50%;background:oklch(52% 0.14 290);color:#fff;display:grid;place-items:center;font-weight:700;flex:none}
+.m-acct .tx{min-width:0;flex:1}
+.m-acct .tx b{display:block;font-size:13px;color:#fff;font-weight:600;line-height:1.2}
+.m-acct .tx small{display:block;font-size:11px;color:var(--rail-faint);margin-top:2px}
+.m-panel{padding:2px 0 0}
+.m-body .nav-item .count{margin-left:auto}
+
+/* ============ RESPONSIVE: mobile = top bar + bottom sheet ============ */
 @media(max-width:880px){
-  :root{--sidebar-w:62px}
-  .brand b,.brand span,.rail-toggle-wrap,.ws-switch .meta,.nav-item span,.nav-label,.user .meta,.nav-item .count{display:none}
-  .brand-row{margin:6px}
-  .brand{padding:8px;border-radius:8px}
-  .brand .logo{width:30px;height:30px;display:grid}
-  .nav-item{justify-content:center} .user{justify-content:center}
-  .ws-switch{justify-content:center;padding:6px} .ws-switch .dot{margin:0}
-  .proj-name,.tb-right .status{display:none}
-  .me-pop{left:0;right:auto;width:240px}
-  .proj-pop{left:0;right:auto;width:240px}
+  .app{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+  .sidebar{flex-direction:row;align-items:center;gap:8px;height:52px;padding:0 10px;border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
+  .brand-row{margin:0;flex:1;min-width:0}
+  .brand{flex:1;border:none;padding:4px 6px;gap:9px}
+  .m-bar{display:none}
+  .m-ctrl{display:flex}
+  .ws-wrap,.nav-group,.spacer,.nav-foot{display:none}
+  .m-trigger{display:flex}
+  .topbar{display:none}
 }
 @media(max-width:520px){
   .content .view{padding:13px}
@@ -1195,93 +1363,80 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
   <aside class="sidebar" data-od-id="primary-nav">
     <div class="brand-row">
       <div class="brand">
-        <span class="logo" aria-label="aLabs"><svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M3 40 H27 M45 40 H61" stroke="#fff" stroke-width="6" stroke-linecap="round"/><path d="M27 40 L31 43 L36 13 L40 47 L45 40" stroke="var(--accent)" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></svg></span>
-        <b>aLabs</b><span class="badge">Beta</span>
+        <span class="logo" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M3 40 H27 M45 40 H61" stroke="#fff" stroke-width="6" stroke-linecap="round"></path><path d="M27 40 L31 43 L36 13 L40 47 L45 40" stroke="var(--accent)" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"></path></svg></span>
+        <span class="meta"><b>aLabs</b><small>Workspace</small></span>
       </div>
-      <div class="rail-toggle-wrap">
-        <button class="rail-toggle" id="rail-toggle" data-od-id="rail-toggle" aria-label="Toggle sidebar" title="Collapse sidebar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="m-bar" id="m-proj-bar" data-od-id="mobile-context"><span class="pdot" id="m-bar-dot">A</span><span class="ctx"><b id="m-proj-name">Atlas Platform 2.0</b></span></div>
+      <div class="m-ctrl">
+        <button class="m-trigger" id="m-trigger" data-od-id="mobile-menu" aria-label="Open menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"></path></svg></button>
       </div>
     </div>
 
     <div class="ws-wrap">
-      <button class="ws-switch" id="proj-switch" data-od-id="project-switch">
-        <span class="dot" id="ws-dot" style="background:oklch(48% .10 258)">A</span>
-        <span class="meta"><b id="ws-proj">Atlas Platform 2.0</b><small>Project</small></span>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5 5 5-5"/></svg>
+      <button class="ws-pill" id="proj-switch" data-od-id="workspace-switcher" title="Switch workspace & project">
+        <span class="pdot" id="ws-dot" style="background:oklch(48% .10 258)">A</span>
+        <span class="ws-meta"><b id="ws-proj">Atlas Platform 2.0</b></span>
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg>
       </button>
-      <div class="proj-pop" id="proj-pop" data-od-id="project-switcher">
-        <div class="me-grp">Projects</div>
-        <button class="sw-item cur" data-proj="atlas"><span class="pdot" style="background:oklch(48% .10 258)">A</span><span class="nm">Atlas Platform 2.0</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
-        <button class="sw-item" data-proj="mobile"><span class="pdot" style="background:oklch(48% .10 190)">M</span><span class="nm">Mobile App v1</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
-        <button class="sw-item" data-proj="dw"><span class="pdot" style="background:oklch(48% .10 145)">D</span><span class="nm">Data Warehouse</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
-        <button class="sw-item" data-proj="mktg"><span class="pdot" style="background:oklch(48% .10 340)">M</span><span class="nm">Marketing Site</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
-      </div>
     </div>
 
     <div class="nav-group">
+      <div class="nav-label">Overview</div>
       <button class="nav-item active" data-nav="view-dashboard" data-od-id="nav-dashboard">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
         <span>Dashboard</span>
       </button>
+      <div class="nav-label">Workspace</div>
       <button class="nav-item" data-nav="view-tasks" data-od-id="nav-tasks">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
         <span>Tasks</span><span class="count">118</span>
       </button>
       <button class="nav-item" data-nav="view-documents" data-od-id="nav-documents">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 13h8M8 17h5"></path></svg>
         <span>Documents</span><span class="count">42</span>
       </button>
       <button class="nav-item" data-nav="view-planning" data-od-id="nav-planning">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h3M8 18h3"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18M8 14h3M8 18h3"></path></svg>
         <span>Planning</span>
       </button>
-    </div>
 
-    <div class="nav-group">
-      <div class="nav-label">More</div>
+      <div class="nav-label">Collaboration</div>
       <button class="nav-item" data-nav="view-meetings" data-od-id="nav-meetings">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         <span>Meetings</span><span class="count">3</span>
       </button>
       <button class="nav-item" data-nav="view-reports" data-od-id="nav-reports">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 4-5"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"></path><path d="M7 14l3-3 3 2 4-5"></path></svg>
         <span>Reports</span>
       </button>
       <button class="nav-item" data-nav="view-agreements" data-od-id="nav-agreements">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13l2 2 4-4"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13l2 2 4-4"></path></svg>
         <span>Agreements</span><span class="count">7</span>
       </button>
-      <button class="nav-item dim" data-od-id="nav-clients">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l8-4 8 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>
-        <span>Client portal</span>
+      <div class="nav-label">Settings</div>
+      <button class="nav-item" data-nav="view-settings-general" data-od-id="nav-general">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+        <span>General</span>
+      </button>
+      <button class="nav-item" data-nav="view-settings-members" data-od-id="nav-members">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path></svg>
+        <span>Users</span>
+      </button>
+      <button class="nav-item" data-nav="view-settings-audit" data-od-id="nav-activity">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path><path d="M12 7v5l4 2"></path></svg>
+        <span>Activity log</span>
       </button>
     </div>
 
     <div class="spacer"></div>
     <div class="nav-foot">
+      <button class="collapse-btn" id="rail-toggle" data-od-id="rail-toggle" aria-label="Toggle sidebar" title="Collapse sidebar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg><span class="lbl">Collapse</span></button>
       <button class="user" id="me-trigger" data-od-id="user-menu">
         <span class="av">AY<span class="pres"></span></span>
         <span class="meta"><b>Aisha Yusuf</b><small>Product Manager</small></span>
-        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--rail-faint)"><path d="M9 6l6 6-6 6"/></svg>
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--rail-faint)"><path d="M9 6l6 6-6 6"></path></svg>
       </button>
-      <div class="me-pop" id="me-pop" data-od-id="user-menu-pop">
-        <div class="me-id">
-          <span class="av">AY</span>
-          <span class="txt"><b>Aisha Yusuf</b><small>aisha@northwind.io · Product Manager</small></span>
-        </div>
-        <div class="me-sep"></div>
-        <div class="me-grp">Organization</div>
-        <button class="sw-item cur" data-org="nw"><span class="pdot" style="background:oklch(48% .10 265)">N</span><span class="nm">Northwind Software House</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
-        <button class="sw-item" data-org="as"><span class="pdot" style="background:oklch(48% .10 195)">A</span><span class="nm">Amin Studio</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
-        <button class="sw-item" data-org="ai"><span class="pdot" style="background:oklch(48% .10 25)">A</span><span class="nm">Acme Internal</span><svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></button>
-        <div class="me-sep"></div>
-        <div class="me-grp">Account</div>
-        <button class="me-row" data-me="profile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Profile settings</button>
-        <button class="me-row" data-me="notif"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Notifications</button>
-        <button class="me-row" data-me="appearance"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Appearance</button>
-        <div class="me-sep"></div>
-        <button class="me-row danger" data-me="signout"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button>
-      </div>
+      <!-- account menu moved to centered #acct-modal -->
     </div>
   </aside>
 
@@ -1298,7 +1453,7 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
       <div class="tb-right">
         <span class="status info"><span class="d"></span>Sprint 14 · 4d left</span>
         <button class="tbtn" data-od-id="notifications" title="3 unread">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
           <span class="count">3</span>
         </button>
       </div>
@@ -1322,28 +1477,28 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
         <!-- KPI row -->
         <div class="grid g4" style="margin-bottom:14px" data-od-id="kpi-row">
           <div class="card kpi">
-            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Active tasks</div>
+            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>Active tasks</div>
             <div class="val">63</div>
             <div class="sub"><span class="up">▲ 8</span> vs last sprint</div>
-            <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="0,22 25,18 50,20 75,12 100,15 125,9 150,11 175,6 200,8"/></svg></div>
+            <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="0,22 25,18 50,20 75,12 100,15 125,9 150,11 175,6 200,8"></polyline></svg></div>
           </div>
           <div class="card kpi">
-            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>In progress</div>
+            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>In progress</div>
             <div class="val">21</div>
             <div class="sub"><span class="up">▲ 3</span> moved today</div>
-            <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--info)" stroke-width="2" points="0,18 25,20 50,14 75,16 100,10 125,13 150,8 175,11 200,7"/></svg></div>
+            <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--info)" stroke-width="2" points="0,18 25,20 50,14 75,16 100,10 125,13 150,8 175,11 200,7"></polyline></svg></div>
           </div>
           <div class="card kpi">
-            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Overdue</div>
+            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg>Overdue</div>
             <div class="val" style="color:var(--danger)">4</div>
             <div class="sub"><span class="dn">▲ 1</span> needs attention</div>
-            <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--danger)" stroke-width="2" points="0,20 25,22 50,18 75,21 100,16 125,19 150,14 175,16 200,12"/></svg></div>
+            <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--danger)" stroke-width="2" points="0,20 25,22 50,18 75,21 100,16 125,19 150,14 175,16 200,12"></polyline></svg></div>
           </div>
           <div class="card kpi">
-            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>Done this sprint</div>
+            <div class="label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="M22 4 12 14.01l-3-3"></path></svg>Done this sprint</div>
             <div class="val">34</div>
             <div class="sub"><span class="up">▲ 12</span> 65% of committed</div>
-            <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--ok)" stroke-width="2" points="0,24 25,22 50,20 75,16 100,14 125,10 150,8 175,5 200,3"/></svg></div>
+            <div class="spark"><svg viewBox="0 0 200 28" width="100%" height="28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--ok)" stroke-width="2" points="0,24 25,22 50,20 75,16 100,14 125,10 150,8 175,5 200,3"></polyline></svg></div>
           </div>
         </div>
 
@@ -1366,12 +1521,12 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
                 <div>
                   <div class="row between" style="margin-bottom:6px"><span class="small muted">Burndown</span><span class="tiny mono muted">4 days remaining</span></div>
                   <svg viewBox="0 0 340 110" width="100%" height="110" preserveAspectRatio="none">
-                    <defs><linearGradient id="burn" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="oklch(54% 0.18 258 / .22)"/><stop offset="1" stop-color="oklch(54% 0.18 258 / 0)"/></linearGradient></defs>
-                    <line x1="0" y1="100" x2="340" y2="0" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4 4"/>
-                    <path d="M0,8 L340,100" stroke="var(--faint)" stroke-width="1.5" stroke-dasharray="3 3"/>
-                    <path d="M0,8 L40,18 L85,40 L130,34 L175,52 L215,48 L255,64 L300,60 L340,70 L340,100 L0,100 Z" fill="url(#burn)"/>
-                    <path d="M0,8 L40,18 L85,40 L130,34 L175,52 L215,48 L255,64 L300,60 L340,70" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
-                    <circle cx="340" cy="70" r="3.5" fill="var(--accent)"/>
+                    <defs><linearGradient id="burn" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="oklch(54% 0.18 258 / .22)"></stop><stop offset="1" stop-color="oklch(54% 0.18 258 / 0)"></stop></linearGradient></defs>
+                    <line x1="0" y1="100" x2="340" y2="0" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4 4"></line>
+                    <path d="M0,8 L340,100" stroke="var(--faint)" stroke-width="1.5" stroke-dasharray="3 3"></path>
+                    <path d="M0,8 L40,18 L85,40 L130,34 L175,52 L215,48 L255,64 L300,60 L340,70 L340,100 L0,100 Z" fill="url(#burn)"></path>
+                    <path d="M0,8 L40,18 L85,40 L130,34 L175,52 L215,48 L255,64 L300,60 L340,70" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"></path>
+                    <circle cx="340" cy="70" r="3.5" fill="var(--accent)"></circle>
                   </svg>
                   <div class="row" style="gap:14px;margin-top:6px"><span class="tiny mono muted">— Ideal</span><span class="tiny mono" style="color:var(--accent)">● Actual</span></div>
                 </div>
@@ -1389,17 +1544,17 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
               <div class="panel-head"><h3>Upcoming milestones</h3></div>
               <div class="panel-body">
                 <div class="ms-item">
-                  <div class="ms-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V8l7-4 7 4v13"/><path d="M9 21v-6h6v6"/></svg></div>
+                  <div class="ms-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V8l7-4 7 4v13"></path><path d="M9 21v-6h6v6"></path></svg></div>
                   <div class="ms-body"><b>v2.0 Beta release</b><small>Due Mar 28 · 7 days · 72% complete</small><div class="bar" style="--p:72"><i style="width:72%"></i></div></div>
                   <span class="status warn"><span class="d"></span>At risk</span>
                 </div>
                 <div class="ms-item">
-                  <div class="ms-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg></div>
+                  <div class="ms-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path></svg></div>
                   <div class="ms-body"><b>Design System v1</b><small>Due Apr 12 · 21 days · 55% complete</small><div class="bar warn" style="--p:55"><i style="width:55%"></i></div></div>
                   <span class="status neutral"><span class="d"></span>On track</span>
                 </div>
                 <div class="ms-item">
-                  <div class="ms-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                  <div class="ms-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
                   <div class="ms-body"><b>Security hardening</b><small>Due Apr 30 · 39 days · 30% complete</small><div class="bar" style="--p:30"><i style="width:30%"></i></div></div>
                   <span class="status ok"><span class="d"></span>On track</span>
                 </div>
@@ -1416,43 +1571,43 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
                 <div class="notif-list">
                   <div class="notif-item unread" data-od-id="notif-mention">
                     <span class="notif-dot"></span>
-                    <span class="notif-ic mention"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.5 7.6"/></svg></span>
+                    <span class="notif-ic mention"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.5 7.6"></path></svg></span>
                     <div class="notif-body"><b>Marco K.</b> mentioned you on <span class="ref">ATL-101</span><span class="quote">“Can you review the SSO token refresh logic before the demo?”</span></div>
                     <span class="notif-time">8m</span>
                   </div>
                   <div class="notif-item unread" data-od-id="notif-assign">
                     <span class="notif-dot"></span>
-                    <span class="notif-ic assign"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M19 8v6M22 11h-6"/></svg></span>
+                    <span class="notif-ic assign"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"></circle><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path><path d="M19 8v6M22 11h-6"></path></svg></span>
                     <div class="notif-body"><b>Sara R.</b> assigned <span class="ref">ATL-122</span> to you · <span style="color:var(--danger)">P1</span></div>
                     <span class="notif-time">25m</span>
                   </div>
                   <div class="notif-item unread" data-od-id="notif-review">
                     <span class="notif-dot"></span>
-                    <span class="notif-ic review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
+                    <span class="notif-ic review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg></span>
                     <div class="notif-body"><b>Diego P.</b> requested your review on <b>Audit-log spec</b></div>
                     <span class="notif-time">1h</span>
                   </div>
                   <div class="notif-item unread" data-od-id="notif-due">
                     <span class="notif-dot"></span>
-                    <span class="notif-ic due"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+                    <span class="notif-ic due"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></span>
                     <div class="notif-body"><span class="ref">ATL-108</span> is due <b style="color:var(--warn)">tomorrow</b></div>
                     <span class="notif-time">2h</span>
                   </div>
                   <div class="notif-item read" data-od-id="notif-reply">
                     <span class="notif-dot"></span>
-                    <span class="notif-ic reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14l-5-5 5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v2"/></svg></span>
+                    <span class="notif-ic reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14l-5-5 5-5"></path><path d="M4 9h11a5 5 0 0 1 5 5v2"></path></svg></span>
                     <div class="notif-body"><b>Lin C.</b> replied in <b>Sprint planning</b></div>
                     <span class="notif-time">3h</span>
                   </div>
                   <div class="notif-item read" data-od-id="notif-invite">
                     <span class="notif-dot"></span>
-                    <span class="notif-ic invite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 7l9 6 9-6M12 13v5M9 16h6"/></svg></span>
+                    <span class="notif-ic invite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 7l9 6 9-6M12 13v5M9 16h6"></path></svg></span>
                     <div class="notif-body"><b>Jonas B.</b> invited you to <b>SSO design sync</b></div>
                     <span class="notif-time">5h</span>
                   </div>
                   <div class="notif-item read" data-od-id="notif-deadline">
                     <span class="notif-dot"></span>
-                    <span class="notif-ic deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M5 3 2 6M22 6l-3-3M12 9v4l2 2"/></svg></span>
+                    <span class="notif-ic deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"></circle><path d="M5 3 2 6M22 6l-3-3M12 9v4l2 2"></path></svg></span>
                     <div class="notif-body">Sprint 14 ends in <b>4 days</b></div>
                     <span class="notif-time">6h</span>
                   </div>
@@ -1465,12 +1620,12 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
               <div class="panel-head"><h3>Recent activity</h3></div>
               <div class="panel-body">
                 <div class="feed">
-                  <div class="feed-item"><div class="feed-ic move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div><div class="feed-body"><b>Marco</b> moved <b>ATL-101</b> to In Progress<div class="when">12 minutes ago</div></div></div>
-                  <div class="feed-item"><div class="feed-ic doc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg></div><div class="feed-body"><b>Jonas</b> updated <b>Design System v1</b><div class="when">38 minutes ago</div></div></div>
-                  <div class="feed-item"><div class="feed-ic com"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="feed-body"><b>Diego</b> commented on <b>ATL-103</b><div class="when">1 hour ago</div></div></div>
-                  <div class="feed-item"><div class="feed-ic done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div><div class="feed-body"><b>Sara</b> closed <b>ATL-112</b><div class="when">2 hours ago</div></div></div>
-                  <div class="feed-item"><div class="feed-ic mile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 4h3v3a3 3 0 0 1-3 3M7 4H4v3a3 3 0 0 0 3 3"/></svg></div><div class="feed-body"><b>Aisha</b> created milestone <b>Security hardening</b><div class="when">3 hours ago</div></div></div>
-                  <div class="feed-item"><div class="feed-ic done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div><div class="feed-body"><b>Lin</b> completed <b>ATL-113</b><div class="when">5 hours ago</div></div></div>
+                  <div class="feed-item"><div class="feed-ic move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></div><div class="feed-body"><b>Marco</b> moved <b>ATL-101</b> to In Progress<div class="when">12 minutes ago</div></div></div>
+                  <div class="feed-item"><div class="feed-ic doc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6"></path></svg></div><div class="feed-body"><b>Jonas</b> updated <b>Design System v1</b><div class="when">38 minutes ago</div></div></div>
+                  <div class="feed-item"><div class="feed-ic com"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div><div class="feed-body"><b>Diego</b> commented on <b>ATL-103</b><div class="when">1 hour ago</div></div></div>
+                  <div class="feed-item"><div class="feed-ic done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="M22 4 12 14.01l-3-3"></path></svg></div><div class="feed-body"><b>Sara</b> closed <b>ATL-112</b><div class="when">2 hours ago</div></div></div>
+                  <div class="feed-item"><div class="feed-ic mile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"></path><path d="M17 4h3v3a3 3 0 0 1-3 3M7 4H4v3a3 3 0 0 0 3 3"></path></svg></div><div class="feed-body"><b>Aisha</b> created milestone <b>Security hardening</b><div class="when">3 hours ago</div></div></div>
+                  <div class="feed-item"><div class="feed-ic done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="M22 4 12 14.01l-3-3"></path></svg></div><div class="feed-body"><b>Lin</b> completed <b>ATL-113</b><div class="when">5 hours ago</div></div></div>
                 </div>
               </div>
             </div>
@@ -1495,40 +1650,40 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
       <section class="view" id="view-tasks" data-od-id="view-tasks">
         <div class="toolbar">
           <div class="seg" id="view-seg">
-            <button class="on" data-taskview="board"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="6" height="18" rx="1"/><rect x="10" y="3" width="6" height="12" rx="1"/><rect x="17" y="3" width="4" height="8" rx="1"/></svg>Board</button>
-            <button data-taskview="table"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18"/></svg>List</button>
-            <button data-taskview="backlog"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h12M3 18h6"/><circle cx="19" cy="16" r="2.5"/></svg>Backlog</button>
+            <button class="on" data-taskview="board"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="6" height="18" rx="1"></rect><rect x="10" y="3" width="6" height="12" rx="1"></rect><rect x="17" y="3" width="4" height="8" rx="1"></rect></svg>Board</button>
+            <button data-taskview="table"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18"></path></svg>List</button>
+            <button data-taskview="backlog"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h12M3 18h6"></path><circle cx="19" cy="16" r="2.5"></circle></svg>Backlog</button>
           </div>
           <div class="tk-search">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-            <input id="task-search" placeholder="Search issues, keys, labels…" />
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input id="task-search" placeholder="Search issues, keys, labels…">
           </div>
           <div class="cols-wrap" id="sprint-wrap">
-            <button class="chip btn" id="sprint-btn" title="Choose which sprints the board shows"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="11" height="12" rx="2"/><rect x="11" y="6" width="11" height="12" rx="2"/></svg>Sprint <span class="cnt-badge" id="sprint-cnt">All</span></button>
+            <button class="chip btn" id="sprint-btn" title="Choose which sprints the board shows"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="11" height="12" rx="2"></rect><rect x="11" y="6" width="11" height="12" rx="2"></rect></svg>Sprint <span class="cnt-badge" id="sprint-cnt">All</span></button>
             <div class="cols-pop sprint-pop" id="sprint-pop"><div class="cp-h">Board sprints</div>
-              <label class="cp-row"><input type="checkbox" class="ck" data-sp="s14" checked><span class="sp-dot ok"></span><span class="sp-name">Sprint 14</span><span class="sp-meta">Active · 8</span></label>
-              <label class="cp-row"><input type="checkbox" class="ck" data-sp="s13" checked><span class="sp-dot"></span><span class="sp-name">Sprint 13</span><span class="sp-meta">Completed · 4</span></label>
-              <label class="cp-row"><input type="checkbox" class="ck" data-sp="backlog" checked><span class="sp-dot hollow"></span><span class="sp-name">Backlog</span><span class="sp-meta">6 issues</span></label>
+              <label class="cp-row"><input type="checkbox" class="ck" data-sp="s14" checked=""><span class="sp-dot ok"></span><span class="sp-name">Sprint 14</span><span class="sp-meta">Active · 8</span></label>
+              <label class="cp-row"><input type="checkbox" class="ck" data-sp="s13" checked=""><span class="sp-dot"></span><span class="sp-name">Sprint 13</span><span class="sp-meta">Completed · 4</span></label>
+              <label class="cp-row"><input type="checkbox" class="ck" data-sp="backlog" checked=""><span class="sp-dot hollow"></span><span class="sp-name">Backlog</span><span class="sp-meta">6 issues</span></label>
             </div>
           </div>
-          <label class="sel-wrap"><span>Group</span><select class="sel" id="group-sel"><option value="none">None</option><option value="sprint" selected>Sprint</option><option value="epic">Epic</option><option value="status">Status</option><option value="assignee">Assignee</option></select></label>
+          <label class="sel-wrap"><span>Group</span><select class="sel" id="group-sel"><option value="none">None</option><option value="sprint" selected="">Sprint</option><option value="epic">Epic</option><option value="status">Status</option><option value="assignee">Assignee</option></select></label>
           <label class="sel-wrap"><span>Density</span><select class="sel" id="density-sel"><option value="comf">Comfortable</option><option value="comp">Compact</option></select></label>
           <div class="cols-wrap">
-            <button class="chip btn" id="cols-btn" style="display:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="5" rx="1"/><rect x="3" y="14" width="10" height="6" rx="1"/></svg>Columns</button>
+            <button class="chip btn" id="cols-btn" style="display:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="5" rx="1"></rect><rect x="3" y="14" width="10" height="6" rx="1"></rect></svg>Columns</button>
             <div class="cols-pop" id="cols-pop"><div class="cp-h">Toggle columns</div>
-              <label class="cp-row"><input type="checkbox" class="ck" data-col="type" checked>Type</label>
-              <label class="cp-row"><input type="checkbox" class="ck" data-col="key" checked>Key</label>
-              <label class="cp-row"><input type="checkbox" class="ck" data-col="status" checked>Status</label>
-              <label class="cp-row"><input type="checkbox" class="ck" data-col="priority" checked>Priority</label>
-              <label class="cp-row"><input type="checkbox" class="ck" data-col="assignee" checked>Assignee</label>
-              <label class="cp-row"><input type="checkbox" class="ck" data-col="sprint" checked>Sprint</label>
-              <label class="cp-row"><input type="checkbox" class="ck" data-col="points" checked>Points</label>
-              <label class="cp-row"><input type="checkbox" class="ck" data-col="due" checked>Due</label>
+              <label class="cp-row"><input type="checkbox" class="ck" data-col="type" checked="">Type</label>
+              <label class="cp-row"><input type="checkbox" class="ck" data-col="key" checked="">Key</label>
+              <label class="cp-row"><input type="checkbox" class="ck" data-col="status" checked="">Status</label>
+              <label class="cp-row"><input type="checkbox" class="ck" data-col="priority" checked="">Priority</label>
+              <label class="cp-row"><input type="checkbox" class="ck" data-col="assignee" checked="">Assignee</label>
+              <label class="cp-row"><input type="checkbox" class="ck" data-col="sprint" checked="">Sprint</label>
+              <label class="cp-row"><input type="checkbox" class="ck" data-col="points" checked="">Points</label>
+              <label class="cp-row"><input type="checkbox" class="ck" data-col="due" checked="">Due</label>
             </div>
           </div>
           <div style="margin-left:auto" class="row">
             <span class="tiny mono muted" id="task-count">— issues</span>
-            <button class="btn primary sm" id="new-task-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Create</button>
+            <button class="btn primary sm" id="new-task-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>Create</button>
           </div>
         </div>
 
@@ -1536,7 +1691,7 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
         <div id="task-table" style="display:none">
           <div class="tbl-wrap"><div class="tbl-scroll"><table class="dt" id="task-table-el"></table></div></div>
           <div class="empty" id="task-empty" style="display:none">
-            <div class="empty-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+            <div class="empty-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg></div>
             <b>No issues match your view</b><p>Try clearing the search or switching to the Backlog.</p>
           </div>
         </div>
@@ -1547,7 +1702,7 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
           <span class="bulk-sep"></span>
           <select class="sel sm" id="bulk-status"><option value="">Set status…</option><option value="backlog">Backlog</option><option value="todo">To Do</option><option value="progress">In Progress</option><option value="review">In Review</option><option value="done">Done</option></select>
           <select class="sel sm" id="bulk-assignee"><option value="">Assign to…</option><option value="mk">Marco Keller</option><option value="lc">Lin Chen</option><option value="dp">Diego Pereira</option><option value="sr">Sara Reinhardt</option><option value="jb">Jonas Berg</option><option value="ay">Aisha Yusuf</option></select>
-          <button class="btn ghost sm danger" id="bulk-delete"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete</button>
+          <button class="btn ghost sm danger" id="bulk-delete"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>Delete</button>
           <button class="link" id="bulk-clear">Clear</button>
         </div>
       </section>
@@ -1555,13 +1710,13 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
       <!-- ================= DOCUMENTS ================= -->
       <section class="view" id="view-documents" data-od-id="view-documents">
         <div class="toolbar">
-          <button class="btn subtle sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M6 12h12M10 18h4"/></svg>All spaces</button>
+          <button class="btn subtle sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M6 12h12M10 18h4"></path></svg>All spaces</button>
           <button class="chip btn on">Engineering</button>
           <button class="chip btn">Product</button>
           <button class="chip btn">Design</button>
           <div style="margin-left:auto" class="row">
-            <button class="btn ghost sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Import</button>
-            <button class="btn primary sm" id="new-doc-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New page</button>
+            <button class="btn ghost sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>Import</button>
+            <button class="btn primary sm" id="new-doc-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>New page</button>
           </div>
         </div>
 
@@ -1569,20 +1724,20 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
           <!-- Tree -->
           <aside class="doc-tree" data-od-id="doc-tree">
             <div class="tree-search">
-              <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
-              <input placeholder="Search documents…" />
+              <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg></span>
+              <input placeholder="Search documents…">
             </div>
             <div class="space" data-space="product">
-              <div class="space-h"><span class="emo">📐</span>Product<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+              <div class="space-h"><span class="emo">📐</span>Product<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg></div>
               <div class="space-body">
-                <div class="page-item" data-page="vision"><span class="emo">🎯</span>Vision & positioning</div>
+                <div class="page-item" data-page="vision"><span class="emo">🎯</span>Vision &amp; positioning</div>
                 <div class="page-item" data-page="roadmap"><span class="emo">🗺️</span>Roadmap</div>
                 <div class="page-item sub" data-page="personas"><span class="emo">👥</span>Personas</div>
                 <div class="page-item" data-page="pricing"><span class="emo">💲</span>Pricing model</div>
               </div>
             </div>
             <div class="space" data-space="eng">
-              <div class="space-h"><span class="emo">⚙️</span>Engineering<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+              <div class="space-h"><span class="emo">⚙️</span>Engineering<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg></div>
               <div class="space-body">
                 <div class="page-item active" data-page="architecture"><span class="emo">🏛️</span>Architecture</div>
                 <div class="page-item" data-page="data-model"><span class="emo">🗄️</span>Data model</div>
@@ -1592,21 +1747,21 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
               </div>
             </div>
             <div class="space collapsed" data-space="design">
-              <div class="space-h"><span class="emo">🎨</span>Design<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+              <div class="space-h"><span class="emo">🎨</span>Design<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg></div>
               <div class="space-body">
                 <div class="page-item" data-page="design-system"><span class="emo">🎨</span>Design system</div>
                 <div class="page-item" data-page="components"><span class="emo">🧩</span>Component library</div>
               </div>
             </div>
             <div class="space collapsed" data-space="client">
-              <div class="space-h"><span class="emo">🤝</span>Client<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+              <div class="space-h"><span class="emo">🤝</span>Client<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg></div>
               <div class="space-body">
                 <div class="page-item" data-page="sow"><span class="emo">📄</span>Northwind SOW</div>
                 <div class="page-item" data-page="status"><span class="emo">📊</span>Status report — Mar</div>
               </div>
             </div>
             <div class="space collapsed" data-space="legal">
-              <div class="space-h"><span class="emo">⚖️</span>Legal<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+              <div class="space-h"><span class="emo">⚖️</span>Legal<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg></div>
               <div class="space-body">
                 <div class="page-item" data-page="msa"><span class="emo">📑</span>Master services agreement</div>
               </div>
@@ -1618,11 +1773,11 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
             <div class="doc-topbar">
               <div class="doc-crumbs"><span>Engineering</span><span class="sep">/</span><b id="doc-title-crumb">Architecture</b></div>
               <div class="right">
-                <button class="tbtn" title="Star"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg></button>
-                <button class="tbtn" title="Share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
-                <button class="tbtn" title="History"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v5h5M3.1 9a9 9 0 1 0 2.1-3.6L3 8"/><path d="M12 7v5l3 2"/></svg></button>
+                <button class="tbtn" title="Star"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"></path></svg></button>
+                <button class="tbtn" title="Share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"></path></svg></button>
+                <button class="tbtn" title="History"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v5h5M3.1 9a9 9 0 1 0 2.1-3.6L3 8"></path><path d="M12 7v5l3 2"></path></svg></button>
                 <span class="av-g" style="margin-left:6px"><span class="av sm b">MK</span><span class="av sm c">LC</span><span class="av sm d">DP</span></span>
-                <button class="btn sm" id="doc-mode-btn" style="margin-left:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Edit</button>
+                <button class="btn sm" id="doc-mode-btn" style="margin-left:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg>Edit</button>
               </div>
             </div>
             <div class="doc-content" id="doc-content"></div>
@@ -1631,7 +1786,7 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
 
         <!-- Files -->
         <div style="margin-top:16px">
-          <div class="section-title"><h2>Files & attachments</h2><span class="link" style="margin-left:auto">Upload</span></div>
+          <div class="section-title"><h2>Files &amp; attachments</h2><span class="link" style="margin-left:auto">Upload</span></div>
           <div class="files-grid" data-od-id="file-manager">
             <div class="file-card"><div class="file-ic fig">FIG</div><b>design-system.fig</b><div class="fm">24.1 MB · Jonas · 2d ago</div></div>
             <div class="file-card"><div class="file-ic pdf">PDF</div><b>northwind-sow.pdf</b><div class="fm">880 KB · Aisha · 5d ago</div></div>
@@ -1646,13 +1801,13 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
       <!-- ================= PLANNING ================= -->
       <section class="view" id="view-planning" data-od-id="view-planning">
         <div class="toolbar">
-          <div class="seg" data-plan-seg>
+          <div class="seg" data-plan-seg="">
             <button class="on" data-planview="board">Iterations</button>
             <button data-planview="timeline">Timeline</button>
             <button data-planview="velocity">Velocity</button>
           </div>
           <div style="margin-left:auto" class="row">
-            <button class="btn primary sm" id="new-iter-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New iteration</button>
+            <button class="btn primary sm" id="new-iter-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>New iteration</button>
           </div>
         </div>
 
@@ -1689,14 +1844,14 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
       <!-- ================= MEETINGS ================= -->
       <section class="view" id="view-meetings" data-od-id="view-meetings">
         <div class="toolbar">
-          <div class="seg" data-meet-seg>
+          <div class="seg" data-meet-seg="">
             <button class="on" data-meetview="upcoming">Upcoming</button>
             <button data-meetview="past">Past</button>
             <button data-meetview="all">All</button>
           </div>
           <div style="margin-left:auto" class="row">
-            <button class="btn subtle sm" data-od-id="meet-filter"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M7 12h10M10 18h4"/></svg>Types</button>
-            <button class="btn primary sm" data-od-id="meet-schedule"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Schedule meeting</button>
+            <button class="btn subtle sm" data-od-id="meet-filter"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M7 12h10M10 18h4"></path></svg>Types</button>
+            <button class="btn primary sm" data-od-id="meet-schedule"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>Schedule meeting</button>
           </div>
         </div>
         <div class="meet-grid" data-od-id="meet-split">
@@ -1711,13 +1866,13 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
       <!-- ================= REPORTS ================= -->
       <section class="view" id="view-reports" data-od-id="view-reports">
         <div class="toolbar">
-          <div class="seg" data-rep-seg>
+          <div class="seg" data-rep-seg="">
             <button class="on" data-repview="overview">Overview</button>
             <button data-repview="reports">Reports</button>
           </div>
           <div style="margin-left:auto" class="row">
-            <button class="btn subtle sm" data-repexport="pdf"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export PDF</button>
-            <button class="btn subtle sm" data-repexport="csv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Export CSV</button>
+            <button class="btn subtle sm" data-repexport="pdf"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>Export PDF</button>
+            <button class="btn subtle sm" data-repexport="csv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>Export CSV</button>
           </div>
         </div>
         <div id="report-root"></div>
@@ -1726,15 +1881,15 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
       <!-- ================= AGREEMENTS ================= -->
       <section class="view" id="view-agreements" data-od-id="view-agreements">
         <div class="toolbar">
-          <div class="seg" data-agr-seg>
+          <div class="seg" data-agr-seg="">
             <button class="on" data-agrview="all">All</button>
             <button data-agrview="active">Active</button>
             <button data-agrview="pending">Pending</button>
             <button data-agrview="expiring">Expiring</button>
           </div>
           <div style="margin-left:auto" class="row">
-            <button class="btn subtle sm" data-agrexport="csv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
-            <button class="btn primary sm" data-od-id="agr-new"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New agreement</button>
+            <button class="btn subtle sm" data-agrexport="csv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>Export</button>
+            <button class="btn primary sm" data-od-id="agr-new"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>New agreement</button>
           </div>
         </div>
         <div id="agr-kpis-root"></div>
@@ -1747,13 +1902,18 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
         </div>
       </section>
 
+      <!-- ================= SETTINGS ================= -->
+      <section class="view" id="view-settings" data-od-id="view-settings">
+        <div id="settings-root"></div>
+      </section>
+
     </main>
   </div>
 </div>
 
 <!-- =================== DRAWER =================== -->
 <div class="modal" id="sprint-modal" data-od-id="new-sprint-modal">
-  <div class="mh"><h3 id="spm-title">New iteration</h3><span class="status neutral" id="spm-status"><span class="d"></span>Planned</span><button class="x" data-close-sprint><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="mh"><h3 id="spm-title">New iteration</h3><span class="status neutral" id="spm-status"><span class="d"></span>Planned</span><button class="x" data-close-sprint=""><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
   <div class="mb">
     <span class="flab">Name <span class="req">*</span></span>
     <input class="fld" id="sp-name" placeholder="Sprint 16" style="margin-bottom:8px">
@@ -1766,10 +1926,10 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
     <span class="flab">Capacity (story points)</span>
     <input class="fld" id="sp-cap" type="number" min="0" step="1" placeholder="Optional — e.g. 48" style="margin-bottom:0">
   </div>
-  <div class="mf"><span class="left-meta" id="spm-meta">Created as Planned · nothing is committed yet</span><button class="btn ghost" data-close-sprint>Cancel</button><button class="btn primary" id="sp-create">Create iteration</button></div>
+  <div class="mf"><span class="left-meta" id="spm-meta">Created as Planned · nothing is committed yet</span><button class="btn ghost" data-close-sprint="">Cancel</button><button class="btn primary" id="sp-create">Create iteration</button></div>
 </div>
 <div class="modal" id="milestone-modal" data-od-id="milestone-modal">
-  <div class="mh"><h3 id="mm-title">New milestone</h3><span class="status ok" id="mm-status"><span class="d"></span>On track</span><button class="x" data-close-ms><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="mh"><h3 id="mm-title">New milestone</h3><span class="status ok" id="mm-status"><span class="d"></span>On track</span><button class="x" data-close-ms=""><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
   <div class="mb">
     <span class="flab">Name <span class="req">*</span></span>
     <input class="fld" id="mm-name" placeholder="e.g. Security hardening" style="margin-bottom:8px">
@@ -1784,30 +1944,35 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
       <button type="button" data-risk="at_risk">At risk</button>
     </div>
   </div>
-  <div class="mf"><span class="left-meta" id="mm-meta">A point in time on the timeline</span><button class="btn ghost" id="mm-delete" style="color:var(--danger);display:none">Delete</button><button class="btn ghost" data-close-ms>Cancel</button><button class="btn primary" id="mm-save">Create milestone</button></div>
+  <div class="mf"><span class="left-meta" id="mm-meta">A point in time on the timeline</span><button class="btn ghost" id="mm-delete" style="color:var(--danger);display:none">Delete</button><button class="btn ghost" data-close-ms="">Cancel</button><button class="btn primary" id="mm-save">Create milestone</button></div>
 </div>
 <div class="scrim" id="scrim"></div>
+<aside class="m-sheet" id="m-sheet" data-od-id="mobile-nav" aria-hidden="true">
+  <div class="m-handle"></div>
+  <div class="m-head"><h3 class="m-title">Menu</h3><button class="x" id="m-close" aria-label="Close menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+  <div class="m-body" id="m-body"></div>
+</aside>
 <aside class="drawer workspace" id="drawer" data-od-id="task-drawer">
   <div class="dh">
     <div style="flex:1;min-width:0">
       <div class="dh-top"><span class="tid" id="d-id">ATL-101</span><span id="d-type"></span></div>
       <h3 id="d-title" contenteditable="true" spellcheck="false" title="Click to edit the title">Implement OAuth2 SSO flow</h3>
     </div>
-    <button class="x" id="drawer-close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <button class="x" id="drawer-close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
   </div>
   <div class="db" id="drawer-body"></div>
 </aside>
 
 <!-- =================== MODAL (create task) =================== -->
 <div class="modal create-modal" id="task-modal" data-od-id="create-issue-modal">
-  <div class="mh"><h3>Create issue</h3><button class="x" data-close-modal><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="mh"><h3>Create issue</h3><button class="x" data-close-modal=""><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
   <div class="mb">
     <div class="cr-type" id="cr-type" data-od-id="issue-type-picker">
-      <button type="button" class="cr-t" data-ty="story"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M6 4h8l5 5v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M14 4v5h5"/></svg> Story</button>
-      <button type="button" class="cr-t" data-ty="task"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> Task</button>
-      <button type="button" class="cr-t" data-ty="bug"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M7 12a5 5 0 0 1 10 0v3a5 5 0 0 1-10 0Z"/><path d="M12 7V4M9 5 7.5 3.5M15 5l1.5-1.5M5 11h2M17 11h2M5.5 16 7 15.5M18.5 16 17 15.5"/></svg> Bug</button>
-      <button type="button" class="cr-t" data-ty="epic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3 21 12 12 21 3 12Z"/><path d="M12 9v6"/></svg> Epic</button>
-      <button type="button" class="cr-t" data-ty="subtask"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><rect x="5" y="9" width="13" height="10" rx="1.5"/><path d="M9 9V7a2 2 0 0 1 2-2h6"/><path d="m9 13 1.3 1.3L13 11.5"/></svg> Subtask</button>
+      <button type="button" class="cr-t" data-ty="story"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M6 4h8l5 5v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"></path><path d="M14 4v5h5"></path></svg> Story</button>
+      <button type="button" class="cr-t" data-ty="task"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2.5"></rect><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg> Task</button>
+      <button type="button" class="cr-t" data-ty="bug"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M7 12a5 5 0 0 1 10 0v3a5 5 0 0 1-10 0Z"></path><path d="M12 7V4M9 5 7.5 3.5M15 5l1.5-1.5M5 11h2M17 11h2M5.5 16 7 15.5M18.5 16 17 15.5"></path></svg> Bug</button>
+      <button type="button" class="cr-t" data-ty="epic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3 21 12 12 21 3 12Z"></path><path d="M12 9v6"></path></svg> Epic</button>
+      <button type="button" class="cr-t" data-ty="subtask"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><rect x="5" y="9" width="13" height="10" rx="1.5"></rect><path d="M9 9V7a2 2 0 0 1 2-2h6"></path><path d="m9 13 1.3 1.3L13 11.5"></path></svg> Subtask</button>
     </div>
     <input class="input fld-lg" id="modal-title" placeholder="Issue title">
     <textarea class="input fld-area" id="modal-desc" placeholder="Description (optional)"></textarea>
@@ -1815,20 +1980,20 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
     <div class="cr-grid">
       <label class="cr-f"><span>Parent</span><select class="fld" id="modal-parent"><option value="">—</option><option value="101">ATL-101 · Implement OAuth2 SSO flow</option><option value="102">ATL-102 · Board drag-and-drop performance</option><option value="103">ATL-103 · Fix flaky CI test on billing webhook</option><option value="104">ATL-104 · Design system: migrate tokens to OKLch</option><option value="105">ATL-105 · Audit log: immutable event store</option><option value="107">ATL-107 · Role-based access at project level</option><option value="108">ATL-108 · Search index for documents</option></select></label>
       <label class="cr-f" id="cr-epic-wrap"><span>Epic</span><select class="fld" id="modal-epic"><option value="">None</option><option value="200">Identity &amp; Access</option><option value="201">Billing &amp; Payments</option><option value="202">Search &amp; Reporting</option><option value="203">Platform Foundation</option></select></label>
-      <label class="cr-f"><span>Assignee</span><select class="fld" id="modal-assignee"><option value="ay" selected>Aisha Yusuf</option><option value="mk">Marco Keller</option><option value="lc">Lin Chen</option><option value="dp">Diego Pereira</option><option value="sr">Sara Reinhardt</option><option value="jb">Jonas Berg</option></select></label>
-      <label class="cr-f"><span>Priority</span><select class="fld" id="modal-priority"><option value="p4">Low</option><option value="p3">Medium</option><option value="p2" selected>High</option><option value="p1">Urgent</option></select></label>
+      <label class="cr-f"><span>Assignee</span><select class="fld" id="modal-assignee"><option value="ay" selected="">Aisha Yusuf</option><option value="mk">Marco Keller</option><option value="lc">Lin Chen</option><option value="dp">Diego Pereira</option><option value="sr">Sara Reinhardt</option><option value="jb">Jonas Berg</option></select></label>
+      <label class="cr-f"><span>Priority</span><select class="fld" id="modal-priority"><option value="p4">Low</option><option value="p3">Medium</option><option value="p2" selected="">High</option><option value="p1">Urgent</option></select></label>
       <label class="cr-f" id="cr-sp-wrap"><span>Sprint</span><select class="fld" id="modal-sprint"><option value="">Backlog</option><option value="s14">Sprint 14</option></select></label>
       <label class="cr-f"><span>Story points</span><input class="fld" id="modal-pts" type="number" min="0" value="3"></label>
       <label class="cr-f"><span>Labels</span><input class="fld" id="modal-labels" placeholder="design, frontend"></label>
       <label class="cr-f"><span>Due date</span><input class="fld" id="modal-due" placeholder="Apr 05"></label>
     </div>
   </div>
-  <div class="mf"><span class="left-meta tiny muted">Advanced fields stay optional</span><button class="btn ghost" data-close-modal>Cancel</button><button class="btn primary" id="modal-create">Create issue</button></div>
+  <div class="mf"><span class="left-meta tiny muted">Advanced fields stay optional</span><button class="btn ghost" data-close-modal="">Cancel</button><button class="btn primary" id="modal-create">Create issue</button></div>
 </div>
 
 <!-- =================== NEW AGREEMENT =================== -->
 <div class="modal" id="agr-modal" data-od-id="new-agreement-modal">
-  <div class="mh"><h3>New agreement</h3><span class="status neutral"><span class="d"></span>Draft</span><button class="x" data-close-agr><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="mh"><h3>New agreement</h3><span class="status neutral"><span class="d"></span>Draft</span><button class="x" data-close-agr=""><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
   <div class="mb">
     <span class="flab">Type / template</span>
     <div class="tp" id="agr-tp" data-od-id="agr-type-picker"></div>
@@ -1848,44 +2013,116 @@ li.bl-li::after{content:"";position:absolute;left:6px;top:15px;width:11px;border
     <textarea class="fld" id="agr-terms" placeholder="Scope, milestones, payment terms, SLAs…"></textarea>
     <div class="fld-err" id="agr-terms-err">Please add a terms summary.</div>
   </div>
-  <div class="mf"><span class="left-meta">Saved as Draft · nothing is sent to the client yet</span><button class="btn ghost" data-close-agr>Cancel</button><button class="btn primary" id="agr-create">Create draft</button></div>
+  <div class="mf"><span class="left-meta">Saved as Draft · nothing is sent to the client yet</span><button class="btn ghost" data-close-agr="">Cancel</button><button class="btn primary" id="agr-create">Create draft</button></div>
 </div>
 
 <div class="ap-conf-back" id="ap-conf-back"></div>
 <div class="modal ap-conf" id="ap-conf" data-od-id="approval-confirm">
-  <div class="mh"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--muted)"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><h3 id="ap-conf-title">Confirm approval</h3><button class="x" data-close-conf><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="mh"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--muted)"><rect x="4" y="11" width="16" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><h3 id="ap-conf-title">Confirm approval</h3><button class="x" data-close-conf=""><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
   <div class="mb">
     <div class="conf-who" id="ap-conf-who"></div>
     <span class="flab">Password</span>
     <div class="pw-in">
       <input class="fld" id="ap-conf-pw" type="password" placeholder="Enter your password" autocomplete="off">
-      <button class="pw-eye" id="ap-conf-eye" type="button" aria-label="Show password"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      <button class="pw-eye" id="ap-conf-eye" type="button" aria-label="Show password"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
     </div>
     <div class="conf-err" id="ap-conf-err">Incorrect password. Try again.</div>
     <p class="conf-note">Re-enter your password to authorise this decision. We're confirming it's really you — your name and role are already verified from your session.</p>
     <p class="conf-hint">Demo · password: <b>demo1234</b></p>
   </div>
-  <div class="mf"><button class="btn ghost" data-close-conf>Cancel</button><button class="btn primary" id="ap-conf-ok">Approve</button></div>
+  <div class="mf"><button class="btn ghost" data-close-conf="">Cancel</button><button class="btn primary" id="ap-conf-ok">Approve</button></div>
 </div>
 
 <!-- =================== COMMAND PALETTE =================== -->
 <div class="modal cmdk" id="cmdk" data-od-id="command-palette">
-  <div class="field"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--faint)"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="cmdk-input" placeholder="Type a command or search…"><span class="kbd" style="font:11px var(--mono);color:var(--faint);border:1px solid var(--border);background:var(--surface-2);border-radius:4px;padding:1px 5px">esc</span></div>
+  <div class="field"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--faint)"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg><input id="cmdk-input" placeholder="Type a command or search…"><span class="kbd" style="font:11px var(--mono);color:var(--faint);border:1px solid var(--border);background:var(--surface-2);border-radius:4px;padding:1px 5px">esc</span></div>
   <div class="res" id="cmdk-res"></div>
+</div>
+
+<!-- =================== SETTINGS OVERLAYS =================== -->
+<aside class="drawer" id="member-drawer" data-od-id="member-drawer">
+  <div class="dh">
+    <span class="av lg" id="md-av">?</span>
+    <div style="flex:1;min-width:0">
+      <div class="dh-top"><span id="md-name" style="font-size:14.5px;font-weight:650;color:var(--fg-strong)">—</span></div>
+      <small id="md-email" class="muted" style="font-size:12px">—</small>
+    </div>
+    <button class="x" id="md-close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+  </div>
+  <div class="db" id="md-body"></div>
+</aside>
+
+<aside class="drawer" id="roles-drawer" data-od-id="roles-drawer">
+  <div class="dh">
+    <div style="flex:1;min-width:0">
+      <div class="dh-top"><span style="font-size:14.5px;font-weight:650;color:var(--fg-strong)">Roles &amp; permissions</span></div>
+      <small class="muted" style="font-size:12px">Three roles · what each can do in <span id="rd-proj">—</span></small>
+    </div>
+    <button class="x" id="rd-close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+  </div>
+  <div class="db" id="rd-body"></div>
+</aside>
+
+<div class="modal" id="invite-modal" data-od-id="invite-modal" style="width:480px">
+  <div class="mh"><h3>Invite people</h3><button class="x" data-invite-close=""><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+  <div class="mb">
+    <span class="flab">Email address <span class="req">*</span></span>
+    <input class="fld" id="inv-email" type="email" placeholder="name@company.com" style="margin-bottom:5px">
+    <div class="fld-err" id="inv-email-err">Enter a valid email address.</div>
+    <span class="flab">Role</span>
+    <select class="fld" id="inv-role" style="margin-bottom:0"><option value="member">Member — standard access</option><option value="admin">Admin — manage members &amp; settings</option></select>
+    <p class="tiny muted" style="margin-top:10px;line-height:1.5">They'll receive an email invitation that expires in 7 days. You can revoke it anytime from the pending list.</p>
+  </div>
+  <div class="mf"><button class="btn ghost" data-invite-close="">Cancel</button><button class="btn primary" id="inv-send"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"></path></svg>Send invite</button></div>
+</div>
+
+<div class="modal" id="conf-modal" data-od-id="confirm-modal" style="width:440px">
+  <div class="mh"><h3 id="conf-title">—</h3><button class="x" data-conf-close=""><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+  <div class="mb"><div id="conf-msg" style="font-size:13px;color:var(--fg);line-height:1.55"></div></div>
+  <div class="mf"><button class="btn ghost" data-conf-close="">Cancel</button><button class="btn" id="conf-ok">Confirm</button></div>
+</div>
+
+<div class="modal" id="acct-modal" data-od-id="account-modal" style="width:420px">
+  <div class="mh"><h3>Account</h3><button class="x" data-acct-close="" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+  <div class="mb">
+    <div class="acct-id"><span class="av">AY</span><span class="txt"><b>Aisha Yusuf</b><small>aisha@northwind.io · Product Manager</small></span></div>
+    <button class="acct-entry" data-acct-org=""><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h6M9 13h6M9 17h6"></path></svg></span><span class="tx"><b>Switch workspace</b><small id="acct-org-sub">Northwind Software House</small></span><svg class="ch" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></button>
+    <div class="acct-sep"></div>
+    <button class="mrow" data-acct="profile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg>Profile settings</button>
+    <button class="mrow" data-acct="notif"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>Notifications</button>
+    <button class="mrow" data-acct="appearance"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg>Appearance</button>
+    <div class="acct-sep"></div>
+    <button class="mrow danger" data-acct="signout"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg>Sign out</button>
+  </div>
+</div>
+
+<div class="modal" id="proj-modal" data-od-id="project-switcher-modal" style="width:420px">
+  <div class="mh"><h3>Switch project</h3><button class="x" data-proj-close="" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+  <div class="mb">
+    <div class="switch-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="proj-search" type="text" placeholder="Search projects" autocomplete="off"></div>
+    <div class="switch-list" id="proj-list"></div>
+  </div>
+</div>
+<div class="modal" id="org-modal" data-od-id="workspace-switcher-modal" style="width:420px">
+  <div class="mh"><h3>Switch workspace</h3><button class="x" data-org-close="" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+  <div class="mb">
+    <div class="switch-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="org-search" type="text" placeholder="Search workspaces" autocomplete="off"></div>
+    <div class="switch-list" id="org-list"></div>
+  </div>
 </div>
 
 <div class="toasts" id="toasts"></div>
 
 <div class="sign-page" id="sign-page" data-od-id="sign-page">
   <header class="sp-bar">
-    <button class="sp-back" data-od-id="sp-exit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to agreements</button>
+    <button class="sp-back" data-od-id="sp-exit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>Back to agreements</button>
     <span class="sp-sep">/</span>
     <span class="sp-doc-title" id="sp-title">Agreement</span>
     <span class="sp-id" id="sp-id">AGR-000</span>
     <span class="status info" id="sp-status"><span class="d"></span>Awaiting</span>
     <div class="sp-right">
-      <button class="btn ghost sm" id="ap-mode-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Preview</button>
-      <button class="btn ghost sm" data-od-id="sp-share"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7L12 19"/></svg>Copy share link</button>
+      <button class="btn ghost sm" id="ap-mode-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>Preview</button>
+      <button class="btn ghost sm" data-od-id="sp-share"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"></path><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7L12 19"></path></svg>Copy share link</button>
     </div>
   </header>
   <div class="sp-body">
@@ -1987,12 +2224,13 @@ const isWork=t=>!t.parent&&t.ty!=='epic';
 const isExecutable=t=>t.ty!=='epic';
 
 /* ============================ NAVIGATION ============================ */
-const VIEWS={dashboard:'Dashboard',tasks:'Tasks',documents:'Documents',planning:'Planning',meetings:'Meetings',reports:'Reports',agreements:'Agreements'};
+const VIEWS={dashboard:'Dashboard',tasks:'Tasks',documents:'Documents',planning:'Planning',meetings:'Meetings',reports:'Reports',agreements:'Agreements',settings:'Settings'};
 function navigate(view){
-  const v=view.replace('view-','');
-  $$('.view').forEach(el=>el.classList.toggle('active',el.id===view));
+  let v=view.replace('view-','');
+  if(v.startsWith('settings-')){settingsTab=v.slice(9);if(settingsTab==='danger')settingsTab='general';if(settingsTab==='roles')settingsTab='members';v='settings';}
+  $$('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+v));
   $$('[data-nav]').forEach(n=>n.classList.toggle('active',n.dataset.nav===view));
-  $('#crumb-cur').textContent=VIEWS[v]||v;
+  $('#crumb-cur').textContent=(v==='settings'&&SETTINGS_TITLES[settingsTab])||VIEWS[v]||v;
   try{localStorage.setItem('alabs-view',view);}catch(e){}
   if(v==='tasks')renderTasks();
   if(v==='documents')renderDoc(currentPage);
@@ -2000,40 +2238,77 @@ function navigate(view){
   if(v==='meetings')renderMeetings();
   if(v==='reports')renderReports();
   if(v==='agreements')renderAgreements();
+  if(v==='settings')renderSettings();
   $('.content').scrollTop=0;
 }
 
 /* ============================ SIDEBAR COLLAPSE ============================ */
-$('#rail-toggle').addEventListener('click',e=>{e.stopPropagation();const app=$('.app');app.classList.toggle('collapsed');const c=app.classList.contains('collapsed');try{localStorage.setItem('alabs-collapsed',c?'1':'0');}catch(_){}});
-try{if(localStorage.getItem('alabs-collapsed')==='1')$('.app').classList.add('collapsed');}catch(e){}
+$('#rail-toggle').addEventListener('click',e=>{e.stopPropagation();const app=$('.app');app.classList.toggle('collapsed');const c=app.classList.contains('collapsed');try{localStorage.setItem('alabs-collapsed',c?'1':'0');}catch(_){}const b=$('#rail-toggle');b.title=c?'Expand sidebar':'Collapse sidebar';const lbl=b.querySelector('.lbl');if(lbl)lbl.textContent=c?'Expand':'Collapse';});
+function applyCollapsed(){const app=$('.app');if(window.matchMedia('(max-width:880px)').matches){app.classList.remove('collapsed');}else{try{if(localStorage.getItem('alabs-collapsed')==='1')app.classList.add('collapsed');}catch(_){}}}
+applyCollapsed();window.addEventListener('resize',applyCollapsed);
 $('.brand').addEventListener('click',()=>{const app=$('.app');if(app.classList.contains('collapsed')){app.classList.remove('collapsed');try{localStorage.setItem('alabs-collapsed','0');}catch(e){}}});
 $$('[data-nav]').forEach(n=>n.addEventListener('click',()=>navigate(n.dataset.nav)));
 
 /* ============================ USER / ACCOUNT MENU ============================ */
-function toggleUserMenu(){const p=$('#me-pop');const b=$('#me-trigger');p.classList.toggle('show');b.classList.toggle('on',p.classList.contains('show'));}
-function closeUserMenu(){$('#me-pop').classList.remove('show');$('#me-trigger').classList.remove('on');}
-$('#me-trigger').addEventListener('click',e=>{e.stopPropagation();toggleUserMenu();});
-$$('.me-row[data-me]').forEach(r=>r.addEventListener('click',()=>{
-  const a=r.dataset.me;
-  if(a==='signout'){closeUserMenu();toast('Signed out of aLabs');return;}
-  closeUserMenu();
-  const labels={profile:'Profile settings',notif:'Notifications',appearance:'Appearance'};
-  toast((labels[a]||a)+' — coming soon');
-}));
-document.addEventListener('click',e=>{if(!$('#me-pop').classList.contains('show'))return;if(!e.target.closest('#me-pop')&&!e.target.closest('#me-trigger'))closeUserMenu();});
-
-/* ============================ ORG / PROJECT SWITCHERS ============================ */
-const ORGS=[{id:'nw',name:'Northwind Software House',dot:'N',hue:265},{id:'as',name:'Amin Studio',dot:'A',hue:195},{id:'ai',name:'Acme Internal',dot:'A',hue:25}];
-const PROJECTS=[{id:'atlas',name:'Atlas Platform 2.0',dot:'A',hue:258},{id:'mobile',name:'Mobile App v1',dot:'M',hue:190},{id:'dw',name:'Data Warehouse',dot:'D',hue:145},{id:'mktg',name:'Marketing Site',dot:'M',hue:340}];
-let curOrg='nw',curProj='atlas';
-function toggleProjPop(){const p=$('#proj-pop');const b=$('#proj-switch');p.classList.toggle('show');b.classList.toggle('on',p.classList.contains('show'));}
-function closeProjPop(){const p=$('#proj-pop'),b=$('#proj-switch');if(p)p.classList.remove('show');if(b)b.classList.remove('on');}
-function setProject(id){const p=PROJECTS.find(x=>x.id===id);if(!p)return;curProj=id;$('#ws-dot').textContent=p.dot;$('#ws-dot').style.background='oklch(48% .10 '+p.hue+')';$('#ws-proj').textContent=p.name;$$('.sw-item[data-proj]').forEach(r=>r.classList.toggle('cur',r.dataset.proj===id));const pn=document.querySelector('.proj-name');if(pn)pn.textContent=p.name;document.title='aLabs \u00b7 '+p.name;closeProjPop();toast('Switched to '+p.name);}
-function setOrg(id){const o=ORGS.find(x=>x.id===id);if(!o)return;curOrg=id;$$('.sw-item[data-org]').forEach(r=>r.classList.toggle('cur',r.dataset.org===id));closeUserMenu();toast('Switched to '+o.name);}
-$('#proj-switch').addEventListener('click',e=>{e.stopPropagation();toggleProjPop();});
-$$('.sw-item[data-proj]').forEach(r=>r.addEventListener('click',()=>setProject(r.dataset.proj)));
-$$('.sw-item[data-org]').forEach(r=>r.addEventListener('click',()=>setOrg(r.dataset.org)));
-document.addEventListener('click',e=>{const p=$('#proj-pop');if(!p||!p.classList.contains('show'))return;if(!e.target.closest('#proj-pop')&&!e.target.closest('#proj-switch'))closeProjPop();});
+/* ============================ ACCOUNT + WORKSPACE SWITCHER ============================ */
+/* ---- account modal (centered) ---- */
+function openAcctModal(){openScrim();$('#acct-modal').classList.add('show');}
+function closeAcctModal(){$('#acct-modal').classList.remove('show');if(!anyOverlayOpen())$('#scrim').classList.remove('show');}
+$('#me-trigger').addEventListener('click',e=>{e.stopPropagation();openAcctModal();});
+$('#acct-modal').addEventListener('click',e=>{if(e.target.closest('[data-acct-close]')){closeAcctModal();return;}if(e.target.closest('[data-acct-org]')){closeAcctModal();openOrgSwitcher();return;}const r=e.target.closest('[data-acct]');if(!r)return;const a=r.dataset.acct;if(a==='signout'){closeAcctModal();toast('Signed out of aLabs');}else{toast({profile:'Profile settings',notif:'Notifications',appearance:'Appearance'}[a]+' — coming soon');}});
+/* ---- data (org→project link mirrors backend schema: project.organizationId) ---- */
+const ORGS=[{id:'nw',name:'Northwind Software House',dot:'N',hue:265,defaultProj:'atlas'},{id:'as',name:'Amin Studio',dot:'A',hue:195,defaultProj:'dw'},{id:'ai',name:'Acme Internal',dot:'A',hue:25,defaultProj:'mktg'}];
+const PROJECTS=[{id:'atlas',name:'Atlas Platform 2.0',dot:'A',hue:258,key:'ATL',org:'nw'},{id:'mobile',name:'Mobile App v1',dot:'M',hue:190,key:'MOB',org:'nw'},{id:'dw',name:'Data Warehouse',dot:'D',hue:145,key:'DWH',org:'as'},{id:'mktg',name:'Marketing Site',dot:'M',hue:340,key:'MKT',org:'ai'}];
+let curOrg='nw',curProj='atlas';let recentProjects=[];
+const chkSvg='<svg class="chk" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"></path></svg>';
+function projForOrg(oid){return PROJECTS.filter(p=>p.org===oid);}
+function refreshScopeUI(){
+  const p=PROJECTS.find(x=>x.id===curProj),o=ORGS.find(x=>x.id===curOrg);
+  const d=$('#ws-dot');if(d&&p){d.textContent=p.dot;d.style.background='oklch(48% .10 '+p.hue+')';}
+  const w=$('#ws-proj');if(w&&p)w.textContent=p.name;
+  const pn=document.querySelector('.proj-name');if(pn&&p)pn.textContent=p.name;
+  if(p)document.title='aLabs · '+p.name;
+  const os=$('#acct-org-sub');if(os&&o)os.textContent=o.name;
+  const bd=$('#m-bar-dot');if(bd&&p){bd.textContent=p.dot;bd.style.background='oklch(48% .10 '+p.hue+')';}
+  const mp=$('#m-proj-name');if(mp&&p)mp.textContent=p.name;
+  $$('.sw-row[data-proj]').forEach(r=>r.classList.toggle('on',r.dataset.proj===curProj));
+  $$('.sw-row[data-org]').forEach(r=>r.classList.toggle('on',r.dataset.org===curOrg));
+}
+function setProject(id,opts){opts=opts||{};const p=PROJECTS.find(x=>x.id===id);if(!p)return;curProj=id;if(p.org&&p.org!==curOrg)curOrg=p.org;rememberProject(id);refreshScopeUI();closeProjectSwitcher();closeMobileNav();closeAcctModal();navigate('view-dashboard');if(!opts.silent)toast('Switched to '+p.name);}
+function setOrg(id){const o=ORGS.find(x=>x.id===id);if(!o)return;curOrg=id;const projs=projForOrg(id);const dp=(o.defaultProj&&projs.some(p=>p.id===o.defaultProj))?o.defaultProj:(projs[0]&&projs[0].id);closeOrgSwitcher();closeAcctModal();if(dp){setProject(dp,{silent:true});toast('Switched to '+o.name);}else{refreshScopeUI();toast(o.name+' has no projects yet');}}
+/* ---- project switcher (frequent; this-org only; search + recents) ---- */
+function rememberProject(id){recentProjects=[id].concat(recentProjects.filter(x=>x!==id)).slice(0,3);}
+function swRowHtml(p,on){return '<button class="sw-row '+(on?'on':'')+'" data-proj="'+p.id+'"><span class="pdot" style="background:oklch(48% .10 '+p.hue+')">'+p.dot+'</span><span class="nm">'+esc(p.name)+'</span><span class="sub">'+(p.key||'')+'</span>'+chkSvg+'</button>';}
+function renderProjectSwitcher(q){
+  q=(q||'').trim().toLowerCase();
+  const o=ORGS.find(x=>x.id===curOrg),oName=o?o.name:'';
+  const match=p=>!q||p.name.toLowerCase().includes(q)||(p.key||'').toLowerCase().includes(q);
+  const recs=recentProjects.map(id=>PROJECTS.find(p=>p.id===id)).filter(p=>p&&p.org===curOrg&&match(p));
+  const recIds=new Set(recs.map(p=>p.id));
+  const rest=projForOrg(curOrg).filter(p=>match(p)&&!recIds.has(p.id));
+  let h='';
+  if(recs.length)h+='<div class="switch-lbl">Recent</div>'+recs.map(p=>swRowHtml(p,p.id===curProj)).join('');
+  if(rest.length)h+='<div class="switch-lbl">'+(q?('More in '+esc(oName)):('All projects in '+esc(oName)))+'</div>'+rest.map(p=>swRowHtml(p,p.id===curProj)).join('');
+  if(!recs.length&&!rest.length)h+='<div class="switch-empty">'+(q?('No projects match "'+esc(q)+'".'):'No projects in this workspace yet.')+'</div>';
+  $('#proj-list').innerHTML=h;
+}
+function openProjectSwitcher(){const i=$('#proj-search');if(i)i.value='';renderProjectSwitcher('');openScrim();$('#proj-modal').classList.add('show');setTimeout(()=>{const s=$('#proj-search');if(s)s.focus();},40);}
+function closeProjectSwitcher(){$('#proj-modal').classList.remove('show');if(!anyOverlayOpen())$('#scrim').classList.remove('show');}
+/* ---- org switcher (rare/identity; search; selecting lands on default project) ---- */
+function renderOrgSwitcher(q){
+  q=(q||'').trim().toLowerCase();
+  const list=ORGS.filter(o=>!q||o.name.toLowerCase().includes(q));
+  const rows=list.length?list.map(o=>{const n=projForOrg(o.id).length;return '<button class="sw-row '+(o.id===curOrg?'on':'')+'" data-org="'+o.id+'"><span class="pdot" style="background:oklch(48% .10 '+o.hue+')">'+o.dot+'</span><span class="nm">'+esc(o.name)+'</span><span class="sub">'+n+' project'+(n===1?'':'s')+'</span>'+chkSvg+'</button>';}).join(''):'<div class="switch-empty">No workspaces match "'+esc(q)+'".</div>';
+  $('#org-list').innerHTML=rows;
+}
+function openOrgSwitcher(){const i=$('#org-search');if(i)i.value='';renderOrgSwitcher('');openScrim();$('#org-modal').classList.add('show');setTimeout(()=>{const s=$('#org-search');if(s)s.focus();},40);}
+function closeOrgSwitcher(){$('#org-modal').classList.remove('show');if(!anyOverlayOpen())$('#scrim').classList.remove('show');}
+/* ---- wiring ---- */
+$('#proj-switch').addEventListener('click',e=>{e.stopPropagation();openProjectSwitcher();});
+$('#proj-modal').addEventListener('click',e=>{if(e.target.closest('[data-proj-close]')){closeProjectSwitcher();return;}if(e.target.closest('#proj-search'))return;const pEl=e.target.closest('[data-proj]');if(pEl)setProject(pEl.dataset.proj);});
+$('#proj-modal').addEventListener('input',e=>{if(e.target.id==='proj-search')renderProjectSwitcher(e.target.value);});
+$('#org-modal').addEventListener('click',e=>{if(e.target.closest('[data-org-close]')){closeOrgSwitcher();return;}if(e.target.closest('#org-search'))return;const oEl=e.target.closest('[data-org]');if(oEl)setOrg(oEl.dataset.org);});
+$('#org-modal').addEventListener('input',e=>{if(e.target.id==='org-search')renderOrgSwitcher(e.target.value);});
 
 /* ============================ TASKS: BOARD ============================ */
 const PRIO={p1:'Urgent',p2:'High',p3:'Medium',p4:'Low'};
@@ -2510,7 +2785,7 @@ function createIssue(){
 
 /* ============================ KEY HANDLERS / WIRING ============================ */
 function openScrim(){$('#scrim').classList.add('show');}
-function closeAll(){curTask=null;closeRelPicker();$('#drawer').classList.remove('show');$('#scrim').classList.remove('show');closeModal();closeCmdk();closeProjPop();closeUserMenu();}
+function closeAll(){curTask=null;closeRelPicker();closeSettingsOverlays();$('#drawer').classList.remove('show');$('#m-sheet').classList.remove('show');$('#acct-modal').classList.remove('show');$('#proj-modal').classList.remove('show');$('#org-modal').classList.remove('show');$('#scrim').classList.remove('show');closeModal();closeCmdk();}
 
 /* ============================ TASKS: WIRING ============================ */
 $('#drawer-close').addEventListener('click',closeAll);
@@ -3900,10 +4175,313 @@ function toast(msg){
   setTimeout(()=>{t.style.transition='opacity .2s';t.style.opacity='0';setTimeout(()=>t.remove(),200);},2200);
 }
 
+/* ============================ SETTINGS: PROJECT / MEMBERS / ROLES ============================ */
+const ROLES={owner:{label:'Owner',cls:'owner'},admin:{label:'Admin',cls:'admin'},member:{label:'Member',cls:'member'}};
+const ROLE_DESC={owner:'Full control over this project — members, settings, and data. Can transfer or delete the project. There is always exactly one project owner.',admin:'Manages members, settings, and day-to-day work in this project. Cannot transfer ownership or delete the project.',member:'Standard access — can create and work on tasks, documents, and meetings in this project.'};
+const PROJECT={key:'ATL',status:'Active',visibility:'Workspace'};
+function projectName(){const p=PROJECTS.find(x=>x.id===curProj);return p?p.name:'Atlas Platform 2.0';}
+const MEMBERS=[
+  {id:'ay',email:'aisha@northwind.io',role:'owner',status:'active',last:'Active now',twoFa:true,joined:'Jan 4, 2024',sessions:3},
+  {id:'mk',email:'marco.keller@northwind.io',role:'admin',status:'active',last:'2 min ago',twoFa:true,joined:'Jan 11, 2024',sessions:2},
+  {id:'lc',email:'lin.chen@northwind.io',role:'member',status:'active',last:'1 hour ago',twoFa:false,joined:'Jan 18, 2024',sessions:1},
+  {id:'dp',email:'diego@northwind.io',role:'member',status:'active',last:'3 hours ago',twoFa:true,joined:'Feb 2, 2024',sessions:1},
+  {id:'sr',email:'sara.reinhardt@northwind.io',role:'member',status:'suspended',last:'2 days ago',twoFa:true,joined:'Feb 14, 2024',sessions:0},
+  {id:'jb',email:'jonas@northwind.io',role:'member',status:'active',last:'Yesterday',twoFa:false,joined:'Mar 3, 2024',sessions:1},
+];
+let INVITES=[
+  {email:'priya.nair@northwind.io',role:'member',sent:'2 hours ago',by:'ay',expires:'in 6 days'},
+  {email:'tom.briggs@contractor.io',role:'admin',sent:'1 day ago',by:'mk',expires:'in 5 days'},
+];
+const PERMS=[
+  ['Create & work on tasks and documents',1,1,1],
+  ['Comment and participate in meetings',1,1,1],
+  ['Invite members to this project',1,1,0],
+  ['Manage project members and roles',1,1,0],
+  ['Edit project settings and status',1,1,0],
+  ['Archive or delete work in this project',1,1,0],
+  ['View the project activity log',1,1,0],
+  ['Transfer project ownership',1,0,0],
+  ['Archive or delete this project',1,0,0],
+];
+const AUDIT=[
+  {by:'mk',ev:'changed role of',tg:'Diego Pereira',dt:'Project member',ip:'41.22.10.6',when:'12 min ago'},
+  {by:'ay',ev:'invited',tg:'priya.nair@northwind.io',dt:'to this project as Member',ip:'41.22.10.2',when:'2 hours ago'},
+  {by:'mk',ev:'moved',tg:'ATL-103',dt:'to Done',ip:'41.22.10.6',when:'3 hours ago'},
+  {by:'ay',ev:'created sprint',tg:'Sprint 14',dt:'14 issues committed',ip:'41.22.10.2',when:'Yesterday'},
+  {by:'lc',ev:'added member',tg:'Jonas Brand',dt:'Project member',ip:'203.0.113.5',when:'Yesterday'},
+  {by:'mk',ev:'updated',tg:'Project profile',dt:'name changed',ip:'41.22.10.6',when:'2 days ago'},
+  {by:'ay',ev:'archived',tg:'ATL-094',dt:'Legacy auth flow',ip:'41.22.10.2',when:'3 days ago'},
+  {by:'ay',ev:'created the project',tg:projectName(),dt:'',ip:'41.22.10.2',when:'Jan 4, 2024'},
+];
+const SETTINGS_TITLES={members:'Users',general:'General',audit:'Activity log'};
+let settingsTab='members';
+let usersTab='people';
+let curMember=null;
+let confCb=null;
+
+function roleBadgeHtml(r){const x=ROLES[r]||ROLES.member;return `<span class="rolebadge ${x.cls}">${x.label}</span>`;}
+function statusBadgeHtml(s){return s==='active'?'<span class="status ok"><span class="d"></span>Active</span>':s==='suspended'?'<span class="status warn"><span class="d"></span>Suspended</span>':'<span class="status info"><span class="d"></span>Pending</span>';}
+function faBadgeHtml(on){return on?'<span class="status ok"><span class="d"></span>Enabled</span>':'<span class="status warn"><span class="d"></span>Disabled</span>';}
+
+function renderSettings(){
+  let body='';
+  if(settingsTab==='members')body=membersPanel();
+  else if(settingsTab==='general')body=generalPanel();
+  else if(settingsTab==='audit')body=auditPanel();
+  $('#settings-root').innerHTML=body;
+  if(settingsTab==='members')wireMembers();
+  else if(settingsTab==='general')wireGeneral();
+}
+
+/* ---- Members panel ---- */
+function membersPanel(){
+  return `<div class="shead"><div class="shead-txt"><h2>Users</h2><p>${MEMBERS.length} people with access to ${esc(projectName())}.</p></div><div class="right"><button class="btn ghost sm" data-open-roles><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/><path d="m9 12 2 2 4-4"/></svg>Roles &amp; permissions</button><button class="btn primary sm" data-od-id="invite-open"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Invite people</button></div></div>
+  <div class="seg" id="users-seg" style="margin-bottom:12px">
+    <button data-utab="people" class="${usersTab==='people'?'on':''}">People<span class="muted" style="font-weight:500">· ${MEMBERS.length}</span></button>
+    <button data-utab="pending" class="${usersTab==='pending'?'on':''}">Pending<span class="muted" style="font-weight:500">· ${INVITES.length}</span></button>
+  </div>
+  <div class="card" data-od-id="members-list"><div class="panel-body flush member-tbl"><div class="tbl-scroll" id="member-tbl-scroll" style="display:${usersTab==='people'?'':'none'}"></div><div class="tbl-scroll" id="invite-tbl-scroll" style="display:${usersTab==='pending'?'':'none'}"></div></div></div>`;
+}
+function memberRow(m){
+  const p=P[m.id]||['Unknown','?',m.id==='ay'?'a':'b'];
+  return `<tr data-mid="${m.id}">
+    <td><div class="mc"><span class="av ${p[2]}">${p[1]}</span><div class="mc-txt"><div class="mc-nm">${esc(p[0])}${m.id==='ay'?'<span class="mc-you">You</span>':''}</div><div class="mc-em">${esc(m.email)}</div></div></div></td>
+    <td>${roleBadgeHtml(m.role)}</td>
+    <td>${statusBadgeHtml(m.status)}</td>
+    <td>${faBadgeHtml(m.twoFa)}</td>
+    <td class="mono small muted">${esc(m.last)}</td>
+    <td class="m-actions"><button data-mmenu="${m.id}" aria-label="Member actions"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
+  </tr>`;
+}
+function wireMembers(){
+  $('#member-tbl-scroll').innerHTML=`<table><thead><tr><th>Member</th><th>Role</th><th>Status</th><th>2FA</th><th>Last active</th><th></th></tr></thead><tbody>${MEMBERS.map(memberRow).join('')}</tbody></table>`;
+  $('#invite-tbl-scroll').innerHTML=INVITES.length?(`<table><thead><tr><th>Email</th><th>Role</th><th>Sent</th><th>Expires</th><th></th></tr></thead><tbody>${INVITES.map((iv,i)=>`<tr data-iv="${i}"><td><div class="mc"><span class="av more">${esc(iv.email[0].toUpperCase())}</span><span style="font-size:12.5px;color:var(--fg-strong)">${esc(iv.email)}</span></div></td><td>${roleBadgeHtml(iv.role)}</td><td class="muted small">${esc(iv.sent)} · by ${esc(who(iv.by))}</td><td class="mono small muted">${esc(iv.expires)}</td><td class="m-actions"><button data-iv-rescind="${i}" aria-label="Revoke invite"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td></tr>`).join('')}</tbody></table>`):(`<div style="padding:48px 16px;text-align:center"><div style="font-size:13px;font-weight:500;color:var(--fg)">No pending invites</div><div class="small muted" style="margin-top:4px;line-height:1.5">Invitations you send will be listed here until accepted or revoked.</div></div>`);
+  $('#member-tbl-scroll').querySelectorAll('tr[data-mid]').forEach(r=>r.addEventListener('click',e=>{if(e.target.closest('.m-actions'))return;openMemberDrawer(r.dataset.mid);}));
+  $('[data-od-id="invite-open"]').addEventListener('click',openInvite);
+  $('[data-open-roles]').addEventListener('click',openRolesDrawer);
+  $$('#users-seg [data-utab]').forEach(b=>b.addEventListener('click',()=>{usersTab=b.dataset.utab;$$('#users-seg [data-utab]').forEach(x=>x.classList.toggle('on',x===b));$('#member-tbl-scroll').style.display=usersTab==='people'?'':'none';$('#invite-tbl-scroll').style.display=usersTab==='pending'?'':'none';}));
+  $$('[data-mmenu]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();openMemberMenu(b,b.dataset.mmenu);}));
+  $$('[data-iv-rescind]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=+b.dataset.ivRescind;const iv=INVITES[i];openConfirm({title:'Revoke invitation',bodyHTML:`<p>This cancels the pending invitation to <b>${esc(iv.email)}</b>. They won't be able to join. You can re-invite them anytime.</p>`,confirmText:'Revoke invite',danger:true,onConfirm:()=>{INVITES.splice(i,1);toast('Invitation revoked');renderSettings();}});}));
+}
+
+/* ---- floating member action menu ---- */
+let memberMenuEl=null;
+function closeMemberMenu(){if(memberMenuEl){memberMenuEl.remove();memberMenuEl=null;}}
+function openMemberMenu(btn,mid){
+  closeMemberMenu();
+  const m=MEMBERS.find(x=>x.id===mid);if(!m)return;const self=mid==='ay';
+  const canOwn=!(m.role!=='owner'&&MEMBERS.some(x=>x.role==='owner'&&x.id!==mid));
+  const el=document.createElement('div');el.className='m-float';
+  el.innerHTML=`<div class="m-grp">Change role</div>
+    ${['owner','admin','member'].filter(r=>r!=='owner'||canOwn).map(r=>`<button class="m-row" data-setrole="${mid}:${r}">${roleBadgeHtml(r)}<span>${ROLES[r].label}</span>${m.role===r?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="margin-left:auto;color:var(--accent)"><path d="M20 6 9 17l-5-5"/></svg>':''}</button>`).join('')}
+    <div class="m-sep"></div>
+    <button class="m-row" data-view="${mid}">View details</button>
+    ${!self?(m.status==='active'?'<button class="m-row" data-suspend="'+mid+'">Deactivate</button>':'<button class="m-row" data-reactivate="'+mid+'">Reactivate</button>'):''}
+    ${!self?'<button class="m-row danger" data-remove="'+mid+'">Remove from project</button>':''}
+    ${self?'<div class="m-row" style="cursor:default;color:var(--faint);font-size:11px">This is you</div>':''}`;
+  document.body.appendChild(el);
+  const r=btn.getBoundingClientRect();const eh=el.offsetHeight;
+  el.style.position='fixed';el.style.zIndex=95;
+  el.style.top=(Math.min(r.bottom+4,window.innerHeight-eh-8))+'px';
+  el.style.right=(window.innerWidth-r.right)+'px';
+  memberMenuEl=el;
+  el.addEventListener('click',ev=>{
+    const t=ev.target.closest('[data-setrole],[data-view],[data-suspend],[data-reactivate],[data-remove]');
+    if(!t)return;
+    if(t.dataset.setrole){const[,role]=t.dataset.setrole.split(':');closeMemberMenu();setMemberRole(mid,role);}
+    else if(t.dataset.view){closeMemberMenu();openMemberDrawer(t.dataset.view);}
+    else if(t.dataset.suspend){closeMemberMenu();confirmSuspend(t.dataset.suspend);}
+    else if(t.dataset.reactivate){closeMemberMenu();reactivateMember(t.dataset.reactivate);}
+    else if(t.dataset.remove){closeMemberMenu();confirmRemove(t.dataset.remove);}
+  });
+}
+document.addEventListener('click',e=>{if(memberMenuEl&&!e.target.closest('.m-float')&&!e.target.closest('[data-mmenu]'))closeMemberMenu();});
+
+function setMemberRole(mid,role){
+  const m=MEMBERS.find(x=>x.id===mid);if(!m||m.role===role)return;
+  if(role==='owner'){const prev=MEMBERS.find(x=>x.role==='owner');if(prev)prev.role='admin';}
+  m.role=role;toast(who(mid)+' is now '+ROLES[role].label);renderSettings();
+}
+function confirmSuspend(mid){const m=MEMBERS.find(x=>x.id===mid);openConfirm({title:'Deactivate '+who(mid),bodyHTML:`<p>${esc(who(mid))} will lose access to ${esc(projectName())} immediately. Their work stays intact and you can reactivate them anytime.</p>`,confirmText:'Deactivate',danger:true,onConfirm:()=>{m.status='suspended';toast(who(mid)+' deactivated');renderSettings();}});}
+function reactivateMember(mid){const m=MEMBERS.find(x=>x.id===mid);m.status='active';toast(who(mid)+' reactivated');renderSettings();}
+function confirmRemove(mid){const m=MEMBERS.find(x=>x.id===mid);openConfirm({title:'Remove '+who(mid)+'?',bodyHTML:`<p>This removes ${esc(who(mid))} from <b>${esc(projectName())}</b>. They'll lose access to this project's tasks, documents, and history. This cannot be undone.</p>`,confirmText:'Remove member',danger:true,onConfirm:()=>{const i=MEMBERS.findIndex(x=>x.id===mid);MEMBERS.splice(i,1);toast(who(mid)+' removed');renderSettings();}});}
+
+/* ---- member detail drawer ---- */
+function openMemberDrawer(id){
+  const m=MEMBERS.find(x=>x.id===id);if(!m)return;curMember=m;const p=P[id]||['Unknown','?','a'];
+  const av=$('#md-av');av.className='av lg '+p[2];av.textContent=p[1];
+  $('#md-name').textContent=p[0];$('#md-email').textContent=m.email;
+  const self=id==='ay';
+  const canOwn=!(m.role!=='owner'&&MEMBERS.some(x=>x.role==='owner'&&x.id!==id));
+  $('#md-body').innerHTML=`
+    <div class="md-stat"><span class="k">Account status</span><span class="v">${statusBadgeHtml(m.status)}</span></div>
+    <div class="md-stat"><span class="k">Role</span><span class="v">${roleBadgeHtml(m.role)}</span></div>
+    <div class="md-stat"><span class="k">Member since</span><span class="v">${esc(m.joined)}</span></div>
+    <div class="md-stat"><span class="k">Last active</span><span class="v"><span class="mono" style="font-size:12px">${esc(m.last)}</span></span></div>
+    <div class="md-stat"><span class="k">Active sessions</span><span class="v">${m.sessions} ${m.sessions===1?'session':'sessions'}</span></div>
+    <div style="padding:14px 0;border-top:1px solid var(--border);margin-top:4px">
+      <div class="flab" style="margin-bottom:9px">Two-factor authentication</div>
+      <div class="row between"><div class="row" style="gap:8px">${faBadgeHtml(m.twoFa)}<span class="small muted">${m.twoFa?'Authenticator app':'Not set up'}</span></div>${!self?`<button class="btn ghost sm" data-md-enforce>${m.twoFa?'Reset 2FA':'Require setup'}</button>`:''}</div>
+    </div>
+    <div style="padding:14px 0;border-top:1px solid var(--border)">
+      <div class="flab" style="margin-bottom:7px">Change role</div>
+      <div class="md-role-opts">${['owner','admin','member'].filter(r=>r!=='owner'||canOwn).map(r=>`<div class="md-role-opt ${m.role===r?'sel':''}" data-md-role="${r}">${roleBadgeHtml(r)}<div class="ro-txt"><b>${ROLES[r].label}</b><small>${esc(ROLE_DESC[r])}</small></div></div>`).join('')}</div>
+    </div>
+    <div style="padding:14px 0;border-top:1px solid var(--border)">
+      <div class="flab" style="margin-bottom:6px">Recent activity</div>
+      <div class="md-feed-item"><span class="md-feed-d"></span><div class="md-feed-txt"><b>${esc(who(id))}</b> ${m.status==='suspended'?'was deactivated':'signed in'}<span class="when">${esc(m.last)}</span></div></div>
+      <div class="md-feed-item"><span class="md-feed-d muted"></span><div class="md-feed-txt">Worked on <b>ATL-107</b> · Role-based access<span class="when">yesterday</span></div></div>
+      <div class="md-feed-item"><span class="md-feed-d muted"></span><div class="md-feed-txt">Commented on <b>ATL-103</b><span class="when">2 days ago</span></div></div>
+    </div>
+    ${!self?`<div style="padding:14px 0;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+      ${m.status==='active'?'<button class="btn danger ghost sm" data-md-suspend>Deactivate member</button>':'<button class="btn sm" data-md-reactivate>Reactivate member</button>'}
+      <button class="btn danger ghost sm" data-md-remove>Remove from project</button>
+    </div>`:`<div style="padding:14px 0;border-top:1px solid var(--border)"><p class="tiny muted">This is your account. Ask another owner to change your role.</p></div>`}`;
+  $('#member-drawer').classList.add('show');openScrim();
+  $$('#md-body [data-md-role]').forEach(o=>o.addEventListener('click',()=>setMemberRole(id,o.dataset.mdRole)));
+  const sus=$('#md-body [data-md-suspend]');if(sus)sus.addEventListener('click',()=>confirmSuspend(id));
+  const rea=$('#md-body [data-md-reactivate]');if(rea)rea.addEventListener('click',()=>reactivateMember(id));
+  const rm=$('#md-body [data-md-remove]');if(rm)rm.addEventListener('click',()=>confirmRemove(id));
+  const enf=$('#md-body [data-md-enforce]');if(enf)enf.addEventListener('click',()=>toast(m.twoFa?'2FA reset email sent':'Enforcement email sent'));
+}
+function closeMemberDrawer(){$('#member-drawer').classList.remove('show');curMember=null;if(!anyOverlayOpen())$('#scrim').classList.remove('show');}
+$('#md-close').addEventListener('click',closeMemberDrawer);
+
+/* ---- roles & permissions drawer ---- */
+function openRolesDrawer(){
+  $('#rd-proj').textContent=projectName();
+  $('#rd-body').innerHTML=rolesSection();
+  $('#roles-drawer').classList.add('show');openScrim();
+}
+function closeRolesDrawer(){$('#roles-drawer').classList.remove('show');if(!anyOverlayOpen())$('#scrim').classList.remove('show');}
+$('#rd-close').addEventListener('click',closeRolesDrawer);
+
+/* ---- invite modal ---- */
+function openInvite(){$('#inv-email').value='';$('#inv-email-err').classList.remove('show');$('#inv-role').value='member';$('#invite-modal').classList.add('show');openScrim();setTimeout(()=>$('#inv-email').focus(),80);}
+function closeInvite(){$('#invite-modal').classList.remove('show');if(!anyOverlayOpen())$('#scrim').classList.remove('show');}
+$('#inv-send').addEventListener('click',()=>{
+  const v=$('#inv-email').value.trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){$('#inv-email-err').classList.add('show');return;}
+  INVITES.unshift({email:v,role:$('#inv-role').value,sent:'just now',by:'ay',expires:'in 7 days'});
+  closeInvite();toast('Invitation sent to '+v);renderSettings();
+});
+$$('[data-invite-close]').forEach(b=>b.addEventListener('click',closeInvite));
+$('#inv-email').addEventListener('keydown',e=>{if(e.key==='Enter')$('#inv-send').click();});
+
+/* ---- confirm modal ---- */
+function openConfirm({title,bodyHTML,confirmText,danger,onConfirm}){
+  $('#conf-title').textContent=title;$('#conf-msg').innerHTML=bodyHTML||'';
+  const ok=$('#conf-ok');ok.textContent=confirmText||'Confirm';ok.className='btn '+(danger?'danger':'primary');
+  $('#conf-modal').classList.add('show');openScrim();confCb=onConfirm||null;
+}
+function closeConfModal(){$('#conf-modal').classList.remove('show');confCb=null;if(!anyOverlayOpen())$('#scrim').classList.remove('show');}
+$('#conf-ok').addEventListener('click',()=>{let keep=false;if(confCb){if(confCb()===false)keep=true;}if(!keep)closeConfModal();});
+$$('[data-conf-close]').forEach(b=>b.addEventListener('click',closeConfModal));
+
+/* ---- overlays / scrim helper ---- */
+function anyOverlayOpen(){return !!($('#drawer.show')||$('#task-modal.show')||$('#sprint-modal.show')||$('#milestone-modal.show')||$('#ap-conf.show')||$('#sign-page.open')||$('#cmdk.show')||$('#member-drawer.show')||$('#roles-drawer.show')||$('#invite-modal.show')||$('#conf-modal.show')||$('#acct-modal.show')||$('#proj-modal.show')||$('#org-modal.show')||$('#m-sheet.show'));}
+function closeSettingsOverlays(){closeMemberMenu();$('#invite-modal').classList.remove('show');$('#conf-modal').classList.remove('show');$('#member-drawer').classList.remove('show');$('#roles-drawer').classList.remove('show');curMember=null;if(!anyOverlayOpen())$('#scrim').classList.remove('show');}
+
+/* ---- mobile bottom-sheet nav (cloned from the live sidebar so it never drifts) ---- */
+function buildMobileNav(){
+  const body=$('#m-body');if(!body)return;
+  const p=PROJECTS.find(x=>x.id===curProj),o=ORGS.find(x=>x.id===curOrg);
+  const chev='<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg>';
+  const chevD='<svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg>';
+  const iProf='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg>';
+  const iNotif='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>';
+  const iApp='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg>';
+  const iBld='<svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M15 9h.01M15 13h.01"></path></svg>';
+  const card='<button class="m-acct" data-m-toggle="acct"><span class="av">AY</span><span class="tx"><b>Aisha Yusuf</b><small>aisha@northwind.io · Product Manager</small></span>'+chev+'</button>';
+  let a='';
+  a+='<button class="m-srow" data-m-switch="org">'+iBld+'<span class="tx"><b>Switch workspace</b><small>'+(o?esc(o.name):'Workspace')+'</small></span>'+chev+'</button>';
+  a+='<button class="ws-pill" data-m-switch="proj">'+(p?'<span class="pdot" style="background:oklch(48% .10 '+p.hue+')">'+p.dot+'</span>':'')+'<span class="ws-meta"><b>'+(p?esc(p.name):'Project')+'</b></span>'+chevD+'</button>';
+  a+='<div class="m-lbl">Account</div>';
+  a+='<button class="me-row" data-m-acct="profile">'+iProf+'Profile settings</button>';
+  a+='<button class="me-row" data-m-acct="notif">'+iNotif+'Notifications</button>';
+  a+='<button class="me-row" data-m-acct="appearance">'+iApp+'Appearance</button>';
+  a+='<button class="me-row danger" data-me="signout"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg>Sign out</button>';
+  let m='';
+  $$('.nav-group').forEach(g=>{g.querySelectorAll(':scope > .nav-label, :scope > .nav-item').forEach(el=>{m+=el.classList.contains('nav-label')?'<div class="m-lbl">'+esc(el.textContent)+'</div>':el.outerHTML;});});
+  body.innerHTML=card+'<div class="m-panel" data-m-panel="menu">'+m+'</div><div class="m-panel" data-m-panel="acct" hidden>'+a+'</div>';
+}
+function setMobileView(view){const a=$('#m-body .m-acct');if(a)a.classList.toggle('open',view==='acct');$('#m-body').querySelectorAll('[data-m-panel]').forEach(p=>p.hidden=p.dataset.mPanel!==view);}
+function openMobileNav(){buildMobileNav();setMobileView('menu');openScrim();const s=$('#m-sheet');s.classList.add('show');s.setAttribute('aria-hidden','false');}
+function closeMobileNav(){const s=$('#m-sheet');s.classList.remove('show');s.setAttribute('aria-hidden','true');if(!anyOverlayOpen())$('#scrim').classList.remove('show');}
+$('#m-trigger').addEventListener('click',e=>{e.stopPropagation();openMobileNav();});
+$('#m-close').addEventListener('click',closeMobileNav);
+$('#m-body').addEventListener('click',e=>{
+  const tEl=e.target.closest('[data-m-toggle]');
+  if(tEl){setMobileView(tEl.classList.contains('open')?'menu':'acct');return;}
+  const aRow=e.target.closest('[data-m-acct]');
+  if(aRow){toast({profile:'Profile settings',notif:'Notifications',appearance:'Appearance'}[aRow.dataset.mAcct]+' — coming soon');return;}
+  const swEl=e.target.closest('[data-m-switch]');
+  if(swEl){closeMobileNav();if(swEl.dataset.mSwitch==='org')openOrgSwitcher();else openProjectSwitcher();return;}
+  const navEl=e.target.closest('[data-nav]');
+  if(navEl){navigate(navEl.dataset.nav);closeMobileNav();}
+  else{const meEl=e.target.closest('[data-me]');if(meEl){closeMobileNav();if(meEl.dataset.me==='signout')toast('Signed out of aLabs');}}
+});
+
+/* ---- General (org profile + domains) ---- */
+function generalPanel(){
+  const letter=projectName().charAt(0);
+  return `<div class="shead"><div class="shead-txt"><h2>General</h2><p>Profile, status, and identity for ${esc(projectName())}. Visible to everyone in the project.</p></div></div>
+  <div class="card" data-od-id="project-profile">
+    <div class="panel-head"><h3>Project profile</h3></div>
+    <div class="panel-body flush">
+      <div class="srow"><div class="sk"><b>Project icon</b><small>Square image, at least 128×128px. Shown in the sidebar and across the project.</small></div><div class="sv"><span class="logo-box">${esc(letter)}</span><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn subtle sm" data-logo-upload>Upload image</button><button class="btn ghost sm" data-logo-remove>Remove</button></div></div></div>
+      <div class="srow"><div class="sk"><b>Project name</b><small>The display name shown in navigation and on tasks.</small></div><div class="sv"><input class="fld" id="proj-name" value="${esc(projectName())}" style="max-width:320px"></div></div>
+      <div class="srow"><div class="sk"><b>Project key</b><small>Short prefix used in task IDs and URLs.</small></div><div class="sv"><code class="mono small" style="color:var(--fg-strong);background:var(--surface-2);padding:4px 8px;border-radius:5px">${esc(PROJECT.key)}-107</code> <span class="muted tiny">e.g. a task identifier</span></div></div>
+      <div class="srow"><div class="sk"><b>Status</b><small>Current state of the project.</small></div><div class="sv"><span class="status ok"><span class="d"></span>${esc(PROJECT.status)}</span></div></div>
+      <div class="srow"><div class="sk"><b>Visibility</b><small>Who can discover and join this project.</small></div><div class="sv"><span class="status info"><span class="d"></span>${esc(PROJECT.visibility)}</span> <span class="muted small">· Any org member can join</span></div></div>
+    </div>
+    <div class="panel-head" style="border-top:1px solid var(--border);border-bottom:none;justify-content:flex-end;background:var(--surface-2)"><button class="btn primary sm" id="proj-save">Save changes</button></div>
+  </div>
+  ${dangerBlocks()}
+  `;
+}
+function wireGeneral(){
+  $('#proj-save').addEventListener('click',()=>{toast('Project profile saved');renderSettings();});
+  $('[data-logo-upload]').addEventListener('click',()=>toast('Choose a project icon to upload'));
+  $('[data-logo-remove]').addEventListener('click',()=>toast('Project icon removed'));
+  wireDanger();
+}
+
+/* ---- Roles & permissions ---- */
+function rolesSection(){
+  const counts={owner:0,admin:0,member:0};MEMBERS.forEach(m=>counts[m.role]++);
+  return `<div class="card" data-od-id="roles-permissions"><div class="panel-head"><h3>Roles &amp; permissions</h3><span class="muted small right">Three roles · what each can do in ${esc(projectName())}</span></div><div class="panel-body"><div class="role-cards" style="margin:0">${['owner','admin','member'].map(r=>`<div class="role-card"><div class="rc-h"><span class="rolebadge ${ROLES[r].cls}">${ROLES[r].label}</span></div><div class="rc-desc">${esc(ROLE_DESC[r])}</div><div class="rc-cnt">${counts[r]} ${counts[r]===1?'member':'members'}</div></div>`).join('')}</div></div></div>
+  <div class="card" data-od-id="permission-matrix"><div class="panel-head"><h3>Permission matrix</h3><span class="muted small right">What each role can do</span></div><div class="panel-body flush perm-tbl-wrap"><table class="perm-tbl"><thead><tr><th>Capability</th><th>Owner</th><th>Admin</th><th>Member</th></tr></thead><tbody>${PERMS.map(p=>`<tr><td>${esc(p[0])}</td>${[1,2,3].map(i=>`<td>${p[i]?'<span class="perm-yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg></span>':'<span class="perm-no"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg></span>'}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+}
+
+/* ---- Audit log ---- */
+function auditPanel(){
+  return `<div class="shead"><div class="shead-txt"><h2>Audit log</h2><p>A record of activity across ${esc(projectName())}. Retained for 90 days.</p></div></div>
+  <div class="card" data-od-id="audit-log"><div class="panel-head"><h3>Activity</h3><span class="muted small right">${AUDIT.length} events</span></div><div class="panel-body flush audit-tbl"><div class="tbl-scroll"><table><thead><tr><th>Actor</th><th>Action</th><th>Target</th><th>IP address</th><th>When</th></tr></thead><tbody>${AUDIT.map(a=>`<tr><td><div class="mc">${avHtml(a.by,'sm')}<span style="font-size:12px;font-weight:500">${esc(who(a.by))}</span></div></td><td class="ev">${esc(a.ev)}</td><td>${a.tg?`<span class="tg">${esc(a.tg)}</span>${a.dt?'<div class="muted tiny" style="margin-top:1px">'+esc(a.dt)+'</div>':''}`:'<span class="muted">—</span>'}</td><td class="ip">${esc(a.ip)}</td><td class="mono small muted">${esc(a.when)}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+}
+
+/* ---- Danger zone ---- */
+function dangerBlocks(){
+  const admins=MEMBERS.filter(m=>m.id!=='ay'&&m.role==='admin');
+  return `<div class="card" data-od-id="danger-zone">
+    <div class="panel-head"><h3>Danger zone</h3><span class="muted small right">Irreversible and sensitive actions</span></div>
+    <div class="panel-body flush">
+      <div class="srow"><div class="sk"><b>Transfer project ownership</b><small>Hand over ownership of ${esc(projectName())} to an admin. You stay on as an admin but lose transfer and deletion rights.</small></div><div class="sv">${admins.length?`<select class="fld" id="transfer-pick" style="width:200px;height:30px">${admins.map(m=>`<option value="${m.id}">${esc(who(m.id))}</option>`).join('')}</select><button class="btn danger ghost sm" data-transfer>Transfer ownership</button>`:`<span class="muted small">Promote an admin first</span>`}</div></div>
+      <div class="srow"><div class="sk"><b>Archive project</b><small>Make ${esc(projectName())} read-only. Members keep access to existing work but can't add new tasks or documents. Reversible anytime.</small></div><div class="sv"><button class="btn ghost sm" data-archive-proj>Archive project</button></div></div>
+      <div class="srow"><div class="sk"><b>Delete project</b><small>Permanently delete ${esc(projectName())} — all tasks, documents, plans, and history. Once deleted, there is no recovery.</small></div><div class="sv"><button class="btn danger sm" data-delete-proj>Delete project</button></div></div>
+    </div>
+  </div>`;
+}
+function wireDanger(){
+  const t=$('[data-transfer]');if(t)t.addEventListener('click',()=>{const to=$('#transfer-pick').value;const nm=who(to);openConfirm({title:'Transfer ownership to '+nm,bodyHTML:`<p>You will hand over ownership of <b>${esc(projectName())}</b> to <b>${esc(nm)}</b>. You will become an <b>Admin</b> and lose transfer &amp; deletion rights. ${esc(nm)} becomes the <b>Owner</b>.</p>`,confirmText:'Transfer ownership',danger:true,onConfirm:()=>{const me=MEMBERS.find(x=>x.id==='ay');me.role='admin';MEMBERS.find(x=>x.id===to).role='owner';toast('Ownership transferred to '+nm);renderSettings();}});});
+  const ar=$('[data-archive-proj]');if(ar)ar.addEventListener('click',()=>openConfirm({title:'Archive '+projectName(),bodyHTML:`<p>Archiving <b>${esc(projectName())}</b> makes it read-only. Members keep access to existing work but can't add new tasks or documents. You can restore it anytime from Settings.</p>`,confirmText:'Archive project',danger:true,onConfirm:()=>{PROJECT.status='Archived';toast(projectName()+' archived');renderSettings();}}));
+  $('[data-delete-proj]').addEventListener('click',()=>{const expected=projectName().toLowerCase();openConfirm({title:'Delete '+projectName(),bodyHTML:`<p>This permanently deletes <b>${esc(projectName())}</b> and all of its data. <b style="color:var(--danger)">This cannot be undone.</b></p><div class="flab" style="margin-top:14px">Type the project name to confirm</div><input class="fld" id="del-confirm-input" placeholder="${esc(projectName())}"><div class="fld-err" id="del-err">Name does not match.</div>`,confirmText:'Delete project',danger:true,onConfirm:()=>{const v=($('#del-confirm-input').value||'').trim().toLowerCase();if(v!==expected){$('#del-err').classList.add('show');return false;}toast('Project scheduled for deletion');renderSettings();}});});
+}
+
 /* ============================ KEYBOARD ============================ */
 document.addEventListener('keydown',e=>{
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openCmdk();}
-  if(e.key==='Escape'){if($('#sprint-modal').classList.contains('show')){closeSprintModal();}else if($('#ap-conf').classList.contains('show')){closeConf();}else if($('#sign-page').classList.contains('open')){closeApproval();}else closeAll();}
+  if(e.key==='Escape'){if($('#m-sheet').classList.contains('show')){closeMobileNav();}else if($('#proj-modal').classList.contains('show')){closeProjectSwitcher();}else if($('#org-modal').classList.contains('show')){closeOrgSwitcher();}else if($('#acct-modal').classList.contains('show')){closeAcctModal();}else if($('#conf-modal').classList.contains('show')||$('#invite-modal').classList.contains('show')||$('#member-drawer').classList.contains('show')||$('#roles-drawer').classList.contains('show')){closeSettingsOverlays();}else if($('#sprint-modal').classList.contains('show')){closeSprintModal();}else if($('#ap-conf').classList.contains('show')){closeConf();}else if($('#sign-page').classList.contains('open')){closeApproval();}else closeAll();}
   if(e.key==='Enter'&&$('#cmdk').classList.contains('show')){const sel=$('.cmdk .ritem.sel');if(sel)runCmd(sel.dataset.cmd);}
 });
 
@@ -3931,5 +4509,6 @@ function init(){
 }
 init();
 </script>
-</body>
-</html>
+
+
+</body></html>

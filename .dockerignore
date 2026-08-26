@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+.next
+**/.next
+**/dist
+.turbo
+**/.turbo
+.git
+# runtime upload dirs (NOT src/app/uploads — that's a route)
+/uploads
+apps/web/uploads
+.env
+.env.*
+!.env.example
+.DS_Store

@@ -17,19 +17,26 @@ and the specs in [`docs/`](./docs).
 
 ```bash
 pnpm install
-pnpm dev               # runs the API (8788) and web (5173) together
+pnpm dev:db            # Postgres in Docker (required — the auth domain persists there)
+pnpm dev               # Next.js on http://localhost:3000 (UI + API in one process)
 ```
 
-Then open **http://localhost:5173**. The API auto-logs you in as the seeded demo
-user (Aisha, Owner of Northwind → Atlas Platform 2.0), so the workspace is live
-immediately.
+`pnpm dev` reads `DATABASE_URL` from `apps/web/.env` — on first boot it copies
+`.env.example` guidance: create the file with
+`DATABASE_URL=postgres://alabs:alabs@localhost:5432/alabs` (matches the compose
+service). Migrations run and the demo users seed automatically.
 
-- Run one app: `pnpm dev:api` / `pnpm dev:web`
+Then open **http://localhost:3000** and sign in with the seeded demo user:
+
+- **aisha@northwind.io / password123** — member of four workspaces, landing on
+  Northwind → Atlas Platform 2.0, so both switchers have real data. (All six
+  seeded users share the password.)
+
 - Type-check everything: `pnpm typecheck`
 - Production build: `pnpm build`
-
-The web dev server proxies `/api` → `http://localhost:8788` (configurable via
-`VITE_API_URL`).
+- Docker: `docker compose up --build` (single service on port 3000)
+- Dev database: `pnpm dev:db` (Postgres in Docker — unused by the app until the Drizzle repository lands)
+- API standalone (rare, for debugging): `pnpm dev:api` — Hono on port 8788
 
 ## What's implemented
 
@@ -41,21 +48,29 @@ The web dev server proxies `/api` → `http://localhost:8788` (configurable via
 | Planning — iterations, milestones, backlog, velocity, timeline (Gantt) | ✅ live |
 | Task drawer — meta, subtasks, comments, status change | ✅ live |
 | Command palette (⌘K), create-task modal, toasts | ✅ live |
-| Auth, Organization, Project, Meeting, Agreement, Reporting, Notification | ✅ API routes |
+| Workspace & project switchers, mobile nav — multi-org demo seed, server-persisted recents, derived landing project | ✅ live |
+| Meetings — master/detail list, schedule modal, agenda + notes editors, action items with convert-to-task | ✅ live (UI + API) |
+| Agreements — master/detail list, lifecycle timeline with auto-stamped send/accept dates, new-agreement modal | ✅ live (UI + API) |
+| Reports — overview KPIs/velocity/workload charts + standard status/progress/activity reports, all generated from live data | ✅ live (UI + API) |
+| Auth — sign-in, create account, forgot/reset password, Google SSO, sign-out; session-gated routes | ✅ live (UI + API) |
+| Organization (members, invitations, soft delete), Project (members), User (profile, recents), Notification | ✅ API routes |
 | Billing, Client Portal, AI | scaffolded in API |
 
 ## Architecture
 
-A modular monolith deployed as two apps over a shared `core` package, backed by
-PostgreSQL. Everything is Docker-able so the same build runs SaaS and
+A modular monolith deployed as a single Next.js app: the UI renders on the App
+Router and the Hono API is mounted in-process under `/api` (one origin, one
+port, cookie sessions by construction). Backed by PostgreSQL (via a shared
+`core` package). Everything is Docker-able so the same build runs SaaS and
 self-hosted.
 
 ```
 apps/
-  api/    Hono REST API (request lifecycle: auth → tenant → permission → validate → handler)
-  web/    React 19 + Vite dashboard (React Query, the design's CSS verbatim)
+  web/    Next.js (App Router) — UI routes, client-only app shell, /api + /uploads mounts
 packages/
+  api/    Hono REST API as a host-agnostic library (request lifecycle: auth → tenant → permission → validate → handler)
   core/   Shared source of truth: enums, Drizzle schema, zod schemas, blocks, constants
+  editor/ Tiptap editor package
 ```
 
 All internal packages use the `@pmin/*` namespace.
@@ -64,9 +79,12 @@ All internal packages use the `@pmin/*` namespace.
   mirrors `docs/tech/03-data-model.md` table-for-table).
 - **Source of truth for validation** — `packages/core/src/schemas` (zod,
   consumed by both the API and the web app).
-- **Runtime store** — the API runs against an in-memory repository seeded with
-  the aLabs demo data (no Postgres required). A Drizzle repository can drop in
-  behind the same service layer; set `DATABASE_URL` and run Drizzle Kit.
+- **Data layer — Postgres via Drizzle, fully migrated.** Every domain
+  persists to Postgres (auth, workspace, projects, tasks + planning,
+  documents, meetings, agreements, notifications, activity) through the
+  per-domain repositories in `packages/api/src/db/` — auto-migrated and
+  demo-seeded on boot. `pnpm db:generate` / `pnpm db:migrate` manage
+  migrations; `pnpm db:studio` opens Drizzle Studio.
 
 ### Request lifecycle
 
@@ -94,11 +112,11 @@ leaking existence. See `docs/tech/`.
 
 | Layer | Choice |
 | ----- | ------ |
-| Frontend | React 19, TypeScript, Vite, React Query |
-| Backend | Hono |
+| Frontend | Next.js (App Router), React 19, TypeScript, React Query |
+| Backend | Hono (mounted in-process by Next.js) |
 | Database | PostgreSQL |
 | ORM | Drizzle |
-| Auth | Better Auth (session-based; demo auto-login) |
+| Auth | Session cookies (credential login, Google SSO, password reset; Better Auth-shaped for the swap) |
 | Validation | zod (shared) |
 | Build | pnpm workspaces + Turborepo |
 | Deploy | Docker / docker-compose |

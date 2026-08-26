@@ -17,13 +17,12 @@ Column types follow `02-conventions.md`: `uuid` PKs (UUID v7), `timestamptz`, sn
 
 Audit columns `created_by` / `updated_by` are omitted below for brevity but apply to every user-mutated entity.
 
-> **Schema sync status (v1.1):** this doc is the *spec* — it now includes story-point
-> estimates, the epic-grouping column, cross-issue links, and iteration point caches
-> that the product already surfaces in the UI. The Drizzle implementation in
-> `packages/core/src/db/schema.ts` currently **lags** by the four additions marked
-> `[NEW v1.1]` below (`tasks.epic_id`, `tasks.story_points`, `task_links`, and
-> `iterations.committed_points` / `completed_points`). Sync `schema.ts` to match
-> before wiring the UI to real persisted data.
+> **Schema sync status (v1.1, in sync):** the Drizzle implementation in
+> `packages/core/src/db/schema.ts` matches this spec, with two deliberate
+> naming deviations: story points live in `tasks.estimate` (the product's term)
+> and epics are modeled as a `task_types` row ("Epic") rather than a separate
+> `tasks.epic_id` column. Cross-issue links (`task_links`) and the iteration
+> point caches are implemented as specified.
 
 ---
 
@@ -166,6 +165,22 @@ Unique `(organization_id, slug)`. Unique `(organization_id, key)`.
 | updated_at | timestamptz  | not null default now               |
 
 Unique `(project_id, user_id)`.
+
+## project_visits `[NEW v1.1]`
+
+Per-user project visit history — powers the "Recent projects" group in the
+switchers and the derived landing project when switching workspaces
+(most-recently-visited project in the org, else first project by `created_at`).
+
+| Column     | Type         | Constraints                        |
+| ---------- | ------------ | ---------------------------------- |
+| user_id    | uuid         | pk, fk users                       |
+| project_id | uuid         | pk, fk projects                    |
+| visited_at | timestamptz  | not null default now               |
+
+Primary key `(user_id, project_id)` — one row per user/project; `visited_at`
+is upserted on each visit. The application caps the history at 5 rows per
+user.
 
 ---
 
@@ -426,7 +441,10 @@ Composite pk `(meeting_id, user_id)`.
 | currency      | varchar(3)       | null                         |
 | start_date    | date             | null                         |
 | end_date      | date             | null                         |
+| sent_at       | timestamptz      | null                         |
 | signed_at     | timestamptz      | null                         |
+| owner_id      | uuid             | fk users, null               |
+| terms         | text             | null                         |
 | created_at    | timestamptz      | not null default now         |
 | updated_at    | timestamptz      | not null default now         |
 | deleted_at    | timestamptz      | null                         |
