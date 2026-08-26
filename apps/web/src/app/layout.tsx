@@ -6,7 +6,7 @@ import "../styles/views.css";
 import "@pmin/editor/editor.css";
 
 export const metadata: Metadata = {
-  title: "aLabs · Atlas Platform 2.0",
+  title: "aLabs",
 };
 
 export const viewport: Viewport = {
