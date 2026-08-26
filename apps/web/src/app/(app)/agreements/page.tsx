@@ -1,6 +1,6 @@
 "use client";
 
-import { AgreementsView } from "@/features/agreements/agreements-view";
+import { AgreementsView } from "./_components/agreements-view";
 
 export default function AgreementsPage() {
   return <AgreementsView />;

@@ -1,6 +1,6 @@
 "use client";
 
-import { MeetingsView } from "@/features/meetings/meetings-view";
+import { MeetingsView } from "./_components/meetings-view";
 
 export default function MeetingsPage() {
   return <MeetingsView />;

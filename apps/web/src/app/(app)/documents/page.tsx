@@ -1,6 +1,6 @@
 "use client";
 
-import { DocumentsView } from "@/features/documents/documents-view";
+import { DocumentsView } from "./_components/documents-view";
 
 export default function DocumentsPage() {
   return <DocumentsView />;
