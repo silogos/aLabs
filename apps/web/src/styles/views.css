@@ -301,6 +301,27 @@
 .page-item:hover .add {
   opacity: 1;
 }
+.page-item .del {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  color: var(--faint);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.page-item:hover .del {
+  opacity: 1;
+}
+.page-item .del:hover {
+  color: var(--danger);
+  background: color-mix(in oklch, var(--danger) 12%, transparent);
+}
 
 .doc-main {
   background: var(--surface);

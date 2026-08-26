@@ -1,12 +1,12 @@
 /** Documents view — space/page tree + a Tiptap-powered rich text editor with persistence. */
 import { documentsService } from "@/services/documents";
-import { workspaceService } from "@/services/workspace";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/app-provider";
 import { useMembers } from "@/hooks/use-members";
 
 import { initials, colorFor } from "@/components/ui/avatar";
+import { Modal } from "@/components/ui/modal";
 import { timeAgo } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 import { RichTextEditor } from "@pmin/editor";
@@ -117,10 +117,25 @@ export function DocumentsView() {
   const [treeQ, setTreeQ] = useState("");
   const [activePageId, setActivePageId] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(true);
+  const [confirmDel, setConfirmDel] = useState<Page | null>(null);
 
   const apiPages: Page[] = pageData?.items ?? [];
   const active = apiPages.find((p) => p.id === activePageId) ?? apiPages[0] ?? null;
   const spaceName = (sid: string) => spaces?.find((s) => s.id === sid)?.name ?? "—";
+
+  const deletePage = async () => {
+    const p = confirmDel;
+    if (!p) return;
+    setConfirmDel(null);
+    try {
+      await documentsService.removePage(pid, p.id);
+      await qc.invalidateQueries({ queryKey: qk.pages(pid) });
+      if (activePageId === p.id) setActivePageId(null);
+      toast("Document deleted");
+    } catch (e) {
+      toast("Couldn't delete document: " + (e as Error).message);
+    }
+  };
 
   const newPage = async () => {
     // Projects created before spaces were auto-seeded (and any future
@@ -151,7 +166,8 @@ export function DocumentsView() {
   };
 
   return (
-    <section className="view active">
+    <>
+      <section className="view active">
       <div className="toolbar">
         <button className="btn subtle sm">All spaces</button>
         {(spaces ?? []).map((s, i) => (
@@ -223,6 +239,25 @@ export function DocumentsView() {
                       <span className="lbl" title={p.title}>
                         {p.title}
                       </span>
+                      <button
+                        className="del"
+                        title="Delete document"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDel(p);
+                        }}
+                      >
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M18 6 6 18M6 6l12 12" />
+                        </svg>
+                      </button>
                     </div>
                   ))}
                   {sp.length === 0 && !isCol && (
@@ -364,6 +399,34 @@ export function DocumentsView() {
         </div>
       </div>
     </section>
+
+      {confirmDel && (
+        <Modal
+          title="Delete document"
+          onClose={() => setConfirmDel(null)}
+          onBackdrop={() => setConfirmDel(null)}
+        >
+          <div className="mb">
+            <p className="muted" style={{ fontSize: 13 }}>
+              Delete <b>{confirmDel.title}</b>? It moves to the server&apos;s soft-delete state —
+              the tree updates immediately.
+            </p>
+          </div>
+          <div className="mf">
+            <button className="btn ghost" onClick={() => setConfirmDel(null)}>
+              Cancel
+            </button>
+            <button
+              className="btn primary"
+              style={{ background: "var(--danger)" }}
+              onClick={deletePage}
+            >
+              Delete
+            </button>
+          </div>
+        </Modal>
+      )}
+    </>
   );
 }
 

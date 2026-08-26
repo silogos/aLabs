@@ -37,6 +37,11 @@ export const documentsService = {
       body: JSON.stringify(patch),
     }).then((x) => x.data),
 
+  removePage: (pid: string, id: string) =>
+    req<void>(`/projects/${pid}/documents/pages/${id}`, { method: "DELETE" }).then(
+      () => undefined,
+    ),
+
   /** The endpoint has shipped two shapes (`{data: []}` and bare `[]`); normalize here once. */
   files: async (pid: string): Promise<FileRef[]> => {
     const body = await req<{ data?: FileRef[] } | FileRef[]>(`/projects/${pid}/documents/files`);
