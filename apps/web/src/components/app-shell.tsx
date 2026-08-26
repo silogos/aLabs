@@ -115,7 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
       <SwitcherModals />
       <MobileNav />
-      <CommandPalette />
+      {cmdkOpen && <CommandPalette />}
       <Toasts />
     </div>
   );

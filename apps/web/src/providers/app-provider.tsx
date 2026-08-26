@@ -169,7 +169,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const org = orgs?.find((o) => o.id === orgPref) ?? orgs?.[0];
   const { data: projects } = useQuery({
-    queryKey: qk.projects(org!.id),
+    // "" keys the not-yet-loaded state (query disabled) — org! must never
+    // evaluate in the key or the first render crashes
+    queryKey: qk.projects(org?.id ?? ""),
     queryFn: () => workspaceService.projects(org!.id),
     enabled: !!org,
   });
