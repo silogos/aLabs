@@ -20,9 +20,13 @@ const AUTH_ERROR_TEXT: Record<string, string> = {
   google_not_configured:
     "Google sign-in is not configured on this server. Use email and password instead.",
   invalid_state: "The sign-in attempt expired or was tampered with. Please try again.",
+  missing_code_or_state: "The sign-in attempt was incomplete. Please try again.",
   token_exchange_failed: "Google rejected the sign-in. Please try again.",
+  userinfo_failed: "Could not reach Google to confirm your account. Please try again.",
   email_missing: "Your Google account has no email address exposed.",
 };
+
+const GENERIC_AUTH_ERROR = "Sign-in failed. Please try again.";
 
 function LoginForm() {
   const router = useRouter();
@@ -32,7 +36,7 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(
-    authError ? (AUTH_ERROR_TEXT[authError] ?? `Sign-in failed (${authError}).`) : null,
+    authError ? (AUTH_ERROR_TEXT[authError] ?? GENERIC_AUTH_ERROR) : null,
   );
   const [busy, setBusy] = useState(false);
 
