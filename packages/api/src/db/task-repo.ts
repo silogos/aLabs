@@ -13,6 +13,7 @@ import {
   taskLabelLinks,
   taskLinks,
   taskComments,
+  taskStatusEvents,
 } from "@pmin/core/db";
 import { uuidv7, type Task, type TaskStatus, type TaskType, type TaskLabel, type TaskLink } from "@pmin/core";
 import { iso } from "./mapping";
@@ -296,9 +297,30 @@ export async function insertTask(input: {
       })
       .returning();
     await setLabelLinks(tx, row!.id, input.labelIds ?? []);
+    await recordStatusEvent(tx, {
+      taskId: row!.id,
+      projectId: row!.projectId,
+      fromStatus: null,
+      toStatus: row!.statusId,
+      occurredAt: now,
+    });
     return row!;
   });
   return (await withLabels([row]))[0]!;
+}
+
+async function recordStatusEvent(
+  tx: Tx,
+  e: { taskId: string; projectId: string; fromStatus: string | null; toStatus: string; occurredAt: Date },
+): Promise<void> {
+  await tx.insert(taskStatusEvents).values({
+    id: uuidv7(),
+    taskId: e.taskId,
+    projectId: e.projectId,
+    fromStatus: e.fromStatus,
+    toStatus: e.toStatus,
+    occurredAt: e.occurredAt,
+  });
 }
 
 /** Replace the label set (delete + insert — small sets). */
@@ -333,6 +355,14 @@ export async function patchTask(
   },
 ): Promise<TaskWithMeta | null> {
   const row = await db.transaction(async (tx) => {
+    let prev: { statusId: string; projectId: string } | null = null;
+    if (patch.statusId !== undefined) {
+      const [p] = await tx
+        .select({ statusId: tasks.statusId, projectId: tasks.projectId })
+        .from(tasks)
+        .where(eq(tasks.id, id));
+      prev = p ?? null;
+    }
     const [row] = await tx
       .update(tasks)
       .set({ ...patch, updatedAt: new Date() })
@@ -340,6 +370,15 @@ export async function patchTask(
       .returning();
     if (!row) return null;
     if (patch.labelIds) await setLabelLinks(tx, row.id, patch.labelIds);
+    if (prev && patch.statusId && prev.statusId !== patch.statusId) {
+      await recordStatusEvent(tx, {
+        taskId: row.id,
+        projectId: prev.projectId,
+        fromStatus: prev.statusId,
+        toStatus: patch.statusId,
+        occurredAt: new Date(),
+      });
+    }
     return row;
   });
   if (!row) return null;
@@ -351,6 +390,51 @@ export async function softDeleteTask(id: string): Promise<void> {
     .update(tasks)
     .set({ deletedAt: new Date(), updatedAt: new Date() })
     .where(eq(tasks.id, id));
+}
+
+/** Status-transition events for a project, oldest first — used to reconstruct
+ *  each task's status at a past point in time (dashboard trends + burndown). */
+export async function listTaskStatusEvents(
+  projectId: string,
+): Promise<{ taskId: string; toStatus: string; occurredAt: Date }[]> {
+  return db
+    .select({
+      taskId: taskStatusEvents.taskId,
+      toStatus: taskStatusEvents.toStatus,
+      occurredAt: taskStatusEvents.occurredAt,
+    })
+    .from(taskStatusEvents)
+    .where(eq(taskStatusEvents.projectId, projectId))
+    .orderBy(asc(taskStatusEvents.occurredAt));
+}
+
+/** Top-level task rows (mirrors listTasks' parentId IS NULL filter) including
+ *  soft-deleted ones, with the raw Date fields the dashboard needs to compute
+ *  status-at-time-T snapshots and points-based burndown. */
+export async function listProjectTaskTimeline(projectId: string): Promise<
+  {
+    id: string;
+    statusId: string;
+    createdAt: Date;
+    deletedAt: Date | null;
+    dueDate: Date | null;
+    estimate: number | null;
+    iterationId: string | null;
+  }[]
+> {
+  return db
+    .select({
+      id: tasks.id,
+      statusId: tasks.statusId,
+      createdAt: tasks.createdAt,
+      deletedAt: tasks.deletedAt,
+      dueDate: tasks.dueDate,
+      estimate: tasks.estimate,
+      iterationId: tasks.iterationId,
+    })
+    .from(tasks)
+    .where(and(eq(tasks.projectId, projectId), isNull(tasks.parentId)))
+    .orderBy(asc(tasks.createdAt));
 }
 
 /** Subtasks of a task (not deleted, board order). */
