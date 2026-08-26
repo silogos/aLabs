@@ -37,7 +37,7 @@ function PageEditor({ page, editMode }: { page: Page; editMode: boolean }) {
         await documentsService.updatePage(pid, page.id, { content: doc });
         void qc.invalidateQueries({ queryKey: qk.pages(pid) });
       } catch (e) {
-        toast("Couldn't save page: " + (e as Error).message);
+        toast("Couldn't save document: " + (e as Error).message);
       }
     }, 700);
   };
@@ -69,11 +69,11 @@ function PageEditor({ page, editMode }: { page: Page; editMode: boolean }) {
         />
       </h1>
       <div className="byline">
-        <span className={`av sm ${colorFor(page.editedBy?.id ?? "marco")}`}>
+        <span className={`av sm ${colorFor(page.editedBy?.id ?? "")}`}>
           {initials(page.editedBy?.name ?? "—")}
         </span>
         <span>
-          Edited by <b style={{ color: "var(--fg)" }}>{page.editedBy?.name ?? "Marco Keller"}</b> ·{" "}
+          Edited by <b style={{ color: "var(--fg)" }}>{page.editedBy?.name ?? "—"}</b> ·{" "}
           {timeAgo(page.updatedAt)}
         </span>
         <span className="sep">·</span>
@@ -144,9 +144,9 @@ export function DocumentsView() {
       });
       await qc.invalidateQueries({ queryKey: qk.pages(pid) });
       setActivePageId(p.id);
-      toast("New page created");
+      toast("New document created");
     } catch (e) {
-      toast("Couldn't create page: " + (e as Error).message);
+      toast("Couldn't create document: " + (e as Error).message);
     }
   };
 
@@ -164,7 +164,7 @@ export function DocumentsView() {
             Import
           </button>
           <button className="btn primary sm" onClick={newPage}>
-            {IcPlus}New page
+            {IcPlus}New document
           </button>
         </div>
       </div>
@@ -333,7 +333,7 @@ export function DocumentsView() {
             {active ? (
               <PageEditor key={active.id} page={active} editMode={editMode} />
             ) : (
-              <div className="muted">No pages yet — create one to start writing.</div>
+              <div className="muted">No documents yet — create one to start writing.</div>
             )}
           </div>
         </div>
