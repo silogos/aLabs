@@ -10,7 +10,7 @@ import { Modal } from "@/components/ui/modal";
 import { timeAgo } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 import { RichTextEditor } from "@pmin/editor";
-import type { Content, Page } from "@pmin/core";
+import type { Content, Page, Space } from "@pmin/core";
 
 const IcPlus = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -121,6 +121,7 @@ export function DocumentsView() {
   const [spaceModal, setSpaceModal] = useState(false);
   const [spaceName2, setSpaceName2] = useState("");
   const [spaceErr, setSpaceErr] = useState(false);
+  const [confirmDelSpace, setConfirmDelSpace] = useState<Space | null>(null);
 
   const apiPages: Page[] = pageData?.items ?? [];
   const active = apiPages.find((p) => p.id === activePageId) ?? apiPages[0] ?? null;
@@ -155,6 +156,21 @@ export function DocumentsView() {
       toast("Document deleted");
     } catch (e) {
       toast("Couldn't delete document: " + (e as Error).message);
+    }
+  };
+
+  const deleteSpace = async () => {
+    const s = confirmDelSpace;
+    if (!s) return;
+    setConfirmDelSpace(null);
+    try {
+      await documentsService.removeSpace(pid, s.id);
+      await qc.invalidateQueries({ queryKey: qk.spaces(pid) });
+      await qc.invalidateQueries({ queryKey: qk.pages(pid) });
+      if (active?.spaceId === s.id) setActivePageId(null);
+      toast(`Space “${s.name}” deleted`);
+    } catch (e) {
+      toast("Couldn't delete space: " + (e as Error).message);
     }
   };
 
@@ -240,6 +256,25 @@ export function DocumentsView() {
                   <span className="lbl" title={s.name}>
                     {s.name}
                   </span>
+                  <button
+                    className="del"
+                    title="Delete space"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmDelSpace(s);
+                    }}
+                  >
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                  </button>
                   <svg
                     className="chev"
                     viewBox="0 0 24 24"
@@ -457,6 +492,33 @@ export function DocumentsView() {
               onClick={deletePage}
             >
               Delete
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {confirmDelSpace && (
+        <Modal
+          title="Delete space"
+          onClose={() => setConfirmDelSpace(null)}
+          onBackdrop={() => setConfirmDelSpace(null)}
+        >
+          <div className="mb">
+            <p className="muted" style={{ fontSize: 13 }}>
+              Delete <b>{confirmDelSpace.name}</b> and every document inside it? Both are
+              soft-deleted on the server.
+            </p>
+          </div>
+          <div className="mf">
+            <button className="btn ghost" onClick={() => setConfirmDelSpace(null)}>
+              Cancel
+            </button>
+            <button
+              className="btn primary"
+              style={{ background: "var(--danger)" }}
+              onClick={deleteSpace}
+            >
+              Delete space
             </button>
           </div>
         </Modal>

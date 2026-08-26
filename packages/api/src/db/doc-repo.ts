@@ -48,6 +48,21 @@ export async function countSpaces(projectId: string): Promise<number> {
   return row?.n ?? 0;
 }
 
+/** Soft-delete a space and every live page inside it, atomically. */
+export async function softDeleteSpace(projectId: string, id: string): Promise<void> {
+  await db.transaction(async (tx) => {
+    const now = new Date();
+    await tx
+      .update(spaces)
+      .set({ deletedAt: now })
+      .where(and(eq(spaces.id, id), eq(spaces.projectId, projectId)));
+    await tx
+      .update(pages)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(and(eq(pages.spaceId, id), isNull(pages.deletedAt)));
+  });
+}
+
 export async function insertSpace(input: {
   projectId: string;
   name: string;

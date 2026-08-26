@@ -40,6 +40,13 @@ documents.post("/documents/spaces", requirePermission("document:create"), async 
   });
   return created(c, s);
 });
+documents.delete("/documents/spaces/:id", requirePermission("document:delete"), async (c) => {
+  const pid = projectIdOf(c);
+  const s = await docRepo.getSpace(pid, c.req.param("id")!);
+  if (!s) throw notFound();
+  await docRepo.softDeleteSpace(pid, s.id);
+  return noContent(c);
+});
 
 // ---- pages ----
 documents.get("/documents/pages", requirePermission("document:view"), async (c) => {

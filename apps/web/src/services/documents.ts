@@ -20,6 +20,11 @@ export const documentsService = {
       body: JSON.stringify(body),
     }).then((x) => x.data),
 
+  removeSpace: (pid: string, id: string) =>
+    req<void>(`/projects/${pid}/documents/spaces/${id}`, { method: "DELETE" }).then(
+      () => undefined,
+    ),
+
   listPages: (pid: string) => req<Paginated<Page>>(`/projects/${pid}/documents/pages?limit=100`),
 
   getPage: (pid: string, id: string) =>

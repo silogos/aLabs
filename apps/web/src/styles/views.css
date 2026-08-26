@@ -258,6 +258,30 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.space-h .del,
+.page-item .del {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  color: var(--faint);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.space-h:hover .del,
+.page-item:hover .del {
+  opacity: 1;
+}
+.space-h .del:hover,
+.page-item .del:hover {
+  color: var(--danger);
+  background: color-mix(in oklch, var(--danger) 12%, transparent);
+}
 .space-h .chev {
   margin-left: auto;
   color: var(--faint);
@@ -304,27 +328,6 @@
 }
 .page-item:hover .add {
   opacity: 1;
-}
-.page-item .del {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  display: grid;
-  place-items: center;
-  opacity: 0;
-  color: var(--faint);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-.page-item:hover .del {
-  opacity: 1;
-}
-.page-item:hover .del:hover {
-  color: var(--danger);
-  background: color-mix(in oklch, var(--danger) 12%, transparent);
 }
 .tree-add {
   display: flex;
