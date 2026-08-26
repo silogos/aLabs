@@ -70,6 +70,10 @@ select {
   font-variant-numeric: tabular-nums;
 }
 
+:root {
+  --brand-w:46%;
+}
+
 /* ---------- Auth shell ---------- */
 .auth {
   display: grid;
