@@ -396,6 +396,32 @@ export const taskComments = pgTable(
 
 /* ============================================================= Documents */
 
+/** Append-only log of task status transitions — powers the dashboard trend
+ *  series and sprint burndown, which reconstruct each task's status at a past
+ *  point in time from this event stream. `from_status` is null for a task's
+ *  initial status; `actor_id` is reserved for a future audit trail. */
+export const taskStatusEvents = pgTable(
+  "task_status_events",
+  {
+    id: uuid("id").primaryKey(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    fromStatus: uuid("from_status"),
+    toStatus: uuid("to_status").notNull(),
+    occurredAt: timestamp("occurred_at", { withTimezone:true, mode: "date" }).notNull(),
+    actorId: uuid("actor_id").references(() => users.id),
+    createdAt: ts().defaultNow(),
+  },
+  (t) => [
+    index("task_status_events_project_at_idx").on(t.projectId, t.occurredAt),
+    index("task_status_events_task_at_idx").on(t.taskId, t.occurredAt),
+  ],
+);
+
 export const spaces = pgTable("spaces", {
   id: uuid("id").primaryKey(),
   projectId: uuid("project_id")
@@ -606,6 +632,7 @@ export const schema = {
   taskLabels,
   taskLabelLinks,
   tasks,
+  taskStatusEvents,
   spaces,
   pages,
   files,
