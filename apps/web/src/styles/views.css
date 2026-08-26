@@ -186,8 +186,12 @@
   .docs-grid {
     grid-template-columns: 1fr;
   }
+  /* the tree is the document navigation — stack it above the editor with a
+     bounded height instead of hiding it (it was display:none when the tree
+     was static decoration) */
   .doc-tree {
-    display: none;
+    max-height: 38vh;
+    min-height: 140px;
   }
 }
 .doc-tree {
