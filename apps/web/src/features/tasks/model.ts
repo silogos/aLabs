@@ -178,7 +178,11 @@ export const dueFmt = (iso: string | null): string =>
 
 /** Best-effort display date ("Aug 20") → ISO; keeps the year sane. */
 export function dueToIso(display: string): string | null {
-  const m = /^(\w{3}) (\d{1,2})$/.exec(display.trim());
+  const s = display.trim();
+  // DatePicker emits "YYYY-MM-DD" — accept it directly.
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (iso) return `${s}T00:00:00.000Z`;
+  const m = /^(\w{3}) (\d{1,2})$/.exec(s);
   if (!m) return null;
   const months = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",

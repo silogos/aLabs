@@ -9,6 +9,7 @@ import { TY, type TypeId, type PrioId } from "./model";
 import { TyIcon } from "./tasks-ui";
 import { taskSerial } from "@/lib/serial";
 import { Modal } from "@/components/ui/modal";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const CREATE_TYPES: TypeId[] = ["story", "task", "bug", "epic", "subtask"];
 const PLACEHOLDERS: Record<TypeId, string> = {
@@ -208,12 +209,7 @@ export function TaskModal() {
           </label>
           <label className="cr-f">
             <span>Due date</span>
-            <input
-              className="fld"
-              value={due}
-              onChange={(e) => setDue(e.target.value)}
-              placeholder="Aug 30"
-            />
+            <DatePicker value={due} onChange={setDue} />
           </label>
         </div>
       </div>

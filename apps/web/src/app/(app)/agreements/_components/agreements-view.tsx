@@ -1,6 +1,7 @@
 /** Agreements view — master/detail split + lifecycle timeline + new-agreement
  *  modal, on live API data (rows in Postgres, owner hydrated per project). */
 import { agreementsService } from "@/services/agreements";
+import { DatePicker } from "@/components/ui/date-picker";
 import type { Agreement, AgreementStatus, AgreementType, User } from "@pmin/core";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -679,18 +680,8 @@ function NewAgreementModal({
           <div>
             <span className="flab">Term · effective → expires</span>
             <div className="dates">
-              <input
-                className="fld"
-                type="date"
-                value={fStart}
-                onChange={(e) => setFStart(e.target.value)}
-              />
-              <input
-                className="fld"
-                type="date"
-                value={fEnd}
-                onChange={(e) => setFEnd(e.target.value)}
-              />
+              <DatePicker value={fStart} onChange={setFStart} />
+              <DatePicker value={fEnd} onChange={setFEnd} />
             </div>
           </div>
         </div>

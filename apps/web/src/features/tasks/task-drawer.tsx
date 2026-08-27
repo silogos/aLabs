@@ -1,6 +1,7 @@
 /** Task detail drawer — two-column workspace (main + side panel) + epic mode.
  *  Reads from the board queries; entry via AppProvider.openTask(id). */
 import { documentsService } from "@/services/documents";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useState, useRef, useEffect } from "react";
 import { useApp } from "@/providers/app-provider";
 import { usePeople } from "@/providers/people-provider";
@@ -441,11 +442,10 @@ function TaskDetail({
           <div className="sp-row">
             <span className="sp-k">Due date</span>
             <div className="sp-v">
-              <input
-                className="sp-date"
-                type="text"
-                value={t.due}
-                onChange={(e) => upd("due", e.target.value, "Updated")}
+              <DatePicker
+                value={t.dueIso ?? ""}
+                onChange={(v) => upd("due", v, "Updated")}
+                placeholder="—"
               />
             </div>
           </div>
