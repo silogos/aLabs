@@ -37,4 +37,10 @@ export const authService = {
       method: "POST",
       body: JSON.stringify(body),
     }).then((x) => x.data),
+
+  updateMe: (body: { name?: string; image?: string | null }) =>
+    req<{ data: User }>("/users/me", {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
 };

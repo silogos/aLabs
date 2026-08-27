@@ -1,5 +1,6 @@
 /** Command palette — navigate, create, jump to a task. */
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApp, type View } from "@/providers/app-provider";
 import { taskSerial } from "@/lib/serial";
 import { useBoard } from "@/features/tasks/queries";
@@ -7,6 +8,7 @@ import { useBoard } from "@/features/tasks/queries";
 export function CommandPalette() {
   const board = useBoard();
   const { setCmdkOpen, setView, setCreateOpen, openTask } = useApp();
+  const router = useRouter();
   const [q, setQ] = useState("");
 
   const groups = useMemo(() => {
@@ -22,6 +24,12 @@ export function CommandPalette() {
       ["Go to Agreements", "agreements"],
     ];
     const filteredNav = nav.filter(([l]) => l.toLowerCase().includes(ql));
+    const settingsItem = "open settings".includes(ql)
+      ? [{ label: "Open Settings", action: () => {
+          setCmdkOpen(false);
+          router.push("/settings");
+        } }]
+      : [];
     const filteredTasks = tasks
       .filter(
         (t) => `${taskSerial(t.id)}`.toLowerCase().includes(ql) || t.t.toLowerCase().includes(ql),
@@ -31,7 +39,10 @@ export function CommandPalette() {
     return [
       {
         g: "Navigate",
-        items: filteredNav.map(([l, v]) => ({ label: l, action: () => go(v, null) })),
+        items: [
+          ...filteredNav.map(([l, v]) => ({ label: l, action: () => go(v, null) })),
+          ...settingsItem,
+        ],
       },
       {
         g: "Create",

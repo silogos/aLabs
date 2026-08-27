@@ -163,6 +163,11 @@ function AccountModal() {
           void signOut();
           return;
         }
+        if (key === "profile") {
+          setNavModal(null);
+          router.push("/settings");
+          return;
+        }
         setNavModal(null);
         toast(msg);
       }}
