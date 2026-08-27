@@ -2,6 +2,7 @@
  *  Design: account card at top toggles the panel below between Menu (nav sections)
  *  and Account (switchers + account rows + sign out); reopens on Menu. */
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApp } from "@/providers/app-provider";
 import {
   NAV_SECTIONS,
@@ -15,6 +16,7 @@ import {
 
 export function MobileNav() {
   const { mNavOpen, setMNavOpen, setNavModal, setView, view, user, project, org, toast } = useApp();
+  const router = useRouter();
   const [sheetView, setSheetView] = useState<"menu" | "acct">("menu");
   const counts = useNavCounts();
   const name = user?.name ?? "…";
@@ -33,6 +35,11 @@ export function MobileNav() {
     <button
       className={`me-row ${key === "signout" ? "danger" : ""}`}
       onClick={() => {
+        if (key === "profile") {
+          setMNavOpen(false);
+          router.push("/settings");
+          return;
+        }
         setMNavOpen(false);
         toast(key === "signout" ? "Signed out of aLabs" : `${label} — coming soon`);
       }}
