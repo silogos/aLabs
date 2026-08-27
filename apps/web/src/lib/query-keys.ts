@@ -5,10 +5,13 @@
 export const qk = {
   me: () => ["me"] as const,
   orgs: () => ["orgs"] as const,
+  org: (orgId: string | undefined) => ["org", orgId] as const,
   projects: (orgId: string) => ["projects", orgId] as const,
   recents: () => ["recents"] as const,
   notifications: () => ["notifications"] as const,
   members: (orgId: string | undefined) => ["members", orgId] as const,
+  invitations: (orgId: string | undefined) => ["invitations", orgId] as const,
+  projectMembers: (pid: string | undefined) => ["project-members", pid] as const,
 
   tasks: (pid: string) => ["tasks", pid] as const,
   task: (pid: string, id: string) => ["tasks", pid, id] as const,
