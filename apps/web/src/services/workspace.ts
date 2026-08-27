@@ -5,6 +5,7 @@ import type {
   Member,
   Invitation,
   ProjectMember,
+  Paginated,
 } from "@pmin/core";
 import { req } from "@/lib/http";
 
@@ -69,8 +70,8 @@ export const workspaceService = {
     }).then(() => undefined),
 
   invitations: (orgId: string) =>
-    req<{ data: Invitation[] }>(`/organizations/${orgId}/invitations`).then(
-      (x) => x.data,
+    req<Paginated<Invitation>>(`/organizations/${orgId}/invitations`).then(
+      (x) => x.items,
     ),
 
   createInvitation: (orgId: string, body: { email: string; roleName: string }) =>
