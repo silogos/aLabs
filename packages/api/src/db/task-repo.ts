@@ -269,6 +269,7 @@ export async function insertTask(input: {
   estimate?: number | null;
   labelIds?: string[];
   /** Seed control (demo rows carry their own timestamps). */
+  actorId?: string | null;
   createdAt?: Date;
 }): Promise<TaskWithMeta> {
   const now = input.createdAt ?? new Date();
@@ -303,6 +304,7 @@ export async function insertTask(input: {
       fromStatus: null,
       toStatus: row!.statusId,
       occurredAt: now,
+      actorId: input.actorId ?? null,
     });
     return row!;
   });
@@ -311,7 +313,7 @@ export async function insertTask(input: {
 
 async function recordStatusEvent(
   tx: Tx,
-  e: { taskId: string; projectId: string; fromStatus: string | null; toStatus: string; occurredAt: Date },
+  e: { taskId: string; projectId: string; fromStatus: string | null; toStatus: string; occurredAt: Date; actorId: string | null },
 ): Promise<void> {
   await tx.insert(taskStatusEvents).values({
     id: uuidv7(),
@@ -320,6 +322,7 @@ async function recordStatusEvent(
     fromStatus: e.fromStatus,
     toStatus: e.toStatus,
     occurredAt: e.occurredAt,
+    actorId: e.actorId,
   });
 }
 
@@ -353,6 +356,7 @@ export async function patchTask(
     estimate?: number | null;
     labelIds?: string[];
   },
+  actorId: string | null = null,
 ): Promise<TaskWithMeta | null> {
   const row = await db.transaction(async (tx) => {
     let prev: { statusId: string; projectId: string } | null = null;
@@ -377,6 +381,7 @@ export async function patchTask(
         fromStatus: prev.statusId,
         toStatus: patch.statusId,
         occurredAt: new Date(),
+        actorId,
       });
     }
     return row;
@@ -396,12 +401,13 @@ export async function softDeleteTask(id: string): Promise<void> {
  *  each task's status at a past point in time (dashboard trends + burndown). */
 export async function listTaskStatusEvents(
   projectId: string,
-): Promise<{ taskId: string; toStatus: string; occurredAt: Date }[]> {
+): Promise<{ taskId: string; toStatus: string; occurredAt: Date; actorId: string | null }[]> {
   return db
     .select({
       taskId: taskStatusEvents.taskId,
       toStatus: taskStatusEvents.toStatus,
       occurredAt: taskStatusEvents.occurredAt,
+      actorId: taskStatusEvents.actorId,
     })
     .from(taskStatusEvents)
     .where(eq(taskStatusEvents.projectId, projectId))
