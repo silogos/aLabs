@@ -64,6 +64,7 @@ task.post("/tasks", requirePermission("task:create"), async (c) => {
     order: await taskRepo.countProjectTasks(pid),
     estimate: input.estimate ?? null,
     labelIds: input.labelIds ?? [],
+    actorId: user.id,
   });
   return created(c, taskSchema.parse(created_));
 });
@@ -154,7 +155,7 @@ task.patch("/tasks/:id", requirePermission("task:update"), async (c) => {
   ]);
   if (input.dueDate !== undefined) patch.dueDate = input.dueDate ? new Date(input.dueDate) : null;
   if (input.labelIds) patch.labelIds = input.labelIds;
-  const updated = await taskRepo.patchTask(t.id, t.updatedAt!, patch);
+  const updated = await taskRepo.patchTask(t.id, t.updatedAt!, patch, c.get("user")!.id);
   if (!updated) throw conflict("Task was modified");
   return data(c, await serializeTask(updated));
 });
