@@ -29,6 +29,9 @@ export function Modal({
       style={width ? { width } : undefined}
       onClick={(e) => {
         if (e.target === e.currentTarget) onBackdrop?.();
+        // Panel clicks must not bubble to a wrapping .scrim (which closes on
+        // any bubbled click — planning's sprint/milestone modals rely on this).
+        e.stopPropagation();
       }}
       {...rest}
     >
