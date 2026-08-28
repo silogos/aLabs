@@ -1,6 +1,7 @@
 /** Meetings view — master/detail split on live API data: filterable list +
  *  detail pane with agenda, notes, action items, and status actions. */
 import { meetingsService } from "@/services/meetings";
+import { DatePicker } from "@/components/ui/date-picker";
 import { tasksService } from "@/services/tasks";
 import type { ActionItem, Meeting, MeetingType, User } from "@pmin/core";
 import { useEffect, useMemo, useState } from "react";
@@ -762,12 +763,10 @@ function AddActionItem({
           </option>
         ))}
       </select>
-      <input
-        type="date"
-        className="fld"
-        style={{ height: 30, width: 140 }}
+      <DatePicker
         value={due}
-        onChange={(e) => setDue(e.target.value)}
+        onChange={setDue}
+        style={{ height:30, width:140 }}
       />
       <button className="btn subtle sm" disabled={!desc.trim()} onClick={() => void submit()}>
         Add
@@ -893,12 +892,7 @@ function ScheduleModal({
           <div className="frow" style={{ marginTop: 12 }}>
             <div>
               <label className="flab">Date</label>
-              <input
-                type="date"
-                className="fld"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
+              <DatePicker value={date} onChange={setDate} />
             </div>
             <div>
               <label className="flab">Time</label>

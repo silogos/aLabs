@@ -16,6 +16,7 @@ import { useBoard } from "@/features/tasks/queries";
 import { usePlanningActions } from "@/features/tasks/mutations";
 import { TyIcon, StatusBadge, PrioBadge, AvKey } from "@/features/tasks/tasks-ui";
 import { Modal } from "@/components/ui/modal";
+import { DatePicker } from "@/components/ui/date-picker";
 
 type PlanView = "board" | "timeline" | "velocity";
 type Zoom = "day" | "week" | "month";
@@ -952,24 +953,22 @@ function SprintModal({
           <div className="frow" style={{ marginTop: 12 }}>
             <div>
               <label className="flab">Start date</label>
-              <input
-                type="date"
-                className={`fld ${dateErr.which === "start" ? "err" : ""}`}
+              <DatePicker
                 value={start}
+                onChange={setStart}
                 min={minD}
                 max={maxD}
-                onChange={(e) => setStart(e.target.value)}
+                error={dateErr.which === "start"}
               />
             </div>
             <div>
               <label className="flab">End date</label>
-              <input
-                type="date"
-                className={`fld ${dateErr.which === "end" ? "err" : ""}`}
+              <DatePicker
                 value={end}
+                onChange={setEnd}
                 min={minD}
                 max={maxD}
-                onChange={(e) => setEnd(e.target.value)}
+                error={dateErr.which === "end"}
               />
             </div>
           </div>
@@ -1115,13 +1114,12 @@ function MilestoneModal({
           <label className="flab" style={{ marginTop: 12 }}>
             Target date
           </label>
-          <input
-            type="date"
-            className={`fld ${dateErr ? "err" : ""}`}
+          <DatePicker
             value={date}
+            onChange={setDate}
             min={minD}
             max={maxD}
-            onChange={(e) => setDate(e.target.value)}
+            error={!!dateErr}
           />
           {dateErr ? (
             <div className="fld-err show" style={{ marginBottom: 0 }}>

@@ -1868,9 +1868,10 @@ textarea.fld {
   display: flex;
   gap: 8px;
 }
-.dates .fld {
-  flex: 1;
-  min-width: 0;
+.dates .fld,
+.dates .dp-wrap {
+  flex:1;
+  min-width:0;
 }
 .mf .left-meta {
   margin-right: auto;
@@ -3901,4 +3902,119 @@ li.bl-li::after {
   .plan-split {
     grid-template-columns: 1fr;
   }
+}
+
+/* DatePicker — .fld-styled trigger + react-day-picker popover (components/ui/date-picker.tsx).
+   react-day-picker v10 ships class names but no variable defaults, so sizes/colors
+   are set explicitly here under .dp-pop. */
+.dp-wrap {
+  position: relative;
+  margin-top:4px;
+  min-width:0;
+}
+.dp-trigger {
+  margin-top:0;
+  height:100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap:6px;
+  cursor: pointer;
+  text-align: left;
+  font-weight:400;
+  font-family: inherit;
+}
+.dp-trigger .dp-ico {
+  flex: none;
+  color: var(--faint);
+}
+.dp-trigger:hover .dp-ico,
+.dp-trigger.dp-open .dp-ico {
+  color: var(--accent);
+}
+.dp-trigger .dp-ph {
+  color: var(--faint);
+}
+.dp-pop {
+  position: absolute;
+  top: calc(100% +6px);
+  left:0;
+  z-index:200;
+  background: var(--surface);
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-pop);
+  padding:8px;
+  width: max-content;
+}
+.dp-pop .rdp-root {
+  --rdp-day-width:28px;
+  --rdp-day-height:28px;
+  --rdp-day_button-width:28px;
+  --rdp-day_button-height:28px;
+  --rdp-day_button-border: none;
+  --rdp-day_button-border-radius:6px;
+  --rdp-nav-height:30px;
+  --rdp-nav_button-width:24px;
+  --rdp-nav_button-height:24px;
+  --rdp-nav_button-disabled-opacity:0.35;
+  --rdp-weekday-opacity:1;
+  --rdp-weekday-color: var(--faint);
+  --rdp-weekday-padding:0;
+  --rdp-weekday-text-align:center;
+  --rdp-weekday-text-transform:uppercase;
+  --rdp-months-gap:12px;
+  --rdp-dropdown-gap:4px;
+  --rdp-disabled-opacity:1;
+  --rdp-outside-opacity:0.4;
+  --rdp-today-color: var(--accent);
+  font-family: var(--font);
+  font-size:12px;
+  color: var(--fg);
+}
+.dp-pop .rdp-month_caption {
+  font-size:12.5px;
+  font-weight:600;
+  color: var(--fg-strong);
+}
+.dp-pop .rdp-chevron {
+  fill: var(--muted);
+}
+.dp-pop .rdp-button_previous,
+.dp-pop .rdp-button_next {
+  border-radius:6px;
+  color: var(--muted);
+}
+.dp-pop .rdp-button_previous:hover:not(:disabled),
+.dp-pop .rdp-button_next:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--fg);
+}
+.dp-pop .rdp-weekday {
+  color: var(--faint);
+  font-size:10px;
+  letter-spacing:0.04em;
+}
+.dp-pop .rdp-day_button {
+  font-size:12px;
+  font-weight:400;
+  color: var(--fg);
+}
+.dp-pop .rdp-day_button:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.dp-pop .rdp-today:not(.rdp-outside) .rdp-day_button {
+  color: var(--accent);
+  font-weight:700;
+}
+.dp-pop .rdp-selected .rdp-day_button {
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight:700;
+}
+.dp-pop .rdp-disabled .rdp-day_button {
+  color: var(--border-strong);
+  cursor: default;
+  text-decoration: line-through;
+  text-decoration-color: var(--border-strong);
 }
