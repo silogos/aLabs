@@ -101,10 +101,14 @@ export function DatePicker({
             mode="single"
             selected={selected}
             onSelect={(d) => {
-              if (!d) return;
-              const next = toLocalDate(d);
-              if (clearable && value && next === value) onChange("");
-              else onChange(next);
+              // react-day-picker passes undefined when the already-selected
+              // day is clicked again (deselect) — map that onto the
+              // clear/re-select contract.
+              if (!d) {
+                if (value) onChange(clearable ? "" : value);
+              } else {
+                onChange(toLocalDate(d));
+              }
               setOpen(false);
             }}
             disabled={disabled}
