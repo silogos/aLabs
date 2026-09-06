@@ -6,6 +6,7 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "dev": { "cache": false, "persistent": true },
+    "test": { "outputs": [] },
     "typecheck": { "outputs": [] },
     "lint": { "outputs": [] }
   }
