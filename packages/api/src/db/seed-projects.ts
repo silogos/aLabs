@@ -47,14 +47,28 @@ export async function seedProjects(
   orgs: Organization[],
   _roles: Role[],
 ): Promise<ProjectWithMeta[]> {
-  if ((await projectRepo.listAllProjects()).length > 0) return projectRepo.listAllProjects();
+  const existing = await projectRepo.listAllProjects();
+  // Per-project guards make this idempotent — never skip the whole seed when
+  // only some demo projects exist (a partial prior seed must self-heal).
+  if (existing.length > 0) {
+    const keys = new Set(existing.map((p) => p.key));
+    if (DEMO_PROJECTS.every((p) => keys.has(p.key))) return existing;
+  }
 
   const userByEmail = new Map(users.map((u) => [u.email, u]));
   const orgBySlug = new Map(orgs.map((o) => [o.slug, o]));
 
   for (const p of DEMO_PROJECTS) {
     const org = orgBySlug.get(p.orgSlug);
-    if (!org || (await projectRepo.keyTakenInOrg(org.id, p.key))) continue;
+    if (!org) continue;
+    if (await projectRepo.keyTakenInOrg(org.id, p.key)) {
+      // A user-deleted demo project still occupies its key, and the rest of
+      // the seed (tasks, planning, docs) requires all 7 demo projects —
+      // revive it instead of leaving the boot wedged on a missing project.
+      const deleted = await projectRepo.findDeletedByKeyInOrg(org.id, p.key);
+      if (deleted) await projectRepo.reviveProject(deleted.id);
+      continue;
+    }
     const project = await projectRepo.insertProject({
       organizationId: org.id,
       name: p.name,
