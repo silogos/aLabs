@@ -20,6 +20,7 @@ const TITLES: Record<View, string> = {
   meetings: "Meetings",
   reports: "Reports",
   agreements: "Agreements",
+  settings: "Settings",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {

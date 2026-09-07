@@ -26,7 +26,14 @@ import { setActiveProjectKey } from "@/lib/serial";
 import { qk } from "@/lib/query-keys";
 
 export type View =
-  "dashboard" | "tasks" | "documents" | "planning" | "meetings" | "reports" | "agreements";
+  | "dashboard"
+  | "tasks"
+  | "documents"
+  | "planning"
+  | "meetings"
+  | "reports"
+  | "agreements"
+  | "settings";
 export type NavModal = "acct" | "proj" | "org" | null;
 
 /** URL per view — the route is the source of truth (no view in storage). */
@@ -38,6 +45,7 @@ export const VIEW_PATH: Record<View, string> = {
   meetings: "/meetings",
   reports: "/reports",
   agreements: "/agreements",
+  settings: "/settings",
 };
 
 const viewFromPath = (p: string): View =>
