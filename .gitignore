@@ -11,3 +11,6 @@ dist
 # Runtime uploads + tooling metadata
 uploads/
 apps/web/index.html.artifact.json
+
+# Local agent session data
+.zcode/
