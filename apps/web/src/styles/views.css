@@ -863,6 +863,8 @@
   max-height: 80dvh;
   display: flex;
   flex-direction: column;
+  /* hard clip at the sheet bounds — the .m-body below is the scroller */
+  overflow: hidden;
 }
 .m-sheet.show {
   transform: translateY(0);
@@ -907,6 +909,10 @@
 .m-body {
   flex: 1;
   min-height: 0;
+  /* definite cap so the scroll range never depends on flex inference —
+     covers mobile WebKit engines that mis-size flex children inside a
+     max-height sheet (menu overflows but cannot scroll) */
+  max-height: calc(80dvh - 62px);
   overflow: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;
