@@ -429,7 +429,65 @@
 .acct-sep {
   height: 1px;
   background: var(--border);
-  margin: 6px 0;
+  margin: 9px 0;
+}
+.acct-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 7px 8px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--fg);
+  text-align: left;
+  transition: background 0.12s;
+}
+.acct-row .ic {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--muted);
+  flex: none;
+  transition: background .12s, color .12s;
+}
+.acct-row .lb {
+  flex: 1;
+  min-width: 0;
+}
+.acct-row .ch {
+  color: var(--muted);
+  opacity: 0.6;
+  flex: none;
+}
+.acct-row:hover {
+  background: var(--surface-2);
+}
+.acct-row:hover .ic {
+  background: color-mix(in oklab, var(--accent) 14%, var(--surface));
+  color: var(--accent);
+}
+.acct-row.danger {
+  color: oklch(54% .19 25);
+}
+.acct-row.danger .ic {
+  background: oklch(96% .03 25);
+  color: oklch(54% .19 25);
+}
+.acct-row.danger:hover {
+  background: oklch(96% .05 25);
+}
+.acct-row.danger:hover .ic {
+  background: oklch(95% .06 25);
+  color: oklch(50% .2 25);
 }
 .mrow {
   display: flex;

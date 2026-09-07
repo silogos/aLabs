@@ -129,7 +129,7 @@ const rowIcon = {
 };
 
 function AccountModal() {
-  const { user, org, setNavModal, toast } = useApp();
+  const { user, org, setNavModal } = useApp();
   const router = useRouter();
   const queryClient = useQueryClient();
   const name = user?.name ?? "…";
@@ -144,37 +144,28 @@ function AccountModal() {
     queryClient.clear();
     router.replace("/login");
   };
-  const acctRow = (key: keyof typeof rowIcon, label: string, msg: string) => (
+  const acctRow = (key: keyof typeof rowIcon, label: string) => (
     <button
-      className={`mrow ${key === "signout" ? "danger" : ""}`}
+      className={`acct-row ${key === "signout" ? "danger" : ""}`}
       onClick={() => {
         if (key === "signout") {
           void signOut();
           return;
         }
-        if (key === "profile") {
-          setNavModal(null);
-          router.push("/user");
-          return;
-        }
-        if (key === "org") {
-          setNavModal(null);
-          router.push("/org/settings");
-          return;
-        }
         setNavModal(null);
-        toast(msg);
+        router.push(key === "profile" ? "/user" : "/org/settings");
       }}
     >
-      {rowIcon[key]}
-      {label}
+      <span className="ic">{rowIcon[key]}</span>
+      <span className="lb">{label}</span>
+      {key !== "signout" && ChevRight("ch")}
     </button>
   );
   return (
     <ModalShell title="Account" onClose={() => setNavModal(null)} odId="account-modal">
       <div className="acct-id">
         <span className="av">{name[0]}</span>
-        <span className="txt">
+        <span className="tx">
           <b>{name}</b>
           <small>{email} · Product Manager</small>
         </span>
@@ -201,10 +192,10 @@ function AccountModal() {
         {ChevRight("ch")}
       </button>
       <div className="acct-sep"></div>
-      {acctRow("org", "Organization settings", "Organization settings — coming soon")}
-      {acctRow("profile", "Profile settings", "Profile settings — coming soon")}
+      {acctRow("org", "Organization settings")}
+      {acctRow("profile", "Profile settings")}
       <div className="acct-sep"></div>
-      {acctRow("signout", "Sign out", "Signed out of aLabs")}
+      {acctRow("signout", "Sign out")}
     </ModalShell>
   );
 }
