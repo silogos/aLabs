@@ -37,7 +37,12 @@ export function MobileNav() {
       onClick={() => {
         if (key === "profile") {
           setMNavOpen(false);
-          router.push("/settings");
+          router.push("/user");
+          return;
+        }
+        if (key === "notif") {
+          setMNavOpen(false);
+          router.push("/user/notifications");
           return;
         }
         setMNavOpen(false);

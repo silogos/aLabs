@@ -165,7 +165,12 @@ function AccountModal() {
         }
         if (key === "profile") {
           setNavModal(null);
-          router.push("/settings");
+          router.push("/user");
+          return;
+        }
+        if (key === "notif") {
+          setNavModal(null);
+          router.push("/user/notifications");
           return;
         }
         setNavModal(null);
