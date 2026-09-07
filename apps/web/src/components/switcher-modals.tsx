@@ -86,55 +86,44 @@ function ModalShell({
 /* ---------------- Account ---------------- */
 
 const rowIcon = {
+  org: (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0,0,24,24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3,21h18M5,21V7l7,-4,7,4v14" />
+      <path d="M9,9h6M9,13h6M9,17h6" />
+    </svg>
+  ),
   profile: (
     <svg
       width="16"
       height="16"
-      viewBox="0 0 24 24"
+      viewBox="0,0,24,24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
     >
       <circle cx="12" cy="8" r="4" />
-      <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
-    </svg>
-  ),
-  notif: (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-    >
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.7 21a2 2 0 0 1-3.4 0" />
-    </svg>
-  ),
-  appearance: (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-    >
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" />
+      <path d="M4,21c0,-4,4,-6,8,-6s8,2,8,6" />
     </svg>
   ),
   signout: (
     <svg
       width="16"
       height="16"
-      viewBox="0 0 24 24"
+      viewBox="0,0,24,24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
     >
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+      <path d="M9,21H5a2,2,0,0,1,-2,-2V5a2,2,0,0,1,2,-2h4M16,17l5,-5,-5,-5M21,12H9" />
     </svg>
   ),
 };
@@ -168,9 +157,9 @@ function AccountModal() {
           router.push("/user");
           return;
         }
-        if (key === "notif") {
+        if (key === "org") {
           setNavModal(null);
-          router.push("/user/notifications");
+          router.push("/org/settings");
           return;
         }
         setNavModal(null);
@@ -211,28 +200,9 @@ function AccountModal() {
         </span>
         {ChevRight("ch")}
       </button>
-      <button className="mrow" onClick={() => { setNavModal(null); router.push("/org"); }}>
-        {rowIcon.profile && (
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 21h18M5 21V7l7-4 7 4v14" />
-            <path d="M9 9h.01M9 13h.01M15 9h.01M15 13h.01M9 21v-4h6v4" />
-          </svg>
-        )}
-        Organization dashboard
-      </button>
       <div className="acct-sep"></div>
+      {acctRow("org", "Organization settings", "Organization settings — coming soon")}
       {acctRow("profile", "Profile settings", "Profile settings — coming soon")}
-      {acctRow("notif", "Notifications", "Notifications — coming soon")}
-      {acctRow("appearance", "Appearance", "Appearance — coming soon")}
       <div className="acct-sep"></div>
       {acctRow("signout", "Sign out", "Signed out of aLabs")}
     </ModalShell>
