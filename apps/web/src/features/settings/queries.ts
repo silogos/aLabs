@@ -1,18 +1,9 @@
-/** Settings queries — org detail, org invitations, project members. The
- *  active org/project/user are already in AppProvider; these are the extra
- *  reads the management surfaces need (members live in the shared
- *  useMembers hook). */
+/** Settings queries — project members for the project settings section.
+ *  The active org/project/user are already in AppProvider. (Org invitations
+ *  moved to features/org/queries.ts with the org area.) */
 import { useQuery } from "@tanstack/react-query";
 import { workspaceService } from "@/services/workspace";
 import { qk } from "@/lib/query-keys";
-
-export function useInvitations(orgId: string | undefined) {
-  return useQuery({
-    queryKey: qk.invitations(orgId),
-    queryFn: () => workspaceService.invitations(orgId!),
-    enabled: !!orgId,
-  });
-}
 
 export function useProjectMembers(projectId: string | undefined) {
   return useQuery({

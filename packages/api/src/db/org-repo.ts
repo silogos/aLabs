@@ -72,7 +72,10 @@ export async function requireSystemRole(
   name: string,
 ): Promise<Role> {
   const role = await findRoleByName(scope, name);
-  if (!role) throw new ApiError("internal_error", `${scope} ${name} role missing — seed incomplete`);
+  if (!role) {
+    console.error(`[seed] system role missing: ${scope} ${name}`);
+    throw new ApiError("internal_error", "Something went wrong on our end. Please try again.");
+  }
   return role;
 }
 

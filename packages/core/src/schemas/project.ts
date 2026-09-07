@@ -26,6 +26,7 @@ export const projectCreate = z.object({
   icon: z.string().max(20).optional(),
 });
 export const projectUpdate = projectCreate.partial().extend({
+  icon: z.string().max(20).nullable().optional(),
   status: ProjectStatus.optional(),
   visibility: ProjectVisibility.optional(),
 });

@@ -629,6 +629,19 @@
   color: var(--muted);
   min-width: 0;
 }
+.pico {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, oklch(54% 0.16 258), oklch(50% 0.15 290));
+  overflow: hidden;
+}
 .tb-left .pico {
   width: 20px;
   height: 20px;
@@ -826,6 +839,14 @@
   background: var(--surface-2);
   border-color: transparent;
 }
+.btn.danger {
+  color: oklch(46% 0.15 25);
+  background: var(--danger-bg);
+  border-color: oklch(88% 0.05 25);
+}
+.btn.danger:hover {
+  background: oklch(92% 0.055 25);
+}
 .btn.sm {
   height: 26px;
   padding: 0 9px;
@@ -837,6 +858,189 @@
 }
 .btn svg {
   flex: none;
+}
+
+/* Split button — the drawer's primary CTA: label segment + caret segment
+   that opens the action menu. Divider makes the two click zones readable. */
+.split {
+  position: relative;
+  display: inline-flex;
+  height: 32px;
+  border-radius: var(--radius);
+  background: var(--accent);
+  box-shadow: inset 0 -1px 0 oklch(45% 0.18 258);
+}
+.split .go {
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 13px;
+  border: none;
+  background: transparent;
+  color: var(--accent-fg);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius) 0 0 var(--radius);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.split .go:hover {
+  background: var(--accent-hover);
+}
+.split .caret {
+  width: 30px;
+  height: 100%;
+  border: none;
+  border-left: 1px solid color-mix(in oklab, var(--accent-fg) 30%, transparent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: transparent;
+  color: var(--accent-fg);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.split .caret:hover,
+.split .caret[aria-expanded="true"] {
+  background: var(--accent-hover);
+}
+.split .caret svg {
+  transition: transform 0.15s ease;
+}
+.split .caret[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* IconPicker — entity-icon tile + popover emoji grid. The tile reuses
+   .pico; the wrapper anchors the popover above/below depending on room. */
+.ipick {
+  position: relative;
+  flex: none;
+}
+.ipick .pico:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+.ipick-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 244px;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-pop);
+  z-index: 60;
+  animation: menu-in 0.13s ease;
+}
+.ipick-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+}
+.ipick-grid button {
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ipick-grid button:hover {
+  background: color-mix(in oklab, var(--fg) 8%, transparent);
+}
+.ipick-grid button.on {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--surface);
+}
+.ipick-foot {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.ipick-foot button {
+  width: 100%;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+}
+.ipick-foot button:hover {
+  background: color-mix(in oklab, var(--fg) 8%, transparent);
+  color: var(--fg);
+}
+
+/* Popup menu — anchored to a .split, opens upward. */
+.menu-pop {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  min-width: 200px;
+  padding: 5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-pop);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  animation: menu-in 0.13s ease;
+}
+.menu-pop button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 31px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fg-strong);
+  text-align: left;
+  cursor: pointer;
+}
+.menu-pop button svg {
+  color: var(--muted);
+  flex: none;
+}
+.menu-pop button:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.menu-pop button:disabled {
+  color: var(--faint, var(--muted));
+  cursor: default;
+}
+.menu-pop button.danger {
+  color: var(--danger);
+}
+.menu-pop button.danger svg {
+  color: var(--danger);
+}
+.menu-pop button.danger:hover:not(:disabled) {
+  background: var(--danger-bg);
+}
+.menu-pop .sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 3px;
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .chip {
@@ -1830,4 +2034,12 @@ table.dt {
     opacity: 1;
     transform: none;
   }
+}
+
+/* ConfirmDialog layer — always above drawer (100) and modal (100). */
+.scrim.confirm {
+  z-index: 140;
+}
+.modal.confirm-dialog {
+  z-index: 150;
 }

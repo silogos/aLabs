@@ -11,17 +11,31 @@ import { req } from "@/lib/http";
 
 type OrgUpdate = {
   name?: string;
-  slug?: string;
-  description?: string;
-  website?: string;
+  description?: string | null;
+  website?: string | null;
+  timezone?: string;
+  language?: string;
 };
+
+export interface OrgActivityEntry {
+  id: string;
+  kind: "move" | "doc" | "com" | "done" | "mile";
+  projectId: string;
+  actorId: string;
+  actorName: string | null;
+  target: string;
+  when: string;
+  whenLabel: string;
+  projectName: string;
+  projectKey: string;
+}
 
 type ProjectUpdateBody = {
   name?: string;
   slug?: string;
   key?: string;
   description?: string;
-  icon?: string;
+  icon?: string | null;
   status?: "active" | "on_hold" | "archived";
   visibility?: "organization" | "private";
 };
@@ -31,6 +45,14 @@ type ProjectMemberUpdateBody = { roleName?: string; status?: "active" };
 
 export const workspaceService = {
   orgs: () => req<{ data: Organization[] }>("/organizations").then((x) => x.data),
+
+  orgActivity: (orgId: string, limit = 100) =>
+    req<{ data: OrgActivityEntry[] }>(`/organizations/${orgId}/activity?limit=${limit}`).then(
+      (x) => x.data,
+    ),
+
+  deleteOrg: (orgId: string) =>
+    req<void>(`/organizations/${orgId}`, { method: "DELETE" }).then(() => undefined),
 
   projects: (orgId: string) =>
     req<{ data: Project[] }>(`/organizations/${orgId}/projects`).then((x) => x.data),
@@ -91,6 +113,20 @@ export const workspaceService = {
     }).then((x) => x.data),
 
   // --- Project management ---
+
+  createProject: (
+    orgId: string,
+    body: { name: string; slug: string; key: string; description?: string; icon?: string },
+  ) =>
+    req<{ data: Project }>(`/organizations/${orgId}/projects`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+
+  deleteProject: (orgId: string, projectId: string) =>
+    req<void>(`/organizations/${orgId}/projects/${projectId}`, {
+      method: "DELETE",
+    }).then(() => undefined),
 
   updateProject: (orgId: string, projectId: string, body: ProjectUpdateBody) =>
     req<{ data: Project }>(`/organizations/${orgId}/projects/${projectId}`, {

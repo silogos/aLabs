@@ -32,8 +32,8 @@ describe("role vocabularies", () => {
 
 describe("PERM", () => {
   it("maps friendly keys to API permission strings", () => {
-    expect(PERM.orgUpdate).toBe("organization:update");
-    expect(PERM.memberCreate).toBe("member:create");
+    expect(PERM.orgDelete).toBe("organization:delete");
     expect(PERM.projectManageMembers).toBe("project:manage-members");
+    expect(PERM.billingManage).toBe("billing:manage");
   });
 });
