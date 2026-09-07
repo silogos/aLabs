@@ -142,6 +142,34 @@ export function MobileNav() {
 
         {/* Menu view — nav sections */}
         <div className="m-panel" hidden={sheetView !== "menu"}>
+          <div className="m-lbl">Organization</div>
+          <button
+            className="m-srow"
+            onClick={() => {
+              setMNavOpen(false);
+              router.push("/org");
+            }}
+          >
+            <span className="ic">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 21h18M5 21V7l7-4 7 4v14" />
+                <path d="M9 9h6M9 13h6M9 17h6" />
+              </svg>
+            </span>
+            <span className="tx">
+              <b>Org dashboard</b>
+              <small>Projects · members · billing</small>
+            </span>
+          </button>
           {NAV_SECTIONS.map((sec) => (
             <div key={sec.label}>
               <div className="m-lbl">{sec.label}</div>

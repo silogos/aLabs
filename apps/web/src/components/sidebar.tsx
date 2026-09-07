@@ -1,6 +1,8 @@
 /** Sidebar rail — brand, project switcher pill, nav sections, collapse + account.
  *  Design: superadmin-style header, labeled sections, bottom collapse button,
- *  switchers open centered modals (see SwitcherModals.tsx). */
+ *  switchers open centered modals (see SwitcherModals.tsx). The Organization
+ *  section links out to the /org area (org management is a separate surface). */
+import { useRouter } from "next/navigation";
 import { useApp } from "@/providers/app-provider";
 import { NAV_SECTIONS, NAV_ICONS, hueFor, projColor, ChevDown, useNavCounts } from "@/components/nav-data";
 
@@ -8,6 +10,7 @@ export function Sidebar() {
   const { view, setView, user, project, setNavModal, setMNavOpen, collapsed, setCollapsed } =
     useApp();
   const counts = useNavCounts();
+  const router = useRouter();
 
   return (
     <aside className="sidebar" data-od-id="primary-nav">
@@ -99,6 +102,30 @@ export function Sidebar() {
             })}
           </div>
         ))}
+        <div>
+          <div className="nav-label">Organization</div>
+          <button
+            className="nav-item"
+            onClick={() => router.push("/org")}
+            data-od-id="nav-org-dashboard"
+            title="Projects, members, settings, billing"
+          >
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 21h18M5 21V7l7-4 7 4v14" />
+              <path d="M9 9h6M9 13h6M9 17h6" />
+            </svg>
+            <span>Org dashboard</span>
+          </button>
+        </div>
       </div>
 
       <div className="spacer"></div>

@@ -8,6 +8,8 @@ import { useApp } from "@/providers/app-provider";
 import { useProjectMembers } from "./queries";
 import { qk } from "@/lib/query-keys";
 import { Avatar } from "@/components/ui/avatar";
+import { IconPicker } from "@/components/ui/icon-picker";
+import { hueFor, projColor } from "@/components/nav-data";
 import { PROJECT_ROLES, PERM, hasPerm } from "./model";
 import type { ProjectStatus, ProjectVisibility } from "@pmin/core";
 
@@ -151,8 +153,16 @@ export function ProjectSection() {
             </div>
             <div style={{ width: 90 }}>
               <label className="flab">Icon</label>
-              <input className="fld" value={icon} disabled={!canUpdate}
-                onChange={(e) => setIcon(e.target.value)} maxLength={20} />
+              <IconPicker
+                value={icon || undefined}
+                fallback="＋"
+                color={icon ? projColor(hueFor(icon)) : "color-mix(in oklab, var(--fg) 10%, transparent)"}
+                size={32}
+                radius={9}
+                disabled={!canUpdate}
+                onChange={(v) => setIcon(v ?? "")}
+                title={canUpdate ? "Choose an icon" : "Read-only"}
+              />
             </div>
           </div>
           <div className="row" style={{ gap: 8 }}>

@@ -206,6 +206,24 @@ function AccountModal() {
         </span>
         {ChevRight("ch")}
       </button>
+      <button className="mrow" onClick={() => { setNavModal(null); router.push("/org"); }}>
+        {rowIcon.profile && (
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3 21h18M5 21V7l7-4 7 4v14" />
+            <path d="M9 9h.01M9 13h.01M15 9h.01M15 13h.01M9 21v-4h6v4" />
+          </svg>
+        )}
+        Organization dashboard
+      </button>
       <div className="acct-sep"></div>
       {acctRow("profile", "Profile settings", "Profile settings — coming soon")}
       {acctRow("notif", "Notifications", "Notifications — coming soon")}
