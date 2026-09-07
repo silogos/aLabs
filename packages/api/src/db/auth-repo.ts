@@ -172,7 +172,10 @@ export async function createUserWithWorkspace(input: {
       .from(roles)
       .where(and(eq(roles.scope, "workspace"), eq(roles.name, "Owner"), isNull(roles.organizationId)))
       .limit(1);
-    if (!ownerRole) throw new ApiError("internal_error", "workspace Owner role missing — seed incomplete");
+    if (!ownerRole) {
+      console.error("[seed] system role missing: workspace Owner");
+      throw new ApiError("internal_error", "Something went wrong on our end. Please try again.");
+    }
 
     await tx.insert(organizationMembers).values({
       id: uuidv7(),

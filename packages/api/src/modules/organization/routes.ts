@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { randomBytes } from "node:crypto";
 import * as orgRepo from "../../db/org-repo";
 import * as authRepo from "../../db/auth-repo";
+import * as activityRepo from "../../db/activity-repo";
 import {
   organizationCreate,
   organizationUpdate,
@@ -70,6 +71,18 @@ organization.patch("/:organizationId", orgContext, requirePermission("organizati
   const org = await orgRepo.updateOrganization(currentTenant(c).organizationId, input);
   return data(c, org);
 });
+
+// Org-wide activity feed for the org dashboard (activity across all projects)
+organization.get(
+  "/:organizationId/activity",
+  orgContext,
+  requirePermission("member:view"),
+  async (c) => {
+    const parsed = Number(c.req.query("limit") ?? "100");
+    const limit = Number.isFinite(parsed) ? Math.min(Math.max(parsed, 1), 200) : 100;
+    return data(c, await activityRepo.listOrgActivity(currentTenant(c).organizationId, limit));
+  },
+);
 
 // Members
 organization.get("/:organizationId/members", orgContext, requirePermission("member:view"), async (c) => {

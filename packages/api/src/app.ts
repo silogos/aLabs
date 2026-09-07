@@ -102,9 +102,11 @@ app.onError((err, c) => {
   if (err instanceof ApiError) {
     return c.json(err.toJSON(), err.httpStatus as ContentfulStatusCode);
   }
+  // Never forward internal messages to clients — log the detail, return a
+  // generic humanized envelope.
   console.error(err);
   return c.json(
-    { error: { code: "internal_error", message: err.message || "Unexpected error" } },
+    { error: { code: "internal_error", message: "Something went wrong on our end. Please try again." } },
     500,
   );
 });

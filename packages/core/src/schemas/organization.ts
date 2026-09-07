@@ -30,7 +30,13 @@ export const organizationCreate = z.object({
   description: z.string().optional(),
   website: z.string().url().optional(),
 });
-export const organizationUpdate = organizationCreate.partial();
+export const organizationUpdate = organizationCreate.partial().extend({
+  timezone: z.string().min(1).max(50).optional(),
+  language: z.string().min(2).max(10).optional(),
+  // nullable so clients can clear an existing website
+  website: z.string().url().nullable().optional(),
+  description: z.string().nullable().optional(),
+});
 
 export const roleSchema = z.object({
   id,
