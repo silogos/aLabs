@@ -2,7 +2,7 @@
  *  project memberships, and the per-user visit history. Domain shapes stay
  *  zod-inferred: ProjectMember embeds its Role and User (hydrated via
  *  joins); visits power the recents + landing-project rule. */
-import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import { db } from "./pg";
 import { projects, projectMembers, projectVisits, roles, spaces, taskStatuses, taskTypes } from "@pmin/core/db";
 import { DEFAULT_TASK_STATUSES, DEFAULT_TASK_TYPES, uuidv7, type Project, type ProjectMember, type User } from "@pmin/core";
@@ -87,6 +87,33 @@ export async function keyTakenInOrg(organizationId: string, key: string): Promis
     .where(and(eq(projects.organizationId, organizationId), eq(projects.key, key)))
     .limit(1);
   return !!row;
+}
+
+/** A soft-deleted project still occupying this key in this org, if any. */
+export async function findDeletedByKeyInOrg(
+  organizationId: string,
+  key: string,
+): Promise<{ id: string } | null> {
+  const [row] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(
+      and(
+        eq(projects.organizationId, organizationId),
+        eq(projects.key, key),
+        isNotNull(projects.deletedAt),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+/** Un-delete + reactivate — used by the demo seed, which owns its keys. */
+export async function reviveProject(id: string): Promise<void> {
+  await db
+    .update(projects)
+    .set({ deletedAt: null, status: "active", updatedAt: new Date() })
+    .where(eq(projects.id, id));
 }
 
 /** Non-archived, non-deleted count — the personal-workspace cap basis. */
