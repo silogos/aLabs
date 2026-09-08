@@ -1,33 +1,30 @@
 "use client";
 
-/** Settings view — project-scoped settings only (Profile · Project).
- *  Workspace/organization management now lives in its own area at /org
- *  (Overview · Projects · Members · Activity · Settings · Billing). */
-import { useState } from "react";
+/** Project settings view — project administration only (General · Members ·
+ *  Danger zone). The user's own profile and notifications live at /user, and
+ *  organization management lives at /org: three separate surfaces. */
 import { useRouter } from "next/navigation";
 import { useApp } from "@/providers/app-provider";
-import { ProfileSection } from "./profile-section";
 import { ProjectSection } from "./project-section";
 
-type Tab = "profile" | "project";
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: "profile", label: "Profile" },
-  { id: "project", label: "Project" },
-];
-
 export function SettingsView() {
-  const { user, project, org } = useApp();
+  const { project, org } = useApp();
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("profile");
+
+  if (!project)
+    return (
+      <section className="view active">
+        <div className="muted">Loading…</div>
+      </section>
+    );
 
   return (
     <section className="view active">
       <div className="row between wrap" style={{ marginBottom: 14, gap: 12 }}>
         <div>
-          <div className="h2">Settings</div>
+          <div className="h2">Project settings</div>
           <div className="small muted" style={{ marginTop: 3 }}>
-            {project ? `Profile and settings for ${project.name}` : "Your profile"}
+            Administration for {project.name}
           </div>
         </div>
       </div>
@@ -50,24 +47,7 @@ export function SettingsView() {
         </div>
       </div>
 
-      <div className="toolbar" style={{ paddingLeft: 0 }}>
-        <div className="seg">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              className={tab === t.id ? "on" : ""}
-              onClick={() => setTab(t.id)}
-              disabled={t.id === "project" ? !project : false}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {!user && <div className="tiny faint">Loading…</div>}
-      {user && tab === "profile" && <ProfileSection />}
-      {user && project && tab === "project" && <ProjectSection />}
+      <ProjectSection />
     </section>
   );
 }
