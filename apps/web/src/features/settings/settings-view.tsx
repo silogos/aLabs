@@ -23,8 +23,13 @@ export function SettingsView() {
 
   return (
     <section className="view active">
-      <div className="panel-head">
-        <h3>Settings</h3>
+      <div className="row between wrap" style={{ marginBottom: 14, gap: 12 }}>
+        <div>
+          <div className="h2">Settings</div>
+          <div className="small muted" style={{ marginTop: 3 }}>
+            {project ? `Profile and settings for ${project.name}` : "Your profile"}
+          </div>
+        </div>
       </div>
       <div className="card" style={{ marginBottom: 16, maxWidth: 720 }}>
         <div className="panel-head">

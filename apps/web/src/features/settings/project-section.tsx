@@ -1,14 +1,18 @@
-/** Project section — project general settings + project members.
- *  Gates actions on the current user's project membership role.permissions
- *  (cosmetic; the API is the source of truth). */
-import { useState } from "react";
+/** Project section — project administration: general settings, project
+ *  members, and the danger zone (soft delete, gated by the current user's
+ *  project role permissions; typing the project name confirms). Mirrors the
+ *  org settings view's design (features/org/org-settings-view.tsx). */
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { workspaceService } from "@/services/workspace";
-import { useApp } from "@/providers/app-provider";
+import { useApp, landingProject } from "@/providers/app-provider";
 import { useProjectMembers } from "./queries";
 import { qk } from "@/lib/query-keys";
+import { dateShort } from "@/lib/format";
 import { Avatar } from "@/components/ui/avatar";
 import { IconPicker } from "@/components/ui/icon-picker";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { hueFor, projColor } from "@/components/nav-data";
 import { PROJECT_ROLES, PERM, hasPerm } from "./model";
 import type { ProjectStatus, ProjectVisibility } from "@pmin/core";
@@ -17,30 +21,45 @@ const STATUS_OPTIONS: ProjectStatus[] = ["active", "on_hold", "archived"];
 const VIS_OPTIONS: ProjectVisibility[] = ["organization", "private"];
 
 export function ProjectSection() {
-  const { project, user, toast } = useApp();
+  const { project, user, projects, recents, toast, switchProject } = useApp();
   const qc = useQueryClient();
+  const router = useRouter();
   const { data: members } = useProjectMembers(project?.id);
 
   const me = members?.find((m) => m.userId === user?.id);
   const canUpdate = hasPerm(me?.role.permissions, PERM.projectUpdate);
   const canManage = hasPerm(me?.role.permissions, PERM.projectManageMembers);
+  const canDelete = hasPerm(me?.role.permissions, PERM.projectDelete);
 
   const refresh = async () => {
     await qc.invalidateQueries({ queryKey: qk.projects(project?.organizationId ?? "") });
     await qc.invalidateQueries({ queryKey: qk.projectMembers(project?.id) });
   };
 
-  // --- general ---
-  const [name, setName] = useState(project?.name ?? "");
-  const [slug, setSlug] = useState(project?.slug ?? "");
-  const [key, setKey] = useState(project?.key ?? "");
-  const [description, setDescription] = useState(project?.description ?? "");
-  const [icon, setIcon] = useState(project?.icon ?? "");
-  const [status, setStatus] = useState<ProjectStatus>(project?.status ?? "active");
-  const [visibility, setVisibility] = useState<ProjectVisibility>(
-    project?.visibility ?? "organization",
-  );
+  // --- general (re-syncs only when this project or its server state changes) ---
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [key, setKey] = useState("");
+  const [description, setDescription] = useState("");
+  const [icon, setIcon] = useState("");
+  const [status, setStatus] = useState<ProjectStatus>("active");
+  const [visibility, setVisibility] = useState<ProjectVisibility>("organization");
   const [saving, setSaving] = useState(false);
+  const syncKey = project ? `${project.id}|${project.updatedAt}` : "";
+  const [lastSync, setLastSync] = useState("");
+
+  useEffect(() => {
+    if (!project || syncKey === lastSync) return;
+    setName(project.name);
+    setSlug(project.slug ?? "");
+    setKey(project.key ?? "");
+    setDescription(project.description ?? "");
+    setIcon(project.icon ?? "");
+    setStatus(project.status ?? "active");
+    setVisibility(project.visibility ?? "organization");
+    setLastSync(syncKey);
+  }, [project, syncKey, lastSync]);
+
   const saveProject = async () => {
     if (!project) return;
     setSaving(true);
@@ -54,6 +73,36 @@ export function ProjectSection() {
       toast((e as Error).message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  // --- danger zone ---
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const doDelete = async () => {
+    if (!project) return;
+    setDeleting(true);
+    // the next project to land in, computed before the delete invalidates caches
+    const next = landingProject(
+      (projects ?? []).filter((p) => p.id !== project.id),
+      recents,
+    );
+    try {
+      await workspaceService.deleteProject(project.organizationId, project.id);
+      await qc.invalidateQueries({ queryKey: qk.projects(project.organizationId) });
+      await qc.removeQueries({ queryKey: qk.projectMembers(project.id) });
+      setDeleteOpen(false);
+      if (next) {
+        switchProject(next);
+      } else {
+        // no projects left in this org — org management is the next stop
+        router.push("/org/projects");
+      }
+      toast(`${project.name} deleted`);
+    } catch (e) {
+      toast((e as Error).message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -170,6 +219,9 @@ export function ProjectSection() {
               onClick={() => void saveProject()}>
               {saving ? "Saving…" : "Save"}
             </button>
+            <span className="tiny faint" style={{ alignSelf: "center" }}>
+              Created {dateShort(project.createdAt)}
+            </span>
           </div>
         </div>
       </div>
@@ -217,6 +269,50 @@ export function ProjectSection() {
           </div>
         </div>
       </div>
+
+      {/* Danger zone */}
+      <div className="card">
+        <div className="panel-head">
+          <h3>Danger zone</h3>
+        </div>
+        <div className="panel-body">
+          <div className="row between wrap" style={{ gap: 10 }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 13 }}>Delete this project</div>
+              <div className="tiny faint" style={{ marginTop: 2 }}>
+                Soft-deletes the project — its tasks, documents and plans become unreachable. Cannot be undone from here.
+              </div>
+            </div>
+            <button
+              className="btn danger sm"
+              disabled={!canDelete}
+              title={canDelete ? undefined : "Your project role cannot delete this project"}
+              onClick={() => setDeleteOpen(true)}
+              data-od-id="project-settings-delete"
+            >
+              Delete project
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="Delete project"
+        description={
+          <>
+            This will delete <b>{project.name}</b> with all of its tasks, documents and plans. Type the project name to confirm.
+          </>
+        }
+        requireText={project.name}
+        confirmLabel="Delete forever"
+        busyLabel="Deleting…"
+        danger
+        busy={deleting}
+        onConfirm={() => void doDelete()}
+        onClose={() => setDeleteOpen(false)}
+        data-od-id="project-delete-modal"
+      />
     </div>
   );
 }
