@@ -276,12 +276,7 @@ function TaskDetail({
                   ))}
               </div>
             ) : (
-              <div className="rel-empty">
-                <span className="muted tiny">No links yet.</span>
-                <button className="link sm" onClick={() => openRelPicker(String(t.id))}>
-                  + Add link
-                </button>
-              </div>
+              <p className="muted tiny">No links yet.</p>
             )}
           </Section>
         )}
