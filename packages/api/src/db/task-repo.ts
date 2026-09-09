@@ -207,15 +207,19 @@ export interface TaskFilters {
   iterationId?: string;
   labelId?: string;
   q?: string;
+  /** Include subtask rows (parented tasks) alongside top-level ones. */
+  includeSubtasks?: boolean;
 }
 
-/** Top-level (non-subtask), non-deleted rows — filters mirror the old
- *  in-memory list. Returns everything; the route paginates for the envelope. */
+/** Non-deleted rows — top-level (non-subtask) by default, subtasks included
+ *  when `f.includeSubtasks`. Filters mirror the old in-memory list. Returns
+ *  everything; the route paginates for the envelope. */
 export async function listTasks(
   projectId: string,
   f: TaskFilters = {},
 ): Promise<TaskWithMeta[]> {
-  const conds = [eq(tasks.projectId, projectId), isNull(tasks.parentId), isNull(tasks.deletedAt)];
+  const conds = [eq(tasks.projectId, projectId), isNull(tasks.deletedAt)];
+  if (!f.includeSubtasks) conds.push(isNull(tasks.parentId));
   if (f.statusId) conds.push(eq(tasks.statusId, f.statusId));
   if (f.assigneeId) conds.push(eq(tasks.assigneeId, f.assigneeId));
   if (f.typeId) conds.push(eq(tasks.typeId, f.typeId));
