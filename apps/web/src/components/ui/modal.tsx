@@ -1,6 +1,6 @@
-/** Modal — the one scaffold for centered dialogs: scrim-less overlay panel
- *  with header (title + close) and body. Previously hand-rolled six times
- *  with drifting close-button classes (`mh-x` vs `x`). */
+/** Modal — the one scaffold for centered dialogs: dimming backdrop plus
+ *  overlay panel with header (title + close) and body. Previously
+ *  hand-rolled six times with drifting close-button classes (`mh-x` vs `x`). */
 import type { ReactNode } from "react";
 import { CloseIcon } from "./icon";
 
@@ -11,8 +11,12 @@ export function Modal({
   width,
   className = "",
   headerExtra,
-  /** Called when the backdrop itself (not the panel) is clicked. */
+  /** Called when the backdrop itself (not the panel) is clicked.
+   *  Defaults to onClose. */
   onBackdrop,
+  /** Set false to render without the dimming backdrop scrim. */
+  backdrop = true,
+  backdropClassName = "",
   ...rest
 }: {
   title: string;
@@ -22,17 +26,20 @@ export function Modal({
   className?: string;
   headerExtra?: ReactNode;
   onBackdrop?: () => void;
+  backdrop?: boolean;
+  backdropClassName?: string;
 } & Record<string, unknown>) {
   return (
-    <div
+    <>
+      {backdrop && (
+        <div
+          className={`scrim show ${backdropClassName}`.trim()}
+          onClick={onBackdrop ?? onClose}
+        />
+      )}
+      <div
       className={`modal show ${className}`.trim()}
       style={width ? { width } : undefined}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onBackdrop?.();
-        // Panel clicks must not bubble to a wrapping .scrim (which closes on
-        // any bubbled click — planning's sprint/milestone modals rely on this).
-        e.stopPropagation();
-      }}
       {...rest}
     >
       <div className="mh">
@@ -43,6 +50,7 @@ export function Modal({
         </button>
       </div>
       {children}
-    </div>
+      </div>
+    </>
   );
 }
