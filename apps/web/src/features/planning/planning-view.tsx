@@ -917,10 +917,11 @@ function SprintModal({
   const statusLbl = edit && editId ? board.sprintStatusLabel(editId) : "Planned";
 
   return (
-    <div className="scrim show" onClick={onClose} data-od-id="new-sprint-modal">
+    <>
       <Modal
         title={isEdit ? "Iteration details" : "New iteration"}
         onClose={onClose}
+        data-od-id="new-sprint-modal"
         headerExtra={
           <span className={`status ${statusCls}`}>
             <span className="d"></span>
@@ -1016,7 +1017,7 @@ function SprintModal({
           </button>
         </div>
       </Modal>
-    </div>
+    </>
   );
 }
 
@@ -1089,10 +1090,11 @@ function MilestoneModal({
   };
 
   return (
-    <div className="scrim show" onClick={onClose} data-od-id="milestone-modal">
+    <>
       <Modal
         title={isEdit ? "Milestone details" : "New milestone"}
         onClose={onClose}
+        data-od-id="milestone-modal"
         headerExtra={
           <span className={`status ${risk === "at_risk" ? "warn" : "ok"}`}>
             <span className="d"></span>
@@ -1179,6 +1181,6 @@ function MilestoneModal({
           </button>
         </div>
       </Modal>
-    </div>
+    </>
   );
 }

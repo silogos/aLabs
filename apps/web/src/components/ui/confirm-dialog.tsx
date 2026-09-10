@@ -64,21 +64,15 @@ export function ConfirmDialog({
   const locked = requireText !== undefined && typed !== requireText;
 
   return (
-    <>
-      {/* Backdrop: dims the page and the drawer underneath; click closes. */}
-      <div
-        className="scrim show confirm"
-        onClick={busy ? undefined : onClose}
-        data-od-id={odId ? `${odId}-backdrop` : undefined}
-      />
-      <Modal
-        title={title}
-        onClose={busy ? () => {} : onClose}
-        onBackdrop={busy ? undefined : onClose}
-        width={width}
-        className="confirm-dialog"
-        data-od-id={odId}
-      >
+    <Modal
+      title={title}
+      onClose={busy ? () => {} : onClose}
+      onBackdrop={busy ? undefined : onClose}
+      backdropClassName="confirm"
+      width={width}
+      className="confirm-dialog"
+      data-od-id={odId}
+    >
       <div className="mb" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {description != null && <div className="small">{description}</div>}
         {requireText !== undefined && (
@@ -105,6 +99,5 @@ export function ConfirmDialog({
         </button>
       </div>
     </Modal>
-    </>
   );
 }
