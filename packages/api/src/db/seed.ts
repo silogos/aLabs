@@ -57,7 +57,7 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
   };
   const statusByName = (n: string) => statusList.find((s) => s.name === n)!;
 
-  const typeNames = ["Task", "Bug", "Feature", "Epic"];
+  const typeNames = ["Task", "Bug", "Story", "Epic", "Subtask"];
   const typeList: TaskType[] = pgSeeded
     ? await taskRepo.listTypes(atlas.id)
     : await Promise.all(typeNames.map((name) => taskRepo.insertType(atlas.id, name)));
@@ -65,7 +65,7 @@ export async function seed(users: User[], projects: ProjectWithMeta[]): Promise<
   const typeByShort: SeedCtx["typeByShort"] = {
     task: typeByName("Task"),
     bug: typeByName("Bug"),
-    feat: typeByName("Feature"),
+    feat: typeByName("Story"),
     epic: typeByName("Epic"),
   };
 

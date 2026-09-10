@@ -45,6 +45,7 @@ export interface SeedCtx {
   dueIso(label: string): string | null;
   statusByShort: Record<"backlog" | "todo" | "progress" | "review" | "done", TaskStatus>;
   statusByName(name: string): TaskStatus;
+  /** "feat" is a seed-file handle — it maps to the Story type. */
   typeByShort: Record<"task" | "bug" | "feat" | "epic", TaskType>;
   labelIdByName(name: string): string;
 }
