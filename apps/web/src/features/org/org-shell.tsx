@@ -3,7 +3,7 @@
 /** Org shell — the /org area chrome: dark rail with the org switcher pill
  *  and org module nav, topbar with a back-to-project affordance, mobile
  *  bottom sheet. Reuses the app's sidebar/topbar/m-sheet classes so the
- *  two surfaces share one design system (see brand-spec.md posture rules).
+ *  two surfaces share one design system (see docs/design/brand-spec.md posture rules).
  *  Nav modals (account + switchers) and toasts come from AppProvider. */
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";

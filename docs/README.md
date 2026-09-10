@@ -18,6 +18,9 @@ It is the source of truth for vision, scope, domains, and module contracts.
 docs/
 ├── 00-product.md              Product vision, principles, business model
 ├── README.md                  This file
+├── design/                    Visual identity & UI posture
+│   └── brand-spec.md
+├── plans/                     Implementation & migration plans (per-feature)
 ├── foundation/                Foundation layer: Identity, Workspace, Project
 │   ├── 00-foundation.md
 │   ├── 01-authentication.md
@@ -104,6 +107,24 @@ docs/
 | tech/05-seed-data.md | Draft | Medium |
 | tech/06-glossary.md | Draft | — |
 | tech/adr/* | Accepted | — |
+
+## Design
+
+| Document | Status | Priority |
+| -------- | ------ | -------- |
+| design/brand-spec.md | Active | High |
+
+## Plans
+
+One document per feature or migration effort. Status is tracked in each plan's own header.
+
+| Document | Topic |
+| -------- | ----- |
+| plans/account-manager-plan.md | Users, orgs, projects, members & invitations (API) |
+| plans/switcher-backend-plan.md | Workspace & project switching backend |
+| plans/switcher-nav-plan.md | Workspace switcher & mobile nav (prototype) |
+| plans/mobile-nav-plan.md | Mobile top bar & nav sheet (prototype) |
+| plans/editor-migration-plan.md | Editor migration |
 
 ---
 
