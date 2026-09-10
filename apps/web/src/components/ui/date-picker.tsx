@@ -61,12 +61,14 @@ export function DatePicker({
 
   // The popover is wider than the trigger; when the trigger hugs the right
   // viewport edge the default left-aligned popover would spill off-screen.
-  // Measure after mount and flip to right-aligned alignment if it overflows.
+  // Compare the trigger's left edge + popover width against the viewport so
+  // the check doesn't depend on the popover's current alignment.
   useLayoutEffect(() => {
     if (!open) return;
-    const pop = ref.current?.querySelector<HTMLElement>(".dp-pop");
-    if (!pop) return;
-    setAlignRight(pop.getBoundingClientRect().right > window.innerWidth);
+    const el = ref.current;
+    const pop = el?.querySelector<HTMLElement>(".dp-pop");
+    if (!el || !pop) return;
+    setAlignRight(el.getBoundingClientRect().left + pop.offsetWidth > window.innerWidth);
   }, [open]);
 
   useEffect(() => {
