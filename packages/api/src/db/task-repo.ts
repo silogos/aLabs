@@ -14,6 +14,7 @@ import {
   taskLinks,
   taskComments,
   taskStatusEvents,
+  milestones,
 } from "@pmin/core/db";
 import { uuidv7, type Task, type TaskStatus, type TaskType, type TaskLabel, type TaskLink } from "@pmin/core";
 import { iso } from "./mapping";
@@ -310,6 +311,7 @@ export async function insertTask(input: {
       occurredAt: now,
       actorId: input.actorId ?? null,
     });
+    if (input.milestoneId) await recomputeMilestone(tx, row!.projectId, input.milestoneId);
     return row!;
   });
   return (await withLabels([row]))[0]!;
@@ -328,6 +330,38 @@ async function recordStatusEvent(
     occurredAt: e.occurredAt,
     actorId: e.actorId,
   });
+}
+
+/** Recompute a milestone's stored aggregates (total/done/progress) from live
+ *  tasks — done = status named "Done". Called whenever a task's status or
+ *  milestone link changes so milestone widgets never drift from the board. */
+async function recomputeMilestone(tx: Tx, projectId: string, milestoneId: string): Promise<void> {
+  const live = and(eq(tasks.milestoneId, milestoneId), isNull(tasks.deletedAt));
+  const [total] = await tx.select({ n: sql<number>`count(*)::int` }).from(tasks).where(live);
+  const doneIds = (
+    await tx
+      .select({ id: taskStatuses.id })
+      .from(taskStatuses)
+      .where(and(eq(taskStatuses.projectId, projectId), eq(taskStatuses.name, "Done")))
+  ).map((s) => s.id);
+  let done = 0;
+  if (doneIds.length > 0) {
+    const [d] = await tx
+      .select({ n: sql<number>`count(*)::int` })
+      .from(tasks)
+      .where(and(live, inArray(tasks.statusId, doneIds)));
+    done = d?.n ?? 0;
+  }
+  const t = total?.n ?? 0;
+  await tx
+    .update(milestones)
+    .set({
+      totalTasks: t,
+      doneTasks: done,
+      progress: t > 0 ? Math.round((done / t) * 100) : 0,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(milestones.id, milestoneId), eq(milestones.projectId, projectId)));
 }
 
 /** Replace the label set (delete + insert — small sets). */
@@ -363,10 +397,10 @@ export async function patchTask(
   actorId: string | null = null,
 ): Promise<TaskWithMeta | null> {
   const row = await db.transaction(async (tx) => {
-    let prev: { statusId: string; projectId: string } | null = null;
-    if (patch.statusId !== undefined) {
+    let prev: { statusId: string; projectId: string; milestoneId: string | null } | null = null;
+    if (patch.statusId !== undefined || patch.milestoneId !== undefined) {
       const [p] = await tx
-        .select({ statusId: tasks.statusId, projectId: tasks.projectId })
+        .select({ statusId: tasks.statusId, projectId: tasks.projectId, milestoneId: tasks.milestoneId })
         .from(tasks)
         .where(eq(tasks.id, id));
       prev = p ?? null;
@@ -388,6 +422,15 @@ export async function patchTask(
         actorId,
       });
     }
+    // milestone aggregates: the new/kept milestone on status change, the old
+    // one when the task moved milestones
+    const touched = new Set<string>();
+    if (patch.milestoneId !== undefined) {
+      if (prev?.milestoneId) touched.add(prev.milestoneId);
+      if (row.milestoneId) touched.add(row.milestoneId);
+    }
+    if (patch.statusId !== undefined && row.milestoneId) touched.add(row.milestoneId);
+    for (const m of touched) await recomputeMilestone(tx, row.projectId, m);
     return row;
   });
   if (!row) return null;
@@ -395,10 +438,17 @@ export async function patchTask(
 }
 
 export async function softDeleteTask(id: string): Promise<void> {
-  await db
-    .update(tasks)
-    .set({ deletedAt: new Date(), updatedAt: new Date() })
-    .where(eq(tasks.id, id));
+  await db.transaction(async (tx) => {
+    const [prev] = await tx
+      .select({ projectId: tasks.projectId, milestoneId: tasks.milestoneId })
+      .from(tasks)
+      .where(eq(tasks.id, id));
+    await tx
+      .update(tasks)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(eq(tasks.id, id));
+    if (prev?.milestoneId) await recomputeMilestone(tx, prev.projectId, prev.milestoneId);
+  });
 }
 
 /** Status-transition events for a project, oldest first — used to reconstruct
