@@ -126,6 +126,8 @@ export const taskListQuery = paginationQuery.extend({
   priority: z.string().optional(),
   iterationId: z.string().uuid().optional(),
   q: z.string().optional(),
+  /** "true" to include subtask rows (parented tasks) alongside top-level ones. */
+  includeSubtasks: z.enum(["true", "false"]).optional(),
 });
 export type TaskListQuery = z.infer<typeof taskListQuery>;
 

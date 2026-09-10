@@ -30,7 +30,7 @@ task.use("*", projectContext);
 task.get("/tasks", requirePermission("task:view"), async (c) => {
   const q = parseQuery(c.req.query(), taskListQuery);
   const pid = projectIdOf(c);
-  const rows = await taskRepo.listTasks(pid, q);
+  const rows = await taskRepo.listTasks(pid, { ...q, includeSubtasks: q.includeSubtasks === "true" });
   taskRepo.attachLinks(rows, await taskRepo.listProjectLinks(pid));
   return paginated(c, paginate(rows.map((r) => taskSchema.parse(r)), q));
 });

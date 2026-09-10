@@ -44,7 +44,9 @@ export function useBoard(): Board {
 
   const tasksQ = useQuery({
     queryKey: qk.tasks(pid),
-    queryFn: () => tasksService.list(pid),
+    // subtask rows ride along (hidden behind parent rows) so the drawer and
+    // subtask trees can derive them via board.subsOf()
+    queryFn: () => tasksService.list(pid, { includeSubtasks: "true" }),
     enabled,
   });
   const statusesQ = useQuery({

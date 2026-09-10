@@ -119,7 +119,8 @@ export function useNavCounts() {
     enabled: !!pid,
   });
   return {
-    tasks: tasksQ.data?.items.length ?? null,
+    // board's cached list includes subtask rows — the nav count is top-level tasks
+    tasks: tasksQ.data?.items.filter((t) => !t.parentId).length ?? null,
     documents: docsQ.data?.items.length ?? null,
   } as Partial<Record<View, number | null>>;
 }

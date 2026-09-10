@@ -50,6 +50,8 @@ export function DashboardView() {
     queryFn: () => tasksService.list(pid, { assigneeId: user?.id }),
     enabled: !!user,
   });
+  // board's cached list includes subtask rows — this panel shows top-level tasks
+  const myTasks = (myTasksPage?.items ?? []).filter((t) => !t.parentId);
 
   if (!data)
     return (
@@ -173,7 +175,7 @@ export function DashboardView() {
           <div className="card">
             <div className="panel-head">
               <h3>My tasks</h3>
-              <span className="muted">{myTasksPage?.items.length ?? 0} assigned</span>
+              <span className="muted">{myTasks.length} assigned</span>
               <div className="right">
                 <button className="btn ghost sm" onClick={() => setView("tasks")}>
                   View all
@@ -181,7 +183,7 @@ export function DashboardView() {
               </div>
             </div>
             <div className="panel-body flush">
-              {(myTasksPage?.items ?? []).slice(0, 6).map((t) => (
+              {myTasks.slice(0, 6).map((t) => (
                 <div className="mtask" key={t.id} onClick={() => openTask(t.id)}>
                   <span className="tid">{taskSerial(t.order)}</span>
                   <span className="tt">{t.title}</span>
@@ -194,7 +196,7 @@ export function DashboardView() {
                   </span>
                 </div>
               ))}
-              {(myTasksPage?.items ?? []).length === 0 && (
+              {myTasks.length === 0 && (
                 <div className="tiny faint" style={{ padding: 12 }}>
                   Nothing assigned to you. 🎉
                 </div>
