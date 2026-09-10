@@ -268,3 +268,45 @@ describe("task comments", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("GET /projects/:projectId/tasks/:id/activity", () => {
+  it("returns creation, status transition, and comment events newest-first", async () => {
+    const p = await setupProject();
+    const task = await createTask(p, "Watched");
+
+    const statuses = await api(`/projects/${p.projectId}/tasks/statuses`, { token: p.token });
+    const { data: statusRows } = (await statuses.json()) as {
+      data: { id: string; name: string }[];
+    };
+    const other = statusRows.find((s) => s.id !== task.statusId)!;
+    await api(`/projects/${p.projectId}/tasks/${task.id}`, {
+      method: "PATCH",
+      token: p.token,
+      body: { statusId: other.id },
+    });
+    await api(`/projects/${p.projectId}/tasks/${task.id}/comments`, {
+      method: "POST",
+      token: p.token,
+      body: { body: "Activity comment" },
+    });
+
+    const res = await api(`/projects/${p.projectId}/tasks/${task.id}/activity`, {
+      token: p.token,
+    });
+    expect(res.status).toBe(200);
+    const { data } = (await res.json()) as {
+      data: { id: string; type: string; actorName: string | null; toStatusName: string | null; body: string | null; createdAt: string }[];
+    };
+    const types = data.map((e) => e.type);
+    expect(types).toContain("created");
+    expect(types).toContain("status");
+    expect(types).toContain("comment");
+    // newest first
+    for (let i = 1; i < data.length; i++) {
+      expect(data[i - 1]!.createdAt >= data[i]!.createdAt).toBe(true);
+    }
+    const statusEvent = data.find((e) => e.type === "status")!;
+    expect(statusEvent.toStatusName).toBe(other.name);
+    expect(statusEvent.actorName).toBeTruthy();
+  });
+});

@@ -10,6 +10,7 @@ import type {
   TaskStatus,
   TaskLabel,
   TaskType,
+  TaskActivityItem,
   Paginated,
   TaskCreateInput,
   TaskUpdateInput,
@@ -54,6 +55,11 @@ export const tasksService = {
       method: "POST",
       body: JSON.stringify(body),
     }).then((x) => x.data),
+
+  activity: (pid: string, taskId: string) =>
+    req<{ data: TaskActivityItem[] }>(`/projects/${pid}/tasks/${taskId}/activity`).then(
+      (x) => x.data,
+    ),
 
   addLink: (pid: string, taskId: string, body: TaskLinkCreateInput) =>
     req<{ data: { id: string } }>(`/projects/${pid}/tasks/${taskId}/links`, {

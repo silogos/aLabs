@@ -137,3 +137,18 @@ export type TaskUpdateInput = z.input<typeof taskUpdate>;
 export type TaskListFilters = Partial<z.input<typeof taskListQuery>>;
 export type TaskLinkCreateInput = z.input<typeof taskLinkCreate>;
 export type CommentCreateInput = z.input<typeof commentCreate>;
+
+/** GET /tasks/:id/activity item — merged, newest-first event feed: the
+ *  creation event (from the task row), status transitions
+ *  (task_status_events), and comments. */
+export const taskActivityItemSchema = z.object({
+  id,
+  type: z.enum(["created", "status", "comment"]),
+  actorId: id.nullable(),
+  actorName: z.string().nullable(),
+  createdAt: iso,
+  fromStatusName: z.string().nullable(),
+  toStatusName: z.string().nullable(),
+  body: z.string().nullable(),
+});
+export type TaskActivityItem = z.infer<typeof taskActivityItemSchema>;

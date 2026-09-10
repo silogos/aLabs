@@ -4,6 +4,7 @@
  *  its cursor envelope by paginating the fetched rows in memory (prototype
  *  volumes). */
 import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db, type Tx } from "./pg";
 import {
   tasks,
@@ -15,8 +16,17 @@ import {
   taskComments,
   taskStatusEvents,
   milestones,
+  users,
 } from "@pmin/core/db";
-import { uuidv7, type Task, type TaskStatus, type TaskType, type TaskLabel, type TaskLink } from "@pmin/core";
+import {
+  uuidv7,
+  type Task,
+  type TaskStatus,
+  type TaskType,
+  type TaskLabel,
+  type TaskLink,
+  type TaskActivityItem,
+} from "@pmin/core";
 import { iso } from "./mapping";
 
 type TaskRow = typeof tasks.$inferSelect;
@@ -641,4 +651,79 @@ export async function insertComment(input: {
     })
     .returning();
   return toComment(row!);
+}
+
+/* ---------------- activity feed ---------------- */
+
+/** Merged, newest-first activity for a task: the creation event (from the
+ *  task row), status transitions, and comments. Capped at 50 entries. */
+export async function listTaskActivity(taskId: string): Promise<TaskActivityItem[]> {
+  const t = await getTask(taskId);
+  if (!t) return [];
+  const fromSt = alias(taskStatuses, "from_status");
+  const toSt = alias(taskStatuses, "to_status");
+  const events = await db
+    .select({
+      id: taskStatusEvents.id,
+      actorId: taskStatusEvents.actorId,
+      actorName: users.name,
+      createdAt: taskStatusEvents.occurredAt,
+      fromStatusName: fromSt.name,
+      toStatusName: toSt.name,
+    })
+    .from(taskStatusEvents)
+    .leftJoin(users, eq(users.id, taskStatusEvents.actorId))
+    .leftJoin(fromSt, eq(fromSt.id, taskStatusEvents.fromStatus))
+    .leftJoin(toSt, eq(toSt.id, taskStatusEvents.toStatus))
+    .where(eq(taskStatusEvents.taskId, taskId));
+  const comments = await db
+    .select({
+      id: taskComments.id,
+      actorId: taskComments.userId,
+      actorName: users.name,
+      createdAt: taskComments.createdAt,
+      body: taskComments.body,
+    })
+    .from(taskComments)
+    .innerJoin(users, eq(users.id, taskComments.userId))
+    .where(eq(taskComments.taskId, taskId));
+  let reporterName: string | null = null;
+  if (t.reporterId) {
+    const [u] = await db.select({ name: users.name }).from(users).where(eq(users.id, t.reporterId));
+    reporterName = u?.name ?? null;
+  }
+  const items: TaskActivityItem[] = [
+    {
+      id: `${t.id}-created`,
+      type: "created",
+      actorId: t.reporterId,
+      actorName: reporterName,
+      createdAt: t.createdAt,
+      fromStatusName: null,
+      toStatusName: null,
+      body: null,
+    },
+    ...events.map((e) => ({
+      id: e.id,
+      type: "status" as const,
+      actorId: e.actorId,
+      actorName: e.actorName,
+      createdAt: e.createdAt.toISOString(),
+      fromStatusName: e.fromStatusName ?? null,
+      toStatusName: e.toStatusName ?? null,
+      body: null,
+    })),
+    ...comments.map((m) => ({
+      id: m.id,
+      type: "comment" as const,
+      actorId: m.actorId,
+      actorName: m.actorName,
+      createdAt: m.createdAt.toISOString(),
+      fromStatusName: null,
+      toStatusName: null,
+      body: m.body,
+    })),
+  ];
+  items.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  return items.slice(0, 50);
 }

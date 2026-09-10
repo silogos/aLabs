@@ -123,6 +123,12 @@ task.post("/tasks/:id/comments", requirePermission("task:update"), async (c) => 
   return created(c, await taskRepo.insertComment({ taskId: t.id, userId: c.get("user")!.id, body: input.body }));
 });
 
+// ---- activity feed (creation + status events + comments, newest first) ----
+task.get("/tasks/:id/activity", requirePermission("task:view"), async (c) => {
+  const t = await findTask(c);
+  return data(c, await taskRepo.listTaskActivity(t.id));
+});
+
 task.get("/tasks/:id", requirePermission("task:view"), async (c) => {
   return data(c, await serializeTask(await findTask(c)));
 });

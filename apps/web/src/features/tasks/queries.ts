@@ -147,4 +147,15 @@ export function useTaskDetail(uuid: string | undefined) {
   });
 }
 
+/** Activity feed (creation + status events + comments) for the drawer. */
+export function useTaskActivity(uuid: string | undefined) {
+  const { project } = useApp();
+  const pid = project?.id ?? "";
+  return useQuery({
+    queryKey: qk.taskActivity(pid, uuid ?? ""),
+    queryFn: () => tasksService.activity(pid, uuid!),
+    enabled: !!project && !!uuid,
+  });
+}
+
 export type { TaskDetail };

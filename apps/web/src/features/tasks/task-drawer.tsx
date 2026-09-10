@@ -9,9 +9,9 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useApp } from "@/providers/app-provider";
 import { usePeople } from "@/providers/people-provider";
-import { useBoard, useTaskDetail } from "./queries";
+import { useBoard, useTaskDetail, useTaskActivity } from "./queries";
 import { useTaskActions } from "./mutations";
-import { PRIO, PRIO_ORDER, ST, progOf, ptsTotal, type RelKey, type TaskRow } from "./model";
+import { PRIO, PRIO_ORDER, progOf, ptsTotal, type RelKey, type TaskRow } from "./model";
 import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill } from "./tasks-ui";
 import { RichTextEditor } from "@pmin/editor";
 import type { Content } from "@pmin/core";
@@ -125,6 +125,7 @@ function TaskDetail({
   const people = usePeople();
   const { setField, toggleSubDone, addSubtask, addComment, removeRelationship } = useTaskActions();
   const detail = useTaskDetail(t.uuid);
+  const activity = useTaskActivity(t.uuid).data ?? [];
   const [cmt, setCmt] = useState("");
   const descTimer = useRef<number | undefined>(undefined);
   const onDescChange = (doc: Content) => {
@@ -338,25 +339,37 @@ function TaskDetail({
 
         <Section title="Activity">
           <ul className="act-list">
-            <li>
-              <span className="act-d" />
-              <div>
-                <b>{people.who(t.rep)}</b> created this{" "}
-                <span className="muted">· {t.desc ? "earlier" : "recently"}</span>
-              </div>
-            </li>
-            <li>
-              <span className="act-d" />
-              <div>
-                <b>{people.who(t.a)}</b> was assigned <span className="muted">· recently</span>
-              </div>
-            </li>
-            <li>
-              <span className="act-d" />
-              <div>
-                Status set to <b>{ST[t.s][0]}</b> <span className="muted">· recently</span>
-              </div>
-            </li>
+            {/* comments get their own section above — the feed lists creation
+                and status transitions */}
+            {activity
+              .filter((e) => e.type !== "comment")
+              .map((e) => (
+                <li key={e.id}>
+                  <span className="act-d" />
+                  <div>
+                    {e.type === "created" ? (
+                      <>
+                        <b>{e.actorName ?? "Someone"}</b> created this
+                      </>
+                    ) : (
+                      <>
+                        {e.actorName ? <b>{e.actorName}</b> : "Status"} set to{" "}
+                        <b>{e.toStatusName ?? "—"}</b>
+                        {e.fromStatusName ? ` (from ${e.fromStatusName})` : ""}
+                      </>
+                    )}{" "}
+                    <span className="muted">· {timeAgo(e.createdAt)}</span>
+                  </div>
+                </li>
+              ))}
+            {activity.filter((e) => e.type !== "comment").length === 0 && (
+              <li>
+                <span className="act-d" />
+                <div>
+                  <span className="muted tiny">No activity yet.</span>
+                </div>
+              </li>
+            )}
           </ul>
         </Section>
       </div>
