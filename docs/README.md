@@ -109,6 +109,9 @@ docs/
 
 # Conventions
 
+- All documentation lives under `docs/` (root `README.md` is the only exception). New plans go in `plans/`, design specs in `design/`.
+- Any change that alters documented behavior must update the corresponding document in the same PR. See the repo root `AGENTS.md` for the full rules.
+
 Each spec document carries a metadata header:
 
 - **Version** — semantic version of the document
