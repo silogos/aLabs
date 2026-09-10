@@ -24,7 +24,7 @@ Replace the BlockNote-based rich text editor with **Tiptap** across the aLabs we
 | D4 | Checklists | **NO** `TaskList`/`TaskItem`. Bullet + ordered lists only, styled to match the app |
 | D5 | Task linking | Paste `alabs.app/t/ATL-105` **or** bare token `ATL-105` → auto-convert to a styled **pill** that navigates in-app. **No separate ID-input box** |
 | D6 | Web links | `Link` extension with `autolink: true` + `linkOnPaste: true` — typed/pasted URLs become clickable links automatically |
-| D7 | Images | **Base64 now**, behind a real `uploadFile` hook so a backend upload route is a one-function swap later |
+| D7 | Images | Insert via **toolbar picker, paste or drop** — all three ride the same `uploadFile` hook (**base64 now**, upload-ready) so a backend upload route is a one-function swap later. Inline images are **resizable** (corner drag handle; `width` stored as a node attr) |
 | D8 | Data model | **Wholesale.** Delete `Block[]`. Store Tiptap ProseMirror `JSONContent` directly. **No adapter, no backwards-compat.** |
 
 ---
@@ -90,9 +90,9 @@ Update `packages/core/src/index.ts`: `export * from "./content.js";` (replacing 
   - `StarterKit` (paragraph, headings, bold/italic/strike/code, bullet+ordered list, blockquote, codeblock, hr, history)
   - `Link.configure({ autolink: true, linkOnPaste: true, openOnClick: false, HTMLAttributes: { class: "al-link" } })` — `openOnClick: false` because pill/link clicks are handled by the app, not full nav.
   - **Custom `TaskLink` inline node** + **paste/typing rule** matching `ATL-\d+` and `alabs\.app/t/ATL-\d+`, inserts a pill node. Stored as a ProseMirror node (`type: "taskLink", attrs: { taskId, label }`) — persists natively, no special handling.
-  - `Image` extension with an `uploadFile` hook (base64-now, upload-ready) — images are inline `image` nodes.
+  - `Image` extension with an `uploadFile` hook (base64-now, upload-ready) — images are inline `image` nodes with a React resize NodeView (`width` attr persists in the stored JSON).
   - `Placeholder` ("Add a description…").
-- Always-visible toolbar: **B / I / S / code** · bullet / ordered list · **link** · **undo/redo**. (No checklist button, no ID-input box.)
+- Always-visible toolbar: **B / I / S / code** · bullet / ordered list · **link / image insert** · **undo/redo**. (No checklist button, no ID-input box.)
 - Toolbar + pill clicks (`onOpenTask`) are wired via props/refs, not editor-internal nav.
 
 ### 2. TaskDrawer integration — `apps/web/src/components/TaskDrawer.tsx`

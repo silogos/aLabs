@@ -4,13 +4,15 @@
  * - Reads/writes native ProseMirror JSON (`@pmin/core` `Content`), so what the
  *   user edits is exactly what persists — no adapter, no mark loss.
  * - Always-visible toolbar (bold / italic / strike / code · headings · lists ·
- *   quote · link · undo/redo). No checklists.
+ *   quote · link · image insert · undo/redo). No checklists.
  * - `Link` autolinks typed/pasted URLs.
  * - Pasting `alabs.app/t/ATL-105` or a bare `ATL-105` token auto-converts to a
  *   **task pill** (custom `taskLink` node) that opens the task in-app.
- * - Pasted/dropped images upload via the optional `uploadFile` prop and insert
- *   the returned URL; if `uploadFile` is omitted (or rejects) they fall back to
- *   base64 data URLs so a flaky upload never silently drops an image.
+ * - Images go in three ways — toolbar picker, paste or drop. They upload via
+ *   the optional `uploadFile` prop and insert the returned URL; if `uploadFile`
+ *   is omitted (or rejects) they fall back to base64 data URLs so a flaky
+ *   upload never silently drops an image. Inline images are resizable via a
+ *   corner drag handle; the width persists as a node attribute.
  *
  * `initialContent` is read ONCE on mount. To load different content, remount
  * via `key` (e.g. `<RichTextEditor key={pageId} ... />`). `onChange` fires on
@@ -20,8 +22,9 @@
  * Base styling ships in `@pmin/editor/editor.css` (import it once at your app
  * entry). Contextual density is an opt-in `className` extension point.
  */
-import { useEffect, useRef } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useState, useEffect, useRef } from "react";
+import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
+import type { NodeViewProps } from "@tiptap/react";
 import type { EditorView } from "@tiptap/pm/view";
 import {
   Node,
@@ -112,6 +115,86 @@ export const TaskLink = Node.create({
 });
 
 /* ============================================================
+ * ResizableImage — the inline image with a corner drag handle.
+ * Width persists as a node attr (px number) so it round-trips in the
+ * stored ProseMirror JSON; height stays auto (aspect ratio kept).
+ * ============================================================ */
+const MIN_IMG_W = 32;
+
+function ImageView({ node, updateAttributes, selected }: NodeViewProps) {
+  const { src, alt, title, width } = node.attrs as {
+    src: string;
+    alt?: string | null;
+    title?: string | null;
+    width: number | null;
+  };
+  const imgRef = useRef<HTMLImageElement>(null);
+  const dragRef = useRef<{ x: number; base: number } | null>(null);
+  const [dragW, setDragW] = useState<number | null>(null);
+
+  const onHandleDown = (e: React.PointerEvent<HTMLSpanElement>) => {
+    e.preventDefault(); // keep ProseMirror from starting a selection/node drag
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    dragRef.current = { x: e.clientX, base: width ?? imgRef.current?.offsetWidth ?? 0 };
+  };
+  const onHandleMove = (e: React.PointerEvent<HTMLSpanElement>) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const box = imgRef.current?.closest(".al-content")?.clientWidth ?? 0;
+    const max = box > 0 ? box : Infinity; // no layout (jsdom) → unclamped
+    setDragW(Math.round(Math.min(Math.max(d.base + (e.clientX - d.x), MIN_IMG_W), max)));
+  };
+  const onHandleUp = () => {
+    if (!dragRef.current) return;
+    dragRef.current = null;
+    if (dragW != null) updateAttributes({ width: dragW }); // one transaction per resize
+    setDragW(null);
+  };
+
+  const w = dragW ?? width;
+  return (
+    <NodeViewWrapper as="span" className={"al-img" + (selected ? " selected" : "")}>
+      <img
+        ref={imgRef}
+        src={src}
+        alt={alt ?? ""}
+        title={title ?? undefined}
+        style={w ? { width: `${w}px` } : undefined}
+        draggable={false}
+      />
+      <span
+        className="al-img-h"
+        contentEditable={false}
+        title="Drag to resize"
+        onPointerDown={onHandleDown}
+        onPointerMove={onHandleMove}
+        onPointerUp={onHandleUp}
+      />
+    </NodeViewWrapper>
+  );
+}
+
+const ResizableImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: null,
+        parseHTML: (el) => {
+          const n = Number.parseInt(el.getAttribute("width") ?? el.style.width ?? "", 10);
+          return Number.isFinite(n) && n > 0 ? n : null;
+        },
+        renderHTML: (attrs) => (attrs.width ? { style: `width: ${attrs.width}px` } : {}),
+      },
+    };
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageView);
+  },
+}).configure({ inline: true, allowBase64: true });
+
+/* ============================================================
  * Image paste/drop — insert pasted/dropped image files as inline
  * <img> nodes (base64 data URL for now). Replace `readAsDataURL`
  * with a real upload call to move off base64.
@@ -170,6 +253,7 @@ const IcOrdered = ({ size = 15 }: IconProps) => ic(size, '<line x1="10" y1="6" x
 const IcQuote = ({ size = 15 }: IconProps) => ic(size, '<path d="M3 21c3 0 7-1 7-8V5H3v7h4"/><path d="M14 21c3 0 7-1 7-8V5h-7v7h4"/>');
 const IcLink = ({ size = 15 }: IconProps) => ic(size, '<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>');
 const IcUndo = ({ size = 15 }: IconProps) => ic(size, '<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>');
+const IcImage = ({ size = 15 }: IconProps) => ic(size, '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>');
 const IcRedo = ({ size = 15 }: IconProps) => ic(size, '<path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>');
 
 /* ============================================================
@@ -224,7 +308,7 @@ export function RichTextEditor({
         linkOnPaste: true,
         HTMLAttributes: { class: "al-link" },
       }),
-      Image.configure({ inline: true, allowBase64: true }),
+      ResizableImage,
       Placeholder.configure({ placeholder: placeholder ?? "Write something…" }),
       TaskLink,
     ],
@@ -249,10 +333,33 @@ export function RichTextEditor({
   });
 
   // `useEditor` captures its options at mount — toggling the `editable` prop
-  // on re-render must be synced to the live instance explicitly.
+  // on re-render must be synced to the live instance explicitly. emitUpdate
+  // must stay false: tiptap's setEditable emits "update" by default, which
+  // would fire onChange on every mount (e.g. the task drawer's debounced
+  // description save) even though no content changed.
   useEffect(() => {
-    editor?.setEditable(editable);
+    editor?.setEditable(editable, false);
   }, [editable, editor]);
+
+  /* Toolbar image insert — a transient <input type="file"> reaches the native
+   * picker with no extra DOM; chosen files ride the same insert/upload path
+   * (uploadFile → base64 fallback) as pasted/dropped images. */
+  const insertImageFromPicker = () => {
+    if (!editor) return;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.multiple = true;
+    input.onchange = () => {
+      const files = input.files;
+      if (!files?.length) return;
+      // re-focus first so the image lands at the caret the user left — the
+      // file dialog may have moved focus elsewhere in the meantime
+      editor.commands.focus();
+      insertImageFiles(editor.view, files, uploadRef.current);
+    };
+    input.click();
+  };
 
   /* Task-pill click → open the task in-app (DOM delegation on the wrapper). */
   useEffect(() => {
@@ -310,6 +417,9 @@ export function RichTextEditor({
             }}
           >
             <IcLink />
+          </TBtn>
+          <TBtn title="Insert image" onClick={insertImageFromPicker}>
+            <IcImage />
           </TBtn>
           <i className="al-sep" />
           <TBtn title="Undo" onClick={() => editor.chain().focus().undo().run()}><IcUndo /></TBtn>
