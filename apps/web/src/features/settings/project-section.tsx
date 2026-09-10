@@ -21,7 +21,7 @@ const STATUS_OPTIONS: ProjectStatus[] = ["active", "on_hold", "archived"];
 const VIS_OPTIONS: ProjectVisibility[] = ["organization", "private"];
 
 export function ProjectSection() {
-  const { project, user, projects, recents, toast, switchProject } = useApp();
+  const { project, org, user, projects, recents, toast, switchProject } = useApp();
   const qc = useQueryClient();
   const router = useRouter();
   const { data: members } = useProjectMembers(project?.id);
@@ -96,7 +96,7 @@ export function ProjectSection() {
         switchProject(next);
       } else {
         // no projects left in this org — org management is the next stop
-        router.push("/org/projects");
+        router.push(org ? `/${org.slug}/projects` : "/");
       }
       toast(`${project.name} deleted`);
     } catch (e) {

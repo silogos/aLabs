@@ -19,7 +19,7 @@ export default function proxy(request: NextRequest) {
 
   if (hasSession && (pathname === "/login" || pathname === "/register")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/";
     url.search = "";
     return NextResponse.redirect(url);
   }

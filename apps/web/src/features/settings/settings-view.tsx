@@ -39,7 +39,7 @@ export function SettingsView() {
           </span>
           <button
             className="btn subtle sm"
-            onClick={() => router.push("/org")}
+            onClick={() => router.push(org ? `/${org.slug}` : "/")}
             data-od-id="settings-open-org"
           >
             Open org dashboard

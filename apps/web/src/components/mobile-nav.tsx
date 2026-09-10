@@ -37,7 +37,7 @@ export function MobileNav() {
       onClick={() => {
         if (key === "orgsettings") {
           setMNavOpen(false);
-          router.push("/org/settings");
+          router.push(org ? `/${org.slug}/settings` : "/");
           return;
         }
         if (key === "profile") {

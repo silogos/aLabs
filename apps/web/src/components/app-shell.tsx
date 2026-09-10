@@ -1,10 +1,12 @@
 /** App shell — sidebar + topbar + routed view + feature-less global overlays.
- *  The active view comes from the URL (provider derives it from the pathname);
- *  this component renders the persistent chrome around whatever page is routed.
- *  Task overlays live in features/tasks/overlays and are mounted by the (app)
- *  layout, keeping this shell free of feature imports. */
+ *  The active view and open task drawer come from the URL (derived from the
+ *  pathname); this component renders the persistent chrome around whatever
+ *  page is routed. Task overlays live in features/tasks/overlays and are
+ *  mounted by the (project) layout, keeping this shell free of feature
+ *  imports. */
 import { useEffect, type ReactNode } from "react";
-import { useApp, type View } from "@/providers/app-provider";
+import { usePathname } from "next/navigation";
+import { useApp, taskFromPath, type View } from "@/providers/app-provider";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import { CommandPalette } from "@/components/command-palette";
@@ -24,9 +26,10 @@ const TITLES: Record<View, string> = {
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const taskId = taskFromPath(pathname);
   const {
     view,
-    taskId,
     createOpen,
     cmdkOpen,
     closeTask,
@@ -55,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         else {
           setCmdkOpen(false);
           closeRelPicker();
-          closeTask();
+          if (taskId) closeTask();
           setCreateOpen(false);
         }
       }
@@ -71,6 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     navModal,
     setMNavOpen,
     setNavModal,
+    taskId,
   ]);
 
   if (!project) {
@@ -109,7 +113,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             closeRelPicker();
             return;
           }
-          closeTask();
+          if (taskId) {
+            closeTask();
+            return;
+          }
           setCreateOpen(false);
           setCmdkOpen(false);
         }}

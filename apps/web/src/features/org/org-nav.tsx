@@ -1,13 +1,15 @@
 "use client";
 
-/** Org nav model — sections + icons for the /org rail and mobile sheet.
- *  Mirrors NAV_SECTIONS in components/nav-data.tsx (same icon language),
- *  but the org area is its own surface: paths, not project views. */
+/** Org nav model — sections + icons for the /{orgSlug} rail and mobile
+ *  sheet. Mirrors NAV_SECTIONS in components/nav-data.tsx (same icon
+ *  language), but the org area is its own surface: path suffixes under
+ *  /{orgSlug}, not project views. */
 import type { ReactNode } from "react";
 
 export interface OrgNavItem {
   id: string;
   label: string;
+  /** Suffix under /{orgSlug} — "" is the org overview itself. */
   path: string;
 }
 
@@ -15,22 +17,22 @@ export const ORG_SECTIONS: { label: string; items: OrgNavItem[] }[] = [
   {
     label: "Overview",
     items: [
-      { id: "org-overview", label: "Overview", path: "/org" },
-      { id: "org-activity", label: "Activity", path: "/org/activity" },
+      { id: "org-overview", label: "Overview", path: "" },
+      { id: "org-activity", label: "Activity", path: "/activity" },
     ],
   },
   {
     label: "Manage",
     items: [
-      { id: "org-projects", label: "Projects", path: "/org/projects" },
-      { id: "org-members", label: "Members", path: "/org/members" },
+      { id: "org-projects", label: "Projects", path: "/projects" },
+      { id: "org-members", label: "Members", path: "/members" },
     ],
   },
   {
     label: "Administration",
     items: [
-      { id: "org-settings", label: "Settings", path: "/org/settings" },
-      { id: "org-billing", label: "Billing", path: "/org/billing" },
+      { id: "org-settings", label: "Settings", path: "/settings" },
+      { id: "org-billing", label: "Billing", path: "/billing" },
     ],
   },
 ];
@@ -102,14 +104,17 @@ export const ORG_BACK_ICON = I(
 
 export const ORG_FLAT_ITEMS = ORG_SECTIONS.flatMap((s) => s.items);
 
-/** Active org section from a /org/* pathname ("/org" itself → Overview). */
+/** Full path for an org nav item: /{orgSlug}{suffix}. */
+export const orgPath = (orgSlug: string, suffix: string) => `/${orgSlug}${suffix}`;
+
+/** Active org section from a /{orgSlug}… pathname ("/{orgSlug}" → Overview). */
 export function orgActiveId(pathname: string): string {
-  const exact = ORG_FLAT_ITEMS.find((n) => n.path === pathname);
+  const suffix = pathname.split("/").filter(Boolean).slice(1).join("/");
+  const suf = suffix ? `/${suffix}` : "";
+  const exact = ORG_FLAT_ITEMS.find((n) => n.path === suf);
   if (exact) return exact.id;
-  // nested match — "/org" must not prefix-capture its own children
-  const nested = ORG_FLAT_ITEMS.find(
-    (n) => n.path !== "/org" && pathname.startsWith(`${n.path}/`),
-  );
+  // nested match — "" must not prefix-capture its own children
+  const nested = ORG_FLAT_ITEMS.find((n) => n.path !== "" && suf.startsWith(`${n.path}/`));
   return nested?.id ?? "org-overview";
 }
 

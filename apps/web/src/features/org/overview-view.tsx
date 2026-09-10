@@ -85,7 +85,7 @@ export function OrgOverviewView() {
           </div>
         </div>
         <div className="row">
-          <button className="btn subtle sm" onClick={() => router.push("/org/members")}>
+          <button className="btn subtle sm" onClick={() => router.push(`/${org.slug}/members`)}>
             Invite member
           </button>
           <button className="btn primary sm" onClick={() => setNewOpen(true)} data-od-id="org-overview-new-project">
@@ -112,7 +112,7 @@ export function OrgOverviewView() {
               <h3>Projects</h3>
               <span className="muted">{projects.length}</span>
               <div className="right">
-                <button className="btn ghost sm" onClick={() => router.push("/org/projects")}>
+                <button className="btn ghost sm" onClick={() => router.push(`/${org.slug}/projects`)}>
                   Manage
                 </button>
               </div>
@@ -149,7 +149,7 @@ export function OrgOverviewView() {
               <h3>Members</h3>
               <span className="muted">{members?.length ?? 0}</span>
               <div className="right">
-                <button className="btn ghost sm" onClick={() => router.push("/org/members")}>
+                <button className="btn ghost sm" onClick={() => router.push(`/${org.slug}/members`)}>
                   Manage
                 </button>
               </div>
@@ -180,7 +180,7 @@ export function OrgOverviewView() {
               <h3>Recent activity</h3>
               <span className="muted">Across all projects</span>
               <div className="right">
-                <button className="btn ghost sm" onClick={() => router.push("/org/activity")}>
+                <button className="btn ghost sm" onClick={() => router.push(`/${org.slug}/activity`)}>
                   View all
                 </button>
               </div>

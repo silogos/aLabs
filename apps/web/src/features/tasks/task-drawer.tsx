@@ -1,8 +1,12 @@
 /** Task detail drawer — two-column workspace (main + side panel) + epic mode.
- *  Reads from the board queries; entry via AppProvider.openTask(id). */
+ *  Reads from the board queries; mounted by the /tasks/[taskId] route.
+ *  Portals to document.body: as routed page content it would live inside
+ *  .main (z-index:1) and paint UNDER the shell's scrim (z-index:90) — at
+ *  body level the drawer's z-index:100 stacks above it again. */
 import { documentsService } from "@/services/documents";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useApp } from "@/providers/app-provider";
 import { usePeople } from "@/providers/people-provider";
 import { useBoard, useTaskDetail } from "./queries";
@@ -26,14 +30,23 @@ export function TaskDrawer({ id }: { id: string }) {
   }, [tid]);
 
   if (!t) {
-    return (
+    // board still loading, or a deep-linked task number that doesn't exist
+    return createPortal(
       <aside className="drawer show">
-        <div className="db">Loading…</div>
-      </aside>
+        <div className="dh">
+          <div className="db">{board.ready ? "Task not found." : "Loading…"}</div>
+          <button className="x" onClick={closeTask} aria-label="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </aside>,
+      document.body,
     );
   }
 
-  return (
+  return createPortal(
     <aside className="drawer workspace show">
       <div className="dh">
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -89,7 +102,8 @@ export function TaskDrawer({ id }: { id: string }) {
           />
         )}
       </div>
-    </aside>
+    </aside>,
+    document.body,
   );
 }
 
