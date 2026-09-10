@@ -36,3 +36,17 @@
 .alabs-editor .al-content .task-pill { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; margin: 0 1px; border-radius: 999px; font-family: var(--mono); font-size: .85em; font-weight: 600; line-height: 1.5; background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in oklch, var(--accent) 28%, transparent); cursor: pointer; white-space: nowrap; user-select: none; vertical-align: baseline; }
 .alabs-editor .al-content .task-pill:hover { background: color-mix(in oklch, var(--accent) 16%, var(--surface)); }
 .alabs-editor .al-content .task-pill::before { content: "◆"; font-size: .8em; opacity: .8; }
+
+/* Resizable image (inline NodeView wrapper + corner drag handle) */
+.alabs-editor .al-content .al-img { position: relative; display: inline-block; max-width: 100%; vertical-align: baseline; }
+.alabs-editor .al-content .al-img img { max-width: 100%; height: auto; border-radius: var(--radius); }
+/* Selection border — shows on hover/selection exactly like the resize
+   handle. Negative offset draws it just INSIDE the image edge so it never
+   overflows the editor area (hosts like .dw-desc clip overflow-x). */
+.alabs-editor .al-content .al-img:hover,
+.alabs-editor .al-content .al-img.selected,
+.alabs-editor .al-content .al-img.ProseMirror-selectednode { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius); }
+.alabs-editor .al-content .al-img-h { position: absolute; right: -5px; bottom: -5px; width: 10px; height: 10px; border-radius: 3px; background: var(--accent); border: 2px solid var(--surface); box-shadow: 0 0 0 1px color-mix(in oklch, var(--accent) 40%, transparent); cursor: nwse-resize; opacity: 0; transition: opacity .12s; touch-action: none; }
+.alabs-editor .al-content .al-img:hover .al-img-h,
+.alabs-editor .al-content .al-img.selected .al-img-h,
+.alabs-editor .al-content .al-img.ProseMirror-selectednode .al-img-h { opacity: 1; }
