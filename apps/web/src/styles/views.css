@@ -3943,6 +3943,12 @@ li.bl-li::after {
   padding:8px;
   width: max-content;
 }
+/* Right-aligned variant — applied when the trigger is close enough to the
+   right viewport edge that the default left-aligned popover would overflow. */
+.dp-pop.dp-pop-end {
+  left:auto;
+  right:0;
+}
 .dp-pop .rdp-root {
   --rdp-day-width:28px;
   --rdp-day-height:28px;

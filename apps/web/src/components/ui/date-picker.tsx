@@ -1,7 +1,7 @@
 /** DatePicker — shared date entry for the app: a `.fld`-styled trigger that
  *  opens a react-day-picker calendar popover. Controlled "YYYY-MM-DD" string
  *  API so existing useState forms keep their shape; "" clears the selection. */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { dateShort, toLocalDate } from "@/lib/format";
@@ -56,7 +56,18 @@ export function DatePicker({
   clearable?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [alignRight, setAlignRight] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  // The popover is wider than the trigger; when the trigger hugs the right
+  // viewport edge the default left-aligned popover would spill off-screen.
+  // Measure after mount and flip to right-aligned alignment if it overflows.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const pop = ref.current?.querySelector<HTMLElement>(".dp-pop");
+    if (!pop) return;
+    setAlignRight(pop.getBoundingClientRect().right > window.innerWidth);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -96,7 +107,7 @@ export function DatePicker({
         <CalIcon />
       </button>
       {open && (
-        <div className="dp-pop" role="dialog" aria-label="Choose date">
+        <div className={`dp-pop${alignRight ? " dp-pop-end" : ""}`} role="dialog" aria-label="Choose date">
           <DayPicker
             mode="single"
             selected={selected}
