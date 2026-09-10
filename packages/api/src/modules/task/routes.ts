@@ -5,6 +5,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import * as taskRepo from "../../db/task-repo";
 import * as docRepo from "../../db/doc-repo";
+import * as orgRepo from "../../db/org-repo";
+import * as planningRepo from "../../db/planning-repo";
 import {
   taskCreate,
   taskUpdate,
@@ -52,6 +54,7 @@ task.post("/tasks", requirePermission("task:create"), async (c) => {
     const found = await taskRepo.findLabels(pid, input.labelIds);
     if (found.length !== input.labelIds.length) throw badRequest("Unknown label id");
   }
+  await validateTaskRefs(c, input, { selfId: null });
   const created_ = await taskRepo.insertTask({
     projectId: pid,
     title: input.title,
@@ -190,6 +193,7 @@ task.patch("/tasks/:id", requirePermission("task:update"), async (c) => {
     const found = await taskRepo.findLabels(projectIdOf(c), input.labelIds);
     if (found.length !== input.labelIds.length) throw badRequest("Unknown label id");
   }
+  await validateTaskRefs(c, input, { selfId: t.id });
   const patch: Parameters<typeof taskRepo.patchTask>[2] = pickDefined(input, [
     "title",
     "description",
@@ -222,6 +226,78 @@ async function findTask(c: Ctx) {
   const t = await taskRepo.getTask(c.req.param("id")!);
   if (!t || t.projectId !== projectIdOf(c)) throw notFound();
   return t;
+}
+
+/** Referential integrity for task create/patch: every relation id must
+ *  resolve inside the caller's tenant (the active org for people, the
+ *  project for everything else). Prevents cross-project/cross-org rows —
+ *  a missed scope here is a data leak. */
+async function validateTaskRefs(
+  c: Ctx,
+  input: {
+    assigneeId?: string | null;
+    typeId?: string | null;
+    parentId?: string | null;
+    epicId?: string | null;
+    iterationId?: string | null;
+    milestoneId?: string | null;
+  },
+  opts: { selfId: string | null },
+): Promise<void> {
+  const pid = projectIdOf(c);
+  const orgId = c.get("tenant")!.organizationId;
+
+  if (input.assigneeId) {
+    const member = await orgRepo.getActiveMember(orgId, input.assigneeId);
+    if (!member) throw badRequest("Assignee is not a member of this workspace");
+  }
+
+  if (input.typeId) {
+    const ty = await taskRepo.findType(pid, input.typeId);
+    if (!ty) throw notFound("Type not found");
+  }
+
+  if (input.parentId !== undefined && input.parentId !== null) {
+    const parent = await taskRepo.getTask(input.parentId);
+    if (!parent || parent.projectId !== pid) throw badRequest("Parent task not found in this project");
+    if (opts.selfId && parent.id === opts.selfId) throw badRequest("A task cannot be its own parent");
+    if (opts.selfId && (await ancestryContains(opts.selfId, parent.id)))
+      throw badRequest("Parent change would create a cycle");
+  }
+
+  if (input.epicId !== undefined && input.epicId !== null) {
+    const epic = await taskRepo.getTask(input.epicId);
+    if (!epic || epic.projectId !== pid) throw badRequest("Epic task not found in this project");
+    if (opts.selfId && epic.id === opts.selfId) throw badRequest("A task cannot be its own epic");
+    // the referenced task must actually be an Epic (type name "Epic")
+    if (epic.typeId) {
+      const ty = await taskRepo.findType(pid, epic.typeId);
+      if (!ty || ty.name !== "Epic") throw badRequest("Epic reference must point to an Epic-typed task");
+    } else {
+      throw badRequest("Epic reference must point to an Epic-typed task");
+    }
+  }
+
+  if (input.iterationId) {
+    const it = await planningRepo.getIteration(input.iterationId);
+    if (!it || it.projectId !== pid) throw notFound("Iteration not found");
+  }
+  if (input.milestoneId) {
+    const m = await planningRepo.getMilestone(input.milestoneId);
+    if (!m || m.projectId !== pid) throw notFound("Milestone not found");
+  }
+}
+
+/** Walk the parent chain from `fromId` upward;true if `targetId` appears
+ *  (bounded — the data model caps nesting at 3 levels). */
+async function ancestryContains(targetId: string, fromId: string): Promise<boolean> {
+  let cur: string | null = fromId;
+  for (let hops = 0; cur && hops < 20; hops++) {
+    if (cur === targetId) return true;
+    const row = await taskRepo.getTask(cur);
+    cur = row?.parentId ?? null;
+  }
+  return false;
 }
 
 async function serializeTask(t: taskRepo.TaskWithMeta) {

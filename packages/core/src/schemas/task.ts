@@ -29,15 +29,24 @@ export const taskTypeSchema = z.object({
 });
 export type TaskType = z.infer<typeof taskTypeSchema>;
 
+/** Config names land in varchar(50) columns — bound here so an oversized
+ *  name is a 400, not a raw DB error. */
+const configName = z.string().trim().min(1).max(50);
+/** Status/label colors: hex or the CSS custom-property refs the seed uses. */
+const configColor = z
+  .string()
+  .max(20)
+  .regex(/^#[0-9a-fA-F]{3,8}$|^var\(--[a-z0-9-]+\)$/);
+
 export const taskStatusCreate = z.object({
-  name: z.string(),
-  color: z.string().optional(),
+  name: configName,
+  color: configColor.optional(),
 });
 export const taskLabelCreate = z.object({
-  name: z.string(),
-  color: z.string().optional(),
+  name: configName,
+  color: configColor.optional(),
 });
-export const taskTypeCreate = z.object({ name: z.string() });
+export const taskTypeCreate = z.object({ name: configName });
 
 /* ---- task links (cross-issue relationships) ---- */
 
@@ -141,7 +150,7 @@ export const taskListQuery = paginationQuery.extend({
   assigneeId: z.string().uuid().optional(),
   labelId: z.string().uuid().optional(),
   typeId: z.string().uuid().optional(),
-  priority: z.string().optional(),
+  priority: TaskPriority.optional(),
   iterationId: z.string().uuid().optional(),
   q: z.string().optional(),
   /** "true" to include subtask rows (parented tasks) alongside top-level ones. */

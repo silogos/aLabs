@@ -209,6 +209,153 @@ describe("task config (statuses / labels / types)", () => {
     expect(((await labels.json()) as { data: { name: string }[] }).data.some((l) => l.name === `bug ${suffix}`)).toBe(true);
     expect(((await types.json()) as { data: { name: string }[] }).data.some((t) => t.name === `Feature ${suffix}`)).toBe(true);
   });
+
+  it("rejects an oversized config name with 400, not a raw DB error", async () => {
+    const p = await setupProject();
+    const long = "x".repeat(51);
+    const [status, label, type] = await Promise.all([
+      api(`/projects/${p.projectId}/tasks/statuses`, { method: "POST", token: p.token, body: { name: long } }),
+      api(`/projects/${p.projectId}/tasks/labels`, { method: "POST", token: p.token, body: { name: long } }),
+      api(`/projects/${p.projectId}/tasks/types`, { method: "POST", token: p.token, body: { name: long } }),
+    ]);
+    expect(status.status).toBe(400);
+    expect(label.status).toBe(400);
+    expect(type.status).toBe(400);
+  });
+
+  it("rejects an invalid priority list filter with 400", async () => {
+    const p = await setupProject();
+    const res = await api(`/projects/${p.projectId}/tasks?priority=blocker`, {
+      token: p.token,
+    });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("task referential validation", () => {
+  it("rejects an assignee who is not a member of the workspace", async () => {
+    const p = await setupProject();
+    const stranger = await registerUser();
+    const res = await api(`/projects/${p.projectId}/tasks`, {
+      method: "POST",
+      token: p.token,
+      body: { title: "Bad assignee", assigneeId: stranger.user.id },
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects a parentId or epicId from another project", async () => {
+    const [a, b] = await Promise.all([setupProject(), setupProject()]);
+    const foreign = await createTask(b, "Other project's task");
+
+    const parent = await api(`/projects/${a.projectId}/tasks`, {
+      method: "POST",
+      token: a.token,
+      body: { title: "Cross-project parent", parentId: foreign.id },
+    });
+    expect(parent.status).toBe(400);
+
+    const epic = await api(`/projects/${a.projectId}/tasks`, {
+      method: "POST",
+      token: a.token,
+      body: { title: "Cross-project epic", epicId: foreign.id },
+    });
+    expect(epic.status).toBe(400);
+  });
+
+  it("rejects an iterationId or milestoneId from another project with 404", async () => {
+    const [a, b] = await Promise.all([setupProject(), setupProject()]);
+    const iterRes = await api(`/projects/${b.projectId}/planning/iterations`, {
+      method: "POST",
+      token: b.token,
+      body: { name: "Sprint 1", startDate: "2026-09-01", endDate: "2026-09-15" },
+    });
+    const iter = ((await iterRes.json()) as { data: { id: string } }).data;
+    const mileRes = await api(`/projects/${b.projectId}/planning/milestones`, {
+      method: "POST",
+      token: b.token,
+      body: { name: "Launch" },
+    });
+    const mile = ((await mileRes.json()) as { data: { id: string } }).data;
+
+    const withIter = await api(`/projects/${a.projectId}/tasks`, {
+      method: "POST",
+      token: a.token,
+      body: { title: "Foreign iteration", iterationId: iter.id },
+    });
+    expect(withIter.status).toBe(404);
+
+    const withMile = await api(`/projects/${a.projectId}/tasks`, {
+      method: "POST",
+      token: a.token,
+      body: { title: "Foreign milestone", milestoneId: mile.id },
+    });
+    expect(withMile.status).toBe(404);
+  });
+
+  it("rejects a task being its own parent and parent cycles", async () => {
+    const p = await setupProject();
+    const parent = await createTask(p, "Parent");
+    const childRes = await api(`/projects/${p.projectId}/tasks`, {
+      method: "POST",
+      token: p.token,
+      body: { title: "Child", parentId: parent.id },
+    });
+    expect(childRes.status).toBe(201);
+    const child = ((await childRes.json()) as { data: TaskRow }).data;
+
+    const self = await api(`/projects/${p.projectId}/tasks/${parent.id}`, {
+      method: "PATCH",
+      token: p.token,
+      body: { parentId: parent.id },
+    });
+    expect(self.status).toBe(400);
+
+    const cycle = await api(`/projects/${p.projectId}/tasks/${parent.id}`, {
+      method: "PATCH",
+      token: p.token,
+      body: { parentId: child.id },
+    });
+    expect(cycle.status).toBe(400);
+  });
+
+  it("rejects an epic reference to a non-Epic task", async () => {
+    const p = await setupProject();
+    const plain = await createTask(p, "Just a task");
+    const res = await api(`/projects/${p.projectId}/tasks`, {
+      method: "POST",
+      token: p.token,
+      body: { title: "Bad epic ref", epicId: plain.id },
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("accepts an epic reference to a real Epic-typed task", async () => {
+    const p = await setupProject();
+    const types = await api(`/projects/${p.projectId}/tasks/types`, { token: p.token });
+    const { data: typeRows } = (await types.json()) as { data: { id: string; name: string }[] };
+    const epicType = typeRows.find((t) => t.name === "Epic")!;
+    const epic = await createTask(p, "Real epic");
+
+    const res = await api(`/projects/${p.projectId}/tasks`, {
+      method: "POST",
+      token: p.token,
+      body: { title: "Work item", epicId: epic.id, typeId: epicType.id },
+    });
+    // the epic itself was created untyped — give it the type first
+    await api(`/projects/${p.projectId}/tasks/${epic.id}`, {
+      method: "PATCH",
+      token: p.token,
+      body: { typeId: epicType.id },
+    });
+    const retry = await api(`/projects/${p.projectId}/tasks`, {
+      method: "POST",
+      token: p.token,
+      body: { title: "Work item", epicId: epic.id },
+    });
+    expect(res.status).toBe(400);
+    expect(retry.status).toBe(201);
+  });
 });
 
 describe("task links", () => {

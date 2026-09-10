@@ -134,6 +134,15 @@ export async function insertType(projectId: string, name: string): Promise<TaskT
   return toType(row!);
 }
 
+export async function findType(projectId: string, typeId: string): Promise<TaskType | null> {
+  const [row] = await db
+    .select()
+    .from(taskTypes)
+    .where(and(eq(taskTypes.projectId, projectId), eq(taskTypes.id, typeId)))
+    .limit(1);
+  return row ? toType(row) : null;
+}
+
 export async function listLabels(projectId: string): Promise<TaskLabel[]> {
   const rows = await db
     .select()
