@@ -313,10 +313,10 @@ Guest
 Authenticated
 
 ```text
-/dashboard
+/
 ```
 
-Unauthorized users attempting to access protected routes should be redirected to Login.
+The user dashboard at `/` is the post-login landing (recents + workspaces). Unauthorized users attempting to access protected routes should be redirected to Login.
 
 ---
 
