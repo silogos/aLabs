@@ -59,7 +59,7 @@ Fields
 
 - id
 - name
-- slug
+- slug — globally unique; identifies the org in web URLs (`/{orgSlug}`, ADR 0009); immutable
 - type (personal | team)
 - logo
 - description

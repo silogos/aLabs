@@ -39,6 +39,10 @@ This keeps the entire routing, scoping, and permission spine intact:
 - `/projects/:projectId/*` resolves and authorizes the same way.
 - `orgContext` / `projectContext` return 404 (not 403) the same way.
 
+(ADR 0009 adds slug-based web URLs — `/{orgSlug}/{projectSlug}/…` — but they are
+a presentation concern resolved client-side to the same UUID spine; the API
+contract above is unchanged.)
+
 Adding personal workspaces changes **one column** (`organizations.type`) and
 two gates. It does not add a parallel data path.
 
@@ -155,5 +159,7 @@ So that I can collaborate with others without losing my personal space.
 - A personal org rejects project creation beyond `PERSONAL_PROJECT_LIMIT`
   active projects.
 - Archiving a project frees the slot.
-- Renaming / archiving never breaks routing (UUID spine unchanged).
+- Renaming / archiving never breaks API routing (UUID spine unchanged). Web
+  URLs use slugs (ADR 0009): renaming a project slug orphans old links, which
+  fall back to `/` with a "Project not found" toast.
 - Downgrade never deletes data.

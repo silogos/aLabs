@@ -153,7 +153,7 @@ function AccountModal() {
           return;
         }
         setNavModal(null);
-        router.push(key === "profile" ? "/user" : "/org/settings");
+        router.push(key === "profile" ? "/user" : org ? `/${org.slug}/settings` : "/");
       }}
     >
       <span className="ic">{rowIcon[key]}</span>

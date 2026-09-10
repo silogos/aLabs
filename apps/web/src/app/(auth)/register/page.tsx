@@ -37,7 +37,7 @@ export default function RegisterPage() {
     setError(null);
     try {
       await authService.register({ name, email, password });
-      router.replace("/dashboard");
+      router.replace("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create the account");
       setBusy(false);

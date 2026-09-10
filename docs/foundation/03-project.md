@@ -59,7 +59,7 @@ Fields
 - id
 - organizationId
 - name
-- slug
+- slug — unique within the org; identifies the project in web URLs (`/{orgSlug}/{projectSlug}/{view}`, ADR 0009); editable, but renaming orphans previously shared links (they fall back to `/` with a toast)
 - key
 - description
 - icon

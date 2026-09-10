@@ -1,5 +1,9 @@
-/** Global app state: active tenant (real org/project ids, persisted as the
- *  last-visited pair), current view, overlays, toasts.
+/** Global app state: active tenant, current view, overlays, toasts.
+ *
+ *  Tenant selection is URL-first: /{orgSlug}/{projectSlug}/{view} is the
+ *  source of truth (shareable links), mirrored into the alabs-org /
+ *  alabs-project localStorage prefs so tenant-less surfaces (/, /user,
+ *  /notifications) and fresh reloads land on the last-visited pair.
  *
  *  Switching model (per the nav design):
  *   - project switcher = frequent, this-org projects only;
@@ -36,21 +40,72 @@ export type View =
   | "settings";
 export type NavModal = "acct" | "proj" | "org" | null;
 
-/** URL per view — the route is the source of truth (no view in storage). */
+/** URL per view — the route is the source of truth (no view in storage).
+ *  Values are bare view names; full paths are /{orgSlug}/{projectSlug}/{view}. */
 export const VIEW_PATH: Record<View, string> = {
-  dashboard: "/dashboard",
-  tasks: "/tasks",
-  documents: "/documents",
-  planning: "/planning",
-  meetings: "/meetings",
-  reports: "/reports",
-  agreements: "/agreements",
-  settings: "/settings",
+  dashboard: "dashboard",
+  tasks: "tasks",
+  documents: "documents",
+  planning: "planning",
+  meetings: "meetings",
+  reports: "reports",
+  agreements: "agreements",
+  settings: "settings",
 };
 
-const viewFromPath = (p: string): View =>
-  (Object.entries(VIEW_PATH).find(([, path]) => path === p)?.[0] as View | undefined) ??
-  "dashboard";
+const VIEW_NAMES = new Set<string>(Object.values(VIEW_PATH));
+const isViewName = (s: string): s is View => VIEW_NAMES.has(s);
+
+/** First path segment that can never be an org slug (static routes win). */
+const STATIC_ROOTS = new Set([
+  "user",
+  "notifications",
+  "tasks",
+  "projects",
+  "orgs",
+  "login",
+  "register",
+  "forgot-password",
+  "reset-password",
+  "api",
+  "uploads",
+]);
+
+/** Tenant slugs from a pathname:
+ *   /{orgSlug}/{projectSlug}/{view} → both (project surface — exactly 3
+ *     segments with a known view third, so org pages like /{org}/settings
+ *     stay project-less);
+ *   /{orgSlug}…                      → org only (org surface);
+ *   /, /user, /tasks, /orgs, /login… → {} (tenant-less roots — these
+ *     static pages are exactly one segment; deeper paths fall through to
+ *     the [orgSlug] route, e.g. /tasks/proj/tasks for an org "tasks"). */
+export function tenantFromPath(pathname: string): { orgSlug?: string; projectSlug?: string } {
+  const segs = pathname.split("/").filter(Boolean);
+  if (!segs.length) return {};
+  if (segs.length === 1 && STATIC_ROOTS.has(segs[0])) return {};
+  if (segs.length >= 3 && isViewName(segs[2])) return { orgSlug: segs[0], projectSlug: segs[1] };
+  return { orgSlug: segs[0] };
+}
+
+/** Full path for a project view — the canonical shareable URL shape. */
+export function viewPath(view: View, orgSlug: string, projectSlug: string): string {
+  return `/${orgSlug}/${projectSlug}/${VIEW_PATH[view]}`;
+}
+
+/** Open task from a pathname: /{orgSlug}/{projectSlug}/tasks/{taskNumber}.
+ *  The drawer itself is the [taskId] route — this tells chrome (scrim, Esc)
+ *  whether one is open. */
+export function taskFromPath(pathname: string): string | null {
+  const segs = pathname.split("/").filter(Boolean);
+  return segs.length === 4 && segs[2] === "tasks" ? segs[3] : null;
+}
+
+/** Active view from /{orgSlug}/{projectSlug}/{view}; anything else → dashboard. */
+const viewFromPath = (p: string): View => {
+  const segs = p.split("/").filter(Boolean);
+  const v = segs[2];
+  return v && isViewName(v) ? v : "dashboard";
+};
 
 interface Toast {
   id: number;
@@ -79,14 +134,13 @@ interface AppState {
   setMNavOpen: (b: boolean) => void;
   view: View;
   collapsed: boolean; // sidebar rail collapse (manual toggle)
-  taskId: string | null; // open drawer
   createOpen: boolean;
   cmdkOpen: boolean;
   relPickerId: string | null; // open the link-issue picker (drawer Relationships)
   toasts: Toast[];
   setView: (v: View) => void;
   setCollapsed: (b: boolean) => void;
-  openTask: (id: string) => void;
+  openTask: (id: string | number) => void;
   closeTask: () => void;
   setCreateOpen: (b: boolean) => void;
   setCmdkOpen: (b: boolean) => void;
@@ -136,7 +190,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const view = viewFromPath(pathname);
   const [collapsed, setCollapsedState] = useState<boolean>(() => lsGet("alabs-collapsed") === "1");
-  const [taskId, setTaskId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [cmdkOpen, setCmdkOpen] = useState(false);
   const [relPickerId, setRelPickerId] = useState<string | null>(null);
@@ -195,25 +248,73 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (project) setActiveProjectKey(project.key);
   }, [project?.key]);
 
-  const setView = useCallback(
-    (v: View) => {
-      router.push(VIEW_PATH[v]);
-    },
-    [router],
-  );
-  const setCollapsed = useCallback((b: boolean) => {
-    setCollapsedState(b);
-    lsSet("alabs-collapsed", b ? "1" : "0");
-  }, []);
-
+  // ---- URL-first tenant: /{orgSlug}/{projectSlug}/{view} drives the prefs ----
+  // Mirrored into localStorage so tenant-less surfaces (/, /user,
+  // /notifications) and fresh reloads keep the last-visited pair.
   const toast = useCallback((msg: string) => {
     const id = Date.now() + Math.random();
     setToasts((t) => [...t, { id, msg }]);
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2400);
   }, []);
 
-  const openTask = useCallback((id: string) => setTaskId(id), []);
-  const closeTask = useCallback(() => setTaskId(null), []);
+  const urlTenant = useMemo(() => tenantFromPath(pathname), [pathname]);
+  useEffect(() => {
+    if (!urlTenant.orgSlug || !orgs) return;
+    const urlOrg = orgs.find((o) => o.slug === urlTenant.orgSlug);
+    if (!urlOrg || urlOrg.id === orgPref) return;
+    setOrgPref(urlOrg.id);
+    lsSet("alabs-org", urlOrg.id);
+    // org-only URLs land on the org's landing project (like switchOrg)
+    if (!urlTenant.projectSlug) {
+      setProjPref(null);
+      lsDel("alabs-project");
+    }
+  }, [urlTenant, orgs, orgPref]);
+  useEffect(() => {
+    if (!urlTenant.projectSlug || !projects) return;
+    const urlProject = projects.find((p) => p.slug === urlTenant.projectSlug);
+    if (!urlProject || urlProject.id === projPref) return;
+    setProjPref(urlProject.id);
+    lsSet("alabs-project", urlProject.id);
+  }, [urlTenant, projects, projPref]);
+
+  // Stale slugs (renamed, no access, typo) → land on / with a toast. The
+  // lists only return what the user can access, so "not in the list" covers
+  // both unknown and forbidden (404-not-403 on the web side too).
+  useEffect(() => {
+    if (!urlTenant.orgSlug || !orgs) return;
+    if (orgs.some((o) => o.slug === urlTenant.orgSlug)) return;
+    toast("Workspace not found");
+    router.replace("/");
+  }, [urlTenant, orgs, router, toast]);
+  useEffect(() => {
+    if (!urlTenant.projectSlug || !projects) return;
+    if (projects.some((p) => p.slug === urlTenant.projectSlug)) return;
+    toast("Project not found");
+    router.replace("/");
+  }, [urlTenant, projects, router, toast]);
+
+  const setView = useCallback(
+    (v: View) => {
+      if (org && project) router.push(viewPath(v, org.slug, project.slug));
+    },
+    [router, org, project],
+  );
+  const setCollapsed = useCallback((b: boolean) => {
+    setCollapsedState(b);
+    lsSet("alabs-collapsed", b ? "1" : "0");
+  }, []);
+
+  const openTask = useCallback(
+    (id: string | number) => {
+      if (org && project)
+        router.push(`${viewPath("tasks", org.slug, project.slug)}/${id}`);
+    },
+    [router, org, project],
+  );
+  const closeTask = useCallback(() => {
+    if (org && project) router.push(viewPath("tasks", org.slug, project.slug));
+  }, [router, org, project]);
   const openRelPicker = useCallback((id: string) => setRelPickerId(id), []);
   const closeRelPicker = useCallback(() => setRelPickerId(null), []);
 
@@ -226,7 +327,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       lsSet("alabs-org", p.organizationId);
       setNavModal(null);
       setMNavOpen(false);
-      router.push("/dashboard");
+      const o = orgs?.find((x) => x.id === p.organizationId);
+      router.push(o ? viewPath("dashboard", o.slug, p.slug) : "/");
       if (!opts?.silent) toast(`Switched to ${p.name}`);
       // server-persisted visit history (fire-and-forget)
       void workspaceService
@@ -234,7 +336,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .catch(() => {})
         .finally(() => queryClient.invalidateQueries({ queryKey: qk.recents() }));
     },
-    [queryClient, router, toast],
+    [orgs, queryClient, router, toast],
   );
 
   // An org switch lands on the org's landing project once its list resolves.
@@ -285,7 +387,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     view,
     collapsed,
     setCollapsed,
-    taskId,
     createOpen,
     cmdkOpen,
     relPickerId,

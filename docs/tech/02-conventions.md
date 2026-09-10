@@ -27,7 +27,7 @@ These rules exist so the codebase stays consistent, multi-tenant safe, and predi
 | TS types       | PascalCase         | `TaskStatus`               |
 | Files (logic)  | kebab-case         | `task-status.ts`           |
 | Files (React)  | PascalCase         | `TaskBoard.tsx`            |
-| Routes         | kebab-case, plural | `/projects/:projectId/tasks` |
+| Routes         | kebab-case, plural | `/projects/:projectId/tasks` (API) · web URLs are slug-based: `/{orgSlug}/{projectSlug}/tasks` (ADR 0009) |
 | Env vars       | UPPER_SNAKE        | `DATABASE_URL`             |
 | Permission keys| `<module>:<action>`| `task:create`              |
 
@@ -57,7 +57,7 @@ This is the most important rule. A missed scope is a data leak.
 
 - Every org-scoped table has `organization_id` (`uuid`, FK, indexed, not null).
 - Every project-scoped table has `project_id` (`uuid`, FK, indexed, not null).
-- The active tenant is resolved once from the route in `tenantContext` and trusted downstream.
+- The active tenant is resolved once from the route in `tenantContext` and trusted downstream. (Web URLs carry slugs, not UUIDs — the client resolves `/{orgSlug}/{projectSlug}` against the org/project lists before any API call; the API itself only ever sees UUIDs.)
 - Every repository query MUST filter by the active tenant. Never query a tenant-scoped table without the tenant filter.
 - Enforce with a repository base that requires the tenant id, and review every new query.
 

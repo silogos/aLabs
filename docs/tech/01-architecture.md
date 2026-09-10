@@ -115,9 +115,16 @@ Database-level Row-Level Security is **not** enabled in v1. It is a future defen
 # Frontend
 
 - Next.js App Router with React 19; views render as client components (React Query for server state, client-only app shell).
-- Real URLs per view (`/dashboard` … `/agreements`); auth screens at `/login`, `/register`, `/forgot-password`, `/reset-password`.
-- The API is mounted in-process: `app/api/[[...route]]` strips the `/api` prefix and delegates to the Hono app — one origin, cookie sessions by construction.
-- A tenant switcher sets the active organization/project.
+- Slug-based shareable URLs (ADR 0009), resolved client-side in `AppProvider` (URL-first, mirrored into localStorage prefs):
+  - `/` — user dashboard (post-login landing: recents + orgs with their projects)
+  - `/tasks`, `/projects`, `/orgs` — user-level pages (my tasks, all projects, all orgs)
+  - `/{orgSlug}` — org overview; `/{orgSlug}/activity|projects|members|settings|billing` — org pages
+  - `/{orgSlug}/{projectSlug}/dashboard|tasks|documents|planning|meetings|reports|agreements|settings` — project views; `/{orgSlug}/{projectSlug}/tasks/{taskNumber}` — task deep link (board + open drawer, URL-derived)
+  - `/user` (profile), `/notifications` — user-scoped, flat
+  - auth screens at `/login`, `/register`, `/forgot-password`, `/reset-password`.
+  - Route tree: one `[orgSlug]` segment with `(org)` and `(project)` route groups nested inside; `(user)` group at the root. Stale/unknown slugs redirect to `/` with a toast.
+- The API is mounted in-process: `app/api/[[...route]]` strips the `/api` prefix and delegates to the Hono app — one origin, cookie sessions by construction. API paths stay UUID-based (`tenantContext` unchanged); slugs never reach the API.
+- The tenant switcher navigates to the slug URL of the chosen org/project.
 - Route guards mirror API permission keys.
 
 ---

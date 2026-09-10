@@ -1,16 +1,15 @@
-/** Global task overlays — detail drawer, relation picker, create modal.
- *  Mounted by the (app) layout (not the shell) so shared chrome never imports
- *  from a feature. State (taskId/relPickerId/createOpen) lives in AppProvider. */
+/** Global task overlays — relation picker, create modal. Mounted by the
+ * (project) layout (not the shell) so shared chrome never imports from a
+ * feature. State (relPickerId/createOpen) lives in AppProvider; the detail
+ * drawer is NOT here — it is the /{org}/{project}/tasks/[taskId] route. */
 import { useApp } from "@/providers/app-provider";
-import { TaskDrawer } from "./task-drawer";
 import { RelModal } from "./rel-modal";
 import { TaskModal } from "./task-modal";
 
 export function TaskOverlays() {
-  const { taskId, relPickerId, createOpen } = useApp();
+  const { relPickerId, createOpen } = useApp();
   return (
     <>
-      {taskId && <TaskDrawer id={taskId} />}
       {relPickerId && <RelModal />}
       {createOpen && <TaskModal />}
     </>

@@ -11,11 +11,13 @@ import { useApp } from "@/providers/app-provider";
 import { SwitcherModals } from "@/components/switcher-modals";
 import { Toasts } from "@/components/toasts";
 import { hueFor, projColor, ChevDown } from "@/components/nav-data";
-import { ORG_SECTIONS, ORG_ICONS, ORG_TITLES, orgActiveId, ORG_BACK_ICON } from "./org-nav";
+import { ORG_SECTIONS, ORG_ICONS, ORG_TITLES, orgActiveId, orgPath, ORG_BACK_ICON } from "./org-nav";
+import { viewPath } from "@/providers/app-provider";
 
 export function OrgShell({ children }: { children: ReactNode }) {
   const {
     org,
+    project,
     user,
     collapsed,
     setCollapsed,
@@ -40,13 +42,14 @@ export function OrgShell({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [mNavOpen, navModal, setMNavOpen, setNavModal]);
 
+  // n.path is a suffix under /{orgSlug} — build the full slug path here
   const go = (path: string) => {
-    router.push(path);
+    router.push(orgPath(org!.slug, path));
     setMNavOpen(false);
   };
   const backToProject = () => {
     setMNavOpen(false);
-    router.push("/dashboard");
+    router.push(org && project ? viewPath("dashboard", org.slug, project.slug) : "/");
   };
 
   if (!org) {

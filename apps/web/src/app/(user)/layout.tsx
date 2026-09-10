@@ -1,15 +1,15 @@
 "use client";
 
-/** User area layout — client-only mounted gate like the (org)
- *  layout (the shell reads localStorage tenant prefs), but rendered with
- *  the UserShell: the project rail is replaced by the account rail
- *  (Profile · Notifications). Shares AppProvider with the project and org
- *  areas, so the active org/tenant is one mental model across all surfaces. */
+/** User area layout — the entry surface (/, /user, /notifications),
+ *  rendered client-only (mounted gate; the provider reads localStorage
+ *  tenant prefs, which don't exist during SSR). Wraps everything in the
+ *  UserShell: the account rail with the dashboard/profile/notifications
+ *  nav plus the workspaces menu (orgs → projects). */
 import { useEffect, useState, type ReactNode } from "react";
 import { AppProvider } from "@/providers/app-provider";
 import { UserShell } from "@/features/user/user-shell";
 
-export default function UserLayout({ children }: { children: ReactNode }) {
+export default function UserAreaLayout({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 

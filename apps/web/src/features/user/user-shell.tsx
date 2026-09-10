@@ -1,19 +1,32 @@
 "use client";
 
-/** User shell — the /user area chrome: dark rail with the user pill
- *  and account nav, topbar with a back-to-project affordance, mobile
- *  bottom sheet. Reuses the app's sidebar/topbar/m-sheet classes so all
- *  three surfaces (project · org · user) share one design system.
- *  Nav modals (account + switchers) and toasts come from AppProvider. */
+/** User shell — the entry surface chrome (/, /user, /notifications):
+ *  dark rail with the user pill, the dashboard/profile/notifications nav
+ *  and the workspaces menu (orgs → projects), topbar with a
+ *  back-to-project affordance, mobile bottom sheet. Reuses the app's
+ *  sidebar/topbar/m-sheet classes so all surfaces (project · org · user)
+ *  share one design system. Nav modals (account + switchers) and toasts
+ *  come from AppProvider. */
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useApp } from "@/providers/app-provider";
 import { SwitcherModals } from "@/components/switcher-modals";
 import { Toasts } from "@/components/toasts";
 import { USER_SECTIONS, USER_ICONS, USER_TITLES, userActiveId, USER_BACK_ICON } from "./user-nav";
+import { viewPath } from "@/providers/app-provider";
 
 export function UserShell({ children }: { children: ReactNode }) {
-  const { user, collapsed, setCollapsed, navModal, setNavModal, mNavOpen, setMNavOpen } = useApp();
+  const {
+    org,
+    project,
+    user,
+    collapsed,
+    setCollapsed,
+    navModal,
+    setNavModal,
+    mNavOpen,
+    setMNavOpen,
+  } = useApp();
   const pathname = usePathname();
   const router = useRouter();
   const activeId = userActiveId(pathname);
@@ -36,7 +49,7 @@ export function UserShell({ children }: { children: ReactNode }) {
   };
   const backToProject = () => {
     setMNavOpen(false);
-    router.push("/dashboard");
+    router.push(org && project ? viewPath("dashboard", org.slug, project.slug) : "/");
   };
 
   if (!user) {
@@ -74,7 +87,7 @@ export function UserShell({ children }: { children: ReactNode }) {
             </span>
             <span className="meta">
               <b>aLabs</b>
-              <small>Account</small>
+              <small>Home</small>
             </span>
           </div>
           <div className="m-ctrl">
