@@ -249,9 +249,12 @@ export function RichTextEditor({
   });
 
   // `useEditor` captures its options at mount — toggling the `editable` prop
-  // on re-render must be synced to the live instance explicitly.
+  // on re-render must be synced to the live instance explicitly. emitUpdate
+  // must stay false: tiptap's setEditable emits "update" by default, which
+  // would fire onChange on every mount (e.g. the task drawer's debounced
+  // description save) even though no content changed.
   useEffect(() => {
-    editor?.setEditable(editable);
+    editor?.setEditable(editable, false);
   }, [editable, editor]);
 
   /* Task-pill click → open the task in-app (DOM delegation on the wrapper). */
