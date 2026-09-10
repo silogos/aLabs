@@ -365,10 +365,8 @@ function TaskDetail({
         <div className="sp-card">
           <SpSelect
             k="Status"
-            value={t.s}
-            options={["backlog", "todo", "progress", "review", "done"].map(
-              (s) => [s, ST[s as keyof typeof ST][0]] as [string, string],
-            )}
+            value={t.su}
+            options={board.cols.map((c) => [c.id, c.name] as [string, string])}
             onChange={(v) => upd("s", v, "Updated")}
           />
           <SpSelect

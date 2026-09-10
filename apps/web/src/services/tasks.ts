@@ -71,6 +71,11 @@ export const tasksService = {
     req<{ data: TaskStatus[] }>(`/projects/${pid}/tasks/statuses`).then((x) => x.data),
   labels: (pid: string) =>
     req<{ data: TaskLabel[] }>(`/projects/${pid}/tasks/labels`).then((x) => x.data),
+  createLabel: (pid: string, name: string) =>
+    req<{ data: TaskLabel }>(`/projects/${pid}/tasks/labels`, {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }).then((x) => x.data),
   types: (pid: string) =>
     req<{ data: TaskType[] }>(`/projects/${pid}/tasks/types`).then((x) => x.data),
 };
