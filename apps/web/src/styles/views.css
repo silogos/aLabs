@@ -3275,6 +3275,12 @@ li.bl-li::after {
   color: var(--fg-strong);
   min-width: 0;
 }
+/* DatePicker trigger is height:100%; give its wrap the same fixed height
+   (and no top margin) as .sp-sel/.sp-num so it doesn't collapse smaller. */
+.sp-v .dp-wrap {
+  height: 30px;
+  margin-top: 0;
+}
 .sp-sel {
   width: 100%;
   height: 30px;
