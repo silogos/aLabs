@@ -310,3 +310,111 @@ describe("GET /projects/:projectId/tasks/:id/activity", () => {
     expect(statusEvent.actorName).toBeTruthy();
   });
 });
+
+describe("task links (GET)", () => {
+  it("lists the links touching a task in both directions", async () => {
+    const p = await setupProject();
+    const a = await createTask(p, "Source");
+    const b = await createTask(p, "Target");
+    await api(`/projects/${p.projectId}/tasks/${a.id}/links`, {
+      method: "POST",
+      token: p.token,
+      body: { targetId: b.id, type: "blocks" },
+    });
+
+    const [resA, resB] = await Promise.all([
+      api(`/projects/${p.projectId}/tasks/${a.id}/links`, { token: p.token }),
+      api(`/projects/${p.projectId}/tasks/${b.id}/links`, { token: p.token }),
+    ]);
+    expect(resA.status).toBe(200);
+    expect(resB.status).toBe(200);
+    const linksA = ((await resA.json()) as { data: { sourceId: string }[] }).data;
+    const linksB = ((await resB.json()) as { data: { targetId: string }[] }).data;
+    expect(linksA).toHaveLength(1);
+    expect(linksB).toHaveLength(1);
+    expect(linksA[0]!.sourceId).toBe(a.id);
+    expect(linksB[0]!.targetId).toBe(b.id);
+  });
+});
+
+describe("task attachments", () => {
+  it("uploads, embeds on the task detail, and soft-deletes", async () => {
+    const p = await setupProject();
+    const task = await createTask(p, "With attachments");
+    const form = new FormData();
+    form.append("file", new File([new Uint8Array([1, 2, 3])], "spec.txt", { type: "text/plain" }));
+
+    const up = await api(`/projects/${p.projectId}/tasks/${task.id}/attachments`, {
+      method: "POST",
+      token: p.token,
+      body: form,
+    });
+    expect(up.status).toBe(201);
+    const { data } = (await up.json()) as {
+      data: { id: string; name: string; mimeType: string; size: number; url: string };
+    };
+    expect(data.name).toBe("spec.txt");
+    expect(data.mimeType).toBe("text/plain");
+    expect(data.url).toMatch(/^\/uploads\//);
+
+    const detail = await api(`/projects/${p.projectId}/tasks/${task.id}`, { token: p.token });
+    const detailBody = (await detail.json()) as {
+      data: { attachments: { id: string; name: string }[] };
+    };
+    expect(detailBody.data.attachments.map((a) => a.id)).toContain(data.id);
+
+    const del = await api(`/projects/${p.projectId}/tasks/${task.id}/attachments/${data.id}`, {
+      method: "DELETE",
+      token: p.token,
+    });
+    expect(del.status).toBe(204);
+
+    const after = await api(`/projects/${p.projectId}/tasks/${task.id}`, { token: p.token });
+    const afterBody = (await after.json()) as {
+      data: { attachments: { id: string }[] };
+    };
+    expect(afterBody.data.attachments).toHaveLength(0);
+  });
+
+  it("rejects an unsupported file type with 400", async () => {
+    const p = await setupProject();
+    const task = await createTask(p, "Bad attachment");
+    const form = new FormData();
+    form.append(
+      "file",
+      new File([new Uint8Array([1])], "app.exe", { type: "application/octet-stream" }),
+    );
+    const res = await api(`/projects/${p.projectId}/tasks/${task.id}/attachments`, {
+      method: "POST",
+      token: p.token,
+      body: form,
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects an oversize upload with 400", async () => {
+    const p = await setupProject();
+    const task = await createTask(p, "Big attachment");
+    const form = new FormData();
+    form.append(
+      "file",
+      new File([new Uint8Array(10 * 1024 * 1024 + 1)], "big.txt", { type: "text/plain" }),
+    );
+    const res = await api(`/projects/${p.projectId}/tasks/${task.id}/attachments`, {
+      method: "POST",
+      token: p.token,
+      body: form,
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 404 for an unknown attachment id", async () => {
+    const p = await setupProject();
+    const task = await createTask(p, "Attachment 404");
+    const res = await api(
+      `/projects/${p.projectId}/tasks/${task.id}/attachments/0197d3b0-0000-7000-8000-000000000000`,
+      { method: "DELETE", token: p.token },
+    );
+    expect(res.status).toBe(404);
+  });
+});

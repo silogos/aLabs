@@ -310,6 +310,30 @@ export function useTaskActions() {
     [patchTasks, pid, qc, toast, uuidOf],
   );
 
+  /** Attach a file to a task (multipart upload → files catalog + link). */
+  const uploadAttachment = useCallback(
+    (uuid: string, file: File) => {
+      if (!pid) return Promise.resolve();
+      const up = tasksService.uploadAttachment(pid, uuid, file).then(() => {
+        void qc.invalidateQueries({ queryKey: qk.task(pid, uuid) });
+      });
+      up.catch(() => toast("Couldn't upload attachment"));
+      return up;
+    },
+    [pid, qc, toast],
+  );
+
+  const removeAttachment = useCallback(
+    (uuid: string, attachmentId: string) => {
+      if (!pid) return;
+      const rm = tasksService.removeAttachment(pid, uuid, attachmentId).then(() => {
+        void qc.invalidateQueries({ queryKey: qk.task(pid, uuid) });
+      });
+      rm.catch(() => toast("Couldn't remove attachment"));
+    },
+    [pid, qc, toast],
+  );
+
   return {
     setField,
     toggleSubDone,
@@ -321,6 +345,8 @@ export function useTaskActions() {
     bulkSetStatus,
     bulkSetAssignee,
     bulkDelete,
+    uploadAttachment,
+    removeAttachment,
   };
 }
 

@@ -15,8 +15,10 @@ import {
   taskLinks,
   taskComments,
   taskStatusEvents,
+  taskAttachments,
   milestones,
   users,
+  files,
 } from "@pmin/core/db";
 import {
   uuidv7,
@@ -26,6 +28,7 @@ import {
   type TaskLabel,
   type TaskLink,
   type TaskActivityItem,
+  type TaskAttachment,
 } from "@pmin/core";
 import { iso } from "./mapping";
 
@@ -651,6 +654,93 @@ export async function insertComment(input: {
     })
     .returning();
   return toComment(row!);
+}
+
+/* ---------------- attachments ---------------- */
+
+const toAttachment = (r: {
+  id: string;
+  taskId: string;
+  fileId: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  uploadedBy: string | null;
+  createdAt: Date;
+}): TaskAttachment => ({ ...r, createdAt: r.createdAt.toISOString() });
+
+/** Live attachments of a task, oldest first (files joined for name/size/url). */
+export async function listAttachments(taskId: string): Promise<TaskAttachment[]> {
+  const rows = await db
+    .select({
+      id: taskAttachments.id,
+      taskId: taskAttachments.taskId,
+      fileId: files.id,
+      name: files.name,
+      mimeType: files.mimeType,
+      size: files.size,
+      url: files.url,
+      uploadedBy: taskAttachments.uploadedBy,
+      createdAt: taskAttachments.createdAt,
+    })
+    .from(taskAttachments)
+    .innerJoin(files, eq(files.id, taskAttachments.fileId))
+    .where(and(eq(taskAttachments.taskId, taskId), isNull(taskAttachments.deletedAt)))
+    .orderBy(asc(taskAttachments.createdAt));
+  return rows.map(toAttachment);
+}
+
+export async function insertAttachment(input: {
+  taskId: string;
+  fileId: string;
+  uploadedBy: string | null;
+}): Promise<TaskAttachment> {
+  const [row] = await db
+    .insert(taskAttachments)
+    .values({
+      id: uuidv7(),
+      taskId: input.taskId,
+      fileId: input.fileId,
+      uploadedBy: input.uploadedBy,
+      createdAt: new Date(),
+    })
+    .returning();
+  const file = (
+    await db
+      .select({
+        id: files.id,
+        name: files.name,
+        mimeType: files.mimeType,
+        size: files.size,
+        url: files.url,
+      })
+      .from(files)
+      .where(eq(files.id, input.fileId))
+  )[0]!;
+  return toAttachment({
+    ...row!,
+    fileId: file.id,
+    name: file.name,
+    mimeType: file.mimeType,
+    size: file.size,
+    url: file.url,
+  });
+}
+
+export async function softDeleteAttachment(taskId: string, attachmentId: string): Promise<boolean> {
+  const res = await db
+    .update(taskAttachments)
+    .set({ deletedAt: new Date() })
+    .where(
+      and(
+        eq(taskAttachments.id, attachmentId),
+        eq(taskAttachments.taskId, taskId),
+        isNull(taskAttachments.deletedAt),
+      ),
+    )
+    .returning();
+  return res.length > 0;
 }
 
 /* ---------------- activity feed ---------------- */

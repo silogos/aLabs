@@ -95,8 +95,26 @@ export const taskSchema = z.object({
 });
 export type Task = z.infer<typeof taskSchema>;
 
-/** GET /tasks/:id — task with its subtasks and comments. */
-export type TaskDetail = Task & { subtasks: Task[]; comments: Comment[] };
+/** GET /tasks/:id — task with its subtasks, comments, and attachments. */
+export type TaskDetail = Task & {
+  subtasks: Task[];
+  comments: Comment[];
+  attachments: TaskAttachment[];
+};
+
+/** Attachment on a task — a files-catalog row linked via task_attachments. */
+export const taskAttachmentSchema = z.object({
+  id,
+  taskId: id,
+  fileId: id,
+  name: z.string(),
+  mimeType: z.string(),
+  size: z.number(),
+  url: z.string(),
+  uploadedBy: id.nullable(),
+  createdAt: iso,
+});
+export type TaskAttachment = z.infer<typeof taskAttachmentSchema>;
 
 export const taskCreate = z.object({
   title: z.string().min(1).max(255),

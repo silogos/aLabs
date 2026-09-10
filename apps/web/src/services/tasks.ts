@@ -11,6 +11,7 @@ import type {
   TaskLabel,
   TaskType,
   TaskActivityItem,
+  TaskAttachment,
   Paginated,
   TaskCreateInput,
   TaskUpdateInput,
@@ -18,7 +19,7 @@ import type {
   TaskLinkCreateInput,
   CommentCreateInput,
 } from "@pmin/core";
-import { req } from "@/lib/http";
+import { req, upload } from "@/lib/http";
 
 export type { TaskCreateInput, TaskUpdateInput };
 export type TaskFilters = TaskListFilters;
@@ -60,6 +61,23 @@ export const tasksService = {
     req<{ data: TaskActivityItem[] }>(`/projects/${pid}/tasks/${taskId}/activity`).then(
       (x) => x.data,
     ),
+
+  uploadAttachment: async (pid: string, taskId: string, file: File): Promise<TaskAttachment> => {
+    const res = await upload(`/projects/${pid}/tasks/${taskId}/attachments`, file);
+    const body = (await res.json().catch(() => ({}))) as {
+      data?: TaskAttachment;
+      error?: { message?: string };
+    };
+    if (!res.ok) {
+      throw new Error(body?.error?.message ?? `Upload failed (${res.status})`);
+    }
+    return body.data!;
+  },
+
+  removeAttachment: (pid: string, taskId: string, attachmentId: string) =>
+    req<void>(`/projects/${pid}/tasks/${taskId}/attachments/${attachmentId}`, {
+      method: "DELETE",
+    }).then(() => undefined),
 
   addLink: (pid: string, taskId: string, body: TaskLinkCreateInput) =>
     req<{ data: { id: string } }>(`/projects/${pid}/tasks/${taskId}/links`, {

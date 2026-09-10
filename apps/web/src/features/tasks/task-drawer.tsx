@@ -16,7 +16,8 @@ import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill } from "./tasks-u
 import { RichTextEditor } from "@pmin/editor";
 import type { Content } from "@pmin/core";
 import { taskSerial } from "@/lib/serial";
-import { timeAgo } from "@/lib/format";
+import { timeAgo, fmtBytes } from "@/lib/format";
+import type { ChangeEvent } from "react";
 
 export function TaskDrawer({ id }: { id: string }) {
   const board = useBoard();
@@ -123,11 +124,25 @@ function TaskDetail({
 }) {
   const board = useBoard();
   const people = usePeople();
-  const { setField, toggleSubDone, addSubtask, addComment, removeRelationship } = useTaskActions();
+  const {
+    setField,
+    toggleSubDone,
+    addSubtask,
+    addComment,
+    removeRelationship,
+    uploadAttachment,
+    removeAttachment,
+  } = useTaskActions();
   const detail = useTaskDetail(t.uuid);
   const activity = useTaskActivity(t.uuid).data ?? [];
   const [cmt, setCmt] = useState("");
   const descTimer = useRef<number | undefined>(undefined);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const onFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (file && t.uuid) void uploadAttachment(t.uuid, file);
+  };
   const onDescChange = (doc: Content) => {
     window.clearTimeout(descTimer.current);
     descTimer.current = window.setTimeout(() => {
@@ -155,6 +170,7 @@ function TaskDetail({
     { key: "relates", label: "Relates to", items: rel?.relates ?? [] },
   ];
   const comments = detail.data?.comments ?? [];
+  const attachments = detail.data?.attachments ?? [];
 
   return (
     <div className="dw-grid">
@@ -331,10 +347,47 @@ function TaskDetail({
         </Section>
 
         <Section
-          title="Attachments · 0"
-          action={{ label: "+ Upload", onClick: () => toast("Upload attachment — coming soon") }}
+          title={`Attachments · ${attachments.length}`}
+          action={{ label: "+ Upload", onClick: () => fileRef.current?.click() }}
         >
-          <p className="muted tiny">No attachments.</p>
+          <input ref={fileRef} type="file" hidden onChange={onFile} />
+          {attachments.length ? (
+            <div className="att-list">
+              {attachments.map((a) => (
+                <div className="att" key={a.id}>
+                  <span className="att-ic">
+                    {(a.name.split(".").pop() ?? "").toUpperCase().slice(0, 3)}
+                  </span>
+                  <div className="att-m">
+                    <a href={a.url} target="_blank" rel="noreferrer">
+                      <b>{a.name}</b>
+                    </a>
+                    <span className="tiny muted">
+                      {fmtBytes(a.size)} · {a.uploadedBy ? people.who(a.uploadedBy) : "—"}
+                    </span>
+                  </div>
+                  <button
+                    className="rel-x"
+                    title="Remove attachment"
+                    onClick={() => t.uuid && void removeAttachment(t.uuid, a.id)}
+                  >
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                    >
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="muted tiny">No attachments.</p>
+          )}
         </Section>
 
         <Section title="Activity">

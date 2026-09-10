@@ -13,6 +13,19 @@ export const UPLOADS_DIR = process.env.UPLOADS_DIR
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
 
+/** Task attachments broaden the editor's image set with documents and
+ *  text/archive types — and get a slightly larger ceiling. */
+export const ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+
+export function attachmentTypeAllowed(mime: string): boolean {
+  return (
+    /^(image|text)\//.test(mime) ||
+    mime === "application/pdf" ||
+    mime === "application/json" ||
+    mime === "application/zip"
+  );
+}
+
 const MIME_BY_EXT: Record<string, string> = {
   ".png": "image/png",
   ".jpg": "image/jpeg",

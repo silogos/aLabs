@@ -1,7 +1,10 @@
 /** Task routes — list (filtered), CRUD, statuses/labels/types.
  *  Task rows, config, and comments live in Postgres (db/task-repo.ts). */
 import { Hono } from "hono";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import * as taskRepo from "../../db/task-repo";
+import * as docRepo from "../../db/doc-repo";
 import {
   taskCreate,
   taskUpdate,
@@ -14,12 +17,14 @@ import {
   taskTypeCreate,
   taskListQuery,
   paginate,
+  uuidv7,
 } from "@pmin/core";
 import { badRequest, conflict, notFound } from "../../lib/errors";
 import { created, data, noContent, paginated } from "../../lib/responses";
 import { parseJsonBody, parseQuery, pickDefined } from "../../lib/validate";
 import { projectContext, projectIdOf } from "../../lib/tenant";
 import { requirePermission } from "../../lib/permission";
+import { UPLOADS_DIR, ATTACHMENT_MAX_BYTES, attachmentTypeAllowed, imageExt } from "../../lib/uploads";
 import type { Vars, Ctx } from "../../lib/ctx";
 
 export const task = new Hono<{ Variables: Vars }>();
@@ -96,6 +101,12 @@ task.post("/tasks/types", requirePermission("task:update"), async (c) => {
 });
 
 // ---- cross-issue links (static sub-path BEFORE :id) ----
+task.get("/tasks/:id/links", requirePermission("task:view"), async (c) => {
+  const t = await findTask(c);
+  const links = await taskRepo.listProjectLinks(t.projectId);
+  return data(c, links.filter((l) => l.sourceId === t.id || l.targetId === t.id));
+});
+
 task.post("/tasks/:id/links", requirePermission("task:update"), async (c) => {
   const t = await findTask(c);
   const input = await parseJsonBody(c, taskLinkCreate);
@@ -127,6 +138,39 @@ task.post("/tasks/:id/comments", requirePermission("task:update"), async (c) => 
 task.get("/tasks/:id/activity", requirePermission("task:view"), async (c) => {
   const t = await findTask(c);
   return data(c, await taskRepo.listTaskActivity(t.id));
+});
+
+// ---- attachments (multipart upload → files catalog + task link) ----
+task.post("/tasks/:id/attachments", requirePermission("task:update"), async (c) => {
+  const t = await findTask(c);
+  const user = c.get("user")!;
+  const body = await c.req.parseBody();
+  const file = body["file"];
+  if (!(file instanceof File)) throw badRequest("Missing 'file' part");
+  if (!attachmentTypeAllowed(file.type)) throw badRequest("Unsupported file type");
+  if (file.size > ATTACHMENT_MAX_BYTES) throw badRequest("File too large (10 MB max)");
+
+  const ext = imageExt(file.type, file.name);
+  const fid = uuidv7();
+  const fname = `${fid}${ext}`;
+  await mkdir(UPLOADS_DIR, { recursive: true });
+  await writeFile(join(UPLOADS_DIR, fname), Buffer.from(await file.arrayBuffer()));
+  const f = await docRepo.insertFile({
+    projectId: t.projectId,
+    name: file.name,
+    mimeType: file.type,
+    size: file.size,
+    url: `/uploads/${fname}`,
+    uploadedBy: user.id,
+  });
+  return created(c, await taskRepo.insertAttachment({ taskId: t.id, fileId: f.id, uploadedBy: user.id }));
+});
+
+task.delete("/tasks/:id/attachments/:attachmentId", requirePermission("task:update"), async (c) => {
+  const t = await findTask(c);
+  const ok = await taskRepo.softDeleteAttachment(t.id, c.req.param("attachmentId")!);
+  if (!ok) throw notFound();
+  return noContent(c);
 });
 
 task.get("/tasks/:id", requirePermission("task:view"), async (c) => {
@@ -186,5 +230,6 @@ async function serializeTask(t: taskRepo.TaskWithMeta) {
     ...t,
     subtasks: await taskRepo.listSubtasks(t.id),
     comments: await taskRepo.listComments(t.id),
+    attachments: await taskRepo.listAttachments(t.id),
   };
 }
