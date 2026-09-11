@@ -17,12 +17,14 @@ Column types follow `02-conventions.md`: `uuid` PKs (UUID v7), `timestamptz`, sn
 
 Audit columns `created_by` / `updated_by` are omitted below for brevity but apply to every user-mutated entity.
 
-> **Schema sync status (v1.1, in sync):** the Drizzle implementation in
-> `packages/core/src/db/schema.ts` matches this spec, with two deliberate
-> naming deviations: story points live in `tasks.estimate` (the product's term)
-> and epics are modeled as a `task_types` row ("Epic") rather than a separate
-> `tasks.epic_id` column. Cross-issue links (`task_links`) and the iteration
-> point caches are implemented as specified.
+> **Schema sync status (v1.2, in sync):** the Drizzle implementation in
+> `packages/core/src/db/schema.ts` matches this spec, with one deliberate
+> naming deviation: story points live in `tasks.estimate` (the product's term;
+> the `story_points` name in the table below is the spec's label). Epics are
+> Epic-typed tasks grouped via `tasks.epic_id`. Cross-issue links
+> (`task_links`), task comments (`task_comments`), the status-event log
+> (`task_status_events`), and task attachments (`task_attachments`) are
+> implemented as specified.
 
 ---
 
@@ -280,6 +282,52 @@ or store both; pick one convention per implementation.
 | project_id | uuid        | fk projects, indexed, not null |
 | name       | varchar(50) | not null                     |
 | created_at | timestamptz | not null default now         |
+
+## task_comments
+
+Append-only comments on a task (task drawer). No edit/delete yet.
+
+| Column     | Type        | Constraints                  |
+| ---------- | ----------- | ---------------------------- |
+| id         | uuid        | pk                           |
+| task_id    | uuid        | fk tasks, cascade, indexed, not null |
+| user_id    | uuid        | fk users, not null           |
+| body       | text        | not null                     |
+| created_at | timestamptz | not null default now         |
+
+## task_status_events
+
+Append-only log of task status transitions — powers the dashboard trend
+series, sprint burndown (each task's status reconstructed at a past point in
+time), and the task activity feed. `from_status` is null for the task's
+initial status.
+
+| Column      | Type        | Constraints                       |
+| ----------- | ----------- | --------------------------------- |
+| id          | uuid        | pk                                |
+| task_id     | uuid        | fk tasks, cascade, not null       |
+| project_id  | uuid        | fk projects, cascade, not null    |
+| from_status | uuid        | fk task_statuses, null            |
+| to_status   | uuid        | fk task_statuses, not null        |
+| occurred_at | timestamptz | not null                          |
+| actor_id    | uuid        | fk users, null                    |
+| created_at | timestamptz | not null default now              |
+
+Index `(project_id, occurred_at)`, `(task_id, occurred_at)`.
+
+## task_attachments
+
+Join rows linking a task to a `files` catalog row (documents module owns the
+storage; bytes live on the uploads dir). Soft-delete via `deleted_at`.
+
+| Column      | Type        | Constraints                  |
+| ----------- | ----------- | ---------------------------- |
+| id          | uuid        | pk                           |
+| task_id     | uuid        | fk tasks, cascade, indexed, not null |
+| file_id     | uuid        | fk files, not null           |
+| uploaded_by | uuid        | fk users, null               |
+| created_at  | timestamptz | not null default now         |
+| deleted_at  | timestamptz | null                         |
 
 ---
 

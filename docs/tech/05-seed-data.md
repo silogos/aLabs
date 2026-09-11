@@ -124,13 +124,20 @@ System roles (`is_system = true`, `scope = project`).
 
 # Default Task Statuses
 
-Created for every new project.
+Created for every new project (`DEFAULT_TASK_STATUSES` in
+`packages/core/src/constants/plans.ts`) — the five board columns.
 
-| Name         | Order | isDefault |
-| ------------ | ----- | --------- |
-| To Do        | 0     | true      |
-| In Progress  | 1     | false     |
-| Done         | 2     | false     |
+| Name         | Order | isDefault | color         |
+| ------------ | ----- | --------- | ------------- |
+| Backlog      |0     | false     | var(--faint)  |
+| To Do        | 1     | true      | var(--muted)  |
+| In Progress  | 2     | false     | var(--info)   |
+| In Review    | 3     | false     | var(--violet) |
+| Done         | 4     | false     | var(--ok)     |
+
+> Migration `0011_backfill_task_config.sql` upgraded pre-existing projects:
+> those still carrying the old 3-status set gained Backlog and In Review, and
+> every project gained the missing default types below.
 
 ---
 
@@ -140,10 +147,11 @@ Created for every new project.
 
 | Name    |
 | ------- |
+| Epic    |
+| Story   |
 | Task    |
 | Bug     |
-| Feature |
-| Epic    |
+| Subtask |
 
 ---
 

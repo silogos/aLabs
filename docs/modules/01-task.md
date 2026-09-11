@@ -160,11 +160,6 @@ Default types (5): **Epic, Story, Task, Bug, Subtask**.
 - **Bug** — defect.
 - **Subtask** — decomposition of a parent Story/Task/Bug (carries `parent_id`).
 
-> **Sync note:** the in-memory seed (`apps/api/src/db/seed.ts`) currently still
-> seeds the pre-rename set `["Task", "Bug", "Feature", "Epic"]` and omits
-> `Story`/`Subtask`. The product/UI spec is the five-type set above; the seed
-> needs renaming `Feature → Story` and adding `Subtask` to match.
-
 ---
 
 # TaskLink
@@ -263,6 +258,12 @@ DELETE /projects/:projectId/tasks/:id
 GET    /projects/:projectId/tasks/:id/links
 POST   /projects/:projectId/tasks/:id/links
 DELETE /projects/:projectId/tasks/:id/links/:linkId
+
+# Comments, activity feed, attachments
+POST   /projects/:projectId/tasks/:id/comments
+GET    /projects/:projectId/tasks/:id/activity
+POST   /projects/:projectId/tasks/:id/attachments        (multipart)
+DELETE /projects/:projectId/tasks/:id/attachments/:attachmentId
 ```
 
 Filter the task list by sprint with `?iterationId=:id`; group/roll-up is done

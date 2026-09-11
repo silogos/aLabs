@@ -251,6 +251,14 @@ GET    Prj/tasks/labels
 POST   Prj/tasks/labels
 GET    Prj/tasks/types
 POST   Prj/tasks/types
+
+GET    Prj/tasks/:id/links
+POST   Prj/tasks/:id/links
+DELETE Prj/tasks/:id/links/:linkId
+POST   Prj/tasks/:id/comments
+GET    Prj/tasks/:id/activity
+POST   Prj/tasks/:id/attachments
+DELETE Prj/tasks/:id/attachments/:attachmentId
 ```
 
 ## Documents
