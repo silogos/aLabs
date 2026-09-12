@@ -12,8 +12,10 @@ import { qk } from "@/lib/query-keys";
 import { useApp } from "@/providers/app-provider";
 import {
   buildMaps,
+  colsOf,
   deriveBoard,
   ptsTotal,
+  type Col,
   type DerivedBoard,
   type Sprint,
   type TaskRow,
@@ -22,6 +24,8 @@ import {
 export interface Board extends DerivedBoard {
   /** true once the task list has loaded (rows may legitimately be empty) */
   ready: boolean;
+  /** board columns in configured order — one per project status */
+  cols: Col[];
   taskById: (id: number) => TaskRow | undefined;
   subsOf: (id: number) => TaskRow[];
   childrenOf: (id: number) => TaskRow[];
@@ -96,6 +100,7 @@ export function useBoard(): Board {
     return {
       ...derived,
       ready: tasksQ.isSuccess,
+      cols: colsOf(statusesQ.data ?? []),
       taskById,
       subsOf: (id) => rows.filter((t) => t.parent === id).sort((a, b) => a.id - b.id),
       childrenOf: (id) => rows.filter((t) => t.epic === id && t.ty !== "subtask"),
@@ -128,7 +133,7 @@ export function useBoard(): Board {
         return !!s && (s.st === "planned" || s.st === "active");
       },
     };
-  }, [derived, tasksQ.isSuccess]);
+  }, [derived, tasksQ.isSuccess, statusesQ.data]);
 }
 
 /** Task detail (subtasks + comments) for the drawer. */
@@ -138,6 +143,17 @@ export function useTaskDetail(uuid: string | undefined) {
   return useQuery({
     queryKey: qk.task(pid, uuid ?? ""),
     queryFn: () => tasksService.get(pid, uuid!),
+    enabled: !!project && !!uuid,
+  });
+}
+
+/** Activity feed (creation + status events + comments) for the drawer. */
+export function useTaskActivity(uuid: string | undefined) {
+  const { project } = useApp();
+  const pid = project?.id ?? "";
+  return useQuery({
+    queryKey: qk.taskActivity(pid, uuid ?? ""),
+    queryFn: () => tasksService.activity(pid, uuid!),
     enabled: !!project && !!uuid,
   });
 }

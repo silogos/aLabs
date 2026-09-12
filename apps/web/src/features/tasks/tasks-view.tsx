@@ -4,12 +4,9 @@ import { useApp } from "@/providers/app-provider";
 import { usePeople } from "@/providers/people-provider";
 import { taskSerial, projKey } from "@/lib/serial";
 import {
-  COLS,
-  ST,
   late,
   ptsTotal,
   progOf,
-  type StatusId,
   type TaskRow,
 } from "./model";
 import { useBoard } from "./queries";
@@ -423,13 +420,13 @@ export function TasksView() {
             value=""
             onChange={(e) => {
               if (e.target.value) {
-                bulkSetStatus([...selected], e.target.value as StatusId);
+                bulkSetStatus([...selected], e.target.value);
                 setSelected(new Set());
               }
             }}
           >
             <option value="">Set status…</option>
-            {COLS.map((c) => (
+            {board.cols.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
@@ -497,24 +494,24 @@ function Board({
   const [overCol, setOverCol] = useState<string | null>(null);
   const list = filtered.filter((t) => boardSprints.has(t.sp || "backlog"));
 
-  const drop = (statusId: StatusId, id: number | null) => {
+  const drop = (statusId: string, id: number | null) => {
     setOverCol(null);
     if (!id) return;
     const t = board.taskById(id);
-    if (!t || t.s === statusId) {
+    if (!t || t.su === statusId) {
       setDragId(null);
       return;
     }
     setField(id, "s", statusId);
     setDragId(null);
-    toast(`${taskSerial(id)} → ${ST[statusId][0]}`);
+    toast(`${taskSerial(id)} → ${board.cols.find((c) => c.id === statusId)?.name ?? ""}`);
   };
 
   return (
     <div className="board-scroll">
       <div className="board">
-        {COLS.map((c) => {
-          const items = list.filter((t) => t.s === c.id);
+        {board.cols.map((c) => {
+          const items = list.filter((t) => t.su === c.id);
           const pts = ptsTotal(items);
           return (
             <div className="col" key={c.id}>
@@ -729,10 +726,12 @@ function TableView(props: {
       return out.filter((g) => g.items.length);
     }
     if (groupBy === "status")
-      return COLS.map((c) => {
-        const items = list.filter((t) => t.s === c.id);
-        return items.length ? { key: c.id, label: c.name, items } : null;
-      }).filter(Boolean) as { key: string; label: string; items: TaskRow[] }[];
+      return board.cols
+        .map((c) => {
+          const items = list.filter((t) => t.su === c.id);
+          return items.length ? { key: c.id, label: c.name, items } : null;
+        })
+        .filter(Boolean) as { key: string; label: string; items: TaskRow[] }[];
     if (groupBy === "assignee") {
       const out: { key: string; label: string; items: TaskRow[] }[] = [];
       const seen = new Set<string>();

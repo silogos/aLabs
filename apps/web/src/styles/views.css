@@ -3211,6 +3211,24 @@ li.bl-li::after {
   font-weight: 600;
   color: var(--fg-strong);
 }
+/* name + meta column: takes the row's remaining width so the remove
+   button (.att .rel-x) sits flush right */
+.att-m {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.att-m a {
+  text-decoration: none;
+}
+.att-m a:hover b {
+  text-decoration: underline;
+}
+.att .rel-x {
+  flex: none;
+}
 .act-list {
   list-style: none;
   margin: 0;

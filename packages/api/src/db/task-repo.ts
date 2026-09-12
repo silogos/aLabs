@@ -4,6 +4,7 @@
  *  its cursor envelope by paginating the fetched rows in memory (prototype
  *  volumes). */
 import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db, type Tx } from "./pg";
 import {
   tasks,
@@ -14,8 +15,21 @@ import {
   taskLinks,
   taskComments,
   taskStatusEvents,
+  taskAttachments,
+  milestones,
+  users,
+  files,
 } from "@pmin/core/db";
-import { uuidv7, type Task, type TaskStatus, type TaskType, type TaskLabel, type TaskLink } from "@pmin/core";
+import {
+  uuidv7,
+  type Task,
+  type TaskStatus,
+  type TaskType,
+  type TaskLabel,
+  type TaskLink,
+  type TaskActivityItem,
+  type TaskAttachment,
+} from "@pmin/core";
 import { iso } from "./mapping";
 
 type TaskRow = typeof tasks.$inferSelect;
@@ -118,6 +132,15 @@ export async function insertType(projectId: string, name: string): Promise<TaskT
     .values({ id: uuidv7(), projectId, name, createdAt: new Date() })
     .returning();
   return toType(row!);
+}
+
+export async function findType(projectId: string, typeId: string): Promise<TaskType | null> {
+  const [row] = await db
+    .select()
+    .from(taskTypes)
+    .where(and(eq(taskTypes.projectId, projectId), eq(taskTypes.id, typeId)))
+    .limit(1);
+  return row ? toType(row) : null;
 }
 
 export async function listLabels(projectId: string): Promise<TaskLabel[]> {
@@ -310,6 +333,7 @@ export async function insertTask(input: {
       occurredAt: now,
       actorId: input.actorId ?? null,
     });
+    if (input.milestoneId) await recomputeMilestone(tx, row!.projectId, input.milestoneId);
     return row!;
   });
   return (await withLabels([row]))[0]!;
@@ -328,6 +352,38 @@ async function recordStatusEvent(
     occurredAt: e.occurredAt,
     actorId: e.actorId,
   });
+}
+
+/** Recompute a milestone's stored aggregates (total/done/progress) from live
+ *  tasks — done = status named "Done". Called whenever a task's status or
+ *  milestone link changes so milestone widgets never drift from the board. */
+async function recomputeMilestone(tx: Tx, projectId: string, milestoneId: string): Promise<void> {
+  const live = and(eq(tasks.milestoneId, milestoneId), isNull(tasks.deletedAt));
+  const [total] = await tx.select({ n: sql<number>`count(*)::int` }).from(tasks).where(live);
+  const doneIds = (
+    await tx
+      .select({ id: taskStatuses.id })
+      .from(taskStatuses)
+      .where(and(eq(taskStatuses.projectId, projectId), eq(taskStatuses.name, "Done")))
+  ).map((s) => s.id);
+  let done = 0;
+  if (doneIds.length > 0) {
+    const [d] = await tx
+      .select({ n: sql<number>`count(*)::int` })
+      .from(tasks)
+      .where(and(live, inArray(tasks.statusId, doneIds)));
+    done = d?.n ?? 0;
+  }
+  const t = total?.n ?? 0;
+  await tx
+    .update(milestones)
+    .set({
+      totalTasks: t,
+      doneTasks: done,
+      progress: t > 0 ? Math.round((done / t) * 100) : 0,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(milestones.id, milestoneId), eq(milestones.projectId, projectId)));
 }
 
 /** Replace the label set (delete + insert — small sets). */
@@ -363,10 +419,10 @@ export async function patchTask(
   actorId: string | null = null,
 ): Promise<TaskWithMeta | null> {
   const row = await db.transaction(async (tx) => {
-    let prev: { statusId: string; projectId: string } | null = null;
-    if (patch.statusId !== undefined) {
+    let prev: { statusId: string; projectId: string; milestoneId: string | null } | null = null;
+    if (patch.statusId !== undefined || patch.milestoneId !== undefined) {
       const [p] = await tx
-        .select({ statusId: tasks.statusId, projectId: tasks.projectId })
+        .select({ statusId: tasks.statusId, projectId: tasks.projectId, milestoneId: tasks.milestoneId })
         .from(tasks)
         .where(eq(tasks.id, id));
       prev = p ?? null;
@@ -388,6 +444,15 @@ export async function patchTask(
         actorId,
       });
     }
+    // milestone aggregates: the new/kept milestone on status change, the old
+    // one when the task moved milestones
+    const touched = new Set<string>();
+    if (patch.milestoneId !== undefined) {
+      if (prev?.milestoneId) touched.add(prev.milestoneId);
+      if (row.milestoneId) touched.add(row.milestoneId);
+    }
+    if (patch.statusId !== undefined && row.milestoneId) touched.add(row.milestoneId);
+    for (const m of touched) await recomputeMilestone(tx, row.projectId, m);
     return row;
   });
   if (!row) return null;
@@ -395,10 +460,17 @@ export async function patchTask(
 }
 
 export async function softDeleteTask(id: string): Promise<void> {
-  await db
-    .update(tasks)
-    .set({ deletedAt: new Date(), updatedAt: new Date() })
-    .where(eq(tasks.id, id));
+  await db.transaction(async (tx) => {
+    const [prev] = await tx
+      .select({ projectId: tasks.projectId, milestoneId: tasks.milestoneId })
+      .from(tasks)
+      .where(eq(tasks.id, id));
+    await tx
+      .update(tasks)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(eq(tasks.id, id));
+    if (prev?.milestoneId) await recomputeMilestone(tx, prev.projectId, prev.milestoneId);
+  });
 }
 
 /** Status-transition events for a project, oldest first — used to reconstruct
@@ -591,4 +663,166 @@ export async function insertComment(input: {
     })
     .returning();
   return toComment(row!);
+}
+
+/* ---------------- attachments ---------------- */
+
+const toAttachment = (r: {
+  id: string;
+  taskId: string;
+  fileId: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  uploadedBy: string | null;
+  createdAt: Date;
+}): TaskAttachment => ({ ...r, createdAt: r.createdAt.toISOString() });
+
+/** Live attachments of a task, oldest first (files joined for name/size/url). */
+export async function listAttachments(taskId: string): Promise<TaskAttachment[]> {
+  const rows = await db
+    .select({
+      id: taskAttachments.id,
+      taskId: taskAttachments.taskId,
+      fileId: files.id,
+      name: files.name,
+      mimeType: files.mimeType,
+      size: files.size,
+      url: files.url,
+      uploadedBy: taskAttachments.uploadedBy,
+      createdAt: taskAttachments.createdAt,
+    })
+    .from(taskAttachments)
+    .innerJoin(files, eq(files.id, taskAttachments.fileId))
+    .where(and(eq(taskAttachments.taskId, taskId), isNull(taskAttachments.deletedAt)))
+    .orderBy(asc(taskAttachments.createdAt));
+  return rows.map(toAttachment);
+}
+
+export async function insertAttachment(input: {
+  taskId: string;
+  fileId: string;
+  uploadedBy: string | null;
+}): Promise<TaskAttachment> {
+  const [row] = await db
+    .insert(taskAttachments)
+    .values({
+      id: uuidv7(),
+      taskId: input.taskId,
+      fileId: input.fileId,
+      uploadedBy: input.uploadedBy,
+      createdAt: new Date(),
+    })
+    .returning();
+  const file = (
+    await db
+      .select({
+        id: files.id,
+        name: files.name,
+        mimeType: files.mimeType,
+        size: files.size,
+        url: files.url,
+      })
+      .from(files)
+      .where(eq(files.id, input.fileId))
+  )[0]!;
+  return toAttachment({
+    ...row!,
+    fileId: file.id,
+    name: file.name,
+    mimeType: file.mimeType,
+    size: file.size,
+    url: file.url,
+  });
+}
+
+export async function softDeleteAttachment(taskId: string, attachmentId: string): Promise<boolean> {
+  const res = await db
+    .update(taskAttachments)
+    .set({ deletedAt: new Date() })
+    .where(
+      and(
+        eq(taskAttachments.id, attachmentId),
+        eq(taskAttachments.taskId, taskId),
+        isNull(taskAttachments.deletedAt),
+      ),
+    )
+    .returning();
+  return res.length > 0;
+}
+
+/* ---------------- activity feed ---------------- */
+
+/** Merged, newest-first activity for a task: the creation event (from the
+ *  task row), status transitions, and comments. Capped at 50 entries. */
+export async function listTaskActivity(taskId: string): Promise<TaskActivityItem[]> {
+  const t = await getTask(taskId);
+  if (!t) return [];
+  const fromSt = alias(taskStatuses, "from_status");
+  const toSt = alias(taskStatuses, "to_status");
+  const events = await db
+    .select({
+      id: taskStatusEvents.id,
+      actorId: taskStatusEvents.actorId,
+      actorName: users.name,
+      createdAt: taskStatusEvents.occurredAt,
+      fromStatusName: fromSt.name,
+      toStatusName: toSt.name,
+    })
+    .from(taskStatusEvents)
+    .leftJoin(users, eq(users.id, taskStatusEvents.actorId))
+    .leftJoin(fromSt, eq(fromSt.id, taskStatusEvents.fromStatus))
+    .leftJoin(toSt, eq(toSt.id, taskStatusEvents.toStatus))
+    .where(eq(taskStatusEvents.taskId, taskId));
+  const comments = await db
+    .select({
+      id: taskComments.id,
+      actorId: taskComments.userId,
+      actorName: users.name,
+      createdAt: taskComments.createdAt,
+      body: taskComments.body,
+    })
+    .from(taskComments)
+    .innerJoin(users, eq(users.id, taskComments.userId))
+    .where(eq(taskComments.taskId, taskId));
+  let reporterName: string | null = null;
+  if (t.reporterId) {
+    const [u] = await db.select({ name: users.name }).from(users).where(eq(users.id, t.reporterId));
+    reporterName = u?.name ?? null;
+  }
+  const items: TaskActivityItem[] = [
+    {
+      id: `${t.id}-created`,
+      type: "created",
+      actorId: t.reporterId,
+      actorName: reporterName,
+      createdAt: t.createdAt,
+      fromStatusName: null,
+      toStatusName: null,
+      body: null,
+    },
+    ...events.map((e) => ({
+      id: e.id,
+      type: "status" as const,
+      actorId: e.actorId,
+      actorName: e.actorName,
+      createdAt: e.createdAt.toISOString(),
+      fromStatusName: e.fromStatusName ?? null,
+      toStatusName: e.toStatusName ?? null,
+      body: null,
+    })),
+    ...comments.map((m) => ({
+      id: m.id,
+      type: "comment" as const,
+      actorId: m.actorId,
+      actorName: m.actorName,
+      createdAt: m.createdAt.toISOString(),
+      fromStatusName: null,
+      toStatusName: null,
+      body: m.body,
+    })),
+  ];
+  items.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  return items.slice(0, 50);
 }

@@ -9,14 +9,15 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useApp } from "@/providers/app-provider";
 import { usePeople } from "@/providers/people-provider";
-import { useBoard, useTaskDetail } from "./queries";
+import { useBoard, useTaskDetail, useTaskActivity } from "./queries";
 import { useTaskActions } from "./mutations";
-import { PRIO, PRIO_ORDER, ST, progOf, ptsTotal, type RelKey, type TaskRow } from "./model";
+import { PRIO, PRIO_ORDER, progOf, ptsTotal, type RelKey, type TaskRow } from "./model";
 import { TyIcon, TyTag, AvKey, StatusBadge, PrioBadge, PtsPill } from "./tasks-ui";
 import { RichTextEditor } from "@pmin/editor";
 import type { Content } from "@pmin/core";
 import { taskSerial } from "@/lib/serial";
-import { timeAgo } from "@/lib/format";
+import { timeAgo, fmtBytes } from "@/lib/format";
+import type { ChangeEvent } from "react";
 
 export function TaskDrawer({ id }: { id: string }) {
   const board = useBoard();
@@ -123,10 +124,25 @@ function TaskDetail({
 }) {
   const board = useBoard();
   const people = usePeople();
-  const { setField, toggleSubDone, addSubtask, addComment, removeRelationship } = useTaskActions();
+  const {
+    setField,
+    toggleSubDone,
+    addSubtask,
+    addComment,
+    removeRelationship,
+    uploadAttachment,
+    removeAttachment,
+  } = useTaskActions();
   const detail = useTaskDetail(t.uuid);
+  const activity = useTaskActivity(t.uuid).data ?? [];
   const [cmt, setCmt] = useState("");
   const descTimer = useRef<number | undefined>(undefined);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const onFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (file && t.uuid) void uploadAttachment(t.uuid, file);
+  };
   const onDescChange = (doc: Content) => {
     window.clearTimeout(descTimer.current);
     descTimer.current = window.setTimeout(() => {
@@ -154,6 +170,7 @@ function TaskDetail({
     { key: "relates", label: "Relates to", items: rel?.relates ?? [] },
   ];
   const comments = detail.data?.comments ?? [];
+  const attachments = detail.data?.attachments ?? [];
 
   return (
     <div className="dw-grid">
@@ -330,33 +347,82 @@ function TaskDetail({
         </Section>
 
         <Section
-          title="Attachments · 0"
-          action={{ label: "+ Upload", onClick: () => toast("Upload attachment — coming soon") }}
+          title={`Attachments · ${attachments.length}`}
+          action={{ label: "+ Upload", onClick: () => fileRef.current?.click() }}
         >
-          <p className="muted tiny">No attachments.</p>
+          <input ref={fileRef} type="file" hidden onChange={onFile} />
+          {attachments.length ? (
+            <div className="att-list">
+              {attachments.map((a) => (
+                <div className="att" key={a.id}>
+                  <span className="att-ic">
+                    {(a.name.split(".").pop() ?? "").toUpperCase().slice(0, 3)}
+                  </span>
+                  <div className="att-m">
+                    <a href={a.url} target="_blank" rel="noreferrer">
+                      <b>{a.name}</b>
+                    </a>
+                    <span className="tiny muted">
+                      {fmtBytes(a.size)} · {a.uploadedBy ? people.who(a.uploadedBy) : "—"}
+                    </span>
+                  </div>
+                  <button
+                    className="rel-x"
+                    title="Remove attachment"
+                    onClick={() => t.uuid && void removeAttachment(t.uuid, a.id)}
+                  >
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                    >
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="muted tiny">No attachments.</p>
+          )}
         </Section>
 
         <Section title="Activity">
           <ul className="act-list">
-            <li>
-              <span className="act-d" />
-              <div>
-                <b>{people.who(t.rep)}</b> created this{" "}
-                <span className="muted">· {t.desc ? "earlier" : "recently"}</span>
-              </div>
-            </li>
-            <li>
-              <span className="act-d" />
-              <div>
-                <b>{people.who(t.a)}</b> was assigned <span className="muted">· recently</span>
-              </div>
-            </li>
-            <li>
-              <span className="act-d" />
-              <div>
-                Status set to <b>{ST[t.s][0]}</b> <span className="muted">· recently</span>
-              </div>
-            </li>
+            {/* comments get their own section above — the feed lists creation
+                and status transitions */}
+            {activity
+              .filter((e) => e.type !== "comment")
+              .map((e) => (
+                <li key={e.id}>
+                  <span className="act-d" />
+                  <div>
+                    {e.type === "created" ? (
+                      <>
+                        <b>{e.actorName ?? "Someone"}</b> created this
+                      </>
+                    ) : (
+                      <>
+                        {e.actorName ? <b>{e.actorName}</b> : "Status"} set to{" "}
+                        <b>{e.toStatusName ?? "—"}</b>
+                        {e.fromStatusName ? ` (from ${e.fromStatusName})` : ""}
+                      </>
+                    )}{" "}
+                    <span className="muted">· {timeAgo(e.createdAt)}</span>
+                  </div>
+                </li>
+              ))}
+            {activity.filter((e) => e.type !== "comment").length === 0 && (
+              <li>
+                <span className="act-d" />
+                <div>
+                  <span className="muted tiny">No activity yet.</span>
+                </div>
+              </li>
+            )}
           </ul>
         </Section>
       </div>
@@ -365,10 +431,8 @@ function TaskDetail({
         <div className="sp-card">
           <SpSelect
             k="Status"
-            value={t.s}
-            options={["backlog", "todo", "progress", "review", "done"].map(
-              (s) => [s, ST[s as keyof typeof ST][0]] as [string, string],
-            )}
+            value={t.su}
+            options={board.cols.map((c) => [c.id, c.name] as [string, string])}
             onChange={(v) => upd("s", v, "Updated")}
           />
           <SpSelect

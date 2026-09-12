@@ -49,13 +49,36 @@ export const ST: Record<StatusId, [string, string]> = {
   done: ["Done", "ok"],
 };
 
-export const COLS: { id: StatusId; name: string; dot: string }[] = [
-  { id: "backlog", name: "Backlog", dot: "var(--faint)" },
-  { id: "todo", name: "To Do", dot: "var(--muted)" },
-  { id: "progress", name: "In Progress", dot: "var(--info)" },
-  { id: "review", name: "In Review", dot: "var(--violet)" },
-  { id: "done", name: "Done", dot: "var(--ok)" },
-];
+/** Column dot fallbacks per short id — used when the configured status has
+ *  no color of its own. */
+const DOT_BY_SHORT: Record<StatusId, string> = {
+  backlog: "var(--faint)",
+  todo: "var(--muted)",
+  progress: "var(--info)",
+  review: "var(--violet)",
+  done: "var(--ok)",
+};
+
+export interface Col {
+  /** task_statuses row id — the value PATCHed as statusId */
+  id: string;
+  /** display short id (known names) for icon/tone lookups */
+  short: StatusId;
+  name: string;
+  dot: string;
+}
+
+/** Board columns derive from the project's configured statuses — never a
+ *  hardcoded set, so projects with fewer/custom statuses still render and
+ *  every column maps to a real statusId. */
+export function colsOf(statuses: TaskStatus[]): Col[] {
+  return [...statuses]
+    .sort((a, b) => a.order - b.order)
+    .map((s) => {
+      const short = STATUS_BY_NAME[s.name] ?? "todo";
+      return { id: s.id, short, name: s.name, dot: s.color || DOT_BY_SHORT[short] };
+    });
+}
 
 export const PRIO: Record<PrioId, string> = { p1: "Urgent", p2: "High", p3: "Medium", p4: "Low" };
 export const PRIO_ORDER: PrioId[] = ["p1", "p2", "p3", "p4"];
@@ -131,6 +154,8 @@ export interface TaskRow {
   /** API task uuid — present on hydrated/write-through rows */
   uuid?: string;
   t: string;
+  /** status row uuid — canonical column key; what mutations send */
+  su: string;
   s: StatusId;
   a: string;
   rep?: string;
@@ -227,6 +252,10 @@ export const isWork = (t: TaskRow): boolean => !t.parent && t.ty !== "epic";
 export interface BoardMaps {
   statusIdByShort: Map<StatusId, string>;
   statusShortById: Map<string, StatusId>;
+  /** task_statuses row id → full row (name/color/order) */
+  statusById: Map<string, TaskStatus>;
+  /** the project's `isDefault` status — create/subtask-undone target */
+  defaultStatusId: string | null;
   tyIdByTy: Map<TypeId, string>;
   tyShortById: Map<string, TypeId>;
   labelIdByName: Map<string, string>;
@@ -239,10 +268,14 @@ export function buildMaps(
 ): BoardMaps {
   const statusIdByShort = new Map<StatusId, string>();
   const statusShortById = new Map<string, StatusId>();
+  const statusById = new Map<string, TaskStatus>();
+  let defaultStatusId: string | null = null;
   for (const s of statuses) {
     const short = STATUS_BY_NAME[s.name] ?? "todo";
     statusIdByShort.set(short, s.id);
     statusShortById.set(s.id, short);
+    statusById.set(s.id, s);
+    if (s.isDefault) defaultStatusId = s.id;
   }
   const tyIdByTy = new Map<TypeId, string>();
   const tyShortById = new Map<string, TypeId>();
@@ -255,7 +288,15 @@ export function buildMaps(
   }
   const labelIdByName = new Map<string, string>();
   for (const l of labels) labelIdByName.set(l.name, l.id);
-  return { statusIdByShort, statusShortById, tyIdByTy, tyShortById, labelIdByName };
+  return {
+    statusIdByShort,
+    statusShortById,
+    statusById,
+    defaultStatusId,
+    tyIdByTy,
+    tyShortById,
+    labelIdByName,
+  };
 }
 
 export interface DerivedBoard {
@@ -300,6 +341,7 @@ export function deriveBoard(
       uuid: t.id,
       rel,
       t: t.title,
+      su: t.statusId,
       s: maps.statusShortById.get(t.statusId) ?? "todo",
       a: t.assigneeId ?? "",
       rep: t.reporterId ?? undefined,

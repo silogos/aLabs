@@ -10,6 +10,8 @@ import type {
   TaskStatus,
   TaskLabel,
   TaskType,
+  TaskActivityItem,
+  TaskAttachment,
   Paginated,
   TaskCreateInput,
   TaskUpdateInput,
@@ -17,7 +19,7 @@ import type {
   TaskLinkCreateInput,
   CommentCreateInput,
 } from "@pmin/core";
-import { req } from "@/lib/http";
+import { req, upload } from "@/lib/http";
 
 export type { TaskCreateInput, TaskUpdateInput };
 export type TaskFilters = TaskListFilters;
@@ -55,6 +57,28 @@ export const tasksService = {
       body: JSON.stringify(body),
     }).then((x) => x.data),
 
+  activity: (pid: string, taskId: string) =>
+    req<{ data: TaskActivityItem[] }>(`/projects/${pid}/tasks/${taskId}/activity`).then(
+      (x) => x.data,
+    ),
+
+  uploadAttachment: async (pid: string, taskId: string, file: File): Promise<TaskAttachment> => {
+    const res = await upload(`/projects/${pid}/tasks/${taskId}/attachments`, file);
+    const body = (await res.json().catch(() => ({}))) as {
+      data?: TaskAttachment;
+      error?: { message?: string };
+    };
+    if (!res.ok) {
+      throw new Error(body?.error?.message ?? `Upload failed (${res.status})`);
+    }
+    return body.data!;
+  },
+
+  removeAttachment: (pid: string, taskId: string, attachmentId: string) =>
+    req<void>(`/projects/${pid}/tasks/${taskId}/attachments/${attachmentId}`, {
+      method: "DELETE",
+    }).then(() => undefined),
+
   addLink: (pid: string, taskId: string, body: TaskLinkCreateInput) =>
     req<{ data: { id: string } }>(`/projects/${pid}/tasks/${taskId}/links`, {
       method: "POST",
@@ -71,6 +95,11 @@ export const tasksService = {
     req<{ data: TaskStatus[] }>(`/projects/${pid}/tasks/statuses`).then((x) => x.data),
   labels: (pid: string) =>
     req<{ data: TaskLabel[] }>(`/projects/${pid}/tasks/labels`).then((x) => x.data),
+  createLabel: (pid: string, name: string) =>
+    req<{ data: TaskLabel }>(`/projects/${pid}/tasks/labels`, {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }).then((x) => x.data),
   types: (pid: string) =>
     req<{ data: TaskType[] }>(`/projects/${pid}/tasks/types`).then((x) => x.data),
 };

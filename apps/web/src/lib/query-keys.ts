@@ -16,6 +16,7 @@ export const qk = {
 
   tasks: (pid: string) => ["tasks", pid] as const,
   task: (pid: string, id: string) => ["tasks", pid, id] as const,
+  taskActivity: (pid: string, id: string) => ["tasks", pid, id, "activity"] as const,
   statuses: (pid: string) => ["statuses", pid] as const,
   types: (pid: string) => ["types", pid] as const,
   labels: (pid: string) => ["labels", pid] as const,

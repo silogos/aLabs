@@ -471,6 +471,26 @@ export const files = pgTable("files", {
   deletedAt: nullableTs(),
 });
 
+/** Task attachments — join rows linking a task to a `files` catalog row;
+ *  the documents module's uploads dir stores the bytes. Lives after `files`
+ *  because it references it. */
+export const taskAttachments = pgTable(
+  "task_attachments",
+  {
+    id: uuid("id").primaryKey(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    fileId: uuid("file_id")
+      .notNull()
+      .references(() => files.id),
+    uploadedBy: uuid("uploaded_by").references(() => users.id),
+    createdAt: ts().defaultNow(),
+    deletedAt: nullableTs(),
+  },
+  (t) => [index("task_attachments_task_idx").on(t.taskId)],
+);
+
 /* ============================================================= Planning */
 
 export const iterations = pgTable("iterations", {
@@ -633,6 +653,7 @@ export const schema = {
   taskLabelLinks,
   tasks,
   taskStatusEvents,
+  taskAttachments,
   spaces,
   pages,
   files,

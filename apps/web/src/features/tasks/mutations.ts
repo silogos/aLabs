@@ -9,7 +9,7 @@ import { planningService } from "@/services/planning";
 import { tasksService, type TaskUpdateInput } from "@/services/tasks";
 import { qk } from "@/lib/query-keys";
 import { useApp } from "@/providers/app-provider";
-import { PRIO_API, dueToIso, type PrioId, type RelKey, type StatusId, type TypeId } from "./model";
+import { PRIO_API, dueToIso, type PrioId, type RelKey, type TypeId } from "./model";
 import { useBoard } from "./queries";
 
 const UUID_RE = /^[0-9a-f-]{36}$/i;
@@ -70,8 +70,7 @@ export function useTaskActions() {
 
   const setField = useCallback(
     (id: number, key: string, value: unknown) => {
-      if (key === "s")
-        patchTask(id, { statusId: board.maps.statusIdByShort.get(value as StatusId) });
+      if (key === "s") patchTask(id, { statusId: String(value) });
       else if (key === "a")
         patchTask(id, {
           assigneeId: value && UUID_RE.test(String(value)) ? String(value) : null,
@@ -93,25 +92,49 @@ export function useTaskActions() {
   const toggleSubDone = useCallback(
     (id: number) => {
       const row = board.taskById(id);
-      if (row) setField(id, "s", row.s === "done" ? "todo" : "done");
+      if (!row) return;
+      const target =
+        row.s === "done"
+          ? (board.maps.defaultStatusId ?? board.maps.statusIdByShort.get("todo"))
+          : board.maps.statusIdByShort.get("done");
+      if (target) setField(id, "s", target);
     },
     [board, setField],
   );
 
   const createIssue = useCallback(
-    (input: CreateInput) => {
+    async (input: CreateInput) => {
       const desc = input.desc
         ? {
             type: "doc" as const,
             content: [{ type: "paragraph" as const, content: [{ type: "text" as const, text: input.desc }] }],
           }
         : undefined;
+      // labels: resolve to ids, creating any the user just typed
+      const labelIds = (
+        await Promise.all(
+          input.labels.map(async (name) => {
+            const known = board.maps.labelIdByName.get(name);
+            if (known) return known;
+            try {
+              const l = await tasksService.createLabel(pid, name);
+              void qc.invalidateQueries({ queryKey: qk.labels(pid) });
+              return l.id;
+            } catch {
+              toast(`Couldn't create label "${name}" — skipped`);
+              return null;
+            }
+          }),
+        )
+      ).filter((x): x is string => !!x);
       const body = {
         title: input.title,
         statusId:
-          input.ty === "epic"
+          (input.ty === "epic"
             ? board.maps.statusIdByShort.get("progress")
-            : board.maps.statusIdByShort.get("todo"),
+            : undefined) ??
+          board.maps.defaultStatusId ??
+          board.maps.statusIdByShort.get("todo"),
         priority: PRIO_API[input.priority],
         assigneeId: input.assignee && UUID_RE.test(input.assignee) ? input.assignee : null,
         estimate: input.pts || null,
@@ -123,13 +146,7 @@ export function useTaskActions() {
         ...(input.epic && input.ty !== "subtask" ? { epicId: uuidOf(input.epic) ?? null } : {}),
         ...(input.due && dueToIso(input.due) ? { dueDate: dueToIso(input.due)! } : {}),
         ...(desc ? { description: JSON.stringify(desc) } : {}),
-        ...(input.labels.length
-          ? {
-              labelIds: input.labels
-                .map((l) => board.maps.labelIdByName.get(l))
-                .filter((x): x is string => !!x),
-            }
-          : {}),
+        ...(labelIds.length ? { labelIds } : {}),
       };
       const created = tasksService.create(pid, body).then((task) => {
         void qc.invalidateQueries({ queryKey: qk.tasks(pid) });
@@ -149,7 +166,7 @@ export function useTaskActions() {
         .create(pid, {
           title: "New subtask",
           parentId: parentUuid,
-          statusId: board.maps.statusIdByShort.get("todo"),
+          statusId: board.maps.defaultStatusId ?? board.maps.statusIdByShort.get("todo"),
         })
         .then((task) => {
           void qc.invalidateQueries({ queryKey: qk.tasks(pid) });
@@ -259,10 +276,10 @@ export function useTaskActions() {
   );
 
   const bulkSetStatus = useCallback(
-    (ids: number[], s: StatusId) =>
+    (ids: number[], statusId: string) =>
       bulkPatch(ids, (order) => {
         const row = board.taskById(order);
-        return row && row.ty !== "epic" ? { statusId: board.maps.statusIdByShort.get(s) } : null;
+        return row && row.ty !== "epic" ? { statusId } : null;
       }),
     [board, bulkPatch],
   );
@@ -293,6 +310,30 @@ export function useTaskActions() {
     [patchTasks, pid, qc, toast, uuidOf],
   );
 
+  /** Attach a file to a task (multipart upload → files catalog + link). */
+  const uploadAttachment = useCallback(
+    (uuid: string, file: File) => {
+      if (!pid) return Promise.resolve();
+      const up = tasksService.uploadAttachment(pid, uuid, file).then(() => {
+        void qc.invalidateQueries({ queryKey: qk.task(pid, uuid) });
+      });
+      up.catch(() => toast("Couldn't upload attachment"));
+      return up;
+    },
+    [pid, qc, toast],
+  );
+
+  const removeAttachment = useCallback(
+    (uuid: string, attachmentId: string) => {
+      if (!pid) return;
+      const rm = tasksService.removeAttachment(pid, uuid, attachmentId).then(() => {
+        void qc.invalidateQueries({ queryKey: qk.task(pid, uuid) });
+      });
+      rm.catch(() => toast("Couldn't remove attachment"));
+    },
+    [pid, qc, toast],
+  );
+
   return {
     setField,
     toggleSubDone,
@@ -304,6 +345,8 @@ export function useTaskActions() {
     bulkSetStatus,
     bulkSetAssignee,
     bulkDelete,
+    uploadAttachment,
+    removeAttachment,
   };
 }
 

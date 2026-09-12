@@ -198,6 +198,7 @@ export async function createProjectWithConfig(input: {
         id: uuidv7(),
         projectId: row!.id,
         name: s.name,
+        color: s.color,
         order: s.order,
         isDefault: s.isDefault,
         createdAt: now,

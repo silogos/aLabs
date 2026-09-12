@@ -13,12 +13,17 @@ export interface TaskStatusSeed {
   name: string;
   order: number;
   isDefault: boolean;
+  color: string;
 }
 
+/** The design's 5 board columns (docs/modules/01-task.md, TaskStatus).
+ *  Colors are CSS custom-property refs — the web theme defines them. */
 export const DEFAULT_TASK_STATUSES: TaskStatusSeed[] = [
-  { name: "To Do", order: 0, isDefault: true },
-  { name: "In Progress", order: 1, isDefault: false },
-  { name: "Done", order: 2, isDefault: false },
+  { name: "Backlog", order: 0, isDefault: false, color: "var(--faint)" },
+  { name: "To Do", order: 1, isDefault: true, color: "var(--muted)" },
+  { name: "In Progress", order: 2, isDefault: false, color: "var(--info)" },
+  { name: "In Review", order: 3, isDefault: false, color: "var(--violet)" },
+  { name: "Done", order: 4, isDefault: false, color: "var(--ok)" },
 ];
 
-export const DEFAULT_TASK_TYPES = ["Task", "Bug", "Feature", "Epic"];
+export const DEFAULT_TASK_TYPES = ["Epic", "Story", "Task", "Bug", "Subtask"];

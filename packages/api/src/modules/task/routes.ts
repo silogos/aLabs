@@ -1,7 +1,12 @@
 /** Task routes — list (filtered), CRUD, statuses/labels/types.
  *  Task rows, config, and comments live in Postgres (db/task-repo.ts). */
 import { Hono } from "hono";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import * as taskRepo from "../../db/task-repo";
+import * as docRepo from "../../db/doc-repo";
+import * as orgRepo from "../../db/org-repo";
+import * as planningRepo from "../../db/planning-repo";
 import {
   taskCreate,
   taskUpdate,
@@ -14,12 +19,14 @@ import {
   taskTypeCreate,
   taskListQuery,
   paginate,
+  uuidv7,
 } from "@pmin/core";
 import { badRequest, conflict, notFound } from "../../lib/errors";
 import { created, data, noContent, paginated } from "../../lib/responses";
 import { parseJsonBody, parseQuery, pickDefined } from "../../lib/validate";
 import { projectContext, projectIdOf } from "../../lib/tenant";
 import { requirePermission } from "../../lib/permission";
+import { UPLOADS_DIR, ATTACHMENT_MAX_BYTES, attachmentTypeAllowed, imageExt } from "../../lib/uploads";
 import type { Vars, Ctx } from "../../lib/ctx";
 
 export const task = new Hono<{ Variables: Vars }>();
@@ -47,6 +54,7 @@ task.post("/tasks", requirePermission("task:create"), async (c) => {
     const found = await taskRepo.findLabels(pid, input.labelIds);
     if (found.length !== input.labelIds.length) throw badRequest("Unknown label id");
   }
+  await validateTaskRefs(c, input, { selfId: null });
   const created_ = await taskRepo.insertTask({
     projectId: pid,
     title: input.title,
@@ -96,6 +104,12 @@ task.post("/tasks/types", requirePermission("task:update"), async (c) => {
 });
 
 // ---- cross-issue links (static sub-path BEFORE :id) ----
+task.get("/tasks/:id/links", requirePermission("task:view"), async (c) => {
+  const t = await findTask(c);
+  const links = await taskRepo.listProjectLinks(t.projectId);
+  return data(c, links.filter((l) => l.sourceId === t.id || l.targetId === t.id));
+});
+
 task.post("/tasks/:id/links", requirePermission("task:update"), async (c) => {
   const t = await findTask(c);
   const input = await parseJsonBody(c, taskLinkCreate);
@@ -123,6 +137,45 @@ task.post("/tasks/:id/comments", requirePermission("task:update"), async (c) => 
   return created(c, await taskRepo.insertComment({ taskId: t.id, userId: c.get("user")!.id, body: input.body }));
 });
 
+// ---- activity feed (creation + status events + comments, newest first) ----
+task.get("/tasks/:id/activity", requirePermission("task:view"), async (c) => {
+  const t = await findTask(c);
+  return data(c, await taskRepo.listTaskActivity(t.id));
+});
+
+// ---- attachments (multipart upload → files catalog + task link) ----
+task.post("/tasks/:id/attachments", requirePermission("task:update"), async (c) => {
+  const t = await findTask(c);
+  const user = c.get("user")!;
+  const body = await c.req.parseBody();
+  const file = body["file"];
+  if (!(file instanceof File)) throw badRequest("Missing 'file' part");
+  if (!attachmentTypeAllowed(file.type)) throw badRequest("Unsupported file type");
+  if (file.size > ATTACHMENT_MAX_BYTES) throw badRequest("File too large (10 MB max)");
+
+  const ext = imageExt(file.type, file.name);
+  const fid = uuidv7();
+  const fname = `${fid}${ext}`;
+  await mkdir(UPLOADS_DIR, { recursive: true });
+  await writeFile(join(UPLOADS_DIR, fname), Buffer.from(await file.arrayBuffer()));
+  const f = await docRepo.insertFile({
+    projectId: t.projectId,
+    name: file.name,
+    mimeType: file.type,
+    size: file.size,
+    url: `/uploads/${fname}`,
+    uploadedBy: user.id,
+  });
+  return created(c, await taskRepo.insertAttachment({ taskId: t.id, fileId: f.id, uploadedBy: user.id }));
+});
+
+task.delete("/tasks/:id/attachments/:attachmentId", requirePermission("task:update"), async (c) => {
+  const t = await findTask(c);
+  const ok = await taskRepo.softDeleteAttachment(t.id, c.req.param("attachmentId")!);
+  if (!ok) throw notFound();
+  return noContent(c);
+});
+
 task.get("/tasks/:id", requirePermission("task:view"), async (c) => {
   return data(c, await serializeTask(await findTask(c)));
 });
@@ -140,6 +193,7 @@ task.patch("/tasks/:id", requirePermission("task:update"), async (c) => {
     const found = await taskRepo.findLabels(projectIdOf(c), input.labelIds);
     if (found.length !== input.labelIds.length) throw badRequest("Unknown label id");
   }
+  await validateTaskRefs(c, input, { selfId: t.id });
   const patch: Parameters<typeof taskRepo.patchTask>[2] = pickDefined(input, [
     "title",
     "description",
@@ -174,11 +228,84 @@ async function findTask(c: Ctx) {
   return t;
 }
 
+/** Referential integrity for task create/patch: every relation id must
+ *  resolve inside the caller's tenant (the active org for people, the
+ *  project for everything else). Prevents cross-project/cross-org rows —
+ *  a missed scope here is a data leak. */
+async function validateTaskRefs(
+  c: Ctx,
+  input: {
+    assigneeId?: string | null;
+    typeId?: string | null;
+    parentId?: string | null;
+    epicId?: string | null;
+    iterationId?: string | null;
+    milestoneId?: string | null;
+  },
+  opts: { selfId: string | null },
+): Promise<void> {
+  const pid = projectIdOf(c);
+  const orgId = c.get("tenant")!.organizationId;
+
+  if (input.assigneeId) {
+    const member = await orgRepo.getActiveMember(orgId, input.assigneeId);
+    if (!member) throw badRequest("Assignee is not a member of this workspace");
+  }
+
+  if (input.typeId) {
+    const ty = await taskRepo.findType(pid, input.typeId);
+    if (!ty) throw notFound("Type not found");
+  }
+
+  if (input.parentId !== undefined && input.parentId !== null) {
+    const parent = await taskRepo.getTask(input.parentId);
+    if (!parent || parent.projectId !== pid) throw badRequest("Parent task not found in this project");
+    if (opts.selfId && parent.id === opts.selfId) throw badRequest("A task cannot be its own parent");
+    if (opts.selfId && (await ancestryContains(opts.selfId, parent.id)))
+      throw badRequest("Parent change would create a cycle");
+  }
+
+  if (input.epicId !== undefined && input.epicId !== null) {
+    const epic = await taskRepo.getTask(input.epicId);
+    if (!epic || epic.projectId !== pid) throw badRequest("Epic task not found in this project");
+    if (opts.selfId && epic.id === opts.selfId) throw badRequest("A task cannot be its own epic");
+    // the referenced task must actually be an Epic (type name "Epic")
+    if (epic.typeId) {
+      const ty = await taskRepo.findType(pid, epic.typeId);
+      if (!ty || ty.name !== "Epic") throw badRequest("Epic reference must point to an Epic-typed task");
+    } else {
+      throw badRequest("Epic reference must point to an Epic-typed task");
+    }
+  }
+
+  if (input.iterationId) {
+    const it = await planningRepo.getIteration(input.iterationId);
+    if (!it || it.projectId !== pid) throw notFound("Iteration not found");
+  }
+  if (input.milestoneId) {
+    const m = await planningRepo.getMilestone(input.milestoneId);
+    if (!m || m.projectId !== pid) throw notFound("Milestone not found");
+  }
+}
+
+/** Walk the parent chain from `fromId` upward;true if `targetId` appears
+ *  (bounded — the data model caps nesting at 3 levels). */
+async function ancestryContains(targetId: string, fromId: string): Promise<boolean> {
+  let cur: string | null = fromId;
+  for (let hops = 0; cur && hops < 20; hops++) {
+    if (cur === targetId) return true;
+    const row = await taskRepo.getTask(cur);
+    cur = row?.parentId ?? null;
+  }
+  return false;
+}
+
 async function serializeTask(t: taskRepo.TaskWithMeta) {
   taskRepo.attachLinks([t], await taskRepo.listProjectLinks(t.projectId));
   return {
     ...t,
     subtasks: await taskRepo.listSubtasks(t.id),
     comments: await taskRepo.listComments(t.id),
+    attachments: await taskRepo.listAttachments(t.id),
   };
 }
