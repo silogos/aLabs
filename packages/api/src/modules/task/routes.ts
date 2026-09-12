@@ -26,6 +26,7 @@ import { created, data, noContent, paginated } from "../../lib/responses";
 import { parseJsonBody, parseQuery, pickDefined } from "../../lib/validate";
 import { projectContext, projectIdOf } from "../../lib/tenant";
 import { requirePermission } from "../../lib/permission";
+import { notifyTaskAssigned, notifyTaskCommented } from "../notification/emit";
 import { UPLOADS_DIR, ATTACHMENT_MAX_BYTES, attachmentTypeAllowed, imageExt } from "../../lib/uploads";
 import type { Vars, Ctx } from "../../lib/ctx";
 
@@ -74,6 +75,7 @@ task.post("/tasks", requirePermission("task:create"), async (c) => {
     labelIds: input.labelIds ?? [],
     actorId: user.id,
   });
+  await notifyTaskAssigned(created_, user.id);
   return created(c, taskSchema.parse(created_));
 });
 
@@ -134,7 +136,9 @@ task.delete("/tasks/:id/links/:linkId", requirePermission("task:update"), async 
 task.post("/tasks/:id/comments", requirePermission("task:update"), async (c) => {
   const t = await findTask(c);
   const input = await parseJsonBody(c, commentCreate);
-  return created(c, await taskRepo.insertComment({ taskId: t.id, userId: c.get("user")!.id, body: input.body }));
+  const comment = await taskRepo.insertComment({ taskId: t.id, userId: c.get("user")!.id, body: input.body });
+  await notifyTaskCommented(t, c.get("user")!.id, comment.body);
+  return created(c, comment);
 });
 
 // ---- activity feed (creation + status events + comments, newest first) ----
@@ -211,6 +215,9 @@ task.patch("/tasks/:id", requirePermission("task:update"), async (c) => {
   if (input.labelIds) patch.labelIds = input.labelIds;
   const updated = await taskRepo.patchTask(t.id, t.updatedAt!, patch, c.get("user")!.id);
   if (!updated) throw conflict("Task was modified");
+  if (input.assigneeId !== undefined && input.assigneeId !== t.assigneeId) {
+    await notifyTaskAssigned(updated, c.get("user")!.id);
+  }
   return data(c, await serializeTask(updated));
 });
 
