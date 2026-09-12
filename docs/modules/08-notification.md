@@ -84,6 +84,7 @@ Entities
 - Notification center
 - Unread badge
 - Mark as read
+- Click-through: clicking an item marks it read (when unread) and navigates to its deep link; items without a link only mark read
 
 ## Email
 
@@ -105,6 +106,13 @@ Other modules emit events; the notification service delivers them. Emitters live
 | `invite`   | Workspace invitation created                 | The invitee, only if they already have an account       |
 
 The demo seed additionally creates `mention` and `due` notifications; those types have no runtime emitter yet.
+
+## Deep Links
+
+Links use the app's slug routes so the web client can `router.push` them directly:
+
+- Task notifications (`assign`, `comment`): `/{orgSlug}/{projectSlug}/tasks/{order}` — the segment is the task's **order number**, never the UUID (the task drawer resolves `Number(param)`; this is the same scheme the task list uses)
+- Invitation notifications (`invite`): `/{orgSlug}/members`
 
 ---
 

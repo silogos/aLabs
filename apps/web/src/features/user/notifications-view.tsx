@@ -1,13 +1,16 @@
 "use client";
 
-/** User notifications view — the full personal feed. Unread items are
- *  marked read on click; "Mark all read" clears the badge. Lean version of
- *  the dashboard NotificationsCard mapping (kinds → icons). */
+/** User notifications view — the full personal feed. Clicking an item
+ *  marks it read (when unread) and follows its deep link to the target
+ *  (task, members page). Lean version of the dashboard NotificationsCard
+ *  mapping (kinds → icons). */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useApp } from "@/providers/app-provider";
 import { notificationsService } from "@/services/notifications";
 import { qk } from "@/lib/query-keys";
 import { timeAgo } from "@/lib/format";
+import type { Notification } from "@pmin/core";
 import type { ReactNode } from "react";
 
 type NotifKind = "mention" | "assign" | "review" | "due" | "reply" | "invite" | "deadline";
@@ -76,6 +79,7 @@ const ICONS: Record<NotifKind, ReactNode> = {
 export function NotificationsView() {
   const { toast } = useApp();
   const qc = useQueryClient();
+  const router = useRouter();
   const { data: items } = useQuery({
     queryKey: qk.notifications(),
     queryFn: notificationsService.list,
@@ -104,6 +108,13 @@ export function NotificationsView() {
     } catch {
       toast("Couldn't mark as read");
     }
+  };
+
+  /** Read state is fire-and-forget so navigation feels instant — the
+   *  invalidation lands while the target page loads. */
+  const open = (n: Notification) => {
+    if (!n.readAt) void markOne(n.id, n.readAt);
+    if (n.link) router.push(n.link);
   };
 
   return (
@@ -138,8 +149,8 @@ export function NotificationsView() {
                 <div
                   key={n.id}
                   className={`notif-item ${n.readAt ? "read" : "unread"}`}
-                  onClick={() => void markOne(n.id, n.readAt)}
-                  style={{ cursor: n.readAt ? "default" : "pointer" }}
+                  onClick={() => open(n)}
+                  style={{ cursor: n.link || !n.readAt ? "pointer" : "default" }}
                 >
                   <span className="notif-dot" />
                   <span className={`notif-ic ${kind}`}>{ICONS[kind]}</span>

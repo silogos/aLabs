@@ -37,7 +37,7 @@ async function createTask(
     body: { title, ...body },
   });
   if (res.status !== 201) throw new Error(`createTask failed: ${res.status} ${await res.text()}`);
-  return (await res.json()) as { data: { id: string } };
+  return (await res.json()) as { data: { id: string; order: number } };
 }
 
 describe("GET /notifications", () => {
@@ -108,7 +108,9 @@ describe("emitter: task assigned", () => {
     expect(notifs).toHaveLength(1);
     expect(notifs[0].title).toContain("assigned you a task");
     expect(notifs[0].body).toBe(title);
-    expect(notifs[0].link).toBe(`/${org.slug}/${project.slug}/tasks/${task.data.id}`);
+    // deep link carries the task's order number — the drawer resolves
+    // Number(param), so a UUID here would open an empty drawer
+    expect(notifs[0].link).toBe(`/${org.slug}/${project.slug}/tasks/${task.data.order}`);
 
     // the actor is never notified for their own action
     expect(await listNotifications(org.token)).toHaveLength(0);
@@ -169,7 +171,7 @@ describe("emitter: task comment", () => {
     expect(memberNotifs).toHaveLength(1);
     expect(memberNotifs[0].title).toContain("commented on");
     expect(memberNotifs[0].body).toContain("urgent");
-    expect(memberNotifs[0].link).toBe(`/${org.slug}/${project.slug}/tasks/${task.data.id}`);
+    expect(memberNotifs[0].link).toBe(`/${org.slug}/${project.slug}/tasks/${task.data.order}`);
     expect(await notificationsOf(org.token, "comment")).toHaveLength(0);
 
     // assignee comments back → only the reporter is notified

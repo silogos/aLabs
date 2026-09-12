@@ -9,6 +9,7 @@ import { tasksService } from "@/services/tasks";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useApp } from "@/providers/app-provider";
 import { Avatar, colorFor, initials } from "@/components/ui/avatar";
 import { Prio, StatusPill, TypeTag } from "@/components/ui/badges";
@@ -460,6 +461,7 @@ interface Notif {
   kind: NotifKind;
   unread: boolean;
   time: string;
+  link: string | null;
   body: ReactNode;
 }
 
@@ -528,6 +530,7 @@ const NOTIF_ICONS: Record<NotifKind, ReactNode> = {
 function NotificationsCard() {
   const { toast } = useApp();
   const qc = useQueryClient();
+  const router = useRouter();
   const { data: raw } = useQuery({
     queryKey: qk.notifications(),
     queryFn: notificationsService.list,
@@ -537,6 +540,7 @@ function NotificationsCard() {
     kind: NOTIF_KIND[n.type] ?? "mention",
     unread: !n.readAt,
     time: timeAgo(n.createdAt),
+    link: n.link,
     body: (
       <>
         <b>{n.title}</b>
@@ -555,6 +559,18 @@ function NotificationsCard() {
       .catch(() => toast("Couldn't mark as read"));
   };
 
+  /** Click follows the deep link (task, members page); unread items are
+   *  marked read in the background so navigation feels instant. */
+  const open = (n: Notif) => {
+    if (n.unread) {
+      notificationsService
+        .markRead(n.id)
+        .then(() => qc.invalidateQueries({ queryKey: qk.notifications() }))
+        .catch(() => toast("Couldn't mark as read"));
+    }
+    if (n.link) router.push(n.link);
+  };
+
   return (
     <div className="card" data-od-id="dashboard-notifications">
       <div className="panel-head">
@@ -570,7 +586,12 @@ function NotificationsCard() {
         <div className="notif-list">
           {items.length === 0 && <div className="muted tiny" style={{ padding: "14px 16px" }}>No notifications yet.</div>}
           {items.map((n) => (
-            <div key={n.id} className={`notif-item ${n.unread ? "unread" : "read"}`}>
+            <div
+              key={n.id}
+              className={`notif-item ${n.unread ? "unread" : "read"}`}
+              onClick={() => open(n)}
+              style={{ cursor: n.link ? "pointer" : "default" }}
+            >
               <span className="notif-dot" />
               <span className={`notif-ic ${n.kind}`}>{NOTIF_ICONS[n.kind]}</span>
               <div className="notif-body">{n.body}</div>

@@ -6,6 +6,7 @@ import * as meetingRepo from "./meeting-repo";
 import * as agreementRepo from "./agreement-repo";
 import * as notificationRepo from "./notification-repo";
 import * as activityRepo from "./activity-repo";
+import * as orgRepo from "./org-repo";
 import type { TaskWithMeta } from "./task-repo";
 import type { SeedCtx } from "./seed-shared";
 
@@ -71,19 +72,24 @@ export async function seedCollab(ctx: SeedCtx, parents: TaskWithMeta[], fresh: b
   /* ---------------- Notifications ---------------- */
   if (fresh) {
     const aisha = usersByShort.ay;
+    // real deep links — /{orgSlug}/{projectSlug}/tasks/{order} (the route
+    // param is the order number, same scheme the emitters build)
+    const org = await orgRepo.getOrganization(atlas.organizationId);
+    const link = (order: number) =>
+      org ? `/${org.slug}/${atlas.slug}/tasks/${order}` : null;
     await notificationRepo.insertNotification({
       userId: aisha.id,
       type: "mention",
       title: "Marco mentioned you on ATL-101",
       body: "Can you review the PKCE verifier before EOD?",
-      link: "/tasks/101",
+      link: link(101),
     });
     await notificationRepo.insertNotification({
       userId: aisha.id,
       type: "due",
       title: "ATL-116 is due today",
       body: "Backlog grooming: triage queue",
-      link: "/tasks/116",
+      link: link(116),
     });
   }
 
