@@ -74,6 +74,44 @@ describe("iterations", () => {
       (await api(`/projects/${p.projectId}/planning/iterations`, { token: outsider.token })).status,
     ).toBe(404);
   });
+
+  it("deletes an iteration and returns committed tasks to the backlog", async () => {
+    const p = await setupProject();
+    const iteration = await createIteration(p, "Doomed");
+
+    const createTask = await api(`/projects/${p.projectId}/tasks`, {
+      method: "POST",
+      token: p.token,
+      body: { title: "Committed work", iterationId: iteration.id },
+    });
+    if (createTask.status !== 201) {
+      throw new Error(`task create failed: ${createTask.status} ${await createTask.text()}`);
+    }
+    const { data: task } = (await createTask.json()) as { data: { id: string } };
+
+    const del = await api(`/projects/${p.projectId}/planning/iterations/${iteration.id}`, {
+      method: "DELETE",
+      token: p.token,
+    });
+    expect(del.status).toBe(204);
+
+    const list = await api(`/projects/${p.projectId}/planning/iterations`, { token: p.token });
+    const { data } = (await list.json()) as { data: { id: string }[] };
+    expect(data.some((i) => i.id === iteration.id)).toBe(false);
+
+    const taskRes = await api(`/projects/${p.projectId}/tasks/${task.id}`, { token: p.token });
+    const { data: after } = (await taskRes.json()) as { data: { iterationId: string | null } };
+    expect(after.iterationId).toBeNull();
+  });
+
+  it("returns 404 when deleting a non-existent iteration", async () => {
+    const p = await setupProject();
+    const res = await api(
+      `/projects/${p.projectId}/planning/iterations/0197d3b0-0000-7000-8000-000000000000`,
+      { method: "DELETE", token: p.token },
+    );
+    expect(res.status).toBe(404);
+  });
 });
 
 describe("milestones", () => {

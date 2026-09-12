@@ -107,6 +107,19 @@ export async function patchIteration(
   return row ? toIteration(row) : null;
 }
 
+/** Hard delete — tasks committed to the iteration return to the backlog,
+ *  both writes in one transaction. */
+export async function deleteIteration(projectId: string, id: string): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    await tx.update(tasks).set({ iterationId: null }).where(eq(tasks.iterationId, id));
+    const rows = await tx
+      .delete(iterations)
+      .where(and(eq(iterations.id, id), eq(iterations.projectId, projectId)))
+      .returning();
+    return rows.length > 0;
+  });
+}
+
 /* ---------------- milestones ---------------- */
 
 export async function listMilestones(projectId: string): Promise<Milestone[]> {

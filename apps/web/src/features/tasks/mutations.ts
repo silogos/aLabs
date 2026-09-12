@@ -510,6 +510,24 @@ export function usePlanningActions() {
     [iterUpdate],
   );
 
+  const deleteSprint = useCallback(
+    (sp: string) => {
+      if (!pid) return;
+      patchIterations((list) => list.filter((i) => i.id !== sp));
+      planningService
+        .deleteIteration(pid, sp)
+        .catch(() => {
+          void qc.invalidateQueries({ queryKey: qk.iterations(pid) });
+          toast("Couldn't delete iteration — showing latest from server");
+        })
+        .finally(() => {
+          // committed tasks return to the backlog
+          void qc.invalidateQueries({ queryKey: qk.tasks(pid) });
+        });
+    },
+    [patchIterations, pid, qc, toast],
+  );
+
   const addMilestone = useCallback(
     (input: MilestoneInput) => {
       const created = planningService
@@ -562,6 +580,7 @@ export function usePlanningActions() {
     planSprintAuto,
     createSprint,
     updateSprint,
+    deleteSprint,
     addMilestone,
     updateMilestone,
     deleteMilestone,
