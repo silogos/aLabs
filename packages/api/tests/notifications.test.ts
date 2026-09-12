@@ -3,12 +3,20 @@
 import { describe, expect, it } from "vitest";
 import { api, registerUser, setupOrg, setupProject, addOrgMember, createProject, unique } from "./helpers";
 
+/** Target as the API ships it — raw routing data (clients format URLs). */
+interface TargetRow {
+  kind: string;
+  orgSlug: string;
+  projectSlug?: string;
+  order?: number;
+}
+
 interface NotificationRow {
   id: string;
   type: string;
   title: string;
   body: string | null;
-  link: string | null;
+  target: TargetRow | null;
 }
 
 /** Fetch the user's notification list; throws on non-200. */
@@ -108,9 +116,14 @@ describe("emitter: task assigned", () => {
     expect(notifs).toHaveLength(1);
     expect(notifs[0].title).toContain("assigned you a task");
     expect(notifs[0].body).toBe(title);
-    // deep link carries the task's order number — the drawer resolves
-    // Number(param), so a UUID here would open an empty drawer
-    expect(notifs[0].link).toBe(`/${org.slug}/${project.slug}/tasks/${task.data.order}`);
+    // target ships routing data, not a URL — order (never the UUID) is
+    // what the web task route is built from
+    expect(notifs[0].target).toEqual({
+      kind: "task",
+      orgSlug: org.slug,
+      projectSlug: project.slug,
+      order: task.data.order,
+    });
 
     // the actor is never notified for their own action
     expect(await listNotifications(org.token)).toHaveLength(0);
@@ -171,7 +184,12 @@ describe("emitter: task comment", () => {
     expect(memberNotifs).toHaveLength(1);
     expect(memberNotifs[0].title).toContain("commented on");
     expect(memberNotifs[0].body).toContain("urgent");
-    expect(memberNotifs[0].link).toBe(`/${org.slug}/${project.slug}/tasks/${task.data.order}`);
+    expect(memberNotifs[0].target).toEqual({
+      kind: "task",
+      orgSlug: org.slug,
+      projectSlug: project.slug,
+      order: task.data.order,
+    });
     expect(await notificationsOf(org.token, "comment")).toHaveLength(0);
 
     // assignee comments back → only the reporter is notified
@@ -215,7 +233,7 @@ describe("emitter: invitation created", () => {
     expect(notifs).toHaveLength(1);
     expect(notifs[0].type).toBe("invite");
     expect(notifs[0].title).toContain(`invited you to join`);
-    expect(notifs[0].link).toBe(`/${org.slug}/members`);
+    expect(notifs[0].target).toEqual({ kind: "members", orgSlug: org.slug });
     expect(await listNotifications(org.token)).toHaveLength(0);
   });
 

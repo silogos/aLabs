@@ -628,7 +628,8 @@ export const notifications = pgTable(
     type: varchar("type", { length: 60 }).notNull(),
     title: varchar("title", { length: 200 }).notNull(),
     body: text("body"),
-    link: text("link"),
+    /** Routing data (kind + slugs/order) — clients format their own URLs */
+    target: jsonb("target"),
     readAt: nullableTs(),
     createdAt: ts().defaultNow(),
   },

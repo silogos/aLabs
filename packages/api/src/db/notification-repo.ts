@@ -3,7 +3,7 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "./pg";
 import { notifications } from "@pmin/core/db";
-import { uuidv7, type Notification } from "@pmin/core";
+import { uuidv7, type Notification, type NotificationTarget } from "@pmin/core";
 import { iso } from "./mapping";
 
 type NotificationRow = typeof notifications.$inferSelect;
@@ -14,7 +14,7 @@ const toNotification = (r: NotificationRow): Notification => ({
   type: r.type,
   title: r.title,
   body: r.body,
-  link: r.link,
+  target: (r.target as NotificationTarget | null) ?? null,
   readAt: iso(r.readAt),
   createdAt: r.createdAt.toISOString(),
 });
@@ -33,7 +33,7 @@ export async function insertNotification(input: {
   type: string;
   title: string;
   body: string;
-  link?: string | null;
+  target?: NotificationTarget | null;
   readAt?: Date | null;
   createdAt?: Date;
 }): Promise<void> {
@@ -43,7 +43,7 @@ export async function insertNotification(input: {
     type: input.type,
     title: input.title,
     body: input.body,
-    link: input.link ?? null,
+    target: input.target ?? null,
     readAt: input.readAt ?? null,
     createdAt: input.createdAt ?? new Date(),
   });

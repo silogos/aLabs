@@ -548,7 +548,7 @@ Unique `(project_id, resource)`.
 | type      | varchar(60) | not null                     |
 | title     | varchar(200)| not null                     |
 | body      | text        | null                         |
-| link      | text        | null                         |
+| target    | jsonb       | null — routing data; clients format URLs |
 | read_at   | timestamptz | null                         |
 | created_at| timestamptz | not null default now         |
 

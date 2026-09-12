@@ -14,6 +14,7 @@ import { useApp } from "@/providers/app-provider";
 import { Avatar, colorFor, initials } from "@/components/ui/avatar";
 import { Prio, StatusPill, TypeTag } from "@/components/ui/badges";
 import { taskSerial } from "@/lib/serial";
+import { notificationPath } from "@/lib/notification-path";
 import { dateShort, isOverdue } from "@/lib/format";
 
 function Spark({ data, color }: { data: number[]; color: string }) {
@@ -540,7 +541,7 @@ function NotificationsCard() {
     kind: NOTIF_KIND[n.type] ?? "mention",
     unread: !n.readAt,
     time: timeAgo(n.createdAt),
-    link: n.link,
+    link: notificationPath(n.target),
     body: (
       <>
         <b>{n.title}</b>
