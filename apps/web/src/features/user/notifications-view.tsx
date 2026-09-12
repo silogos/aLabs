@@ -11,6 +11,7 @@ import { useApp } from "@/providers/app-provider";
 import { notificationsService } from "@/services/notifications";
 import { qk } from "@/lib/query-keys";
 import { timeAgo } from "@/lib/format";
+import { notificationPath } from "@/lib/notification-path";
 import type { Notification, NotificationPreference } from "@pmin/core";
 import type { ReactNode } from "react";
 
@@ -139,9 +140,9 @@ export function NotificationsView() {
 
   /** Read state is fire-and-forget so navigation feels instant — the
    *  invalidation lands while the target page loads. */
-  const open = (n: Notification) => {
+  const open = (n: Notification, path: string | null) => {
     if (!n.readAt) void markOne(n.id, n.readAt);
-    if (n.link) router.push(n.link);
+    if (path) router.push(path);
   };
 
   return (
@@ -177,8 +178,8 @@ export function NotificationsView() {
                   <div
                     key={n.id}
                     className={`notif-item ${n.readAt ? "read" : "unread"}`}
-                    onClick={() => open(n)}
-                    style={{ cursor: n.link || !n.readAt ? "pointer" : "default" }}
+                    onClick={() => open(n, notificationPath(n.target))}
+                    style={{ cursor: n.target || !n.readAt ? "pointer" : "default" }}
                   >
                     <span className="notif-dot" />
                     <span className={`notif-ic ${kind}`}>{ICONS[kind]}</span>
@@ -207,6 +208,7 @@ export function NotificationsView() {
                   <div className="pref-meta">
                     <b>{meta?.title ?? p.type}</b>
                     <span className="sub">{meta?.sub}</span>
+
                   </div>
                   <button
                     className={`tgl ${p.enabled ? "on" : ""}`}

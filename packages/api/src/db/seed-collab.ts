@@ -72,24 +72,25 @@ export async function seedCollab(ctx: SeedCtx, parents: TaskWithMeta[], fresh: b
   /* ---------------- Notifications ---------------- */
   if (fresh) {
     const aisha = usersByShort.ay;
-    // real deep links — /{orgSlug}/{projectSlug}/tasks/{order} (the route
-    // param is the order number, same scheme the emitters build)
+    // routing data — clients format their own URLs from slugs + order
     const org = await orgRepo.getOrganization(atlas.organizationId);
-    const link = (order: number) =>
-      org ? `/${org.slug}/${atlas.slug}/tasks/${order}` : null;
+    const taskTarget = (order: number) =>
+      org
+        ? { kind: "task" as const, orgSlug: org.slug, projectSlug: atlas.slug, order }
+        : null;
     await notificationRepo.insertNotification({
       userId: aisha.id,
       type: "mention",
       title: "Marco mentioned you on ATL-101",
       body: "Can you review the PKCE verifier before EOD?",
-      link: link(101),
+      target: taskTarget(101),
     });
     await notificationRepo.insertNotification({
       userId: aisha.id,
       type: "due",
       title: "ATL-116 is due today",
       body: "Backlog grooming: triage queue",
-      link: link(116),
+      target: taskTarget(116),
     });
   }
 

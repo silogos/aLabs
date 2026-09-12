@@ -52,16 +52,16 @@ Entities
 
 # Notification
 
-| Field      | Type     | Required | Description        |
-| ---------- | -------- | -------- | ------------------ |
-| id         | UUID     | Yes      | Primary identifier |
-| userId     | UUID     | Yes      | Recipient          |
-| type       | String   | Yes      | Event type         |
-| title      | String   | Yes      | Short title        |
-| body       | String?  | No       | Detail             |
-| link       | String?  | No       | Deep link          |
-| readAt     | DateTime | No       | Read timestamp     |
-| createdAt  | DateTime | Yes      | Creation timestamp |
+| Field      | Type     | Required | Description                          |
+| ---------- | -------- | -------- | ------------------------------------ |
+| id         | UUID     | Yes      | Primary identifier                   |
+| userId     | UUID     | Yes      | Recipient                            |
+| type       | String   | Yes      | Event type                           |
+| title      | String   | Yes      | Short title                          |
+| body       | String?  | No       | Detail                               |
+| target     | Object?  | No       | Routing data — clients format URLs   |
+| readAt     | DateTime | No       | Read timestamp                       |
+| createdAt  | DateTime | Yes      | Creation timestamp                   |
 
 ---
 
@@ -117,12 +117,16 @@ The demo seed additionally creates `mention` and `due` notifications; those type
 
 Before inserting, every emitter subtracts recipients who disabled the emitted type on the `in_app` channel (`notification-repo.ts` → `inAppOptedOut`). The `email` channel has no delivery path yet — email provider pick is deferred — so email rows persist but gate nothing today.
 
-## Deep Links
+## Targets
 
-Links use the app's slug routes so the web client can `router.push` them directly:
+Notifications ship **routing data, never URLs** — the backend never learns a client's route scheme. `target` is a discriminated object (`NotificationTarget` in `packages/core/src/schemas/notification.ts`):
 
-- Task notifications (`assign`, `comment`): `/{orgSlug}/{projectSlug}/tasks/{order}` — the segment is the task's **order number**, never the UUID (the task drawer resolves `Number(param)`; this is the same scheme the task list uses)
-- Invitation notifications (`invite`): `/{orgSlug}/members`
+| kind       | Payload                                        | Emitted by            |
+| ---------- | ---------------------------------------------- | --------------------- |
+| `task`     | `{ orgSlug, projectSlug, order }`              | `assign`, `comment`   |
+| `members`  | `{ orgSlug }`                                  | `invite`              |
+
+Each client formats its own links. The web app builds them in `apps/web/src/lib/notification-path.ts` (`notificationPath`): task → `/{orgSlug}/{projectSlug}/tasks/{order}` (the segment is the task's **order number**, never the UUID — the task drawer resolves `Number(param)`), members → `/{orgSlug}/members`. Slugs in the payload are data, not routing; the API's own routes still only ever see UUIDs (ADR 0009).
 
 ---
 

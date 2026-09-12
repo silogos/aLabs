@@ -9,6 +9,7 @@ import {
   notifiableEventTypes,
   type Notification,
   type NotificationPreference,
+  type NotificationTarget,
 } from "@pmin/core";
 import { iso } from "./mapping";
 
@@ -20,7 +21,7 @@ const toNotification = (r: NotificationRow): Notification => ({
   type: r.type,
   title: r.title,
   body: r.body,
-  link: r.link,
+  target: (r.target as NotificationTarget | null) ?? null,
   readAt: iso(r.readAt),
   createdAt: r.createdAt.toISOString(),
 });
@@ -39,7 +40,7 @@ export async function insertNotification(input: {
   type: string;
   title: string;
   body: string;
-  link?: string | null;
+  target?: NotificationTarget | null;
   readAt?: Date | null;
   createdAt?: Date;
 }): Promise<void> {
@@ -49,7 +50,7 @@ export async function insertNotification(input: {
     type: input.type,
     title: input.title,
     body: input.body,
-    link: input.link ?? null,
+    target: input.target ?? null,
     readAt: input.readAt ?? null,
     createdAt: input.createdAt ?? new Date(),
   });
