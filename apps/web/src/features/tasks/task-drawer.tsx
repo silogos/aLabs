@@ -21,14 +21,26 @@ import type { ChangeEvent } from "react";
 
 export function TaskDrawer({ id }: { id: string }) {
   const board = useBoard();
-  const { setField } = useTaskActions();
+  const { setField, bulkDelete } = useTaskActions();
   const { closeTask, toast, openTask, openRelPicker, project } = useApp();
   const tid = Number(id);
   const t = board.taskById(tid);
+  const [menuOpen, setMenuOpen] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (titleRef.current && t) titleRef.current.textContent = t.t;
-  }, [tid]);
+    // t?.t (not t): re-run when the title string arrives/changes, but not on
+    // board refetches — those would clobber in-progress contentEditable typing.
+  }, [tid, t?.t]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   if (!t) {
     // board still loading, or a deep-linked task number that doesn't exist
@@ -47,10 +59,16 @@ export function TaskDrawer({ id }: { id: string }) {
     );
   }
 
+  const del = () => {
+    bulkDelete([t.id]);
+    closeTask();
+    toast(taskSerial(t.id) + " deleted");
+  };
+
   return createPortal(
     <aside className="drawer workspace show">
       <div className="dh">
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="dh-main">
           <div className="dh-top">
             {t.ty === "epic" ? <span className="tag o">Epic</span> : <TyTag ty={t.ty} />}
             <span className="tid">
@@ -69,7 +87,8 @@ export function TaskDrawer({ id }: { id: string }) {
                 setField(t.id, "t", v);
                 toast("Title updated");
               } else if (!v && titleRef.current) titleRef.current.textContent = t.t;
-            }}            onKeyDown={(e) => {
+            }}
+            onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
                 e.currentTarget.blur();
@@ -77,18 +96,62 @@ export function TaskDrawer({ id }: { id: string }) {
             }}
           />
         </div>
-        <button className="x" onClick={closeTask}>
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>
-        </button>
+        <div className="hacts">
+          <div className="hmenu">
+            <button
+              className="x"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Task actions"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="5" r="1.6" />
+                <circle cx="12" cy="12" r="1.6" />
+                <circle cx="12" cy="19" r="1.6" />
+              </svg>
+            </button>
+            {menuOpen && (
+              <div className="menu-pop down" role="menu">
+                <button
+                  role="menuitem"
+                  className="danger"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    del();
+                  }}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
+                  </svg>
+                  Delete task
+                </button>
+              </div>
+            )}
+          </div>
+          <button className="x" onClick={closeTask} aria-label="Close">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
       <div className="db" id="drawer-body">
         {t.ty === "epic" ? (

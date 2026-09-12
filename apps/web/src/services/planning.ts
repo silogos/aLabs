@@ -26,6 +26,11 @@ export const planningService = {
       body: JSON.stringify(patch),
     }).then((x) => x.data),
 
+  deleteIteration: (pid: string, id: string) =>
+    req<void>(`/projects/${pid}/planning/iterations/${id}`, {
+      method: "DELETE",
+    }).then(() => undefined),
+
   /* ---- milestones ---- */
   milestones: (pid: string) =>
     req<{ data: Milestone[] }>(`/projects/${pid}/planning/milestones`).then((x) => x.data),

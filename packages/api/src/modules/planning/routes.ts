@@ -42,6 +42,12 @@ planning.patch("/planning/iterations/:id", requirePermission("planning:manage"),
   return data(c, updated!);
 });
 
+planning.delete("/planning/iterations/:id", requirePermission("planning:manage"), async (c) => {
+  const ok = await planningRepo.deleteIteration(projectIdOf(c), c.req.param("id")!);
+  if (!ok) throw notFound();
+  return noContent(c);
+});
+
 // ---- milestones ----
 planning.get("/planning/milestones", requirePermission("planning:view"), async (c) =>
   data(c, await planningRepo.listMilestones(projectIdOf(c))),

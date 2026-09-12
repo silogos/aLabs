@@ -207,6 +207,7 @@ DELETE /projects/:projectId/planning/iterations/:id
 GET    /projects/:projectId/planning/milestones
 POST   /projects/:projectId/planning/milestones
 PATCH  /projects/:projectId/planning/milestones/:id
+DELETE /projects/:projectId/planning/milestones/:id
 
 # Timeline (computed)
 GET    /projects/:projectId/planning/timeline

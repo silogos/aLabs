@@ -832,7 +832,7 @@ function SprintModal({
 }) {
   const { toast } = useApp();
   const board = useBoard();
-  const { createSprint, updateSprint } = usePlanningActions();
+  const { createSprint, updateSprint, deleteSprint } = usePlanningActions();
   const [win] = useState<[Date, Date]>(() => fitWindow("week"));
   const [minD, maxD] = [fmtISO(win[0]), fmtISO(win[1])];
   const edit = editId ? board.sprints[editId] : undefined;
@@ -911,6 +911,13 @@ function SprintModal({
         })
         .catch(() => undefined); // createSprint already toasts on failure
     }
+  };
+
+  const remove = () => {
+    if (!isEdit || !editId) return;
+    deleteSprint(editId);
+    onClose();
+    toast((edit?.name ?? "Iteration") + " deleted · committed items returned to backlog");
   };
 
   const statusCls = edit ? spStatusClass(edit.st) : "neutral";
@@ -1009,6 +1016,15 @@ function SprintModal({
               ? `${edit.start} – ${edit.end}${edit.capacity ? " · " + edit.capacity + " pts cap" : ""}`
               : "Created as Planned · nothing is committed yet"}
           </span>
+          {isEdit && (
+            <button
+              className="btn ghost"
+              style={{ color: "var(--danger)" }}
+              onClick={remove}
+            >
+              Delete
+            </button>
+          )}
           <button className="btn ghost" onClick={onClose}>
             Cancel
           </button>
