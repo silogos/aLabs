@@ -9,6 +9,7 @@ export const qk = {
   projects: (orgId: string) => ["projects", orgId] as const,
   recents: () => ["recents"] as const,
   notifications: () => ["notifications"] as const,
+  notificationPreferences: () => ["notification-preferences"] as const,
   members: (orgId: string | undefined) => ["members", orgId] as const,
   invitations: (orgId: string | undefined) => ["invitations", orgId] as const,
   orgActivity: (orgId: string | undefined) => ["org-activity", orgId] as const,

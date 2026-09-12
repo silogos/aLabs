@@ -1508,6 +1508,68 @@
   white-space: nowrap;
 }
 
+/* ============================ Notification preferences ============================ */
+.pref-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--border);
+}
+.pref-row:first-of-type {
+  border-top: none;
+}
+.pref-meta {
+  flex: 1;
+  min-width: 0;
+}
+.pref-meta b {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fg-strong);
+}
+.pref-meta .sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.tgl {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--border-strong);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s;
+}
+.tgl::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s;
+}
+.tgl.on {
+  background: var(--accent);
+}
+.tgl.on::after {
+  transform: translateX(14px);
+}
+.tgl:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 /* ============================ AGREEMENTS ============================ */
 .agr-grid {
   display: grid;
