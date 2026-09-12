@@ -1484,6 +1484,14 @@
   font-weight: 600;
   color: var(--fg-strong);
 }
+.notif-body .notif-link {
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+.notif-body .notif-link:hover {
+  text-decoration: underline;
+}
 .notif-body .ref {
   font-weight: 600;
   color: var(--accent);

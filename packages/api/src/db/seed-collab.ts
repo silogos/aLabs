@@ -6,6 +6,7 @@ import * as meetingRepo from "./meeting-repo";
 import * as agreementRepo from "./agreement-repo";
 import * as notificationRepo from "./notification-repo";
 import * as activityRepo from "./activity-repo";
+import * as orgRepo from "./org-repo";
 import type { TaskWithMeta } from "./task-repo";
 import type { SeedCtx } from "./seed-shared";
 
@@ -71,19 +72,36 @@ export async function seedCollab(ctx: SeedCtx, parents: TaskWithMeta[], fresh: b
   /* ---------------- Notifications ---------------- */
   if (fresh) {
     const aisha = usersByShort.ay;
+    // routing data — clients format their own URLs from slugs + order;
+    // title spans link the actor (→ members) and the task serial (→ task)
+    const org = await orgRepo.getOrganization(atlas.organizationId);
+    const members = org ? { kind: "members" as const, orgSlug: org.slug } : null;
+    const taskTarget = (order: number) =>
+      org
+        ? { kind: "task" as const, orgSlug: org.slug, projectSlug: atlas.slug, order }
+        : null;
     await notificationRepo.insertNotification({
       userId: aisha.id,
       type: "mention",
       title: "Marco mentioned you on ATL-101",
+      titleSegments: [
+        { text: "Marco", target: members },
+        { text: " mentioned you on " },
+        { text: "ATL-101", target: taskTarget(101) },
+      ],
       body: "Can you review the PKCE verifier before EOD?",
-      link: "/tasks/101",
+      target: taskTarget(101),
     });
     await notificationRepo.insertNotification({
       userId: aisha.id,
       type: "due",
       title: "ATL-116 is due today",
+      titleSegments: [
+        { text: "ATL-116", target: taskTarget(116) },
+        { text: " is due today" },
+      ],
       body: "Backlog grooming: triage queue",
-      link: "/tasks/116",
+      target: taskTarget(116),
     });
   }
 

@@ -627,8 +627,12 @@ export const notifications = pgTable(
       .references(() => users.id),
     type: varchar("type", { length: 60 }).notNull(),
     title: varchar("title", { length: 200 }).notNull(),
+    /** Rich title spans — entity refs the client links (actor → members,
+     *  task text → task); null when there are none. Mirrors `title`. */
+    titleSegments: jsonb("title_segments"),
     body: text("body"),
-    link: text("link"),
+    /** Routing data (kind + slugs/order) — clients format their own URLs */
+    target: jsonb("target"),
     readAt: nullableTs(),
     createdAt: ts().defaultNow(),
   },

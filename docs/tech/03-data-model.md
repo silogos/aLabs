@@ -541,16 +541,17 @@ Unique `(project_id, resource)`.
 
 ## notifications
 
-| Column    | Type        | Constraints                  |
-| --------- | ----------- | ---------------------------- |
-| id        | uuid        | pk                           |
-| user_id   | uuid        | fk users, indexed, not null  |
-| type      | varchar(60) | not null                     |
-| title     | varchar(200)| not null                     |
-| body      | text        | null                         |
-| link      | text        | null                         |
-| read_at   | timestamptz | null                         |
-| created_at| timestamptz | not null default now         |
+| Column        | Type        | Constraints                  |
+| ------------- | ----------- | ---------------------------- |
+| id            | uuid        | pk                           |
+| user_id       | uuid        | fk users, indexed, not null  |
+| type          | varchar(60) | not null                     |
+| title         | varchar(200)| not null                     |
+| title_segments| jsonb       | null — title spans; some carry a routing target |
+| body          | text        | null                         |
+| target        | jsonb       | null — routing data; clients format URLs |
+| read_at       | timestamptz | null                         |
+| created_at    | timestamptz | not null default now         |
 
 Index `(user_id, created_at)`.
 
