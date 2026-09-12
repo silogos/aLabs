@@ -3,7 +3,7 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "./pg";
 import { notifications } from "@pmin/core/db";
-import { uuidv7, type Notification, type NotificationTarget } from "@pmin/core";
+import { uuidv7, type Notification, type NotificationTarget, type NotificationTitleSegment } from "@pmin/core";
 import { iso } from "./mapping";
 
 type NotificationRow = typeof notifications.$inferSelect;
@@ -13,6 +13,7 @@ const toNotification = (r: NotificationRow): Notification => ({
   userId: r.userId,
   type: r.type,
   title: r.title,
+  titleSegments: (r.titleSegments as NotificationTitleSegment[] | null) ?? null,
   body: r.body,
   target: (r.target as NotificationTarget | null) ?? null,
   readAt: iso(r.readAt),
@@ -32,6 +33,7 @@ export async function insertNotification(input: {
   userId: string;
   type: string;
   title: string;
+  titleSegments?: NotificationTitleSegment[] | null;
   body: string;
   target?: NotificationTarget | null;
   readAt?: Date | null;
@@ -42,6 +44,7 @@ export async function insertNotification(input: {
     userId: input.userId,
     type: input.type,
     title: input.title,
+    titleSegments: input.titleSegments ?? null,
     body: input.body,
     target: input.target ?? null,
     readAt: input.readAt ?? null,

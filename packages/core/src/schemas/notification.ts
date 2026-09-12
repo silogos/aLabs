@@ -21,11 +21,23 @@ export const notificationTargetSchema = z.discriminatedUnion("kind", [
 ]);
 export type NotificationTarget = z.infer<typeof notificationTargetSchema>;
 
+/** One span of a notification title — plain text, or an entity reference
+ *  (actor, task serial) the client renders as an inline link. Data only:
+ *  the client decides what a span links to and how it looks. */
+export const notificationTitleSegmentSchema = z.object({
+  text: z.string(),
+  target: notificationTargetSchema.nullable().optional(),
+});
+export type NotificationTitleSegment = z.infer<typeof notificationTitleSegmentSchema>;
+
 export const notificationSchema = z.object({
   id,
   userId: id,
   type: z.string(),
+  /** Plain text, always present — canonical title (search, email, fallback) */
   title: z.string(),
+  /** Rich title spans; null when the emitter had no entities to link */
+  titleSegments: z.array(notificationTitleSegmentSchema).nullable(),
   body: z.string().nullable(),
   target: notificationTargetSchema.nullable(),
   readAt: iso.nullable(),

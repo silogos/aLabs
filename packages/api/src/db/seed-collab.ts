@@ -72,8 +72,10 @@ export async function seedCollab(ctx: SeedCtx, parents: TaskWithMeta[], fresh: b
   /* ---------------- Notifications ---------------- */
   if (fresh) {
     const aisha = usersByShort.ay;
-    // routing data — clients format their own URLs from slugs + order
+    // routing data — clients format their own URLs from slugs + order;
+    // title spans link the actor (→ members) and the task serial (→ task)
     const org = await orgRepo.getOrganization(atlas.organizationId);
+    const members = org ? { kind: "members" as const, orgSlug: org.slug } : null;
     const taskTarget = (order: number) =>
       org
         ? { kind: "task" as const, orgSlug: org.slug, projectSlug: atlas.slug, order }
@@ -82,6 +84,11 @@ export async function seedCollab(ctx: SeedCtx, parents: TaskWithMeta[], fresh: b
       userId: aisha.id,
       type: "mention",
       title: "Marco mentioned you on ATL-101",
+      titleSegments: [
+        { text: "Marco", target: members },
+        { text: " mentioned you on " },
+        { text: "ATL-101", target: taskTarget(101) },
+      ],
       body: "Can you review the PKCE verifier before EOD?",
       target: taskTarget(101),
     });
@@ -89,6 +96,10 @@ export async function seedCollab(ctx: SeedCtx, parents: TaskWithMeta[], fresh: b
       userId: aisha.id,
       type: "due",
       title: "ATL-116 is due today",
+      titleSegments: [
+        { text: "ATL-116", target: taskTarget(116) },
+        { text: " is due today" },
+      ],
       body: "Backlog grooming: triage queue",
       target: taskTarget(116),
     });

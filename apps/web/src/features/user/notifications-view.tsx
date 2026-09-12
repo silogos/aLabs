@@ -11,6 +11,7 @@ import { notificationsService } from "@/services/notifications";
 import { qk } from "@/lib/query-keys";
 import { timeAgo } from "@/lib/format";
 import { notificationPath } from "@/lib/notification-path";
+import { NotificationTitle } from "@/components/notification-title";
 import type { Notification } from "@pmin/core";
 import type { ReactNode } from "react";
 
@@ -157,7 +158,13 @@ export function NotificationsView() {
                   <span className="notif-dot" />
                   <span className={`notif-ic ${kind}`}>{ICONS[kind]}</span>
                   <div className="notif-body">
-                    <b>{n.title}</b>
+                    <b>
+                      <NotificationTitle
+                        segments={n.titleSegments}
+                        title={n.title}
+                        onOpen={(path) => open(n, path)}
+                      />
+                    </b>
                     {n.body && <span className="quote">{n.body}</span>}
                   </div>
                   <span className="notif-time">{timeAgo(n.createdAt)}</span>

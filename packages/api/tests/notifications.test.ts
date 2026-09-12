@@ -11,10 +11,17 @@ interface TargetRow {
   order?: number;
 }
 
+/** Title span — plain text, or an entity the client links. */
+interface SegmentRow {
+  text: string;
+  target?: TargetRow | null;
+}
+
 interface NotificationRow {
   id: string;
   type: string;
   title: string;
+  titleSegments: SegmentRow[] | null;
   body: string | null;
   target: TargetRow | null;
 }
@@ -124,6 +131,11 @@ describe("emitter: task assigned", () => {
       projectSlug: project.slug,
       order: task.data.order,
     });
+    // title spans: the actor links to the org's members page
+    expect(notifs[0].titleSegments).toEqual([
+      { text: expect.any(String), target: { kind: "members", orgSlug: org.slug } },
+      { text: " assigned you a task" },
+    ]);
 
     // the actor is never notified for their own action
     expect(await listNotifications(org.token)).toHaveLength(0);
@@ -190,6 +202,15 @@ describe("emitter: task comment", () => {
       projectSlug: project.slug,
       order: task.data.order,
     });
+    // title spans: actor → members page, task title → the task itself
+    expect(memberNotifs[0].titleSegments).toEqual([
+      { text: expect.any(String), target: { kind: "members", orgSlug: org.slug } },
+      { text: " commented on " },
+      {
+        text: "Comment target",
+        target: { kind: "task", orgSlug: org.slug, projectSlug: project.slug, order: task.data.order },
+      },
+    ]);
     expect(await notificationsOf(org.token, "comment")).toHaveLength(0);
 
     // assignee comments back → only the reporter is notified
@@ -234,6 +255,10 @@ describe("emitter: invitation created", () => {
     expect(notifs[0].type).toBe("invite");
     expect(notifs[0].title).toContain(`invited you to join`);
     expect(notifs[0].target).toEqual({ kind: "members", orgSlug: org.slug });
+    expect(notifs[0].titleSegments).toEqual([
+      { text: expect.any(String), target: { kind: "members", orgSlug: org.slug } },
+      { text: expect.stringMatching(/^ invited you to join /) },
+    ]);
     expect(await listNotifications(org.token)).toHaveLength(0);
   });
 
