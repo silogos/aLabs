@@ -277,8 +277,8 @@ export function OrgProjectsView() {
   );
 }
 
-/** Project drawer — details (meta grid + description); all actions live in
- *  the popup menu on the footer's split "Open project" button. */
+/** Project drawer — details (meta grid + description); actions live in the
+ *  header ⋮ menu (status changes + delete); footer opens the workspace. */
 function ProjectDrawer({
   project,
   busy,
@@ -325,11 +325,81 @@ function ProjectDrawer({
           </div>
           <h3>{project.name}</h3>
         </div>
-        <button className="x" onClick={onClose} title="Close (Esc)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>
-        </button>
+        <div className="hacts">
+          {hasActions && (
+            <div className="hmenu">
+              <button
+                className="x"
+                onClick={() => onMenuOpen(!menuOpen)}
+                aria-label="Project actions"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                disabled={busy}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="1.6" />
+                  <circle cx="12" cy="12" r="1.6" />
+                  <circle cx="12" cy="19" r="1.6" />
+                </svg>
+              </button>
+              {menuOpen && (
+                <div className="menu-pop down" role="menu" data-od-id="org-project-actions-menu">
+                  {canUpdate && project.status === "active" && (
+                    <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("on_hold"); }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <rect x="6" y="4" width="4" height="16" rx="1" />
+                        <rect x="14" y="4" width="4" height="16" rx="1" />
+                      </svg>
+                      Put on hold
+                    </button>
+                  )}
+                  {canUpdate && project.status === "on_hold" && (
+                    <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("active"); }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+                        <path d="M8 5.5v13l11-6.5z" />
+                      </svg>
+                      Resume project
+                    </button>
+                  )}
+                  {canUpdate && project.status !== "archived" && (
+                    <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("archived"); }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="4" width="18" height="5" rx="1" />
+                        <path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" />
+                      </svg>
+                      Archive
+                    </button>
+                  )}
+                  {canUpdate && project.status === "archived" && (
+                    <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("active"); }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                        <path d="M3 3v5h5" />
+                      </svg>
+                      Restore
+                    </button>
+                  )}
+                  {canDelete && (
+                    <>
+                      <div className="sep" />
+                      <button role="menuitem" className="danger" onClick={() => { onMenuOpen(false); onConfirmDelete(true); }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
+                        </svg>
+                        Delete project…
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          <button className="x" onClick={onClose} aria-label="Close" title="Close (Esc)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
       <div className="db">
         {project.description ? (
@@ -360,78 +430,14 @@ function ProjectDrawer({
       </div>
       <div className="df">
         <div className="split">
-                  <button className="go" onClick={onOpen} title="Switch into this project's workspace">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M7 17 17 7" />
-                      <path d="M9 7h8v8" />
-                    </svg>
-                    Open project
-                  </button>
-                  {hasActions && (
-                    <button
-                      className="caret"
-                      aria-expanded={menuOpen}
-                      aria-haspopup="menu"
-                      title="Project actions"
-                      disabled={busy}
-                      onClick={() => onMenuOpen(!menuOpen)}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="m18 15-6-6-6 6" />
-                      </svg>
-                    </button>
-                  )}
-                  {menuOpen && hasActions && (
-                    <div className="menu-pop" role="menu" data-od-id="org-project-actions-menu">
-                      {canUpdate && project.status === "active" && (
-                        <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("on_hold"); }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                            <rect x="6" y="4" width="4" height="16" rx="1" />
-                            <rect x="14" y="4" width="4" height="16" rx="1" />
-                          </svg>
-                          Put on hold
-                        </button>
-                      )}
-                      {canUpdate && project.status === "on_hold" && (
-                        <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("active"); }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-                            <path d="M8 5.5v13l11-6.5z" />
-                          </svg>
-                          Resume project
-                        </button>
-                      )}
-                      {canUpdate && project.status !== "archived" && (
-                        <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("archived"); }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="4" width="18" height="5" rx="1" />
-                            <path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" />
-                          </svg>
-                          Archive
-                        </button>
-                      )}
-                      {canUpdate && project.status === "archived" && (
-                        <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("active"); }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-                            <path d="M3 3v5h5" />
-                          </svg>
-                          Restore
-                        </button>
-                      )}
-                      {canDelete && (
-                        <>
-                          <div className="sep" />
-                          <button role="menuitem" className="danger" onClick={() => { onMenuOpen(false); onConfirmDelete(true); }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
-                            </svg>
-                            Delete project…
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
-            </div>
+          <button className="go" onClick={onOpen} title="Switch into this project's workspace">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 17 17 7" />
+              <path d="M9 7h8v8" />
+            </svg>
+            Open project
+          </button>
+        </div>
         <div className="tiny faint" style={{ marginLeft: "auto" }}>
           Switches into the project workspace
         </div>
