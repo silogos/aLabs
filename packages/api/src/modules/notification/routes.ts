@@ -1,10 +1,13 @@
 /** Notification routes — user-scoped (not tenant-scoped).
- *  Rows live in Postgres (db/notification-repo.ts); read-marking is owner-scoped. */
+ *  Rows live in Postgres (db/notification-repo.ts); read-marking and
+ *  preference writes are owner-scoped. */
 import { Hono } from "hono";
+import { notificationPreferenceSchema } from "@pmin/core";
 import * as notificationRepo from "../../db/notification-repo";
 import { noContent, data } from "../../lib/responses";
 import { notFound } from "../../lib/errors";
 import { requireAuth } from "../../lib/auth";
+import { parseJsonBody } from "../../lib/validate";
 import type { Vars } from "../../lib/ctx";
 
 export const notification = new Hono<{ Variables: Vars }>();
@@ -28,5 +31,13 @@ notification.patch("/read-all", async (c) => {
   return noContent(c);
 });
 
-notification.get("/preferences", (c) => data(c, {}));
-notification.patch("/preferences", (c) => data(c, {}));
+notification.get("/preferences", async (c) => {
+  const user = c.get("user")!;
+  return data(c, await notificationRepo.listNotificationPreferences(user.id));
+});
+
+notification.patch("/preferences", async (c) => {
+  const user = c.get("user")!;
+  const input = await parseJsonBody(c, notificationPreferenceSchema);
+  return data(c, await notificationRepo.upsertNotificationPreference(user.id, input));
+});
