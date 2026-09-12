@@ -96,7 +96,15 @@ Entities
 
 ## Triggers
 
-Other modules emit events; the notification service delivers them.
+Other modules emit events; the notification service delivers them. Emitters live in `packages/api/src/modules/notification/emit.ts`; type strings match the kinds the UI renders.
+
+| Type    | Emitted when                                    | Recipients                                              |
+| ------- | ----------------------------------------------- | ------------------------------------------------------- |
+| `assign`   | Task created or reassigned to a user         | The new assignee (never the actor)                      |
+| `comment`  | Comment posted on a task (`POST /tasks/:id/comments`) | Task assignee + reporter (never the author, deduped) |
+| `invite`   | Workspace invitation created                 | The invitee, only if they already have an account       |
+
+The demo seed additionally creates `mention` and `due` notifications; those types have no runtime emitter yet.
 
 ---
 

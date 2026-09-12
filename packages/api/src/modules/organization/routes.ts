@@ -20,6 +20,7 @@ import { parseJsonBody, parseQuery } from "../../lib/validate";
 import { orgContext, currentTenant } from "../../lib/tenant";
 import { requireAuth } from "../../lib/auth";
 import { requirePermission } from "../../lib/permission";
+import { notifyInvitationCreated } from "../notification/emit";
 import type { Vars, Ctx } from "../../lib/ctx";
 
 export const organization = new Hono<{ Variables: Vars }>();
@@ -134,6 +135,7 @@ organization.post(
   orgContext,
   requirePermission("member:create"),
   async (c) => {
+    const user = c.get("user")!;
     const input = await parseJsonBody(c, invitationCreate);
     const orgId = currentTenant(c).organizationId;
     const role =
@@ -152,6 +154,7 @@ organization.post(
       // admin-driven flow today; the token future-proofs email delivery
       token: randomBytes(24).toString("base64url"),
     });
+    await notifyInvitationCreated(invitation, user.id);
     return created(c, invitation);
   },
 );
