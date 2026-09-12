@@ -556,15 +556,17 @@ Index `(user_id, created_at)`.
 
 ## notification_preferences
 
-| Column  | Type                 | Constraints                  |
-| ------- | -------------------- | ---------------------------- |
-| id      | uuid                 | pk                           |
-| user_id | uuid                 | fk users, indexed, not null  |
-| channel | notification_channel | not null                     |
-| type    | varchar(60)          | not null                     |
-| enabled | boolean              | not null default true        |
+| Column    | Type                 | Constraints                  |
+| --------- | -------------------- | ---------------------------- |
+| id        | uuid                 | pk                           |
+| user_id   | uuid                 | fk users, indexed, not null  |
+| channel   | notification_channel | not null                     |
+| type      | varchar(60)          | not null                     |
+| enabled   | boolean              | not null default true        |
+| created_at| timestamptz          | not null default now         |
+| updated_at| timestamptz          | not null default now         |
 
-Unique `(user_id, channel, type)`.
+Unique `(user_id, channel, type)`. Rows are overrides only — absent row = enabled.
 
 ---
 
