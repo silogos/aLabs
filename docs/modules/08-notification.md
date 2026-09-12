@@ -88,6 +88,7 @@ Rows are overrides only: an absent `(userId, channel, type)` row means **enabled
 - Notification center
 - Unread badge
 - Mark as read
+- Click-through: clicking an item marks it read (when unread) and navigates to its deep link; items without a link only mark read
 
 ## Email
 
@@ -115,6 +116,13 @@ Other modules emit events; the notification service delivers them. Emitters live
 The demo seed additionally creates `mention` and `due` notifications; those types have no runtime emitter yet.
 
 Before inserting, every emitter subtracts recipients who disabled the emitted type on the `in_app` channel (`notification-repo.ts` → `inAppOptedOut`). The `email` channel has no delivery path yet — email provider pick is deferred — so email rows persist but gate nothing today.
+
+## Deep Links
+
+Links use the app's slug routes so the web client can `router.push` them directly:
+
+- Task notifications (`assign`, `comment`): `/{orgSlug}/{projectSlug}/tasks/{order}` — the segment is the task's **order number**, never the UUID (the task drawer resolves `Number(param)`; this is the same scheme the task list uses)
+- Invitation notifications (`invite`): `/{orgSlug}/members`
 
 ---
 

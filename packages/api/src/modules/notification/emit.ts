@@ -23,12 +23,14 @@ async function inAppRecipients(
   return userIds.filter((id) => !optedOut.has(id));
 }
 
-/** Deep link to a task — /:orgSlug/:projectSlug/tasks/:taskId */
+/** Deep link to a task — /:orgSlug/:projectSlug/tasks/:order. The route
+ *  param is the task's order number (TaskDrawer resolves Number(param)),
+ *  matching how the app itself links tasks — never the UUID. */
 async function taskLink(task: TaskWithMeta): Promise<string | null> {
   const project = await projectRepo.getProject(task.projectId);
   if (!project) return null;
   const org = await orgRepo.getOrganization(project.organizationId);
-  return org ? `/${org.slug}/${project.slug}/tasks/${task.id}` : null;
+  return org ? `/${org.slug}/${project.slug}/tasks/${task.order}` : null;
 }
 
 /** Actor display name for titles — authenticated users always resolve, the
