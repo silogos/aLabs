@@ -15,6 +15,26 @@ Seed data is idempotent. Running it twice must not duplicate rows.
 
 ---
 
+# When Seeding Runs
+
+Boot (`packages/api/src/db/boot.ts`) always runs migrations and seeds the
+system roles — org creation, invitations and project membership resolve those
+roles by name at runtime, so they must exist in every environment. The demo
+dataset (Northwind users with password `password123`, demo orgs, projects and
+content) seeds only when demo seeding is enabled:
+
+| Environment                        | Demo seed |
+| ---------------------------------- | --------- |
+| `NODE_ENV` ≠ `production` (dev, test) | on (default) |
+| `NODE_ENV=production`              | off       |
+
+`SEED_DEMO=true/false` overrides the default in any environment (`packages/api/src/db/seed-mode.ts`):
+e.g. `SEED_DEMO=false` boots a clean prod-like local database, `SEED_DEMO=true`
+explicitly opts a production-mode build into demo data. Production boots with
+a clean database — no demo users, no demo workspaces.
+
+---
+
 # Where Constants Live
 
 | Kind                | Location                              |

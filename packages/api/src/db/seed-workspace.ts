@@ -1,15 +1,9 @@
-/** Workspace seed — system roles + the demo organizations/memberships into
- *  Postgres when empty. Returns them for the in-memory seed (projects and
- *  below reference the real DB ids). Conflict-safe for concurrent boots;
- *  non-demo databases are left alone. */
+/** Workspace seed — system roles (every boot, production included) + the
+ *  demo organizations/memberships into Postgres when empty. Conflict-safe
+ *  for concurrent boots; non-demo databases are left alone. */
 import type { User, Organization, Role } from "@pmin/core";
 import { SYSTEM_WORKSPACE_ROLES, SYSTEM_PROJECT_ROLES } from "@pmin/core";
 import * as orgRepo from "./org-repo";
-
-export interface SeededWorkspace {
-  orgs: Organization[];
-  roles: Role[];
-}
 
 const DEMO_ORGS: {
   slug: string;
@@ -57,8 +51,10 @@ const DEMO_ORGS: {
   },
 ];
 
-export async function seedWorkspace(users: User[]): Promise<SeededWorkspace> {
-  // system roles (idempotent — conflict-nothing inserts)
+/** System workspace/project roles — org creation, invitations and project
+ *  membership resolve these by name at runtime, so they seed on every boot
+ *  regardless of the demo gate. Idempotent (conflict-nothing inserts). */
+export async function seedSystemRoles(): Promise<Role[]> {
   const roleDefs = [...SYSTEM_WORKSPACE_ROLES, ...SYSTEM_PROJECT_ROLES];
   for (const r of roleDefs) {
     await orgRepo.insertRoleIfAbsent({
@@ -69,11 +65,13 @@ export async function seedWorkspace(users: User[]): Promise<SeededWorkspace> {
       permissions: r.permissions,
     });
   }
-  const roles = await orgRepo.listRoles();
+  return orgRepo.listRoles();
+}
 
-  // demo orgs + memberships (only into an empty org table)
+/** Demo orgs + memberships (only into an empty org table). */
+export async function seedWorkspace(users: User[], roles: Role[]): Promise<Organization[]> {
   const anyOrg = await orgRepo.listOrganizations();
-  if (anyOrg.length > 0) return { orgs: anyOrg, roles };
+  if (anyOrg.length > 0) return anyOrg;
 
   const userByEmail = new Map(users.map((u) => [u.email, u]));
   for (const o of DEMO_ORGS) {
@@ -93,5 +91,5 @@ export async function seedWorkspace(users: User[]): Promise<SeededWorkspace> {
       await orgRepo.insertMember({ organizationId: org.id, userId: user.id, roleId: role.id });
     }
   }
-  return { orgs: await orgRepo.listOrganizations(), roles };
+  return orgRepo.listOrganizations();
 }

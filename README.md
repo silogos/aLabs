@@ -24,7 +24,8 @@ pnpm dev               # Next.js on http://localhost:3000 (UI + API in one proce
 `pnpm dev` reads `DATABASE_URL` from `apps/web/.env` — on first boot it copies
 `.env.example` guidance: create the file with
 `DATABASE_URL=postgres://alabs:alabs@localhost:5432/alabs` (matches the compose
-service). Migrations run and the demo users seed automatically.
+service). Migrations run and the demo users seed automatically (demo seeding
+defaults on outside production; `SEED_DEMO=false` boots a clean database).
 
 Then open **http://localhost:3000** and sign in with the seeded demo user:
 
@@ -82,8 +83,9 @@ All internal packages use the `@pmin/*` namespace.
 - **Data layer — Postgres via Drizzle, fully migrated.** Every domain
   persists to Postgres (auth, workspace, projects, tasks + planning,
   documents, meetings, agreements, notifications, activity) through the
-  per-domain repositories in `packages/api/src/db/` — auto-migrated and
-  demo-seeded on boot. `pnpm db:generate` / `pnpm db:migrate` manage
+  per-domain repositories in `packages/api/src/db/` — auto-migrated on boot;
+  demo data seeds unless `NODE_ENV=production` (`SEED_DEMO` overrides, see
+  `docs/tech/05-seed-data.md`). `pnpm db:generate` / `pnpm db:migrate` manage
   migrations; `pnpm db:studio` opens Drizzle Studio.
 
 ### Request lifecycle
