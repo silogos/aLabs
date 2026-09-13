@@ -146,7 +146,7 @@ export function OrgMembersView() {
                   <div
                     style={{ fontWeight: 600, cursor: "pointer", width: "fit-content" }}
                     onClick={() => router.push(`/${org.slug}/members/${m.userId}`)}
-                    title="Open profile"
+                    title="Open member"
                   >
                     {m.user.name}
                     {m.userId === user?.id && <span className="tiny faint"> (you)</span>}

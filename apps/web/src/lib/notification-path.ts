@@ -12,7 +12,7 @@ export function notificationPath(target: NotificationTarget | null): string | nu
     case "members":
       return `/${target.orgSlug}/members`;
     case "user":
-      // org-scoped member profile
+      // member quick-view drawer over the members list
       return `/${target.orgSlug}/members/${target.userId}`;
   }
 }
