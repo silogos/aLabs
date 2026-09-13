@@ -2,10 +2,11 @@
 
 /** Member quick-view drawer over the members list — the same pattern as the
  *  task drawer: /{orgSlug}/members/{userId} mounts this drawer on top of the
- *  persistent directory backdrop. "Open profile" (header action) jumps to
- *  the full GitLab-style profile page. Portals to document.body for the same
- *  z-index reasons as TaskDrawer. */
+ *  persistent directory backdrop. Header follows the task/project drawer
+ *  convention: a three-dot actions menu (Open profile) + close. Portals to
+ *  document.body for the same z-index reasons as TaskDrawer. */
 import { createPortal } from "react-dom";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useApp, viewPath } from "@/providers/app-provider";
@@ -19,6 +20,16 @@ export function MemberDrawer() {
   const router = useRouter();
   const params = useParams<{ orgSlug: string; userId: string }>();
   const userId = params?.userId;
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   const { data: profile, isError } = useQuery({
     queryKey: qk.memberProfile(org?.id, userId),
@@ -63,15 +74,57 @@ export function MemberDrawer() {
           <div className="tiny mono faint">{profile.user.email}</div>
         </div>
         <div className="hacts">
-          <button className="x" onClick={openProfile} title="Open profile" aria-label="Open profile">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4,21c0,-4,4,-6,8,-6s8,2,8,6" />
-              <path d="M18 14l3 3l-3 3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+          <div className="hmenu">
+            <button
+              className="x"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Member actions"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="5" r="1.6" />
+                <circle cx="12" cy="12" r="1.6" />
+                <circle cx="12" cy="19" r="1.6" />
+              </svg>
+            </button>
+            {menuOpen && (
+              <div className="menu-pop down" role="menu">
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    openProfile();
+                  }}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4,21c0,-4,4,-6,8,-6s8,2,8,6" />
+                  </svg>
+                  Open profile
+                </button>
+              </div>
+            )}
+          </div>
           <button className="x" onClick={close} aria-label="Close">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
