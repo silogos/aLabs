@@ -5,8 +5,8 @@
  *  silently when there is nobody to notify (self-action, unknown email).
  *
  *  Titles ship twice: `title` (plain varchar(200)) and `titleSegments`
- *  (spans whose targets the client renders as inline links — actor →
- *  members page, task text → task). Routing data only, never URLs. */
+ *  (spans whose targets the client renders as inline links — actor → their
+ *  member profile, task text → task). Routing data only, never URLs. */
 import * as notificationRepo from "../../db/notification-repo";
 import * as authRepo from "../../db/auth-repo";
 import * as orgRepo from "../../db/org-repo";
@@ -52,15 +52,16 @@ function taskTarget(
   return locale ? { kind: "task", ...locale, order: task.order } : null;
 }
 
-/** Title spans linking the actor (→ the org's members page — the only
- *  roster surface) followed by the plain rest of the sentence. */
+/** Title spans linking the actor (→ their member profile in this org)
+ *  followed by the plain rest of the sentence. No org → no link. */
 function actorFirstSegments(
+  actorId: string,
   actor: string,
   rest: string,
-  members: NotificationTarget | null,
+  orgSlug: string | null,
 ): NotificationTitleSegment[] {
   return [
-    { text: actor, target: members },
+    { text: actor, target: orgSlug ? { kind: "user", orgSlug, userId: actorId } : null },
     { text: rest },
   ];
 }
@@ -84,11 +85,7 @@ export async function notifyTaskAssigned(task: TaskWithMeta, actorId: string): P
     userId: recipient,
     type: "assign",
     title: `${name} assigned you a task`,
-    titleSegments: actorFirstSegments(
-      name,
-      " assigned you a task",
-      locale ? { kind: "members", orgSlug: locale.orgSlug } : null,
-    ),
+    titleSegments: actorFirstSegments(actorId, name, " assigned you a task", locale?.orgSlug ?? null),
     body: task.title,
     target: taskTarget(task, locale),
   });
@@ -111,7 +108,10 @@ export async function notifyTaskCommented(
   const target = taskTarget(task, locale);
   const taskText = clip(task.title, 100);
   const titleSegments: NotificationTitleSegment[] = [
-    { text: name, target: locale ? { kind: "members", orgSlug: locale.orgSlug } : null },
+    {
+      text: name,
+      target: locale ? { kind: "user", orgSlug: locale.orgSlug, userId: actorId } : null,
+    },
     { text: " commented on " },
     { text: taskText, target },
   ];
@@ -144,10 +144,12 @@ export async function notifyInvitationCreated(
     userId: recipient,
     type: "invite",
     title: `${name} invited you to join ${org.name}`,
-    titleSegments: actorFirstSegments(name, ` invited you to join ${org.name}`, {
-      kind: "members",
-      orgSlug: org.slug,
-    }),
+    titleSegments: actorFirstSegments(
+      actorId,
+      name,
+      ` invited you to join ${org.name}`,
+      org.slug,
+    ),
     body: `Workspace invitation · role: ${invitation.roleName}`,
     target: { kind: "members", orgSlug: org.slug },
   });

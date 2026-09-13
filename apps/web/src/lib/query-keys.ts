@@ -11,6 +11,8 @@ export const qk = {
   notifications: () => ["notifications"] as const,
   notificationPreferences: () => ["notification-preferences"] as const,
   members: (orgId: string | undefined) => ["members", orgId] as const,
+  memberProfile: (orgId: string | undefined, userId: string | undefined) =>
+    ["member-profile", orgId, userId] as const,
   invitations: (orgId: string | undefined) => ["invitations", orgId] as const,
   orgActivity: (orgId: string | undefined) => ["org-activity", orgId] as const,
   projectMembers: (pid: string | undefined) => ["project-members", pid] as const,

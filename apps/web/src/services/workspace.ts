@@ -3,6 +3,7 @@ import type {
   Organization,
   Project,
   Member,
+  MemberProfile,
   Invitation,
   ProjectMember,
   Paginated,
@@ -59,6 +60,13 @@ export const workspaceService = {
 
   members: (orgId: string) =>
     req<{ data: Member[] }>(`/organizations/${orgId}/members`).then((x) => x.data),
+
+  /** Org-scoped member profile by user id — what notification actor links
+   *  and the members list open. */
+  memberProfile: (orgId: string, userId: string) =>
+    req<{ data: MemberProfile }>(`/organizations/${orgId}/members/${userId}/profile`).then(
+      (x) => x.data,
+    ),
 
   /** Project visit history ("recents"). */
   recents: (limit = 3) =>

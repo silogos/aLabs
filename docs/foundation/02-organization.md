@@ -99,6 +99,25 @@ Status
 
 ---
 
+# Member Profile
+
+The org-scoped view of a fellow member — what notification actor links and
+the members list open (`/{orgSlug}/members/{userId}` on the web). Visible to
+any active member of the org (no extra permission — a profile click from a
+notification must never 403); outsiders get 404.
+
+Fields
+
+- the Member (user, workspace role, status, joinedAt)
+- projects — the member's active project memberships in this org
+  (id, name, slug, project role)
+
+API: `GET /organizations/:organizationId/members/:userId/profile` — note the
+param is a user id, unlike the membership-id routes for role changes and
+removal.
+
+---
+
 # Invitation
 
 Invite users using email.

@@ -1,6 +1,6 @@
 /** Organization module — CRUD, members/roles, invitations, soft delete. */
 import { describe, expect, it } from "vitest";
-import { api, registerUser, setupOrg, unique } from "./helpers";
+import { api, createProject, registerUser, setupOrg, unique } from "./helpers";
 
 describe("POST /organizations", () => {
   it("creates an org and makes the creator its Owner", async () => {
@@ -156,6 +156,67 @@ describe("members & roles", () => {
       body: { roleName: "Nonexistent" },
     });
     expect(res.status).toBe(400);
+  });
+});
+
+describe("member profile", () => {
+  it("returns a member's profile with role and active project memberships", async () => {
+    const org = await setupOrg();
+    const member = await registerUser();
+    const acceptRes = await acceptInvitation(org, member.email);
+    expect(acceptRes.status).toBe(200);
+    const project = await createProject(org.token, org.orgId);
+
+    // the org owner created the project → their membership is active
+    const ownerMe = await api("/auth/me", { token: org.token });
+    const ownerId = ((await ownerMe.json()) as { data: { id: string } }).data.id;
+    const res = await api(`/organizations/${org.orgId}/members/${ownerId}/profile`, {
+      token: org.token,
+    });
+    expect(res.status).toBe(200);
+    const { data } = (await res.json()) as {
+      data: {
+        userId: string;
+        role: { name: string };
+        user: { email: string };
+        status: string;
+        projects: { id: string; slug: string; role: string }[];
+      };
+    };
+    expect(data.userId).toBe(ownerId);
+    expect(data.role.name).toBe("Owner");
+    expect(data.status).toBe("active");
+    expect(data.projects).toHaveLength(1);
+    expect(data.projects[0]!.id).toBe(project.id);
+    expect(typeof data.projects[0]!.role).toBe("string");
+
+    // the fresh member belongs to no project yet
+    const memberProfile = await api(
+      `/organizations/${org.orgId}/members/${member.user.id}/profile`,
+      { token: org.token },
+    );
+    const memberBody = (await memberProfile.json()) as { data: { projects: unknown[] } };
+    expect(memberBody.data.projects).toEqual([]);
+  });
+
+  it("404s for an unknown user inside the org and for outsiders", async () => {
+    const org = await setupOrg();
+    const member = await registerUser();
+    await inviteAndAccept(org, member.email);
+    const outsider = await registerUser();
+
+    // user id with no membership in this org → 404 (never a leak)
+    const unknown = await api(
+      `/organizations/${org.orgId}/members/${outsider.user.id}/profile`,
+      { token: org.token },
+    );
+    expect(unknown.status).toBe(404);
+
+    // outsider requesting a real member → 404 (orgContext hides the org)
+    const real = await api(`/organizations/${org.orgId}/members/${member.user.id}/profile`, {
+      token: outsider.token,
+    });
+    expect(real.status).toBe(404);
   });
 });
 

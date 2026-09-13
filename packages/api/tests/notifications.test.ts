@@ -40,6 +40,12 @@ async function notificationsOf(token: string, type: string): Promise<Notificatio
   return (await listNotifications(token)).filter((n) => n.type === type);
 }
 
+/** The caller's user id — emitters put it in actor-segment targets. */
+async function meId(token: string): Promise<string> {
+  const res = await api("/auth/me", { token });
+  return ((await res.json()) as { data: { id: string } }).data.id;
+}
+
 /** Create a task; throws on non-201 so happy-path tests fail loudly. */
 async function createTask(
   p: { token: string; projectId: string },
@@ -265,9 +271,12 @@ describe("emitter: task assigned", () => {
       projectSlug: project.slug,
       order: task.data.order,
     });
-    // title spans: the actor links to the org's members page
+    // title spans: the actor links to their member profile
     expect(notifs[0].titleSegments).toEqual([
-      { text: expect.any(String), target: { kind: "members", orgSlug: org.slug } },
+      {
+        text: expect.any(String),
+        target: { kind: "user", orgSlug: org.slug, userId: await meId(org.token) },
+      },
       { text: " assigned you a task" },
     ]);
 
@@ -336,9 +345,12 @@ describe("emitter: task comment", () => {
       projectSlug: project.slug,
       order: task.data.order,
     });
-    // title spans: actor → members page, task title → the task itself
+    // title spans: actor → their profile, task title → the task itself
     expect(memberNotifs[0].titleSegments).toEqual([
-      { text: expect.any(String), target: { kind: "members", orgSlug: org.slug } },
+      {
+        text: expect.any(String),
+        target: { kind: "user", orgSlug: org.slug, userId: await meId(org.token) },
+      },
       { text: " commented on " },
       {
         text: "Comment target",
@@ -390,7 +402,10 @@ describe("emitter: invitation created", () => {
     expect(notifs[0].title).toContain(`invited you to join`);
     expect(notifs[0].target).toEqual({ kind: "members", orgSlug: org.slug });
     expect(notifs[0].titleSegments).toEqual([
-      { text: expect.any(String), target: { kind: "members", orgSlug: org.slug } },
+      {
+        text: expect.any(String),
+        target: { kind: "user", orgSlug: org.slug, userId: await meId(org.token) },
+      },
       { text: expect.stringMatching(/^ invited you to join /) },
     ]);
     expect(await listNotifications(org.token)).toHaveLength(0);

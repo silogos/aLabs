@@ -11,5 +11,8 @@ export function notificationPath(target: NotificationTarget | null): string | nu
       return `/${target.orgSlug}/${target.projectSlug}/tasks/${target.order}`;
     case "members":
       return `/${target.orgSlug}/members`;
+    case "user":
+      // org-scoped member profile
+      return `/${target.orgSlug}/members/${target.userId}`;
   }
 }
