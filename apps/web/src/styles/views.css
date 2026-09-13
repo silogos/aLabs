@@ -1576,6 +1576,53 @@
 .tgl:disabled {
   opacity: 0.55;
   cursor: default;
+/* ============================ Member profile ============================ */
+/* GitLab-style two-column layout: identity card (big avatar, key facts)
+ * on the left, content sections on the right; stacks on narrow screens. */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 880px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.profile-side .side-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+.profile-side .side-top .name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg-strong);
+}
+.profile-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 12.5px;
+}
+.profile-row .k {
+  color: var(--muted);
+}
+.profile-row .v {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  color: var(--fg);
+  text-align: right;
 }
 
 /* ============================ AGREEMENTS ============================ */

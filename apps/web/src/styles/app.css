@@ -1282,6 +1282,12 @@
   height: 32px;
   font-size: 12px;
 }
+.av.xl {
+  width: 72px;
+  height: 72px;
+  font-size: 24px;
+  flex: none;
+}
 .av.a {
   background: oklch(52% 0.13 25);
 }

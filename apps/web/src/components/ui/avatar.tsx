@@ -23,7 +23,7 @@ export function Avatar({
   name,
 }: {
   user?: Pick<User, "id" | "name">;
-  size?: "sm" | "lg" | "";
+  size?: "sm" | "lg" | "xl" | "";
   name?: string;
 }) {
   const label = name ?? user?.name ?? "?";
