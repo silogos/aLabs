@@ -4,7 +4,13 @@
  *  dims behind task drawers). */
 import { documentsService } from "@/services/documents";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Drawer, DrawerHeader, DrawerTitle, DrawerMenu } from "@/components/ui/drawer-kit";
+import {
+  Drawer,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerMenu,
+  DrawerMenuItem,
+} from "@/components/ui/drawer-kit";
 import { useState, useRef, useEffect } from "react";
 import { useApp } from "@/providers/app-provider";
 import { usePeople } from "@/providers/people-provider";
@@ -24,7 +30,6 @@ export function TaskDrawer({ id }: { id: string }) {
   const { closeTask, toast, openTask, openRelPicker, project } = useApp();
   const tid = Number(id);
   const t = board.taskById(tid);
-  const [menuOpen, setMenuOpen] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (titleRef.current && t) titleRef.current.textContent = t.t;
@@ -55,8 +60,6 @@ export function TaskDrawer({ id }: { id: string }) {
       variant="workspace"
       withScrim={false}
       onClose={closeTask}
-      menuOpen={menuOpen}
-      onMenuOpen={setMenuOpen}
     >
       <DrawerHeader>
         <DrawerTitle>
@@ -88,28 +91,26 @@ export function TaskDrawer({ id }: { id: string }) {
           />
         </DrawerTitle>
         <DrawerMenu label="Task actions">
-          <button
-            role="menuitem"
-            className="danger"
-            onClick={() => {
-              setMenuOpen(false);
-              del();
-            }}
+          <DrawerMenuItem
+            danger
+            onClick={del}
+            icon={
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
+              </svg>
+            }
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
-            </svg>
             Delete task
-          </button>
+          </DrawerMenuItem>
         </DrawerMenu>
       </DrawerHeader>
       <div className="db" id="drawer-body">

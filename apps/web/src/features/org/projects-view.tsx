@@ -14,7 +14,13 @@ import { dateShort } from "@/lib/format";
 import { PERM, hasPerm } from "@/features/settings/model";
 import { NewProjectModal } from "./new-project-modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Drawer, DrawerHeader, DrawerTitle, DrawerMenu } from "@/components/ui/drawer-kit";
+import {
+  Drawer,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerMenu,
+  DrawerMenuItem,
+} from "@/components/ui/drawer-kit";
 import { IconPicker } from "@/components/ui/icon-picker";
 import { hueFor, projColor } from "@/components/nav-data";
 import { ProjectStatus } from "./overview-view";
@@ -334,51 +340,72 @@ function ProjectDrawer({
           {hasActions && (
             <>
               {canUpdate && project.status === "active" && (
-                    <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("on_hold"); }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <rect x="6" y="4" width="4" height="16" rx="1" />
-                        <rect x="14" y="4" width="4" height="16" rx="1" />
-                      </svg>
-                      Put on hold
-                    </button>
-                  )}
-                  {canUpdate && project.status === "on_hold" && (
-                    <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("active"); }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-                        <path d="M8 5.5v13l11-6.5z" />
-                      </svg>
-                      Resume project
-                    </button>
-                  )}
-                  {canUpdate && project.status !== "archived" && (
-                    <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("archived"); }}>
+                <DrawerMenuItem
+                  onClick={() => onStatus("on_hold")}
+                  icon={
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <rect x="6" y="4" width="4" height="16" rx="1" />
+                      <rect x="14" y="4" width="4" height="16" rx="1" />
+                    </svg>
+                  }
+                >
+                  Put on hold
+                </DrawerMenuItem>
+              )}
+              {canUpdate && project.status === "on_hold" && (
+                <DrawerMenuItem
+                  onClick={() => onStatus("active")}
+                  icon={
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+                      <path d="M8 5.5v13l11-6.5z" />
+                    </svg>
+                  }
+                >
+                  Resume project
+                </DrawerMenuItem>
+              )}
+              {canUpdate && project.status !== "archived" && (
+                <DrawerMenuItem
+                  onClick={() => onStatus("archived")}
+                  icon={
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="5" rx="1" />
+                      <path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" />
+                    </svg>
+                  }
+                >
+                  Archive
+                </DrawerMenuItem>
+              )}
+              {canUpdate && project.status === "archived" && (
+                <DrawerMenuItem
+                  onClick={() => onStatus("active")}
+                  icon={
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                      <path d="M3 3v5h5" />
+                    </svg>
+                  }
+                >
+                  Restore
+                </DrawerMenuItem>
+              )}
+              {canDelete && (
+                <>
+                  <div className="sep" />
+                  <DrawerMenuItem
+                    danger
+                    onClick={() => onConfirmDelete(true)}
+                    icon={
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="5" rx="1" />
-                        <path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" />
+                        <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
                       </svg>
-                      Archive
-                    </button>
-                  )}
-                  {canUpdate && project.status === "archived" && (
-                    <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("active"); }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-                        <path d="M3 3v5h5" />
-                      </svg>
-                      Restore
-                    </button>
-                  )}
-                  {canDelete && (
-                    <>
-                      <div className="sep" />
-                      <button role="menuitem" className="danger" onClick={() => { onMenuOpen(false); onConfirmDelete(true); }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
-                        </svg>
-                        Delete project…
-                      </button>
-                    </>
-                  )}
+                    }
+                  >
+                    Delete project…
+                  </DrawerMenuItem>
+                </>
+              )}
             </>
           )}
         </DrawerMenu>

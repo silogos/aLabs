@@ -103,7 +103,9 @@ export function DrawerTitle({ children }: { children: ReactNode }) {
 }
 
 /** Actions cluster (.hacts): the three-dot menu when children are given,
- *  plus the close button. `label`/`disabled` shape the three-dot button. */
+ *  plus the close button. `label`/`disabled` shape the three-dot button.
+ *  Items are DrawerMenuItems (a bare <div className="sep" /> still works
+ *  as a divider). */
 export function DrawerMenu({
   label = "Actions",
   disabled = false,
@@ -153,5 +155,37 @@ export function DrawerMenu({
         </svg>
       </button>
     </div>
+  );
+}
+
+/** One action in the DrawerMenu pop — closes the menu, then runs onClick,
+ *  so callers never wire menu state themselves. */
+export function DrawerMenuItem({
+  onClick,
+  icon,
+  danger = false,
+  disabled = false,
+  children,
+}: {
+  onClick?: () => void;
+  icon?: ReactNode;
+  danger?: boolean;
+  disabled?: boolean;
+  children: ReactNode;
+}) {
+  const { setMenuOpen } = useDrawer();
+  return (
+    <button
+      role="menuitem"
+      className={danger ? "danger" : undefined}
+      disabled={disabled}
+      onClick={() => {
+        setMenuOpen(false);
+        onClick?.();
+      }}
+    >
+      {icon}
+      {children}
+    </button>
   );
 }

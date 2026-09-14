@@ -11,7 +11,13 @@ import { workspaceService } from "@/services/workspace";
 import { qk } from "@/lib/query-keys";
 import { dateShort } from "@/lib/format";
 import { Avatar } from "@/components/ui/avatar";
-import { Drawer, DrawerHeader, DrawerTitle, DrawerMenu } from "@/components/ui/drawer-kit";
+import {
+  Drawer,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerMenu,
+  DrawerMenuItem,
+} from "@/components/ui/drawer-kit";
 
 export function MemberDrawer() {
   const { org } = useApp();
@@ -56,25 +62,26 @@ export function MemberDrawer() {
           <div className="tiny mono faint">{profile.user.email}</div>
         </DrawerTitle>
         <DrawerMenu label="Member actions">
-          <button
-            role="menuitem"
+          <DrawerMenuItem
             onClick={openProfile}
+            icon={
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4,21c0,-4,4,-6,8,-6s8,2,8,6" />
+              </svg>
+            }
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4,21c0,-4,4,-6,8,-6s8,2,8,6" />
-            </svg>
             Open profile
-          </button>
+          </DrawerMenuItem>
         </DrawerMenu>
       </DrawerHeader>
       <div className="db">
