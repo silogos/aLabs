@@ -1,7 +1,7 @@
 "use client";
 
 /** Org shell — the /org area chrome: dark rail with the org switcher pill
- *  and org module nav, topbar with a back-to-project affordance, mobile
+ *  and org module nav, topbar, mobile
  *  bottom sheet. Reuses the app's sidebar/topbar/m-sheet classes so the
  *  two surfaces share one design system (see docs/design/brand-spec.md posture rules).
  *  Nav modals (account + switchers) and toasts come from AppProvider. */
@@ -11,13 +11,11 @@ import { useApp } from "@/providers/app-provider";
 import { SwitcherModals } from "@/components/switcher-modals";
 import { Toasts } from "@/components/toasts";
 import { hueFor, projColor, ChevDown } from "@/components/nav-data";
-import { ORG_SECTIONS, ORG_ICONS, ORG_TITLES, orgActiveId, orgPath, ORG_BACK_ICON } from "./org-nav";
-import { viewPath } from "@/providers/app-provider";
+import { ORG_SECTIONS, ORG_ICONS, ORG_TITLES, orgActiveId, orgPath } from "./org-nav";
 
 export function OrgShell({ children }: { children: ReactNode }) {
   const {
     org,
-    project,
     user,
     collapsed,
     setCollapsed,
@@ -46,10 +44,6 @@ export function OrgShell({ children }: { children: ReactNode }) {
   const go = (path: string) => {
     router.push(orgPath(org!.slug, path));
     setMNavOpen(false);
-  };
-  const backToProject = () => {
-    setMNavOpen(false);
-    router.push(org && project ? viewPath("dashboard", org.slug, project.slug) : "/");
   };
 
   if (!org) {
@@ -153,15 +147,6 @@ export function OrgShell({ children }: { children: ReactNode }) {
         <div className="nav-foot">
           <button
             className="collapse-btn"
-            data-od-id="org-back-to-project"
-            onClick={backToProject}
-            title="Back to project"
-          >
-            {ORG_BACK_ICON}
-            <span className="lbl">Back to project</span>
-          </button>
-          <button
-            className="collapse-btn"
             data-od-id="org-rail-toggle"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -222,27 +207,6 @@ export function OrgShell({ children }: { children: ReactNode }) {
             <span className="sep">/</span>
             <span className="cur">{ORG_TITLES[activeId] ?? "Overview"}</span>
           </div>
-          <div className="tb-right">
-            <button
-              className="tbtn"
-              data-od-id="org-topbar-back"
-              title="Back to project workspace"
-              onClick={backToProject}
-            >
-              <svg
-                width="17"
-                height="17"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-            </button>
-          </div>
         </header>
         <main className="content">{children}</main>
       </div>
@@ -259,7 +223,7 @@ export function OrgShell({ children }: { children: ReactNode }) {
         }}
       />
       <SwitcherModals />
-      <OrgMobileNav activeId={activeId} onGo={go} onBack={backToProject} />
+      <OrgMobileNav activeId={activeId} onGo={go} />
       <Toasts />
     </div>
   );
@@ -270,11 +234,9 @@ export function OrgShell({ children }: { children: ReactNode }) {
 function OrgMobileNav({
   activeId,
   onGo,
-  onBack,
 }: {
   activeId: string;
   onGo: (path: string) => void;
-  onBack: () => void;
 }) {
   const { org, mNavOpen, setMNavOpen, setNavModal } = useApp();
   return (
@@ -340,28 +302,6 @@ function OrgMobileNav({
             ))}
           </div>
         ))}
-
-        <div className="m-lbl">Project workspace</div>
-        <button className="m-srow" onClick={onBack}>
-          <span className="ic">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </span>
-          <span className="tx">
-            <b>Back to project</b>
-            <small>Tasks, documents, planning</small>
-          </span>
-        </button>
       </div>
     </aside>
   );

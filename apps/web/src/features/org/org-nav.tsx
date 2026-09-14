@@ -96,12 +96,6 @@ export const ORG_BUILDING_ICON = I(
   </>,
 );
 
-export const ORG_BACK_ICON = I(
-  <>
-    <path d="M19 12H5M12 19l-7-7 7-7" />
-  </>,
-);
-
 export const ORG_FLAT_ITEMS = ORG_SECTIONS.flatMap((s) => s.items);
 
 /** Full path for an org nav item: /{orgSlug}{suffix}. */
