@@ -43,6 +43,7 @@ import {
   meetingStatusEnum,
   agreementTypeEnum,
   agreementStatusEnum,
+  notificationChannelEnum,
 } from "../enums";
 
 const ts = () => timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow();
@@ -635,6 +636,29 @@ export const notifications = pgTable(
   (t) => [index("notif_user_created_idx").on(t.userId, t.createdAt)],
 );
 
+/** Per-channel/per-type opt-in — one row per user override. Absent row =
+ *  enabled (default opt-in); rows only appear when a user changes something.
+ *  Email rows persist today but nothing delivers until an email provider
+ *  exists; in-app rows gate the emitters in modules/notification/emit.ts. */
+export const notificationPreferences = pgTable(
+  "notification_preferences",
+  {
+    id: uuid("id").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    channel: notificationChannelEnum("channel").notNull(),
+    type: varchar("type", { length: 60 }).notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+    createdAt: ts().defaultNow(),
+    updatedAt: ts().defaultNow(),
+  },
+  (t) => [
+    index("notif_pref_user_idx").on(t.userId),
+    uniqueIndex("notif_pref_user_channel_type_key").on(t.userId, t.channel, t.type),
+  ],
+);
+
 // Note: forward-declared iterations/milestones above are defined before `tasks`
 // because tasks references them; the table is hoisted by Drizzle's builder.
 
@@ -665,6 +689,7 @@ export const schema = {
   agreements,
   activity,
   notifications,
+  notificationPreferences,
 };
 
 export type Schema = typeof schema;

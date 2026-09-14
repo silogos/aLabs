@@ -67,13 +67,17 @@ Entities
 
 # NotificationPreference
 
-| Field    | Type    | Required | Description                  |
-| -------- | ------- | -------- | ---------------------------- |
-| id       | UUID    | Yes      | Primary identifier           |
-| userId   | UUID    | Yes      | Owner                        |
-| channel  | Enum    | Yes      | InApp, Email                 |
-| type     | String  | Yes      | Event type                   |
-| enabled  | Boolean | Yes      | Enabled flag                 |
+| Field      | Type     | Required | Description                  |
+| ---------- | -------- | -------- | ---------------------------- |
+| id         | UUID     | Yes      | Primary identifier           |
+| userId     | UUID     | Yes      | Owner                        |
+| channel    | Enum     | Yes      | InApp, Email                 |
+| type       | String   | Yes      | Event type                   |
+| enabled    | Boolean  | Yes      | Enabled flag                 |
+| createdAt  | DateTime | Yes      | Creation timestamp           |
+| updatedAt  | DateTime | Yes      | Last change timestamp        |
+
+Rows are overrides only: an absent `(userId, channel, type)` row means **enabled** — users opt out, not in. The unique key is `(userId, channel, type)`; writes upsert against it.
 
 ---
 
@@ -93,6 +97,10 @@ Entities
 ## Preferences
 
 - Per-channel, per-type opt-in or opt-out
+- Absent row = enabled (default opt-in); rows exist only where a user changed something
+- GET resolves the full matrix (every notifiable type × channel) with defaults filled in, so the UI never reconstructs defaults client-side
+- In-app emitters consult the recipient's `in_app` preference before inserting; opt-outs take effect on the next emitted event (existing notifications are untouched)
+- Only types with a runtime emitter are preferencable today: `assign`, `comment`, `invite`
 
 ## Triggers
 
@@ -106,6 +114,8 @@ Other modules emit events; the notification service delivers them. Emitters live
 
 The demo seed additionally creates `mention` and `due` notifications; those types have no runtime emitter yet.
 
+Before inserting, every emitter subtracts recipients who disabled the emitted type on the `in_app` channel (`notification-repo.ts` → `inAppOptedOut`). The `email` channel has no delivery path yet — email provider pick is deferred — so email rows persist but gate nothing today.
+
 ---
 
 # API Endpoints
@@ -118,6 +128,10 @@ GET   /notifications/preferences
 PATCH /notifications/preferences
 ```
 
+`GET /notifications/preferences` → `{ data: [{ channel, type, enabled }, …] }` — the resolved matrix, owner-scoped.
+
+`PATCH /notifications/preferences` with `{ channel, type, enabled }` upserts one preference (400 on unknown channel/type) and returns the stored triple.
+
 ---
 
 # Permissions
@@ -129,7 +143,7 @@ Notifications are scoped to the owning user. No role-based permission beyond aut
 # UI Screens
 
 - Notification dropdown and center
-- Preferences page
+- Preferences card on the notifications page — per-type in-app toggles (optimistic, rolled back on failure); email toggles arrive with email delivery
 
 ---
 

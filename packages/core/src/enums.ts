@@ -24,6 +24,7 @@ export type MeetingType = "standup" | "review" | "planning" | "client" | "other"
 export type MeetingStatus = "scheduled" | "completed" | "cancelled";
 export type AgreementType = "sow" | "nda" | "contract" | "proposal" | "other";
 export type AgreementStatus = "draft" | "sent" | "accepted" | "rejected" | "expired";
+export type NotificationChannel = "in_app" | "email";
 
 /* ---- pg enums (mirror DB precisely) ---- */
 
@@ -64,6 +65,7 @@ export const agreementStatusEnum = pgEnum("agreement_status", [
   "rejected",
   "expired",
 ]);
+export const notificationChannelEnum = pgEnum("notification_channel", ["in_app", "email"]);
 
 /* ---- zod-friendly enum objects (re-exported for schema validation) ---- */
 
@@ -82,3 +84,4 @@ export const MeetingType = z.enum(["standup", "review", "planning", "client", "o
 export const MeetingStatus = z.enum(["scheduled", "completed", "cancelled"]);
 export const AgreementType = z.enum(["sow", "nda", "contract", "proposal", "other"]);
 export const AgreementStatus = z.enum(["draft", "sent", "accepted", "rejected", "expired"]);
+export const NotificationChannel = z.enum(["in_app", "email"]);

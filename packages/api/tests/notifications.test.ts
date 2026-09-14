@@ -75,20 +75,154 @@ describe("PATCH /notifications/read-all", () => {
   });
 });
 
-describe("preferences", () => {
-  it("returns an empty object for GET and PATCH", async () => {
-    const u = await registerUser();
-    const get = await api("/notifications/preferences", { token: u.token });
-    expect(get.status).toBe(200);
-    expect(((await get.json()) as { data: unknown }).data).toEqual({});
+/* ---------------- preferences (persistence + emitter gating) ---------------- */
 
-    const patch = await api("/notifications/preferences", {
-      method: "PATCH",
-      token: u.token,
-      body: { email: false },
+interface PreferenceRow {
+  channel: string;
+  type: string;
+  enabled: boolean;
+}
+
+async function listPreferences(token: string): Promise<PreferenceRow[]> {
+  const res = await api("/notifications/preferences", { token });
+  if (res.status !== 200) throw new Error(`listPreferences failed: ${res.status}`);
+  const { data } = (await res.json()) as { data: PreferenceRow[] };
+  return data;
+}
+
+async function patchPreference(
+  token: string,
+  body: Record<string, unknown>,
+): Promise<Response> {
+  return api("/notifications/preferences", { method: "PATCH", token, body });
+}
+
+describe("GET /notifications/preferences", () => {
+  it("resolves the full matrix with enabled defaults for a fresh user", async () => {
+    const u = await registerUser();
+    const prefs = await listPreferences(u.token);
+    expect(prefs).toHaveLength(6); // 3 notifiable types × 2 channels
+    expect(prefs.every((p) => p.enabled)).toBe(true);
+    expect(new Set(prefs.map((p) => p.type))).toEqual(new Set(["assign", "comment", "invite"]));
+    expect(new Set(prefs.map((p) => p.channel))).toEqual(new Set(["in_app", "email"]));
+  });
+
+  it("requires auth", async () => {
+    expect((await api("/notifications/preferences")).status).toBe(401);
+  });
+});
+
+describe("PATCH /notifications/preferences", () => {
+  it("upserts a preference and GET reflects it", async () => {
+    const u = await registerUser();
+    const off = await patchPreference(u.token, { channel: "in_app", type: "assign", enabled: false });
+    expect(off.status).toBe(200);
+    expect(((await off.json()) as { data: PreferenceRow }).data).toEqual({
+      channel: "in_app",
+      type: "assign",
+      enabled: false,
     });
-    expect(patch.status).toBe(200);
-    expect(((await patch.json()) as { data: unknown }).data).toEqual({});
+
+    let prefs = await listPreferences(u.token);
+    expect(prefs.find((p) => p.channel === "in_app" && p.type === "assign")?.enabled).toBe(false);
+    // other cells keep their defaults
+    expect(prefs.find((p) => p.channel === "in_app" && p.type === "comment")?.enabled).toBe(true);
+
+    // flip back on — same unique key, update not insert
+    const on = await patchPreference(u.token, { channel: "in_app", type: "assign", enabled: true });
+    expect(on.status).toBe(200);
+    prefs = await listPreferences(u.token);
+    expect(prefs.find((p) => p.channel === "in_app" && p.type === "assign")?.enabled).toBe(true);
+  });
+
+  it("rejects unknown types, channels, and non-boolean enabled", async () => {
+    const u = await registerUser();
+    expect((await patchPreference(u.token, { channel: "in_app", type: "mention", enabled: true })).status).toBe(400);
+    expect((await patchPreference(u.token, { channel: "sms", type: "assign", enabled: true })).status).toBe(400);
+    expect((await patchPreference(u.token, { channel: "in_app", type: "assign", enabled: "yes" })).status).toBe(400);
+  });
+
+  it("requires auth", async () => {
+    const res = await api("/notifications/preferences", {
+      method: "PATCH",
+      body: { channel: "in_app", type: "assign", enabled: false },
+    });
+    expect(res.status).toBe(401);
+  });
+});
+
+describe("preferences gate the emitters", () => {
+  it("skips assign notifications the recipient opted out of", async () => {
+    const org = await setupOrg();
+    const member = await addOrgMember(org);
+    const project = await createProject(org.token, org.orgId);
+    expect(
+      (await patchPreference(member.token, { channel: "in_app", type: "assign", enabled: false })).status,
+    ).toBe(200);
+
+    await createTask({ token: org.token, projectId: project.id }, "Muted task", {
+      assigneeId: member.user.id,
+    });
+    expect(await notificationsOf(member.token, "assign")).toHaveLength(0);
+  });
+
+  it("skips comment notifications only for the recipient who opted out", async () => {
+    const org = await setupOrg();
+    const muted = await addOrgMember(org);
+    const loud = await addOrgMember(org);
+    const project = await createProject(org.token, org.orgId);
+    const mutedTask = await createTask({ token: org.token, projectId: project.id }, "Muted task", {
+      assigneeId: muted.user.id,
+    });
+    const loudTask = await createTask({ token: org.token, projectId: project.id }, "Loud task", {
+      assigneeId: loud.user.id,
+    });
+    expect(
+      (await patchPreference(muted.token, { channel: "in_app", type: "comment", enabled: false })).status,
+    ).toBe(200);
+
+    for (const task of [mutedTask, loudTask]) {
+      const res = await api(`/projects/${project.id}/tasks/${task.data.id}/comments`, {
+        method: "POST",
+        token: org.token,
+        body: { body: "Opt-out check." },
+      });
+      expect(res.status).toBe(201);
+    }
+
+    // muted assignee: nothing · same-shaped recipient who didn't opt out: notified
+    expect(await notificationsOf(muted.token, "comment")).toHaveLength(0);
+    expect(await notificationsOf(loud.token, "comment")).toHaveLength(1);
+  });
+
+  it("skips invite notifications the invitee opted out of", async () => {
+    const org = await setupOrg();
+    const invitee = await registerUser();
+    expect(
+      (await patchPreference(invitee.token, { channel: "in_app", type: "invite", enabled: false })).status,
+    ).toBe(200);
+
+    const res = await api(`/organizations/${org.orgId}/invitations`, {
+      method: "POST",
+      token: org.token,
+      body: { email: invitee.email, roleName: "Member" },
+    });
+    expect(res.status).toBe(201);
+    expect(await listNotifications(invitee.token)).toHaveLength(0);
+  });
+
+  it("email-channel opt-out does not mute in-app delivery", async () => {
+    const org = await setupOrg();
+    const member = await addOrgMember(org);
+    const project = await createProject(org.token, org.orgId);
+    expect(
+      (await patchPreference(member.token, { channel: "email", type: "assign", enabled: false })).status,
+    ).toBe(200);
+
+    await createTask({ token: org.token, projectId: project.id }, "Email-muted only", {
+      assigneeId: member.user.id,
+    });
+    expect(await notificationsOf(member.token, "assign")).toHaveLength(1);
   });
 });
 

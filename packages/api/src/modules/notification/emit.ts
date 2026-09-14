@@ -7,11 +7,21 @@ import * as notificationRepo from "../../db/notification-repo";
 import * as authRepo from "../../db/auth-repo";
 import * as orgRepo from "../../db/org-repo";
 import * as projectRepo from "../../db/project-repo";
-import type { Invitation } from "@pmin/core";
+import type { Invitation, NotifiableEventType } from "@pmin/core";
 import type { TaskWithMeta } from "../../db/task-repo";
 
 /** titles land in varchar(200); bodies render as one quote line */
 const clip = (s: string, max: number) => (s.length <= max ? s : `${s.slice(0, max - 1)}…`);
+
+/** Recipients minus those who turned this type off in-app (absent row =
+ *  enabled — only explicit opt-outs are subtracted). */
+async function inAppRecipients(
+  userIds: string[],
+  type: NotifiableEventType,
+): Promise<string[]> {
+  const optedOut = await notificationRepo.inAppOptedOut(userIds, type);
+  return userIds.filter((id) => !optedOut.has(id));
+}
 
 /** Deep link to a task — /:orgSlug/:projectSlug/tasks/:taskId */
 async function taskLink(task: TaskWithMeta): Promise<string | null> {
@@ -32,8 +42,10 @@ async function actorName(actorId: string): Promise<string> {
  *  never the actor. Clearing the assignee emits nothing. */
 export async function notifyTaskAssigned(task: TaskWithMeta, actorId: string): Promise<void> {
   if (!task.assigneeId || task.assigneeId === actorId) return;
+  const [recipient] = await inAppRecipients([task.assigneeId], "assign");
+  if (!recipient) return;
   await notificationRepo.insertNotification({
-    userId: task.assigneeId,
+    userId: recipient,
     type: "assign",
     title: `${await actorName(actorId)} assigned you a task`,
     body: task.title,
@@ -48,8 +60,10 @@ export async function notifyTaskCommented(
   actorId: string,
   body: string,
 ): Promise<void> {
-  const recipients = [...new Set([task.assigneeId, task.reporterId])]
-    .filter((id): id is string => !!id && id !== actorId);
+  const candidates = [...new Set([task.assigneeId, task.reporterId])].filter(
+    (id): id is string => !!id && id !== actorId,
+  );
+  const recipients = await inAppRecipients(candidates, "comment");
   if (recipients.length === 0) return;
   const name = await actorName(actorId);
   const link = await taskLink(task);
@@ -72,10 +86,12 @@ export async function notifyInvitationCreated(
 ): Promise<void> {
   const invitee = await authRepo.getUserByEmail(invitation.email);
   if (!invitee || invitee.id === actorId) return;
+  const [recipient] = await inAppRecipients([invitee.id], "invite");
+  if (!recipient) return;
   const org = await orgRepo.getOrganization(invitation.organizationId);
   if (!org) return;
   await notificationRepo.insertNotification({
-    userId: invitee.id,
+    userId: recipient,
     type: "invite",
     title: `${await actorName(actorId)} invited you to join ${org.name}`,
     body: `Workspace invitation · role: ${invitation.roleName}`,
