@@ -2,11 +2,8 @@
 
 /** Member quick-view drawer over the members list — the same pattern as the
  *  task drawer: /{orgSlug}/members/{userId} mounts this drawer on top of the
- *  persistent directory backdrop. Header follows the task/project drawer
- *  convention: a three-dot actions menu (Open profile) + close. Portals to
- *  document.body for the same z-index reasons as TaskDrawer. */
-import { createPortal } from "react-dom";
-import { useEffect, useState } from "react";
+ *  persistent directory backdrop. Built on DrawerKit; the three-dot menu
+ *  carries "Open profile" which jumps to the full profile page. */
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useApp, viewPath } from "@/providers/app-provider";
@@ -14,22 +11,13 @@ import { workspaceService } from "@/services/workspace";
 import { qk } from "@/lib/query-keys";
 import { dateShort } from "@/lib/format";
 import { Avatar } from "@/components/ui/avatar";
+import { Drawer, DrawerHeader, DrawerTitle, DrawerMenu } from "@/components/ui/drawer-kit";
 
 export function MemberDrawer() {
   const { org } = useApp();
   const router = useRouter();
   const params = useParams<{ orgSlug: string; userId: string }>();
   const userId = params?.userId;
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenuOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [menuOpen]);
 
   const { data: profile, isError } = useQuery({
     queryKey: qk.memberProfile(org?.id, userId),
@@ -43,30 +31,19 @@ export function MemberDrawer() {
   const openProfile = () => router.push(`/${org.slug}/members/${userId}/profile`);
 
   if (!profile) {
-    return createPortal(
-      <>
-        <div className="scrim show" onClick={close} />
-        <aside className="drawer show" role="dialog" aria-label="Member details">
-          <div className="dh">
-            <div className="db">{isError ? "Member not found." : "Loading…"}</div>
-            <button className="x" onClick={close} aria-label="Close">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </aside>
-      </>,
-      document.body,
+    return (
+      <Drawer label="Member details" onClose={close}>
+        <DrawerHeader>
+          <DrawerTitle>{isError ? "Member not found." : "Loading…"}</DrawerTitle>
+        </DrawerHeader>
+      </Drawer>
     );
   }
 
-  return createPortal(
-    <>
-      <div className="scrim show" onClick={close} />
-      <aside className="drawer show" role="dialog" aria-label={`${profile.user.name} — member details`}>
-      <div className="dh">
-        <div className="dh-main">
+  return (
+    <Drawer label={`${profile.user.name} — member details`} onClose={close}>
+      <DrawerHeader>
+        <DrawerTitle>
           <div className="dh-top" style={{ alignItems: "center", gap: 8 }}>
             <Avatar user={profile.user} size="sm" />
             <span className="chip muted">{profile.role.name}</span>
@@ -77,64 +54,29 @@ export function MemberDrawer() {
           </div>
           <h3>{profile.user.name}</h3>
           <div className="tiny mono faint">{profile.user.email}</div>
-        </div>
-        <div className="hacts">
-          <div className="hmenu">
-            <button
-              className="x"
-              onClick={() => setMenuOpen((v) => !v)}
-              aria-label="Member actions"
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="5" r="1.6" />
-                <circle cx="12" cy="12" r="1.6" />
-                <circle cx="12" cy="19" r="1.6" />
-              </svg>
-            </button>
-            {menuOpen && (
-              <div className="menu-pop down" role="menu">
-                <button
-                  role="menuitem"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    openProfile();
-                  }}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M4,21c0,-4,4,-6,8,-6s8,2,8,6" />
-                  </svg>
-                  Open profile
-                </button>
-              </div>
-            )}
-          </div>
-          <button className="x" onClick={close} aria-label="Close">
+        </DrawerTitle>
+        <DrawerMenu label="Member actions">
+          <button
+            role="menuitem"
+            onClick={openProfile}
+          >
             <svg
-              width="18"
-              height="18"
+              width="14"
+              height="14"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path d="M18 6 6 18M6 6l12 12" />
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4,21c0,-4,4,-6,8,-6s8,2,8,6" />
             </svg>
+            Open profile
           </button>
-        </div>
-      </div>
+        </DrawerMenu>
+      </DrawerHeader>
       <div className="db">
         <div className="profile-row">
           <span className="k">Organization</span>
@@ -170,8 +112,6 @@ export function MemberDrawer() {
           )}
         </div>
       </div>
-      </aside>
-    </>,
-    document.body,
+    </Drawer>
   );
 }

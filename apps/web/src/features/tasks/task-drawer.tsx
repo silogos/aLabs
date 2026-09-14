@@ -1,12 +1,11 @@
 /** Task detail drawer — two-column workspace (main + side panel) + epic mode.
  *  Reads from the board queries; mounted by the /tasks/[taskId] route.
- *  Portals to document.body: as routed page content it would live inside
- *  .main (z-index:1) and paint UNDER the shell's scrim (z-index:90) — at
- *  body level the drawer's z-index:100 stacks above it again. */
+ *  Built on DrawerKit (workspace variant, no scrim — the project shell
+ *  dims behind task drawers). */
 import { documentsService } from "@/services/documents";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Drawer, DrawerHeader, DrawerTitle, DrawerMenu } from "@/components/ui/drawer-kit";
 import { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { useApp } from "@/providers/app-provider";
 import { usePeople } from "@/providers/people-provider";
 import { useBoard, useTaskDetail, useTaskActivity } from "./queries";
@@ -33,29 +32,14 @@ export function TaskDrawer({ id }: { id: string }) {
     // board refetches — those would clobber in-progress contentEditable typing.
   }, [tid, t?.t]);
 
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenuOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [menuOpen]);
-
   if (!t) {
     // board still loading, or a deep-linked task number that doesn't exist
-    return createPortal(
-      <aside className="drawer show">
-        <div className="dh">
-          <div className="db">{board.ready ? "Task not found." : "Loading…"}</div>
-          <button className="x" onClick={closeTask} aria-label="Close">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </aside>,
-      document.body,
+    return (
+      <Drawer label="Task details" onClose={closeTask} withScrim={false}>
+        <DrawerHeader>
+          <DrawerTitle>{board.ready ? "Task not found." : "Loading…"}</DrawerTitle>
+        </DrawerHeader>
+      </Drawer>
     );
   }
 
@@ -65,10 +49,17 @@ export function TaskDrawer({ id }: { id: string }) {
     toast(taskSerial(t.id) + " deleted");
   };
 
-  return createPortal(
-    <aside className="drawer workspace show">
-      <div className="dh">
-        <div className="dh-main">
+  return (
+    <Drawer
+      label={`${taskSerial(t.id)} — task details`}
+      variant="workspace"
+      withScrim={false}
+      onClose={closeTask}
+      menuOpen={menuOpen}
+      onMenuOpen={setMenuOpen}
+    >
+      <DrawerHeader>
+        <DrawerTitle>
           <div className="dh-top">
             {t.ty === "epic" ? <span className="tag o">Epic</span> : <TyTag ty={t.ty} />}
             <span className="tid">
@@ -95,64 +86,32 @@ export function TaskDrawer({ id }: { id: string }) {
               }
             }}
           />
-        </div>
-        <div className="hacts">
-          <div className="hmenu">
-            <button
-              className="x"
-              onClick={() => setMenuOpen((v) => !v)}
-              aria-label="Task actions"
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="5" r="1.6" />
-                <circle cx="12" cy="12" r="1.6" />
-                <circle cx="12" cy="19" r="1.6" />
-              </svg>
-            </button>
-            {menuOpen && (
-              <div className="menu-pop down" role="menu">
-                <button
-                  role="menuitem"
-                  className="danger"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    del();
-                  }}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
-                  </svg>
-                  Delete task
-                </button>
-              </div>
-            )}
-          </div>
-          <button className="x" onClick={closeTask} aria-label="Close">
+        </DrawerTitle>
+        <DrawerMenu label="Task actions">
+          <button
+            role="menuitem"
+            className="danger"
+            onClick={() => {
+              setMenuOpen(false);
+              del();
+            }}
+          >
             <svg
-              width="18"
-              height="18"
+              width="14"
+              height="14"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path d="M18 6 6 18M6 6l12 12" />
+              <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
             </svg>
+            Delete task
           </button>
-        </div>
-      </div>
+        </DrawerMenu>
+      </DrawerHeader>
       <div className="db" id="drawer-body">
         {t.ty === "epic" ? (
           <EpicDetail e={t} onOpen={openTask} />
@@ -166,8 +125,7 @@ export function TaskDrawer({ id }: { id: string }) {
           />
         )}
       </div>
-    </aside>,
-    document.body,
+    </Drawer>
   );
 }
 
