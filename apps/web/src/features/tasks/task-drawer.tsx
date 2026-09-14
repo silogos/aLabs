@@ -11,6 +11,7 @@ import {
   DrawerMenu,
   DrawerMenuItem,
 } from "@/components/ui/drawer-kit";
+import { DetailList, DetailItem } from "@/components/ui/detail-list";
 import { useState, useRef, useEffect } from "react";
 import { useApp } from "@/providers/app-provider";
 import { usePeople } from "@/providers/people-provider";
@@ -65,9 +66,6 @@ export function TaskDrawer({ id }: { id: string }) {
         <DrawerTitle>
           <div className="dh-top">
             {t.ty === "epic" ? <span className="tag o">Epic</span> : <TyTag ty={t.ty} />}
-            <span className="tid">
-              {t.ty === "epic" ? `EPIC · ${taskSerial(t.id)}` : `${taskSerial(t.id)}`}
-            </span>
           </div>
           <h3
             ref={titleRef}
@@ -89,6 +87,9 @@ export function TaskDrawer({ id }: { id: string }) {
               }
             }}
           />
+          <div className="tid" style={{ marginTop: 2 }}>
+            {t.ty === "epic" ? `EPIC · ${taskSerial(t.id)}` : taskSerial(t.id)}
+          </div>
         </DrawerTitle>
         <DrawerMenu label="Task actions">
           <DrawerMenuItem
@@ -451,6 +452,7 @@ function TaskDetail({
 
       <aside className="dw-side">
         <div className="sp-card">
+          <DetailList>
           <SpSelect
             k="Status"
             value={t.su}
@@ -463,14 +465,11 @@ function TaskDetail({
             options={[["", "Unassigned"], ...people.options()]}
             onChange={(v) => upd("a", v, "Updated")}
           />
-          <div className="sp-row">
-            <span className="sp-k">Reporter</span>
-            <div className="sp-v">
-              <span className="sp-who">
-                <AvKey id={t.rep} size="sm" /> {rep ? rep.name : "—"}
-              </span>
-            </div>
-          </div>
+          <DetailItem label="Reporter">
+            <span className="sp-who">
+              <AvKey id={t.rep} size="sm" /> {rep ? rep.name : "—"}
+            </span>
+          </DetailItem>
           <SpSelect
             k="Priority"
             value={t.p}
@@ -488,12 +487,9 @@ function TaskDetail({
               onChange={(v) => upd("sp", v || null, "Updated")}
             />
           ) : (
-            <div className="sp-row">
-              <span className="sp-k">Sprint</span>
-              <div className="sp-v">
-                <span className="muted tiny">Inherited</span>
-              </div>
-            </div>
+            <DetailItem label="Sprint">
+              <span className="muted tiny">Inherited</span>
+            </DetailItem>
           )}
           {t.ty !== "subtask" && (
             <SpSelect
@@ -508,42 +504,34 @@ function TaskDetail({
               onChange={(v) => upd("epic", v ? Number(v) : undefined, "Updated")}
             />
           )}
-          <div className="sp-row">
-            <span className="sp-k">Labels</span>
-            <div className="sp-v">
-              {(t.lb || []).length ? (
-                (t.lb || []).map((l) => (
-                  <span className="tag" key={l}>
-                    {l}
-                  </span>
-                ))
-              ) : (
-                <span className="muted tiny">None</span>
-              )}
-            </div>
-          </div>
-          <div className="sp-row">
-            <span className="sp-k">Story points</span>
-            <div className="sp-v">
-              <input
-                className="sp-num"
-                type="number"
-                min={0}
-                value={t.pts || 0}
-                onChange={(e) => upd("pts", Number(e.target.value), "Updated")}
-              />
-            </div>
-          </div>
-          <div className="sp-row">
-            <span className="sp-k">Due date</span>
-            <div className="sp-v">
-              <DatePicker
-                value={t.dueIso ?? ""}
-                onChange={(v) => upd("due", v, "Updated")}
-                placeholder="—"
-              />
-            </div>
-          </div>
+          <DetailItem label="Labels">
+            {(t.lb || []).length ? (
+              (t.lb || []).map((l) => (
+                <span className="tag" key={l}>
+                  {l}
+                </span>
+              ))
+            ) : (
+              <span className="muted tiny">None</span>
+            )}
+          </DetailItem>
+          <DetailItem label="Story points">
+            <input
+              className="sp-num"
+              type="number"
+              min={0}
+              value={t.pts || 0}
+              onChange={(e) => upd("pts", Number(e.target.value), "Updated")}
+            />
+          </DetailItem>
+          <DetailItem label="Due date">
+            <DatePicker
+              value={t.dueIso ?? ""}
+              onChange={(v) => upd("due", v, "Updated")}
+              placeholder="—"
+            />
+          </DetailItem>
+          </DetailList>
         </div>
       </aside>
     </div>
@@ -562,18 +550,15 @@ function SpSelect({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="sp-row">
-      <span className="sp-k">{k}</span>
-      <div className="sp-v">
-        <select className="sp-sel" value={value} onChange={(e) => onChange(e.target.value)}>
-          {options.map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
+    <DetailItem label={k}>
+      <select className="sp-sel" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map(([v, l]) => (
+          <option key={v} value={v}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </DetailItem>
   );
 }
 

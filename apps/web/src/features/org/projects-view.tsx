@@ -21,6 +21,7 @@ import {
   DrawerMenu,
   DrawerMenuItem,
 } from "@/components/ui/drawer-kit";
+import { DetailList, DetailItem } from "@/components/ui/detail-list";
 import { IconPicker } from "@/components/ui/icon-picker";
 import { hueFor, projColor } from "@/components/nav-data";
 import { ProjectStatus } from "./overview-view";
@@ -330,11 +331,10 @@ function ProjectDrawer({
           title={canUpdate ? "Change icon" : "Read-only"}
         />
         <DrawerTitle>
-          <div className="dh-top row" style={{ gap: 8 }}>
-            <ProjectStatus status={project.status} />
-            <span className="tid mono">{project.key}</span>
-          </div>
           <h3>{project.name}</h3>
+          <div className="tiny mono faint">
+            {project.key} · {project.slug}
+          </div>
         </DrawerTitle>
         <DrawerMenu label="Project actions" disabled={busy}>
           {hasActions && (
@@ -420,22 +420,25 @@ function ProjectDrawer({
         <div className="tiny muted" style={{ letterSpacing: 0.04, textTransform: "uppercase", marginBottom: 10 }}>
           Details
         </div>
-        <div className="meta-grid">
-          <div className="k">Status</div>
-          <div className="v">
+        <DetailList>
+          <DetailItem label="Status">
             <ProjectStatus status={project.status} />
-          </div>
-          <div className="k">Visibility</div>
-          <div className="v">
-            <span className="chip muted">{project.visibility === "organization" ? "Organization" : "Private"}</span>
-          </div>
-          <div className="k">Project key</div>
-          <div className="v mono">{project.key}</div>
-          <div className="k">Slug</div>
-          <div className="v mono">{project.slug}</div>
-          <div className="k">Created</div>
-          <div className="v mono">{dateShort(project.createdAt)}</div>
-        </div>
+          </DetailItem>
+          <DetailItem label="Visibility">
+            <span className="chip muted">
+              {project.visibility === "organization" ? "Organization" : "Private"}
+            </span>
+          </DetailItem>
+          <DetailItem label="Project key">
+            <span className="mono">{project.key}</span>
+          </DetailItem>
+          <DetailItem label="Slug">
+            <span className="mono">{project.slug}</span>
+          </DetailItem>
+          <DetailItem label="Created">
+            <span className="mono">{dateShort(project.createdAt)}</span>
+          </DetailItem>
+        </DetailList>
       </div>
       <div className="df">
         <div className="split">

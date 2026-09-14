@@ -11,6 +11,7 @@ import { workspaceService } from "@/services/workspace";
 import { qk } from "@/lib/query-keys";
 import { dateShort } from "@/lib/format";
 import { Avatar } from "@/components/ui/avatar";
+import { DetailList, DetailItem } from "@/components/ui/detail-list";
 
 export function MemberProfileView() {
   const { org, user } = useApp();
@@ -73,25 +74,19 @@ export function MemberProfileView() {
               </div>
               <div className="tiny mono faint">{profile.user.email}</div>
             </div>
-            <div className="profile-row">
-              <span className="k">Organization</span>
-              <span className="v">{org.name}</span>
-            </div>
-            <div className="profile-row">
-              <span className="k">Workspace role</span>
-              <span className="v">{profile.role.name}</span>
-            </div>
-            <div className="profile-row">
-              <span className="k">Status</span>
-              <span className={`status ${profile.status === "active" ? "ok" : "neutral"}`}>
-                <span className="d" />
-                {profile.status}
-              </span>
-            </div>
-            <div className="profile-row">
-              <span className="k">Joined</span>
-              <span className="v">{profile.joinedAt ? dateShort(profile.joinedAt) : "—"}</span>
-            </div>
+            <DetailList>
+              <DetailItem label="Organization">{org.name}</DetailItem>
+              <DetailItem label="Workspace role">{profile.role.name}</DetailItem>
+              <DetailItem label="Status">
+                <span className={`status ${profile.status === "active" ? "ok" : "neutral"}`}>
+                  <span className="d" />
+                  {profile.status}
+                </span>
+              </DetailItem>
+              <DetailItem label="Joined">
+                {profile.joinedAt ? dateShort(profile.joinedAt) : "—"}
+              </DetailItem>
+            </DetailList>
           </div>
         </div>
 

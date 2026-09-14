@@ -18,6 +18,7 @@ import {
   DrawerMenu,
   DrawerMenuItem,
 } from "@/components/ui/drawer-kit";
+import { DetailList, DetailItem } from "@/components/ui/detail-list";
 
 export function MemberDrawer() {
   const { org } = useApp();
@@ -50,13 +51,8 @@ export function MemberDrawer() {
     <Drawer label={`${profile.user.name} — member details`} onClose={close}>
       <DrawerHeader>
         <DrawerTitle>
-          <div className="dh-top" style={{ alignItems: "center", gap: 8 }}>
-            <Avatar user={profile.user} size="sm" />
-            <span className="chip muted">{profile.role.name}</span>
-            <span className={`status ${profile.status === "active" ? "ok" : "neutral"}`}>
-              <span className="d" />
-              {profile.status}
-            </span>
+          <div className="dh-top">
+            <Avatar user={profile.user} size="lg" />
           </div>
           <h3>{profile.user.name}</h3>
           <div className="tiny mono faint">{profile.user.email}</div>
@@ -85,18 +81,21 @@ export function MemberDrawer() {
         </DrawerMenu>
       </DrawerHeader>
       <div className="db">
-        <div className="profile-row">
-          <span className="k">Organization</span>
-          <span className="v">{org.name}</span>
-        </div>
-        <div className="profile-row">
-          <span className="k">Workspace role</span>
-          <span className="v">{profile.role.name}</span>
-        </div>
-        <div className="profile-row">
-          <span className="k">Joined</span>
-          <span className="v">{profile.joinedAt ? dateShort(profile.joinedAt) : "—"}</span>
-        </div>
+        <DetailList>
+          <DetailItem label="Organization">{org.name}</DetailItem>
+          <DetailItem label="Workspace role">
+            <span className="chip muted">{profile.role.name}</span>
+          </DetailItem>
+          <DetailItem label="Status">
+            <span className={`status ${profile.status === "active" ? "ok" : "neutral"}`}>
+              <span className="d" />
+              {profile.status}
+            </span>
+          </DetailItem>
+          <DetailItem label="Joined">
+            {profile.joinedAt ? dateShort(profile.joinedAt) : "—"}
+          </DetailItem>
+        </DetailList>
 
         <div className="panel-head" style={{ marginTop: 14, paddingLeft: 0, paddingRight: 0 }}>
           <h3>Projects</h3>

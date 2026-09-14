@@ -1895,6 +1895,34 @@ table.dt {
   gap: 6px;
   flex-wrap: wrap;
 }
+/* shared label/value detail rows (DetailList/DetailItem) — the one details
+ * style for drawer and profile bodies, static or interactive values */
+.detail-list {
+  display: flex;
+  flex-direction: column;
+}
+.detail-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 12.5px;
+}
+.detail-item .k {
+  color: var(--muted);
+  flex: none;
+}
+.detail-item .v {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+  color: var(--fg-strong);
+  text-align: right;
+}
 .sub-row {
   display: flex;
   align-items: center;
