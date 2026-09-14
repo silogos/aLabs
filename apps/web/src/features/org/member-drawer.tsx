@@ -50,10 +50,10 @@ export function MemberDrawer() {
   return (
     <Drawer label={`${profile.user.name} — member details`} onClose={close}>
       <DrawerHeader>
+        {/* same anatomy as the project drawer header: icon left, then
+         * title + subtitle inside DrawerTitle */}
+        <Avatar user={profile.user} size="lg" />
         <DrawerTitle>
-          <div className="dh-top">
-            <Avatar user={profile.user} size="lg" />
-          </div>
           <h3>{profile.user.name}</h3>
           <div className="tiny mono faint">{profile.user.email}</div>
         </DrawerTitle>
