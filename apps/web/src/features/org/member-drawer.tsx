@@ -44,22 +44,27 @@ export function MemberDrawer() {
 
   if (!profile) {
     return createPortal(
-      <aside className="drawer show" role="dialog" aria-label="Member details">
-        <div className="dh">
-          <div className="db">{isError ? "Member not found." : "Loading…"}</div>
-          <button className="x" onClick={close} aria-label="Close">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </aside>,
+      <>
+        <div className="scrim show" onClick={close} />
+        <aside className="drawer show" role="dialog" aria-label="Member details">
+          <div className="dh">
+            <div className="db">{isError ? "Member not found." : "Loading…"}</div>
+            <button className="x" onClick={close} aria-label="Close">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </aside>
+      </>,
       document.body,
     );
   }
 
   return createPortal(
-    <aside className="drawer show" role="dialog" aria-label={`${profile.user.name} — member details`}>
+    <>
+      <div className="scrim show" onClick={close} />
+      <aside className="drawer show" role="dialog" aria-label={`${profile.user.name} — member details`}>
       <div className="dh">
         <div className="dh-main">
           <div className="dh-top" style={{ alignItems: "center", gap: 8 }}>
@@ -165,7 +170,8 @@ export function MemberDrawer() {
           )}
         </div>
       </div>
-    </aside>,
+      </aside>
+    </>,
     document.body,
   );
 }
