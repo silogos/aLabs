@@ -1,1 +1,1 @@
-ALTER TABLE "notifications" DROP COLUMN "link";
+ALTER TABLE "notifications" DROP COLUMN IF EXISTS "link";--> statement-breakpoint
