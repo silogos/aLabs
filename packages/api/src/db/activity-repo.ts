@@ -1,5 +1,6 @@
-/** Activity feed repository — Postgres (Drizzle). Seeded demo events today;
- *  modules write here as they gain audit trails. */
+/** Activity feed repository — Postgres (Drizzle). Rows come from the module
+ *  emitters (modules/activity/emit.ts: task status changes, task comments,
+ *  project creation) and from the demo seed. */
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "./pg";
 import { activity, projects } from "@pmin/core/db";
@@ -8,7 +9,7 @@ import { userMap } from "./mapping";
 
 export interface ActivityEntry {
   id: string;
-  kind: "move" | "doc" | "com" | "done" | "mile";
+  kind: "move" | "doc" | "com" | "done" | "mile" | "proj";
   projectId: string;
   actorId: string;
   target: string;
@@ -22,7 +23,9 @@ export async function insertActivity(input: {
   actorId: string;
   target: string;
   occurredAt?: Date;
-  whenLabel: string;
+  /** Pinned display label (demo seed); live rows omit it so clients
+   *  compute timeAgo(when) — a stored label would freeze. */
+  whenLabel?: string;
 }): Promise<void> {
   await db.insert(activity).values({
     id: uuidv7(),
@@ -31,7 +34,7 @@ export async function insertActivity(input: {
     actorId: input.actorId,
     target: input.target,
     occurredAt: input.occurredAt ?? new Date(),
-    whenLabel: input.whenLabel,
+    whenLabel: input.whenLabel ?? "",
   });
 }
 

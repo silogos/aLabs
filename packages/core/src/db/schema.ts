@@ -598,9 +598,10 @@ export const agreements = pgTable("agreements", {
 
 /* ============================================================= Notification */
 
-/** Dashboard activity feed (seeded demo events today; written by modules
- *  as they gain audit trails). `whenLabel` is the display string shown in
- *  the UI next to the timestamp. */
+/** Dashboard activity feed — written by module emitters
+ *  (modules/activity/emit.ts: task status changes, task comments, project
+ *  creation) and by the demo seed. `whenLabel` is a pinned display string
+ *  (seed rows only — live rows store "" so clients compute timeAgo). */
 export const activity = pgTable(
   "activity",
   {
@@ -608,7 +609,7 @@ export const activity = pgTable(
     projectId: uuid("project_id")
       .notNull()
       .references(() => projects.id),
-    kind: varchar("kind", { length: 10 }).notNull(), // move|doc|com|done|mile
+    kind: varchar("kind", { length: 10 }).notNull(), // move|doc|com|done|mile|proj
     actorId: uuid("actor_id")
       .notNull()
       .references(() => users.id),
