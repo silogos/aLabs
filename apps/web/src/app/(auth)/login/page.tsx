@@ -35,6 +35,13 @@ function LoginForm() {
   const params = useSearchParams();
   const authError = params.get("authError");
 
+  // Post-auth landing (?next=) — internal paths only, never //host (open
+  // redirect). Set by pages that must be revisited after sign-in (/invite).
+  const next = params.get("next");
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  const selfUrl = (path: string) =>
+    safeNext ? `${path}?next=${encodeURIComponent(safeNext)}` : path;
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(
@@ -49,12 +56,12 @@ function LoginForm() {
 
   // The OAuth callback redirects back with ?authError=…; drop the param from
   // the URL once it's been read so it doesn't survive back-nav or reappear on
-  // a retry.
+  // a retry (?next= survives — the invitee still wants to land back on /invite).
   useEffect(() => {
     if (params.get("authError")) {
-      router.replace("/login");
+      router.replace(safeNext ? `/login?next=${encodeURIComponent(safeNext)}` : "/login");
     }
-  }, [params, router]);
+  }, [params, router, safeNext]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -63,7 +70,7 @@ function LoginForm() {
     setNotice(null);
     try {
       await authService.login({ email, password });
-      router.replace("/");
+      router.replace(safeNext ?? "/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed");
       setBusy(false);
@@ -141,7 +148,10 @@ function LoginForm() {
           </button>
         </form>
 
-        <SwitchFoot text="Don't have an account?" link={<Link href="/register">Create one</Link>} />
+        <SwitchFoot
+          text="Don't have an account?"
+          link={<Link href={selfUrl("/register")}>Create one</Link>}
+        />
 
         <LegalFoot />
       </div>

@@ -5,6 +5,7 @@ import type {
   Member,
   MemberProfile,
   Invitation,
+  InvitationPreview,
   ProjectMember,
   Paginated,
 } from "@pmin/core";
@@ -119,6 +120,21 @@ export const workspaceService = {
       method: "PATCH",
       body: JSON.stringify(body),
     }).then((x) => x.data),
+
+  // --- Invitations (invitee side — /invite?token=…) ---
+
+  /** Public lookup by token — what the accept page renders before sign-in. */
+  invitationPreview: (token: string) =>
+    req<{ data: InvitationPreview }>(`/invitations/${encodeURIComponent(token)}`).then(
+      (x) => x.data,
+    ),
+
+  /** Self-accept: requires the session of exactly the invited account. */
+  acceptInvitation: (token: string) =>
+    req<{ data: { ok: boolean; organization: Organization } }>(
+      `/invitations/${encodeURIComponent(token)}/accept`,
+      { method: "POST" },
+    ).then((x) => x.data),
 
   // --- Project management ---
 
