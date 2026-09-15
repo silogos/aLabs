@@ -91,10 +91,24 @@ export const invitationSchema = z.object({
   email: z.string(),
   status: InvitationStatus,
   roleName: z.string(),
+  /** Full accept link (/invite?token=…) — computed server-side; the raw
+   *  token never leaves the URL. Dead once status ≠ pending. */
+  inviteUrl: z.string(),
   expiresAt: iso,
   createdAt: iso,
 });
 export type Invitation = z.infer<typeof invitationSchema>;
+
+/** What the accept page shows before sign-in — public lookup by token;
+ *  carries no ids, only display data. */
+export const invitationPreviewSchema = z.object({
+  organizationName: z.string(),
+  email: z.string(),
+  roleName: z.string(),
+  status: InvitationStatus,
+  expiresAt: iso,
+});
+export type InvitationPreview = z.infer<typeof invitationPreviewSchema>;
 
 export const projectMemberSchema = z.object({
   id,

@@ -2,7 +2,7 @@
  *  roles, organization members, and invitations. Domain shapes stay
  *  zod-inferred from @pmin/core: Members embed their Role and User,
  *  Invitations expose roleName — both hydrated via joins here. */
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gt, isNull, sql } from "drizzle-orm";
 import { db } from "./pg";
 import {
   organizations,
@@ -23,6 +23,7 @@ import {
 } from "@pmin/core";
 import { getUserByEmail } from "./auth-repo";
 import { iso, userMap } from "./mapping";
+import { inviteUrl } from "../lib/urls";
 import { ApiError } from "../lib/errors";
 
 type OrgRow = typeof organizations.$inferSelect;
@@ -372,6 +373,7 @@ const toInvitation = (r: InvitationRow, roleName: string): Invitation => ({
   email: r.email,
   status: r.status,
   roleName,
+  inviteUrl: inviteUrl(r.token),
   expiresAt: r.expiresAt.toISOString(),
   createdAt: r.createdAt.toISOString(),
 });
@@ -399,7 +401,27 @@ export async function getOrgInvitation(
   return row ? toInvitation(row.invitation, row.role.name) : null;
 }
 
+/** By accept-token — the one invitation lookup that is NOT org-scoped: the
+ *  invitee is by definition not a member yet, so the token is the capability.
+ *  A pending row past its expiry is flipped to `expired` on sight (the enum
+ *  value existed but nothing ever set it). */
+export async function getInvitationByToken(token: string): Promise<Invitation | null> {
+  const [row] = await db
+    .select({ invitation: invitations, role: roles })
+    .from(invitations)
+    .innerJoin(roles, eq(roles.id, invitations.roleId))
+    .where(eq(invitations.token, token))
+    .limit(1);
+  if (!row) return null;
+  if (row.invitation.status === "pending" && row.invitation.expiresAt <= new Date()) {
+    await updateInvitationStatus(row.invitation.id, "expired");
+    return toInvitation({ ...row.invitation, status: "expired" }, row.role.name);
+  }
+  return toInvitation(row.invitation, row.role.name);
+}
+
 export async function hasPendingInvitation(orgId: string, email: string): Promise<boolean> {
+  // only unexpired rows count — an expired invitation never blocks a re-invite
   const [row] = await db
     .select({ id: invitations.id })
     .from(invitations)
@@ -408,6 +430,7 @@ export async function hasPendingInvitation(orgId: string, email: string): Promis
         eq(invitations.organizationId, orgId),
         eq(invitations.email, email.toLowerCase()),
         eq(invitations.status, "pending"),
+        gt(invitations.expiresAt, new Date()),
       ),
     )
     .limit(1);

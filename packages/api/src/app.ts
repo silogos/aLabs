@@ -18,6 +18,7 @@ import type { Vars } from "./lib/ctx";
 
 import { auth } from "./modules/auth/routes";
 import { organization } from "./modules/organization/routes";
+import { invitation } from "./modules/invitation/routes";
 import { project } from "./modules/project/routes";
 import { projectMembers } from "./modules/project/members";
 import { task } from "./modules/task/routes";
@@ -80,6 +81,7 @@ app.get("/", (c) =>
       "/projects/:projectId/planning/*",
       "/projects/:projectId/reporting/*",
       "/notifications",
+      "/invitations/:token (public preview) · /invitations/:token/accept",
     ],
   }),
 );
@@ -87,6 +89,7 @@ app.get("/", (c) =>
 app.route("/auth", auth);
 app.route("/users", user);
 app.route("/organizations", organization);
+app.route("/invitations", invitation);
 app.route("/organizations/:organizationId/projects", project);
 app.route("/projects/:projectId", projectMembers);
 app.route("/projects/:projectId", task);
