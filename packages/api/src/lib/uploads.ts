@@ -26,6 +26,15 @@ export function attachmentTypeAllowed(mime: string): boolean {
   );
 }
 
+/** Avatars render on every page, so the set is narrower than attachments:
+ *  raster/web formats only — no SVG, which /uploads/* serves same-origin
+ *  inline (stored-XSS vector), and no PDF/text obviously. */
+const AVATAR_MIMES = new Set(["image/png", "image/jpeg", "image/gif", "image/webp", "image/avif"]);
+
+export function avatarTypeAllowed(mime: string): boolean {
+  return AVATAR_MIMES.has(mime);
+}
+
 const MIME_BY_EXT: Record<string, string> = {
   ".png": "image/png",
   ".jpg": "image/jpeg",

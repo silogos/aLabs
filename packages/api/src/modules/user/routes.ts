@@ -3,12 +3,15 @@
  *  (cross-org by nature), so these routes only require auth — no tenant
  *  middleware. Projects outside the caller's orgs stay invisible (404). */
 import { Hono } from "hono";
-import { userUpdate, recentTouch } from "@pmin/core";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { uuidv7, userUpdate, recentTouch } from "@pmin/core";
 import * as authRepo from "../../db/auth-repo";
 import * as orgRepo from "../../db/org-repo";
 import * as projectRepo from "../../db/project-repo";
-import { notFound } from "../../lib/errors";
+import { badRequest, notFound } from "../../lib/errors";
 import { data } from "../../lib/responses";
+import { UPLOADS_DIR, MAX_UPLOAD_BYTES, avatarTypeAllowed, imageExt } from "../../lib/uploads";
 import { parseJsonBody } from "../../lib/validate";
 import { requireAuth } from "../../lib/auth";
 import type { Vars } from "../../lib/ctx";
@@ -22,6 +25,22 @@ user.patch("/me", async (c) => {
   const input = await parseJsonBody(c, userUpdate);
   // users live in Postgres — real UPDATE, response is the fresh row
   return data(c, await authRepo.updateUserProfile(user.id, input));
+});
+
+// Avatar upload — same local-disk pipeline as documents/files, but
+// identity-level (no project tenant) and restricted to avatar-safe images.
+user.post("/me/avatar", async (c) => {
+  const user = c.get("user")!;
+  const body = await c.req.parseBody();
+  const file = body["file"];
+  if (!(file instanceof File)) throw badRequest("Missing 'file' part");
+  if (!avatarTypeAllowed(file.type))
+    throw badRequest("Only PNG, JPEG, GIF, WebP or AVIF images are supported");
+  if (file.size > MAX_UPLOAD_BYTES) throw badRequest("File too large (5 MB max)");
+  const fname = `${uuidv7()}${imageExt(file.type, file.name)}`;
+  await mkdir(UPLOADS_DIR, { recursive: true });
+  await writeFile(join(UPLOADS_DIR, fname), Buffer.from(await file.arrayBuffer()));
+  return data(c, await authRepo.updateUserProfile(user.id, { image: `/uploads/${fname}` }));
 });
 
 user.get("/me/recents", async (c) => {
