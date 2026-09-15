@@ -218,8 +218,26 @@ DELETE Org/members/:id
 
 POST   Org/invitations                 (invite by email — the membership flow)
 GET    Org/invitations
-PATCH  Org/invitations/:id             (accept / cancel; accept requires a registered user)
+PATCH  Org/invitations/:id             (accept / cancel — admin-driven; accept requires
+                                        a registered user and rejects expired rows)
 ```
+
+Invitation responses carry `inviteUrl` — the invitee accept link — never the
+raw token.
+
+## Invitation accept (invitee-facing)
+
+```http
+GET    /invitations/:token             (public preview: org name, email, role, status)
+POST   /invitations/:token/accept      (invitee self-accept)
+```
+
+Not under `orgContext`: the invitee is not a member yet, so the token is the
+capability. `POST …/accept` requires the session of exactly the invited
+account (403 otherwise), creates the membership as `active`, and flips the
+invitation to `accepted`; 400 when it is no longer pending. A pending
+invitation past `expiresAt` is flipped to `expired` on lookup — preview,
+accept, and the admin accept all reject it, and it never blocks a re-invite.
 
 ## Project
 

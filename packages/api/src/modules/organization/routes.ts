@@ -168,7 +168,8 @@ organization.post(
       roleId: role.id,
       roleName: role.name,
       expiresAt: new Date(Date.now() + 7 * 86400000),
-      // admin-driven flow today; the token future-proofs email delivery
+      // powers the invitee accept link (see /invitations/:token/accept);
+      // email delivery is deferred, so admins copy the link from the UI
       token: randomBytes(24).toString("base64url"),
     });
     await notifyInvitationCreated(invitation, user.id);
@@ -197,6 +198,12 @@ organization.patch(
     if (!invitation) throw notFound();
     if (invitation.status !== "pending")
       throw badRequest(`Invitation is already ${invitation.status}`);
+    // a pending row past its expiry is dead — flip and reject, so the list
+    // stops showing it as pending (same flip the token lookup performs)
+    if (new Date(invitation.expiresAt) <= new Date()) {
+      await orgRepo.updateInvitationStatus(invitation.id, "expired");
+      throw badRequest("Invitation has expired");
+    }
     const input = await parseJsonBody(c, invitationAction);
     if (input.action === "cancel") {
       await orgRepo.updateInvitationStatus(invitation.id, "cancelled");

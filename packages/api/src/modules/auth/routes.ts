@@ -18,6 +18,7 @@ import {
 } from "@pmin/core";
 import { badRequest, unauthorized } from "../../lib/errors";
 import { extractToken, SESSION_COOKIE } from "../../lib/auth";
+import { webUrl } from "../../lib/urls";
 import { hashPassword, verifyPassword } from "../../lib/passwords";
 import { created, data } from "../../lib/responses";
 import { parseJsonBody } from "../../lib/validate";
@@ -148,8 +149,6 @@ const googleConfig = () => {
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   return clientId && clientSecret ? { clientId, clientSecret } : null;
 };
-
-const webUrl = () => process.env.WEB_URL ?? "http://localhost:3000";
 
 /** The OAuth redirect URI registered with Google. The app serves the API
  *  under /api (Next.js in-process mount), so the callback lives there. */

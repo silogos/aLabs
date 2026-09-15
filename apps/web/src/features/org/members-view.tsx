@@ -102,6 +102,17 @@ export function OrgMembersView() {
     }
   };
 
+  // No email provider yet — the invite link is the delivery mechanism, so
+  // the admin copies it and sends it through any channel.
+  const copyInviteLink = async (inv: Invitation) => {
+    try {
+      await navigator.clipboard.writeText(inv.inviteUrl);
+      toast("Invite link copied");
+    } catch {
+      toast("Could not copy the link");
+    }
+  };
+
   if (!org) {
     return (
       <section className="view active">
@@ -239,7 +250,12 @@ export function OrgMembersView() {
                     {invSaving ? "Sending…" : "Invite"}
                   </button>
                 </div>
-                <InvitationList invitations={invitations} canManage={canInvite} onAct={actOnInv} />
+                <InvitationList
+                  invitations={invitations}
+                  canManage={canInvite}
+                  onAct={actOnInv}
+                  onCopy={copyInviteLink}
+                />
               </>
             )}
           </div>
@@ -287,10 +303,12 @@ function InvitationList({
   invitations,
   canManage,
   onAct,
+  onCopy,
 }: {
   invitations: Invitation[] | undefined;
   canManage: boolean;
   onAct: (id: string, action: "accept" | "cancel") => void;
+  onCopy: (inv: Invitation) => void;
 }) {
   if (!invitations || invitations.length === 0)
     return <div className="tiny faint">No invitations.</div>;
@@ -312,6 +330,13 @@ function InvitationList({
           </span>
           {canManage && iv.status === "pending" && (
             <>
+              <button
+                className="btn ghost sm"
+                onClick={() => void onCopy(iv)}
+                title="Copy the accept link to send it yourself (email delivery isn't wired yet)"
+              >
+                Copy link
+              </button>
               <button className="btn ghost sm" onClick={() => onAct(iv.id, "accept")}>
                 Accept
               </button>

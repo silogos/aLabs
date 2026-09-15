@@ -67,6 +67,7 @@ const STATIC_ROOTS = new Set([
   "register",
   "forgot-password",
   "reset-password",
+  "invite",
   "api",
   "uploads",
 ]);

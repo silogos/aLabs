@@ -1,8 +1,8 @@
 "use client";
 
 import { authService } from "@/services/auth";
-import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BrandPanel } from "../_components/brand-panel";
 import {
   Alert,
@@ -18,10 +18,20 @@ import {
   TextInput,
 } from "../_components/auth-form";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const params = useSearchParams();
+
+  // Post-register landing (?next=) — internal paths only (open-redirect
+  // guard); ?email= prefills the invited address when arriving from /invite
+  // (accepting requires the session to match the invited email exactly).
+  const next = params.get("next");
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  const selfUrl = (path: string) =>
+    safeNext ? `${path}?next=${encodeURIComponent(safeNext)}` : path;
+
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(params.get("email") ?? "");
   const [password, setPassword] = useState("");
   const [terms, setTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +47,7 @@ export default function RegisterPage() {
     setError(null);
     try {
       await authService.register({ name, email, password });
-      router.replace("/");
+      router.replace(safeNext ?? "/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create the account");
       setBusy(false);
@@ -121,11 +131,25 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <SwitchFoot text="Already have an account?" link={<Link href="/login">Sign in</Link>} />
+          <SwitchFoot
+            text="Already have an account?"
+            link={<Link href={selfUrl("/login")}>Sign in</Link>}
+          />
 
           <LegalFoot />
         </div>
       </main>
+    </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <div className="auth">
+      <BrandPanel />
+      <Suspense fallback={<main className="form-panel" />}>
+        <RegisterForm />
+      </Suspense>
     </div>
   );
 }
