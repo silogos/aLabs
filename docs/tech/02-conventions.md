@@ -135,6 +135,18 @@ A `404` is returned instead of `403` when a resource is outside the caller's ten
 
 ---
 
+# Logging
+
+Server code uses the shared pino logger from `packages/api/src/lib/logger.ts` (ADR 0010) — never `console.*`:
+
+- Structured fields over message interpolation: `logger.info({ taskId }, "task created")`.
+- Errors go under the `err` key so pino serializes type, message and stack.
+- The request lifecycle is logged once by the middleware in `app.ts` (method, path, status, duration_ms) — don't log per-route entry/exit.
+- Never log secrets (passwords, session tokens). The password-reset link is the deliberate exception: with no email provider it is the delivery stand-in.
+- Level comes from `LOG_LEVEL` (default: debug outside production, info in production).
+
+---
+
 # Authentication and Authorization
 
 - Better Auth manages sessions.
