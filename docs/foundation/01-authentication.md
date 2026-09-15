@@ -1,6 +1,6 @@
 # Authentication Domain
 
-Version: 1.1.0
+Version: 1.2.0
 
 Status: MVP
 
@@ -65,11 +65,13 @@ Authentication is NOT responsible for:
 
 # Domain Model
 
-Authentication consists of three entities.
+Authentication consists of five entities, all persisted in Postgres (Drizzle):
 
 - User
 - Session
-- Account (managed by Better Auth)
+- Account (one per provider: `credential` or `google`)
+- Password Reset (single-use token)
+- OAuth State (single-use CSRF nonce for the Google flow)
 
 ---
 
@@ -101,20 +103,38 @@ Fields
 | --------- | -------- |
 | id        | UUID     |
 | userId    | UUID     |
+| token     | String   |
 | expiresAt | DateTime |
 | createdAt | DateTime |
 
-Session persistence is handled by Better Auth.
+Sessions are hand-rolled: opaque `sess-` tokens stored in the `sessions`
+table (7-day TTL) and sent as the httpOnly `alabs_session` cookie; a Bearer
+token is also accepted (API clients/tests). No third-party auth library.
 
 ---
 
 # Account
 
-Authentication provider account.
+Authentication provider account — one row per `(userId, provider)`.
 
-Managed by Better Auth.
+- `credential`: stores the scrypt password hash (`scrypt:<salt>:<hash>`).
+- `google`: stores the provider-side subject id (`sub`), no password hash.
 
-No custom business logic should depend on this entity.
+---
+
+# Password Reset
+
+Single-use, one-hour reset token mailed as a link (logged to the console
+until an email provider is selected). Fields: `token`, `userId`,
+`expiresAt`, `usedAt`.
+
+---
+
+# OAuth State
+
+Single-use CSRF nonce for the Google SSO redirect flow — persisted in the
+`oauth_states` table (10-minute TTL, consumed on callback) so multi-instance
+deployments share it. Expired rows are trimmed opportunistically on insert.
 
 ---
 
@@ -222,6 +242,20 @@ Requirements
 
 ---
 
+## Change Password
+
+Signed-in users can change their password without the email round-trip.
+
+Acceptance Criteria
+
+- Current password is verified first; a mismatch returns 400.
+- The new password replaces the credential account's scrypt hash.
+- Every session except the current device is revoked.
+- Accounts without a credential account (Google-only) are rejected with a
+  pointer to the forgot-password flow.
+
+---
+
 ## Current User
 
 The frontend must be able to retrieve the authenticated user.
@@ -274,8 +308,6 @@ Required
 
 # UI Screens
 
-Authentication requires only two pages.
-
 ## Login
 
 Contains
@@ -285,6 +317,7 @@ Contains
 - Password
 - Login button
 - Link to Register
+- Google sign-in button (shown when `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` are set)
 
 ---
 
@@ -297,6 +330,19 @@ Contains
 - Password
 - Create Account button
 - Link to Login
+
+---
+
+## Forgot / Reset Password
+
+- `/forgot-password` — email field; always confirms (never reveals existence).
+- `/reset-password?token=…` — new password form.
+
+---
+
+## Change Password
+
+- Password card on the profile page (`/user`) — current + new password.
 
 ---
 
@@ -370,7 +416,9 @@ GET
 /auth/oauth/google
 ```
 
-Redirects to Google's consent screen. Requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (returns 503 otherwise).
+Redirects to Google's consent screen with a fresh `state` nonce persisted to
+the `oauth_states` table. Requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
+(returns 503 otherwise).
 
 ---
 
@@ -382,7 +430,23 @@ GET
 /auth/oauth/google/callback
 ```
 
-Google redirects here with `?code&state`. Exchanges the code, upserts the user by email, creates a session, and redirects to the web app (`WEB_URL`).
+Google redirects here with `?code&state`. Validates the state against
+`oauth_states` (single-use, 10-minute TTL), exchanges the code, upserts the
+user by email, creates a session, and redirects to the web app (`WEB_URL`).
+
+---
+
+## Change Password
+
+POST
+
+```http
+/auth/change-password
+```
+
+Body: `{ "currentPassword": "...", "password": "..." }` (min 8 chars; session
+required). Verifies the current password, rotates the scrypt hash, and revokes
+every session except the current one.
 
 ---
 
@@ -489,11 +553,12 @@ Not included in MVP.
 - Session Management UI
 - Device History
 
-Implemented past MVP (v1.1):
+Implemented past MVP:
 
-- Forgot Password
-- Reset Password
-- Google Login
+- Forgot Password (v1.1)
+- Reset Password (v1.1)
+- Google Login (v1.1)
+- Change Password while signed in (v1.2)
 
 ---
 
@@ -519,11 +584,11 @@ Those belong to other domains.
 
 Requires
 
-- Better Auth
 - PostgreSQL
 - Drizzle ORM
 - Hono
 - React
+- node:crypto (scrypt)
 
 ---
 
