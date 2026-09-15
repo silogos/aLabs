@@ -38,6 +38,24 @@ describe("Avatar", () => {
     expect(el).toHaveClass(colorFor("u1"));
   });
 
+  it("renders the user's image when set, instead of initials", () => {
+    const { container } = render(
+      <Avatar user={{ id: "u1", name: "Amin Yusuf", image: "/uploads/pixel.png" }} />,
+    );
+    const img = container.querySelector(".av img")!;
+    expect(img).toHaveAttribute("src", "/uploads/pixel.png");
+    expect(img).toHaveAttribute("alt", "Amin Yusuf");
+    expect(container.querySelector(".av")).toHaveTextContent("");
+  });
+
+  it("falls back to initials when the image is null", () => {
+    const { container } = render(
+      <Avatar user={{ id: "u1", name: "Amin Yusuf", image: null }} />,
+    );
+    expect(container.querySelector(".av img")).toBeNull();
+    expect(container.querySelector(".av")).toHaveTextContent("AY");
+  });
+
   it("prefers the name prop over the user's name", () => {
     const { container } = render(
       <Avatar user={{ id: "u1", name: "Amin Yusuf" }} name="Guest User" />,

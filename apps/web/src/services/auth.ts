@@ -7,7 +7,7 @@ import type {
   ResetPasswordInput,
   ChangePasswordInput,
 } from "@pmin/core";
-import { req } from "@/lib/http";
+import { req, upload } from "@/lib/http";
 
 export const authService = {
   me: () => req<{ data: User }>("/auth/me").then((x) => x.data),
@@ -50,4 +50,18 @@ export const authService = {
       method: "PATCH",
       body: JSON.stringify(body),
     }).then((x) => x.data),
+
+  /** Upload an avatar image; the server stores it and returns the fresh
+   *  user with `image` pointing at the served /uploads/<id> URL. */
+  uploadAvatar: async (file: File): Promise<User> => {
+    const res = await upload("/users/me/avatar", file);
+    const body = (await res.json().catch(() => ({}))) as {
+      data?: User;
+      error?: { message?: string };
+    };
+    if (!res.ok) {
+      throw new Error(body?.error?.message ?? `Upload failed (${res.status})`);
+    }
+    return body.data!;
+  },
 };

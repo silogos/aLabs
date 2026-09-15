@@ -1288,6 +1288,13 @@
   font-size: 24px;
   flex: none;
 }
+.av img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
 .av.a {
   background: oklch(52% 0.13 25);
 }
