@@ -9,9 +9,10 @@ import { useApp } from "@/providers/app-provider";
 import { authService } from "@/services/auth";
 import { dateShort } from "@/lib/format";
 import { ProfileSection } from "./profile-section";
+import { PasswordSection } from "./password-section";
 
 export function ProfileView() {
-  const { user, toast } = useApp();
+  const { user } = useApp();
   const qc = useQueryClient();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
@@ -48,6 +49,7 @@ export function ProfileView() {
 
       <div className="stack" style={{ gap: 14, maxWidth: 720 }}>
         <ProfileSection />
+        <PasswordSection />
 
         <div className="card">
           <div className="panel-head">
@@ -58,13 +60,8 @@ export function ProfileView() {
               <span className="small muted">Email</span>
               <span className="small mono">{user.email}</span>
             </div>
-            <div className="row between wrap" style={{ gap: 10 }}>
-              <span className="small muted">Email verified</span>
-              <span className={`status ${user.emailVerified ? "ok" : "neutral"}`}>
-                <span className="d" />
-                {user.emailVerified ? "Verified" : "Not verified"}
-              </span>
-            </div>
+            {/* Email verification is blocked on an email provider (#59) —
+                emailVerified stays in the data model but isn't surfaced. */}
             <div className="row between wrap" style={{ gap: 10 }}>
               <span className="small muted">Member since</span>
               <span className="small">{dateShort(user.createdAt)}</span>

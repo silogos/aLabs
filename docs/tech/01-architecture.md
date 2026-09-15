@@ -23,7 +23,7 @@ A modular monolith deployed as a single application — a Next.js server that re
 | Backend     | Hono, mounted in-process by Next.js (`@pmin/api`) |
 | Database    | PostgreSQL          |
 | ORM         | Drizzle             |
-| Auth        | Better Auth         |
+| Auth        | Hand-rolled sessions (scrypt + Postgres) |
 | Validation  | zod (shared)        |
 | Package Mgmt| pnpm workspaces     |
 | Build       | Turborepo           |
@@ -66,7 +66,7 @@ modules/<module>/
 
 | Module        | API folder                       | DB tables                                   |
 | ------------- | -------------------------------- | ------------------------------------------- |
-| Authentication| `modules/auth` (Better Auth)     | users, sessions, accounts, verifications    |
+| Authentication| `modules/auth`                   | users, sessions, accounts, password_resets, oauth_states |
 | Organization  | `modules/organization`           | organizations, organization_members, roles, role_permissions, invitations |
 | Project       | `modules/project`                | projects, project_members                   |
 | Task          | `modules/task`                   | tasks, task_statuses, task_labels, task_label_links, task_types |
@@ -143,7 +143,15 @@ Required environment variables:
 
 ```text
 DATABASE_URL
-BETTER_AUTH_SECRET
+```
+
+Optional (with defaults):
+
+```text
+WEB_URL            external app origin (default http://localhost:3000)
+GOOGLE_CLIENT_ID   Google SSO — off until both are set
+GOOGLE_CLIENT_SECRET
+SEED_DEMO          demo seed on boot (default: on outside production)
 ```
 
 To be selected:

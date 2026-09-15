@@ -1,13 +1,14 @@
 /** Auth repository — Postgres (Drizzle) implementation for users, sessions,
  *  accounts, and password resets. Domain shapes stay zod-inferred from
  *  @pmin/core (ISO date strings, camelCase); rows are mapped here. */
-import { and, asc, eq, gt, inArray, isNull } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNull, lt, ne } from "drizzle-orm";
 import { db } from "./pg";
 import {
   users,
   sessions,
   authAccounts,
   passwordResets,
+  oauthStates,
   organizations,
   roles,
   organizationMembers,
@@ -244,6 +245,14 @@ export async function revokeUserSessions(userId: string): Promise<void> {
   await db.delete(sessions).where(eq(sessions.userId, userId));
 }
 
+/** Revoke all of a user's sessions except one — the change-password path
+ *  keeps the current device signed in while killing every other session. */
+export async function revokeOtherUserSessions(userId: string, keepToken: string): Promise<void> {
+  await db
+    .delete(sessions)
+    .where(and(eq(sessions.userId, userId), ne(sessions.token, keepToken)));
+}
+
 /* ---------------- accounts ---------------- */
 
 export interface Account {
@@ -381,4 +390,28 @@ export async function markPasswordResetUsed(token: string): Promise<void> {
     .update(passwordResets)
     .set({ usedAt: new Date() })
     .where(eq(passwordResets.token, token));
+}
+
+/* ---------------- oauth states ---------------- */
+
+export async function insertOAuthState(input: { state: string; expiresAt: Date }): Promise<void> {
+  // States live for minutes, so trim expired rows on insert instead of
+  // scheduling a cleanup job.
+  await db.delete(oauthStates).where(lt(oauthStates.expiresAt, new Date()));
+  await db.insert(oauthStates).values({
+    id: uuidv7(),
+    state: input.state,
+    expiresAt: input.expiresAt,
+    createdAt: new Date(),
+  });
+}
+
+/** Single-use CSRF nonce: delete-and-return, then check the expiry. */
+export async function consumeOAuthState(state: string): Promise<boolean> {
+  const rows = await db
+    .delete(oauthStates)
+    .where(eq(oauthStates.state, state))
+    .returning({ expiresAt: oauthStates.expiresAt });
+  const row = rows[0];
+  return row != null && row.expiresAt > new Date();
 }
