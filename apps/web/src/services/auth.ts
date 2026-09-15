@@ -5,6 +5,7 @@ import type {
   RegisterInput,
   ForgotPasswordInput,
   ResetPasswordInput,
+  ChangePasswordInput,
 } from "@pmin/core";
 import { req } from "@/lib/http";
 
@@ -34,6 +35,12 @@ export const authService = {
 
   resetPassword: (body: ResetPasswordInput) =>
     req<{ data: { ok: boolean } }>("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((x) => x.data),
+
+  changePassword: (body: ChangePasswordInput) =>
+    req<{ data: { ok: boolean } }>("/auth/change-password", {
       method: "POST",
       body: JSON.stringify(body),
     }).then((x) => x.data),

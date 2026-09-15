@@ -1,6 +1,7 @@
 /** Auth module — register/login/logout/me + the forgot/reset password flow. */
 import { describe, expect, it } from "vitest";
 import { api, registerUser, PASSWORD, unique } from "./helpers";
+import { insertOAuthState, consumeOAuthState } from "../src/db/auth-repo";
 
 describe("POST /auth/register", () => {
   it("creates a user, a session token, and the standard envelope", async () => {
@@ -148,5 +149,122 @@ describe("forgot / reset password", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { data: { ok: boolean } };
     expect(body.data.ok).toBe(true);
+  });
+});
+
+describe("POST /auth/change-password", () => {
+  it("rotates the password, keeps the current session, revokes others", async () => {
+    const u = await registerUser();
+
+    // a second device signs in before the change
+    const other = await api("/auth/login", {
+      method: "POST",
+      body: { email: u.email, password: PASSWORD },
+    });
+    const otherToken = ((await other.json()) as { data: { token: string } }).data.token;
+
+    const newPassword = "r0tated-pass!";
+    const change = await api("/auth/change-password", {
+      method: "POST",
+      token: u.token,
+      body: { currentPassword: PASSWORD, password: newPassword },
+    });
+    expect(change.status).toBe(200);
+
+    // current device stays signed in, the other session is revoked
+    expect((await api("/auth/me", { token: u.token })).status).toBe(200);
+    expect((await api("/auth/me", { token: otherToken })).status).toBe(401);
+
+    expect(
+      (
+        await api("/auth/login", {
+          method: "POST",
+          body: { email: u.email, password: PASSWORD },
+        })
+      ).status,
+    ).toBe(401);
+    expect(
+      (
+        await api("/auth/login", {
+          method: "POST",
+          body: { email: u.email, password: newPassword },
+        })
+      ).status,
+    ).toBe(200);
+  });
+
+  it("rejects a wrong current password with 400", async () => {
+    const u = await registerUser();
+    const res = await api("/auth/change-password", {
+      method: "POST",
+      token: u.token,
+      body: { currentPassword: "wrong-password", password: "n3w-password!" },
+    });
+    expect(res.status).toBe(400);
+    // the password is unchanged
+    expect(
+      (
+        await api("/auth/login", {
+          method: "POST",
+          body: { email: u.email, password: PASSWORD },
+        })
+      ).status,
+    ).toBe(200);
+  });
+
+  it("rejects a short new password with 400", async () => {
+    const u = await registerUser();
+    const res = await api("/auth/change-password", {
+      method: "POST",
+      token: u.token,
+      body: { currentPassword: PASSWORD, password: "short" },
+    });
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe("validation_error");
+  });
+
+  it("requires a session", async () => {
+    const res = await api("/auth/change-password", {
+      method: "POST",
+      body: { currentPassword: PASSWORD, password: "n3w-password!" },
+    });
+    expect(res.status).toBe(401);
+  });
+});
+
+describe("google oauth state", () => {
+  it("persists a single-use state when the flow starts", async () => {
+    const prevId = process.env.GOOGLE_CLIENT_ID;
+    const prevSecret = process.env.GOOGLE_CLIENT_SECRET;
+    process.env.GOOGLE_CLIENT_ID = "test-client-id";
+    process.env.GOOGLE_CLIENT_SECRET = "test-secret";
+    try {
+      const start = await api("/auth/oauth/google");
+      expect(start.status).toBe(302);
+      const location = start.headers.get("location")!;
+      expect(location).toContain("accounts.google.com");
+      const state = new URL(location).searchParams.get("state");
+      expect(state).toBeTruthy();
+
+      // single-use: the first consume validates, a replay is rejected
+      expect(await consumeOAuthState(state!)).toBe(true);
+      expect(await consumeOAuthState(state!)).toBe(false);
+    } finally {
+      process.env.GOOGLE_CLIENT_ID = prevId;
+      process.env.GOOGLE_CLIENT_SECRET = prevSecret;
+    }
+  });
+
+  it("rejects the callback for an unknown state", async () => {
+    const res = await api("/auth/oauth/google/callback?code=x&state=no-such-state");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toContain("authError=invalid_state");
+  });
+
+  it("rejects an expired state", async () => {
+    const state = `st-${unique()}`;
+    await insertOAuthState({ state, expiresAt: new Date(Date.now() - 1000) });
+    expect(await consumeOAuthState(state)).toBe(false);
   });
 });

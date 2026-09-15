@@ -2,9 +2,9 @@
  * Auth routes — session-based.
  *
  * Contract: docs/foundation/01-authentication.md. Users, sessions, accounts,
- * and password resets live in Postgres (db/auth-repo.ts); passwords are
- * scrypt hashes (lib/passwords.ts). OAuth state stays in memory — short-lived
- * CSRF nonces, fine for a single-node deployment.
+ * OAuth states, and password resets live in Postgres (db/auth-repo.ts);
+ * passwords are scrypt hashes (lib/passwords.ts). OAuth state is persisted
+ * so multi-instance deployments share the CSRF nonces.
  */
 import { Hono } from "hono";
 import { deleteCookie, setCookie } from "hono/cookie";
@@ -15,6 +15,7 @@ import {
   loginInput,
   forgotPasswordInput,
   resetPasswordInput,
+  changePasswordInput,
 } from "@pmin/core";
 import { badRequest, unauthorized } from "../../lib/errors";
 import { extractToken, SESSION_COOKIE } from "../../lib/auth";
@@ -134,15 +135,37 @@ auth.post("/reset-password", async (c) => {
   return data(c, { ok: true });
 });
 
+/* ---------------- change password (signed in) ---------------- */
+
+auth.post("/change-password", async (c) => {
+  const user = c.get("user");
+  if (!user) throw unauthorized();
+
+  const input = await parseJsonBody(c, changePasswordInput);
+  const account = await authRepo.findAccount(user.id, "credential");
+  if (!account?.passwordHash) {
+    throw badRequest("This account has no password set. Use forgot password to create one.");
+  }
+  if (!(await verifyPassword(input.currentPassword, account.passwordHash))) {
+    throw badRequest("Current password is incorrect");
+  }
+
+  await authRepo.updateAccountPassword(account.id, await hashPassword(input.password));
+
+  // Keep this device signed in; revoke every other session in case the
+  // password was changed because it leaked.
+  const token = extractToken(c.req.raw);
+  if (token) await authRepo.revokeOtherUserSessions(user.id, token);
+
+  return data(c, { ok: true });
+});
+
 /* ---------------- Google SSO ---------------- */
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
 const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
-
-/** Pending OAuth states (CSRF protection) — state → expiresAt. */
-const oauthStates = new Map<string, number>();
 
 const googleConfig = () => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -155,14 +178,14 @@ const googleConfig = () => {
 const googleRedirectUri = () => `${webUrl()}/api/auth/oauth/google/callback`;
 
 /** Kick off the flow: redirect to Google's consent screen. */
-auth.get("/oauth/google", (c) => {
+auth.get("/oauth/google", async (c) => {
   const cfg = googleConfig();
   if (!cfg) {
     return c.redirect(`${webUrl()}/login?authError=google_not_configured`);
   }
 
   const state = randomBytes(24).toString("base64url");
-  oauthStates.set(state, Date.now() + OAUTH_STATE_TTL_MS);
+  await authRepo.insertOAuthState({ state, expiresAt: new Date(Date.now() + OAUTH_STATE_TTL_MS) });
 
   const redirectUri = googleRedirectUri();
   const url = new URL(GOOGLE_AUTH_URL);
@@ -192,9 +215,8 @@ auth.get("/oauth/google/callback", async (c) => {
   }
   if (!code || !state) return fail("missing_code_or_state");
 
-  const stateExpiresAt = oauthStates.get(state);
-  oauthStates.delete(state);
-  if (!stateExpiresAt || stateExpiresAt < Date.now()) return fail("invalid_state");
+  const stateOk = await authRepo.consumeOAuthState(state);
+  if (!stateOk) return fail("invalid_state");
 
   const cfg = googleConfig();
   if (!cfg) return fail("google_not_configured");

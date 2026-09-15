@@ -29,6 +29,10 @@ export const resetPasswordInput = z.object({
   token: z.string().min(20),
   password: z.string().min(8).max(100),
 });
+export const changePasswordInput = z.object({
+  currentPassword: z.string().min(1),
+  password: z.string().min(8).max(100),
+});
 
 export const userUpdate = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -39,3 +43,4 @@ export type LoginInput = z.input<typeof loginInput>;
 export type RegisterInput = z.input<typeof registerInput>;
 export type ForgotPasswordInput = z.input<typeof forgotPasswordInput>;
 export type ResetPasswordInput = z.input<typeof resetPasswordInput>;
+export type ChangePasswordInput = z.input<typeof changePasswordInput>;
