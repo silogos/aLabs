@@ -9,10 +9,13 @@ import { tasksService } from "@/services/tasks";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useApp } from "@/providers/app-provider";
 import { Avatar, colorFor, initials } from "@/components/ui/avatar";
 import { Prio, StatusPill, TypeTag } from "@/components/ui/badges";
 import { taskSerial } from "@/lib/serial";
+import { notificationPath } from "@/lib/notification-path";
+import { NotificationTitle } from "@/components/notification-title";
 import { dateShort, isOverdue } from "@/lib/format";
 
 function Spark({ data, color }: { data: number[]; color: string }) {
@@ -460,6 +463,7 @@ interface Notif {
   kind: NotifKind;
   unread: boolean;
   time: string;
+  link: string | null;
   body: ReactNode;
 }
 
@@ -528,18 +532,40 @@ const NOTIF_ICONS: Record<NotifKind, ReactNode> = {
 function NotificationsCard() {
   const { toast } = useApp();
   const qc = useQueryClient();
+  const router = useRouter();
   const { data: raw } = useQuery({
     queryKey: qk.notifications(),
     queryFn: notificationsService.list,
   });
+
+  /** Click follows a route (whole item → primary target, entity span → its
+   *  own); unread items are marked read in the background so navigation
+   *  feels instant. */
+  const open = (id: string, unread: boolean, path: string | null) => {
+    if (unread) {
+      notificationsService
+        .markRead(id)
+        .then(() => qc.invalidateQueries({ queryKey: qk.notifications() }))
+        .catch(() => toast("Couldn't mark as read"));
+    }
+    if (path) router.push(path);
+  };
+
   const items: Notif[] = (raw ?? []).slice(0, 7).map((n) => ({
     id: n.id,
     kind: NOTIF_KIND[n.type] ?? "mention",
     unread: !n.readAt,
     time: timeAgo(n.createdAt),
+    link: notificationPath(n.target),
     body: (
       <>
-        <b>{n.title}</b>
+        <b>
+          <NotificationTitle
+            segments={n.titleSegments}
+            title={n.title}
+            onOpen={(path) => open(n.id, !n.readAt, path)}
+          />
+        </b>
         {n.body && <span className="quote">{n.body}</span>}
       </>
     ),
@@ -570,7 +596,12 @@ function NotificationsCard() {
         <div className="notif-list">
           {items.length === 0 && <div className="muted tiny" style={{ padding: "14px 16px" }}>No notifications yet.</div>}
           {items.map((n) => (
-            <div key={n.id} className={`notif-item ${n.unread ? "unread" : "read"}`}>
+            <div
+              key={n.id}
+              className={`notif-item ${n.unread ? "unread" : "read"}`}
+              onClick={() => open(n.id, n.unread, n.link)}
+              style={{ cursor: n.link ? "pointer" : "default" }}
+            >
               <span className="notif-dot" />
               <span className={`notif-ic ${n.kind}`}>{NOTIF_ICONS[n.kind]}</span>
               <div className="notif-body">{n.body}</div>
