@@ -1,4 +1,5 @@
-/** Avatar — initials chip with a stable per-user color. */
+/** Avatar — the user's image when set, initials chip on a stable
+ *  per-user color as fallback. */
 import type { User } from "@pmin/core";
 
 export function initials(name: string): string {
@@ -22,11 +23,15 @@ export function Avatar({
   size = "",
   name,
 }: {
-  user?: Pick<User, "id" | "name">;
+  user?: Pick<User, "id" | "name"> & { image?: string | null };
   size?: "sm" | "lg" | "xl" | "";
   name?: string;
 }) {
   const label = name ?? user?.name ?? "?";
   const cls = user ? colorFor(user.id) : "b";
-  return <span className={`av ${cls} ${size}`}>{initials(label)}</span>;
+  return (
+    <span className={`av ${cls} ${size}`}>
+      {user?.image ? <img src={user.image} alt={label} /> : initials(label)}
+    </span>
+  );
 }

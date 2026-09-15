@@ -187,9 +187,16 @@ GET    /auth/me
 
 ```http
 PATCH  /users/me
+POST   /users/me/avatar
 GET    /users/me/recents?limit=3
 POST   /users/me/recents
 ```
+
+`POST /users/me/avatar` — multipart `file` part (PNG, JPEG, GIF, WebP or
+AVIF; 5 MB max; no SVG). Stored on local disk via the shared uploads
+pipeline and served from `/uploads/*`; sets `users.image` to that URL and
+returns the fresh user row. Auth-only (identity-level, no tenant). Clear
+the avatar with `PATCH /users/me` (`{ "image": null }`).
 
 `GET /users/me/recents` — the caller's recently visited projects,
 most-recent-first. `limit` defaults to 3, max 5. Each item embeds its org:
