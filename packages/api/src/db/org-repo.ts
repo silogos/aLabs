@@ -25,6 +25,7 @@ import { getUserByEmail } from "./auth-repo";
 import { iso, userMap } from "./mapping";
 import { inviteUrl } from "../lib/urls";
 import { ApiError } from "../lib/errors";
+import { logger } from "../lib/logger";
 
 type OrgRow = typeof organizations.$inferSelect;
 type RoleRow = typeof roles.$inferSelect;
@@ -89,7 +90,7 @@ export async function requireSystemRole(
 ): Promise<Role> {
   const role = await findRoleByName(scope, name);
   if (!role) {
-    console.error(`[seed] system role missing: ${scope} ${name}`);
+    logger.error({ scope, role: name }, "system role missing — seed did not run");
     throw new ApiError("internal_error", "Something went wrong on our end. Please try again.");
   }
   return role;

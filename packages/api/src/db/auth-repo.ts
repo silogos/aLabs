@@ -15,6 +15,7 @@ import {
 } from "@pmin/core/db";
 import { uuidv7, type User } from "@pmin/core";
 import { ApiError } from "../lib/errors";
+import { logger } from "../lib/logger";
 
 type UserRow = typeof users.$inferSelect;
 
@@ -174,7 +175,7 @@ export async function createUserWithWorkspace(input: {
       .where(and(eq(roles.scope, "workspace"), eq(roles.name, "Owner"), isNull(roles.organizationId)))
       .limit(1);
     if (!ownerRole) {
-      console.error("[seed] system role missing: workspace Owner");
+      logger.error({ scope: "workspace", role: "Owner" }, "system role missing — seed did not run");
       throw new ApiError("internal_error", "Something went wrong on our end. Please try again.");
     }
 
