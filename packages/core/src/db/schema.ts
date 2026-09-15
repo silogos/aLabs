@@ -116,6 +116,19 @@ export const passwordResets = pgTable(
   (t) => [uniqueIndex("password_resets_token_key").on(t.token)],
 );
 
+/** Pending OAuth `state` nonces (CSRF protection for SSO redirects) — in
+ *  Postgres, not memory, so multi-instance deploys share them. */
+export const oauthStates = pgTable(
+  "oauth_states",
+  {
+    id: uuid("id").primaryKey(),
+    state: varchar("state", { length: 128 }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+    createdAt: ts().defaultNow(),
+  },
+  (t) => [uniqueIndex("oauth_states_state_key").on(t.state)],
+);
+
 /* ============================================================= Workspace */
 
 export const organizations = pgTable("organizations", {
