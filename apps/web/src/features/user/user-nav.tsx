@@ -81,12 +81,6 @@ export const USER_ICONS: Record<string, ReactNode> = {
   ),
 };
 
-export const USER_BACK_ICON = I(
-  <>
-    <path d="M19,12H5M12,19l-7,-7,7,-7" />
-  </>,
-);
-
 export const USER_FLAT_ITEMS = USER_SECTIONS.flatMap((s) => s.items);
 
 /** Active user section from a /, /user or /notifications pathname. */

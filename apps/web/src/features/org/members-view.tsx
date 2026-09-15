@@ -3,8 +3,10 @@
 /** Org members — directory with workspace roles, invitations (create /
  *  accept / cancel), and a role legend. Ported from the old settings
  *  Workspace tab now that org management is its own area; actions gate on
- *  the current member's role permissions (API remains the source of truth). */
+ *  the current member's role permissions (API remains the source of truth).
+ *  Names open the member's profile page. */
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/app-provider";
 import { useMembers } from "@/hooks/use-members";
@@ -27,6 +29,7 @@ const ROLE_NOTES: Record<string, string> = {
 
 export function OrgMembersView() {
   const { org, user, toast } = useApp();
+  const router = useRouter();
   const qc = useQueryClient();
   const { data: members, isError } = useMembers(org?.id);
   const { data: invitations } = useInvitations(org?.id);
@@ -138,13 +141,20 @@ export function OrgMembersView() {
           <div className="panel-body flush">
             {(members ?? []).map((m) => (
               <div key={m.id} className="mrow" style={{ alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <Avatar user={m.user} size="sm" />
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontWeight: 600 }}>
-                    {m.user.name}
-                    {m.userId === user?.id && <span className="tiny faint"> (you)</span>}
+                <div
+                  className="row"
+                  style={{ minWidth: 0, flex: 1, gap: 10, alignItems: "center", cursor: "pointer" }}
+                  onClick={() => router.push(`/${org.slug}/members/${m.userId}`)}
+                  title="Open member"
+                >
+                  <Avatar user={m.user} size="sm" />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600 }}>
+                      {m.user.name}
+                      {m.userId === user?.id && <span className="tiny faint"> (you)</span>}
+                    </div>
+                    <div className="tiny faint">{m.user.email}</div>
                   </div>
-                  <div className="tiny faint">{m.user.email}</div>
                 </div>
                 <span className={`status ${m.status === "active" ? "ok" : "neutral"}`}>
                   <span className="d" />

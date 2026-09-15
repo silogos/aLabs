@@ -99,6 +99,32 @@ Status
 
 ---
 
+# Member Profile
+
+The org-scoped view of a fellow member. Two surfaces share one payload:
+
+- Quick-view drawer at `/{orgSlug}/members/{userId}` — opens over the members
+  list (the task-drawer pattern); header action "Open profile" jumps to the
+  full page. This is where notification actor links land.
+- Full profile page at `/{orgSlug}/members/{userId}/profile` — GitLab-style
+  two-column layout: identity card (large avatar, key facts) left, content
+  sections (projects) right.
+
+Visible to any active member of the org (no extra permission — a profile
+click from a notification must never 403); outsiders get 404.
+
+Fields
+
+- the Member (user, workspace role, status, joinedAt)
+- projects — the member's active project memberships in this org
+  (id, name, slug, project role)
+
+API: `GET /organizations/:organizationId/members/:userId/profile` — note the
+param is a user id, unlike the membership-id routes for role changes and
+removal.
+
+---
+
 # Invitation
 
 Invite users using email.

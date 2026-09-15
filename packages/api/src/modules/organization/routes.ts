@@ -90,6 +90,23 @@ organization.get("/:organizationId/members", orgContext, requirePermission("memb
   return data(c, await orgRepo.listOrgMembers(currentTenant(c).organizationId));
 });
 
+// Member profile — org-scoped view of a fellow member (notification actor
+// links land here). orgContext alone gates it: any active member can view
+// a profile, so an actor click never 403s. NOTE: :userId is a USER id,
+// unlike the membership-id routes for role change / removal below.
+organization.get(
+  "/:organizationId/members/:userId/profile",
+  orgContext,
+  async (c) => {
+    const profile = await orgRepo.getMemberProfile(
+      currentTenant(c).organizationId,
+      c.req.param("userId")!,
+    );
+    if (!profile) throw notFound();
+    return data(c, profile);
+  },
+);
+
 // Change a member's workspace role.
 organization.patch(
   "/:organizationId/members/:memberId",

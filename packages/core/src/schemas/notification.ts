@@ -5,7 +5,8 @@ import { NotificationChannel } from "../enums";
 
 /** Where a notification points — routing DATA, never a URL: the backend
  *  ships the identifiers, each client formats its own links (the web app
- *  builds /{orgSlug}/{projectSlug}/tasks/{order} and /{orgSlug}/members).
+ *  builds /{orgSlug}/{projectSlug}/tasks/{order}, /{orgSlug}/members and
+ *  /{orgSlug}/members/{userId}).
  *  Slugs are data here, not routing — the client-resolves-slugs stance of
  *  ADR 0009 still holds for the API's own routes. */
 export const notificationTargetSchema = z.discriminatedUnion("kind", [
@@ -18,6 +19,11 @@ export const notificationTargetSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("members"),
     orgSlug: z.string(),
+  }),
+  z.object({
+    kind: z.literal("user"),
+    orgSlug: z.string(),
+    userId: id,
   }),
 ]);
 export type NotificationTarget = z.infer<typeof notificationTargetSchema>;

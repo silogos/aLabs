@@ -122,14 +122,15 @@ Before inserting, every emitter subtracts recipients who disabled the emitted ty
 
 Notifications ship **routing data, never URLs** — the backend never learns a client's route scheme. `target` is a discriminated object (`NotificationTarget` in `packages/core/src/schemas/notification.ts`):
 
-| kind       | Payload                                        | Emitted by            |
-| ---------- | ---------------------------------------------- | --------------------- |
-| `task`     | `{ orgSlug, projectSlug, order }`              | `assign`, `comment`   |
-| `members`  | `{ orgSlug }`                                  | `invite`              |
+| kind       | Payload                                        | Emitted by / used for                    |
+| ---------- | ---------------------------------------------- | ---------------------------------------- |
+| `task`     | `{ orgSlug, projectSlug, order }`              | `assign`, `comment`                      |
+| `members`  | `{ orgSlug }`                                  | `invite` (the invitation lives there)    |
+| `user`     | `{ orgSlug, userId }`                          | actor title spans → member profile       |
 
-Each client formats its own links. The web app builds them in `apps/web/src/lib/notification-path.ts` (`notificationPath`): task → `/{orgSlug}/{projectSlug}/tasks/{order}` (the segment is the task's **order number**, never the UUID — the task drawer resolves `Number(param)`), members → `/{orgSlug}/members`. Slugs in the payload are data, not routing; the API's own routes still only ever see UUIDs (ADR 0009).
+Each client formats its own links. The web app builds them in `apps/web/src/lib/notification-path.ts` (`notificationPath`): task → `/{orgSlug}/{projectSlug}/tasks/{order}` (the segment is the task's **order number**, never the UUID — the task drawer resolves `Number(param)`), members → `/{orgSlug}/members`, user → the member profile `/{orgSlug}/members/{userId}`. Slugs in the payload are data, not routing; the API's own routes still only ever see UUIDs (ADR 0009).
 
-Titles also ship as **segments** (`titleSegments`, mirroring the plain `title`): `{ text, target? }` spans where a target marks an entity inside the sentence — the actor's name links to the members page, the task title/serial links to the task. The web renders these through `apps/web/src/components/notification-title.tsx` (`NotificationTitle`): entity spans become inline links (accent-colored, middle/cmd-click native), everything else stays plain; clicking an entity marks the notification read and navigates to that entity, while clicking elsewhere on the item goes to the primary `target`.
+Titles also ship as **segments** (`titleSegments`, mirroring the plain `title`): `{ text, target? }` spans where a target marks an entity inside the sentence — the actor's name links to their member profile, the task title/serial links to the task. The web renders these through `apps/web/src/components/notification-title.tsx` (`NotificationTitle`): entity spans become inline links (accent-colored, middle/cmd-click native), everything else stays plain; clicking an entity marks the notification read and navigates to that entity, while clicking elsewhere on the item goes to the primary `target`.
 
 ---
 

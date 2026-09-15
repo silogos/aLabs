@@ -3,7 +3,7 @@
 /** User shell — the entry surface chrome (/, /user, /notifications):
  *  dark rail with the user pill, the dashboard/profile/notifications nav
  *  and the workspaces menu (orgs → projects), topbar with a
- *  back-to-project affordance, mobile bottom sheet. Reuses the app's
+ *  mobile bottom sheet. Reuses the app's
  *  sidebar/topbar/m-sheet classes so all surfaces (project · org · user)
  *  share one design system. Nav modals (account + switchers) and toasts
  *  come from AppProvider. */
@@ -12,13 +12,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useApp } from "@/providers/app-provider";
 import { SwitcherModals } from "@/components/switcher-modals";
 import { Toasts } from "@/components/toasts";
-import { USER_SECTIONS, USER_ICONS, USER_TITLES, userActiveId, USER_BACK_ICON } from "./user-nav";
-import { viewPath } from "@/providers/app-provider";
+import { USER_SECTIONS, USER_ICONS, USER_TITLES, userActiveId } from "./user-nav";
 
 export function UserShell({ children }: { children: ReactNode }) {
   const {
-    org,
-    project,
     user,
     collapsed,
     setCollapsed,
@@ -46,10 +43,6 @@ export function UserShell({ children }: { children: ReactNode }) {
   const go = (path: string) => {
     router.push(path);
     setMNavOpen(false);
-  };
-  const backToProject = () => {
-    setMNavOpen(false);
-    router.push(org && project ? viewPath("dashboard", org.slug, project.slug) : "/");
   };
 
   if (!user) {
@@ -150,15 +143,6 @@ export function UserShell({ children }: { children: ReactNode }) {
         <div className="nav-foot">
           <button
             className="collapse-btn"
-            data-od-id="user-back-to-project"
-            onClick={backToProject}
-            title="Back to project"
-          >
-            {USER_BACK_ICON}
-            <span className="lbl">Back to project</span>
-          </button>
-          <button
-            className="collapse-btn"
             data-od-id="user-rail-toggle"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -211,27 +195,6 @@ export function UserShell({ children }: { children: ReactNode }) {
             <span className="sep">/</span>
             <span className="cur">{USER_TITLES[activeId] ?? "Profile"}</span>
           </div>
-          <div className="tb-right">
-            <button
-              className="tbtn"
-              data-od-id="user-topbar-back"
-              title="Back to project workspace"
-              onClick={backToProject}
-            >
-              <svg
-                width="17"
-                height="17"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-            </button>
-          </div>
         </header>
         <main className="content">{children}</main>
       </div>
@@ -248,22 +211,20 @@ export function UserShell({ children }: { children: ReactNode }) {
         }}
       />
       <SwitcherModals />
-      <UserMobileNav activeId={activeId} onGo={go} onBack={backToProject} />
+      <UserMobileNav activeId={activeId} onGo={go} />
       <Toasts />
     </div>
   );
 }
 
-/** Mobile bottom sheet (≤880px) — account nav + back to project, mirroring
+/** Mobile bottom sheet (≤880px) — account nav, mirroring
  *  the org MobileNav structure with user-scoped content. */
 function UserMobileNav({
   activeId,
   onGo,
-  onBack,
 }: {
   activeId: string;
   onGo: (path: string) => void;
-  onBack: () => void;
 }) {
   const { user, mNavOpen, setMNavOpen, setNavModal } = useApp();
   return (
@@ -330,28 +291,6 @@ function UserMobileNav({
             ))}
           </div>
         ))}
-
-        <div className="m-lbl">Project workspace</div>
-        <button className="m-srow" onClick={onBack}>
-          <span className="ic">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </span>
-          <span className="tx">
-            <b>Back to project</b>
-            <small>Tasks, documents, planning</small>
-          </span>
-        </button>
       </div>
     </aside>
   );

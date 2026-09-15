@@ -4,8 +4,23 @@
  *  Invitations expose roleName — both hydrated via joins here. */
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "./pg";
-import { organizations, roles, organizationMembers, invitations } from "@pmin/core/db";
-import { uuidv7, type Organization, type Role, type Member, type Invitation, type User } from "@pmin/core";
+import {
+  organizations,
+  roles,
+  organizationMembers,
+  invitations,
+  projects,
+  projectMembers,
+} from "@pmin/core/db";
+import {
+  uuidv7,
+  type Organization,
+  type Role,
+  type Member,
+  type MemberProfile,
+  type Invitation,
+  type User,
+} from "@pmin/core";
 import { getUserByEmail } from "./auth-repo";
 import { iso, userMap } from "./mapping";
 import { ApiError } from "../lib/errors";
@@ -240,6 +255,42 @@ export async function getOrgMember(orgId: string, memberId: string): Promise<Mem
   if (!row) return null;
   const byId = await userMap([row.member.userId]);
   return toMember(row.member, row.role, byId.get(row.member.userId));
+}
+
+/** Org-scoped member profile, looked up by USER id (what notification
+ *  targets carry) — the hydrated membership plus the member's active
+ *  project memberships inside this org. */
+export async function getMemberProfile(
+  orgId: string,
+  userId: string,
+): Promise<MemberProfile | null> {
+  const [row] = await db
+    .select({ member: organizationMembers, role: roles })
+    .from(organizationMembers)
+    .innerJoin(roles, eq(roles.id, organizationMembers.roleId))
+    .where(
+      and(eq(organizationMembers.organizationId, orgId), eq(organizationMembers.userId, userId)),
+    )
+    .limit(1);
+  if (!row) return null;
+  const byId = await userMap([row.member.userId]);
+  const member = toMember(row.member, row.role, byId.get(row.member.userId));
+  if (!member.user) return null; // user row vanished mid-flight — no profile
+  const projectRows = await db
+    .select({ id: projects.id, name: projects.name, slug: projects.slug, role: roles.name })
+    .from(projectMembers)
+    .innerJoin(projects, eq(projects.id, projectMembers.projectId))
+    .innerJoin(roles, eq(roles.id, projectMembers.roleId))
+    .where(
+      and(
+        eq(projectMembers.userId, userId),
+        eq(projectMembers.status, "active"),
+        eq(projects.organizationId, orgId),
+        isNull(projects.deletedAt),
+      ),
+    )
+    .orderBy(asc(projects.name));
+  return { ...member, projects: projectRows };
 }
 
 export async function insertMember(input: {

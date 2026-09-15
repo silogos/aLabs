@@ -14,6 +14,14 @@ import { dateShort } from "@/lib/format";
 import { PERM, hasPerm } from "@/features/settings/model";
 import { NewProjectModal } from "./new-project-modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Drawer,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerMenu,
+  DrawerMenuItem,
+} from "@/components/ui/drawer-kit";
+import { DetailList, DetailItem } from "@/components/ui/detail-list";
 import { IconPicker } from "@/components/ui/icon-picker";
 import { hueFor, projColor } from "@/components/nav-data";
 import { ProjectStatus } from "./overview-view";
@@ -235,7 +243,6 @@ export function OrgProjectsView() {
 
       {selected && (
         <>
-          <div className="scrim show" onClick={() => setSelectedId(null)} />
           <ProjectDrawer
             project={selected}
             busy={busyId === selected.id}
@@ -306,8 +313,13 @@ function ProjectDrawer({
 }) {
   const hasActions = canUpdate || canDelete;
   return (
-    <aside className="drawer show" data-od-id="org-project-drawer">
-      <div className="dh">
+    <Drawer
+      label={`${project.name} — project details`}
+      onClose={onClose}
+      menuOpen={menuOpen}
+      onMenuOpen={onMenuOpen}
+    >
+      <DrawerHeader>
         <IconPicker
           value={project.icon}
           fallback={project.name[0]}
@@ -318,89 +330,86 @@ function ProjectDrawer({
           onChange={onIcon}
           title={canUpdate ? "Change icon" : "Read-only"}
         />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="dh-top row" style={{ gap: 8 }}>
-            <ProjectStatus status={project.status} />
-            <span className="tid mono">{project.key}</span>
-          </div>
+        <DrawerTitle>
           <h3>{project.name}</h3>
-        </div>
-        <div className="hacts">
+          <div className="tiny mono faint">
+            {project.key} · {project.slug}
+          </div>
+        </DrawerTitle>
+        <DrawerMenu label="Project actions" disabled={busy}>
           {hasActions && (
-            <div className="hmenu">
-              <button
-                className="x"
-                onClick={() => onMenuOpen(!menuOpen)}
-                aria-label="Project actions"
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                disabled={busy}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="5" r="1.6" />
-                  <circle cx="12" cy="12" r="1.6" />
-                  <circle cx="12" cy="19" r="1.6" />
-                </svg>
-              </button>
-              {menuOpen && (
-                <div className="menu-pop down" role="menu" data-od-id="org-project-actions-menu">
-                  {canUpdate && project.status === "active" && (
-                    <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("on_hold"); }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <rect x="6" y="4" width="4" height="16" rx="1" />
-                        <rect x="14" y="4" width="4" height="16" rx="1" />
-                      </svg>
-                      Put on hold
-                    </button>
-                  )}
-                  {canUpdate && project.status === "on_hold" && (
-                    <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("active"); }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-                        <path d="M8 5.5v13l11-6.5z" />
-                      </svg>
-                      Resume project
-                    </button>
-                  )}
-                  {canUpdate && project.status !== "archived" && (
-                    <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("archived"); }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="5" rx="1" />
-                        <path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" />
-                      </svg>
-                      Archive
-                    </button>
-                  )}
-                  {canUpdate && project.status === "archived" && (
-                    <button role="menuitem" onClick={() => { onMenuOpen(false); onStatus("active"); }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-                        <path d="M3 3v5h5" />
-                      </svg>
-                      Restore
-                    </button>
-                  )}
-                  {canDelete && (
-                    <>
-                      <div className="sep" />
-                      <button role="menuitem" className="danger" onClick={() => { onMenuOpen(false); onConfirmDelete(true); }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
-                        </svg>
-                        Delete project…
-                      </button>
-                    </>
-                  )}
-                </div>
+            <>
+              {canUpdate && project.status === "active" && (
+                <DrawerMenuItem
+                  onClick={() => onStatus("on_hold")}
+                  icon={
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <rect x="6" y="4" width="4" height="16" rx="1" />
+                      <rect x="14" y="4" width="4" height="16" rx="1" />
+                    </svg>
+                  }
+                >
+                  Put on hold
+                </DrawerMenuItem>
               )}
-            </div>
+              {canUpdate && project.status === "on_hold" && (
+                <DrawerMenuItem
+                  onClick={() => onStatus("active")}
+                  icon={
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+                      <path d="M8 5.5v13l11-6.5z" />
+                    </svg>
+                  }
+                >
+                  Resume project
+                </DrawerMenuItem>
+              )}
+              {canUpdate && project.status !== "archived" && (
+                <DrawerMenuItem
+                  onClick={() => onStatus("archived")}
+                  icon={
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="5" rx="1" />
+                      <path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" />
+                    </svg>
+                  }
+                >
+                  Archive
+                </DrawerMenuItem>
+              )}
+              {canUpdate && project.status === "archived" && (
+                <DrawerMenuItem
+                  onClick={() => onStatus("active")}
+                  icon={
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                      <path d="M3 3v5h5" />
+                    </svg>
+                  }
+                >
+                  Restore
+                </DrawerMenuItem>
+              )}
+              {canDelete && (
+                <>
+                  <div className="sep" />
+                  <DrawerMenuItem
+                    danger
+                    onClick={() => onConfirmDelete(true)}
+                    icon={
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
+                      </svg>
+                    }
+                  >
+                    Delete project…
+                  </DrawerMenuItem>
+                </>
+              )}
+            </>
           )}
-          <button className="x" onClick={onClose} aria-label="Close" title="Close (Esc)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
+        </DrawerMenu>
+      </DrawerHeader>
       <div className="db">
         {project.description ? (
           <p className="small" style={{ color: "var(--fg)", margin: "0 0 16px" }}>
@@ -411,22 +420,25 @@ function ProjectDrawer({
         <div className="tiny muted" style={{ letterSpacing: 0.04, textTransform: "uppercase", marginBottom: 10 }}>
           Details
         </div>
-        <div className="meta-grid">
-          <div className="k">Status</div>
-          <div className="v">
+        <DetailList>
+          <DetailItem label="Status">
             <ProjectStatus status={project.status} />
-          </div>
-          <div className="k">Visibility</div>
-          <div className="v">
-            <span className="chip muted">{project.visibility === "organization" ? "Organization" : "Private"}</span>
-          </div>
-          <div className="k">Project key</div>
-          <div className="v mono">{project.key}</div>
-          <div className="k">Slug</div>
-          <div className="v mono">{project.slug}</div>
-          <div className="k">Created</div>
-          <div className="v mono">{dateShort(project.createdAt)}</div>
-        </div>
+          </DetailItem>
+          <DetailItem label="Visibility">
+            <span className="chip muted">
+              {project.visibility === "organization" ? "Organization" : "Private"}
+            </span>
+          </DetailItem>
+          <DetailItem label="Project key">
+            <span className="mono">{project.key}</span>
+          </DetailItem>
+          <DetailItem label="Slug">
+            <span className="mono">{project.slug}</span>
+          </DetailItem>
+          <DetailItem label="Created">
+            <span className="mono">{dateShort(project.createdAt)}</span>
+          </DetailItem>
+        </DetailList>
       </div>
       <div className="df">
         <div className="split">
@@ -442,6 +454,6 @@ function ProjectDrawer({
           Switches into the project workspace
         </div>
       </div>
-    </aside>
+    </Drawer>
   );
 }

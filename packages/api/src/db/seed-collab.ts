@@ -73,9 +73,11 @@ export async function seedCollab(ctx: SeedCtx, parents: TaskWithMeta[], fresh: b
   if (fresh) {
     const aisha = usersByShort.ay;
     // routing data — clients format their own URLs from slugs + order;
-    // title spans link the actor (→ members) and the task serial (→ task)
+    // title spans link the actor (→ profile) and the task serial (→ task)
     const org = await orgRepo.getOrganization(atlas.organizationId);
-    const members = org ? { kind: "members" as const, orgSlug: org.slug } : null;
+    const actorTarget = org
+      ? { kind: "user" as const, orgSlug: org.slug, userId: usersByShort.mk.id }
+      : null;
     const taskTarget = (order: number) =>
       org
         ? { kind: "task" as const, orgSlug: org.slug, projectSlug: atlas.slug, order }
@@ -85,7 +87,7 @@ export async function seedCollab(ctx: SeedCtx, parents: TaskWithMeta[], fresh: b
       type: "mention",
       title: "Marco mentioned you on ATL-101",
       titleSegments: [
-        { text: "Marco", target: members },
+        { text: "Marco", target: actorTarget },
         { text: " mentioned you on " },
         { text: "ATL-101", target: taskTarget(101) },
       ],

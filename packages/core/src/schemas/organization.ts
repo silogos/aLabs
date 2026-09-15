@@ -63,6 +63,23 @@ export const memberSchema = z.object({
 });
 export type Member = z.infer<typeof memberSchema>;
 
+/** A project the member belongs to, as shown on their profile. */
+export const memberProjectSchema = z.object({
+  id,
+  name: z.string(),
+  slug: z.string(),
+  role: z.string(),
+});
+export type MemberProject = z.infer<typeof memberProjectSchema>;
+
+/** Org-scoped member profile — the hydrated Member plus the user's active
+ *  project memberships in this org. Workspace-scoped on purpose: profiles
+ *  are viewed through an org by fellow members, never globally. */
+export const memberProfileSchema = memberSchema.extend({
+  projects: z.array(memberProjectSchema),
+});
+export type MemberProfile = z.infer<typeof memberProfileSchema>;
+
 export const invitationCreate = z.object({
   email: z.string().email(),
   roleName: z.string(),
