@@ -20,7 +20,7 @@ type OrgUpdate = {
 
 export interface OrgActivityEntry {
   id: string;
-  kind: "move" | "doc" | "com" | "done" | "mile";
+  kind: "move" | "doc" | "com" | "done" | "mile" | "proj";
   projectId: string;
   actorId: string;
   actorName: string | null;
