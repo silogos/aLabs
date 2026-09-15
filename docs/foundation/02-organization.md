@@ -146,6 +146,13 @@ Status
 - Expired
 - Cancelled
 
+Flow
+
+- An admin (member:create) invites an email; the invitation carries a unique token and expires after 7 days.
+- Email delivery is deferred — until a provider is picked, the accept link (`/invite?token=…`) is copyable from the members page.
+- The invitee accepts themselves via the link: public preview, then accept with the invited account's session (the membership is created active). Admins can still accept or cancel on the invitee's behalf.
+- Expiry is enforced on lookup and on accept: a pending invitation past its expiry is flipped to Expired and never blocks a re-invite.
+
 ---
 
 # Role
