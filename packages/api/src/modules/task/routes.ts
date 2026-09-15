@@ -27,6 +27,7 @@ import { parseJsonBody, parseQuery, pickDefined } from "../../lib/validate";
 import { projectContext, projectIdOf } from "../../lib/tenant";
 import { requirePermission } from "../../lib/permission";
 import { notifyTaskAssigned, notifyTaskCommented } from "../notification/emit";
+import { emitTaskCommented, emitTaskStatusChanged } from "../activity/emit";
 import { UPLOADS_DIR, ATTACHMENT_MAX_BYTES, attachmentTypeAllowed, imageExt } from "../../lib/uploads";
 import type { Vars, Ctx } from "../../lib/ctx";
 
@@ -138,6 +139,7 @@ task.post("/tasks/:id/comments", requirePermission("task:update"), async (c) => 
   const input = await parseJsonBody(c, commentCreate);
   const comment = await taskRepo.insertComment({ taskId: t.id, userId: c.get("user")!.id, body: input.body });
   await notifyTaskCommented(t, c.get("user")!.id, comment.body);
+  await emitTaskCommented(t, c.get("user")!.id);
   return created(c, comment);
 });
 
@@ -189,10 +191,10 @@ task.patch("/tasks/:id", requirePermission("task:update"), async (c) => {
   const input = await parseJsonBody(c, taskUpdate);
   // optimistic concurrency
   if (input.updatedAt && input.updatedAt !== t.updatedAt) throw conflict("Task was modified");
-  if (input.statusId) {
-    const ns = await taskRepo.findStatus(projectIdOf(c), input.statusId);
-    if (!ns) throw notFound("Status not found");
-  }
+  const newStatus = input.statusId
+    ? await taskRepo.findStatus(projectIdOf(c), input.statusId)
+    : null;
+  if (input.statusId && !newStatus) throw notFound("Status not found");
   if (input.labelIds) {
     const found = await taskRepo.findLabels(projectIdOf(c), input.labelIds);
     if (found.length !== input.labelIds.length) throw badRequest("Unknown label id");
@@ -217,6 +219,9 @@ task.patch("/tasks/:id", requirePermission("task:update"), async (c) => {
   if (!updated) throw conflict("Task was modified");
   if (input.assigneeId !== undefined && input.assigneeId !== t.assigneeId) {
     await notifyTaskAssigned(updated, c.get("user")!.id);
+  }
+  if (newStatus && newStatus.id !== t.statusId) {
+    await emitTaskStatusChanged(updated, c.get("user")!.id, newStatus.name);
   }
   return data(c, await serializeTask(updated));
 });

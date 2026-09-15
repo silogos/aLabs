@@ -18,6 +18,7 @@ const VERB: Record<string, string> = {
   com: "commented on",
   done: "closed",
   mile: "created milestone",
+  proj: "created project",
 };
 
 const FEED_ICON: Record<string, React.ReactNode> = {
@@ -46,6 +47,12 @@ const FEED_ICON: Record<string, React.ReactNode> = {
   mile: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z" />
+    </svg>
+  ),
+  proj: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <path d="M12 11v5M9.5 13.5h5" />
     </svg>
   ),
 };

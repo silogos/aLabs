@@ -12,6 +12,7 @@ import { created, data, noContent } from "../../lib/responses";
 import { parseJsonBody } from "../../lib/validate";
 import { projectContext, orgContext, currentTenant } from "../../lib/tenant";
 import { requirePermission } from "../../lib/permission";
+import { emitProjectCreated } from "../activity/emit";
 import type { Vars } from "../../lib/ctx";
 
 export const project = new Hono<{ Variables: Vars }>();
@@ -48,6 +49,7 @@ project.post("/", orgContext, requirePermission("project:create"), async (c) => 
     icon: input.icon ?? null,
     creatorId: user.id,
   });
+  await emitProjectCreated(proj, user.id);
   return created(c, projectSchema.parse(proj));
 });
 

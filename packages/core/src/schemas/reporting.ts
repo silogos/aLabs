@@ -29,7 +29,7 @@ export const dashboardSchema = z.object({
   activity: z.array(
     z.object({
       id: id,
-      kind: z.enum(["move", "doc", "com", "done", "mile"]),
+      kind: z.enum(["move", "doc", "com", "done", "mile", "proj"]),
       projectId: id.optional(),
       actorId: id,
       target: z.string(),

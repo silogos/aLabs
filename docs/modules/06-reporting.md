@@ -68,6 +68,10 @@ Entities
 - Progress report
 - Activity report
 
+### Activity feed
+
+The activity feed (`activity` table) is a cross-project dashboard stream. It is written by module emitters (`packages/api/src/modules/activity/emit.ts`) on real usage — task status changes (kind `move`, or `done` when the target status is named "Done"), task comments (`com`), and project creation (`proj`) — plus display-only demo rows from the seed. Events carry a display `target` (task serial `<KEY>-<n>` or project name); live rows leave `whenLabel` empty so clients render relative time from `when`. The per-task audit trail remains `task_status_events` (task module); the org-wide feed is served by `GET /organizations/:id/activity` and the per-project feed by `GET /projects/:id/reporting/activity`.
+
 ## Export
 
 - Export to PDF
