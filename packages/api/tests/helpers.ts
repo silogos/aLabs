@@ -107,9 +107,11 @@ export async function createProject(
     },
   });
   if (res.status !== 201) {
-    throw new Error(`createProject failed: ${res.status} ${await res.text()}`);
+    throw new Error(`createProject failed: ${res.status}`);
   }
-  const { data } = (await res.json()) as { data: { id: string; slug: string; key: string } };
+  const { data } = (await res.json()) as {
+    data: { id: string; slug: string; key: string; name: string };
+  };
   return data;
 }
 
