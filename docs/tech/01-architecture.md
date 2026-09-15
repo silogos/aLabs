@@ -25,6 +25,7 @@ A modular monolith deployed as a single application — a Next.js server that re
 | ORM         | Drizzle             |
 | Auth        | Hand-rolled sessions (scrypt + Postgres) |
 | Validation  | zod (shared)        |
+| Logging     | pino (structured JSON to stdout, ADR 0010) |
 | Package Mgmt| pnpm workspaces     |
 | Build       | Turborepo           |
 | Deployment  | Docker              |
@@ -97,7 +98,7 @@ DB table definitions live in `packages/core/db`. The module owns its service and
 7. response           → serialized envelope
 ```
 
-Any step can short-circuit with the standard error envelope (see Conventions).
+Any step can short-circuit with the standard error envelope (see Conventions). Every request emits one structured log line on completion (method, path, status, duration_ms) from the middleware in `app.ts`.
 
 ---
 
@@ -152,6 +153,8 @@ WEB_URL            external app origin (default http://localhost:3000)
 GOOGLE_CLIENT_ID   Google SSO — off until both are set
 GOOGLE_CLIENT_SECRET
 SEED_DEMO          demo seed on boot (default: on outside production)
+LOG_LEVEL          pino log level (default: debug outside production, info in production)
+UPLOADS_DIR        local-disk uploads directory
 ```
 
 To be selected:

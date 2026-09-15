@@ -20,6 +20,7 @@ import {
 import { badRequest, unauthorized } from "../../lib/errors";
 import { extractToken, SESSION_COOKIE } from "../../lib/auth";
 import { webUrl } from "../../lib/urls";
+import { logger } from "../../lib/logger";
 import { hashPassword, verifyPassword } from "../../lib/passwords";
 import { created, data } from "../../lib/responses";
 import { parseJsonBody } from "../../lib/validate";
@@ -108,7 +109,7 @@ auth.post("/forgot-password", async (c) => {
   // No email provider wired yet (EMAIL_* is unselected — see .env.example), so
   // log the link as the stand-in. Returned outside production so the flow is
   // testable end-to-end.
-  console.log(`[auth] password reset for ${user.email}: ${resetUrl}`);
+  logger.info({ email: user.email, resetPath: resetUrl }, "password reset link (no email provider)");
   return data(c, {
     ok: true,
     ...(process.env.NODE_ENV !== "production" ? { resetPath: resetUrl } : {}),
@@ -234,12 +235,12 @@ auth.get("/oauth/google/callback", async (c) => {
     }),
   });
   if (!tokenRes.ok) {
-    console.error(`[auth] google token exchange failed: ${tokenRes.status} ${tokenRes.statusText}`);
+    logger.error({ status: tokenRes.status, statusText: tokenRes.statusText }, "google token exchange failed");
     return fail("token_exchange_failed");
   }
   const { access_token } = (await tokenRes.json()) as { access_token?: string };
   if (!access_token) {
-    console.error("[auth] google token exchange returned no access_token");
+    logger.error("google token exchange returned no access_token");
     return fail("token_exchange_failed");
   }
 
@@ -247,7 +248,7 @@ auth.get("/oauth/google/callback", async (c) => {
     headers: { Authorization: `Bearer ${access_token}` },
   });
   if (!profileRes.ok) {
-    console.error(`[auth] google userinfo failed: ${profileRes.status} ${profileRes.statusText}`);
+    logger.error({ status: profileRes.status, statusText: profileRes.statusText }, "google userinfo failed");
     return fail("userinfo_failed");
   }
   const profile = (await profileRes.json()) as {

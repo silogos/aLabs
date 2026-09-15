@@ -6,12 +6,12 @@
  * in-process by the Next.js server under /api. Same-origin only — no CORS.
  */
 import { Hono } from "hono";
-import { logger } from "hono/logger";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { readFile } from "node:fs/promises";
 import { basename, join, normalize } from "node:path";
 import { ApiError } from "./lib/errors";
 import { resolveUser } from "./lib/auth";
+import { logger } from "./lib/logger";
 import { UPLOADS_DIR, uploadMime } from "./lib/uploads";
 import { ready } from "./db/boot";
 import type { Vars } from "./lib/ctx";
@@ -32,7 +32,19 @@ import { user } from "./modules/user/routes";
 
 export const app = new Hono<{ Variables: Vars }>();
 
-app.use("*", logger());
+// structured request log — one JSON line per request on completion
+app.use("*", async (c, next) => {
+  const start = performance.now();
+  await next();
+  const fields = {
+    method: c.req.method,
+    path: c.req.path,
+    status: c.res.status,
+    duration_ms: Math.round(performance.now() - start),
+  };
+  if (c.res.status >= 500) logger.error({ ...fields, err: c.error }, "request failed");
+  else logger.info(fields, "request");
+});
 
 // boot gate: migrations + auth seed (Postgres) + demo seed before any request
 app.use("*", async (_c, next) => {
@@ -107,7 +119,7 @@ app.onError((err, c) => {
   }
   // Never forward internal messages to clients — log the detail, return a
   // generic humanized envelope.
-  console.error(err);
+  logger.error({ err, path: c.req.path }, "unhandled error");
   return c.json(
     { error: { code: "internal_error", message: "Something went wrong on our end. Please try again." } },
     500,
