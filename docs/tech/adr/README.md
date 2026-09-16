@@ -47,3 +47,4 @@ What else was considered and rejected.
 | 0007| Personal workspaces as single-member orgs       |
 | 0008| Next.js App Router as the single web deployment |
 | 0009| Slug-based shareable web URLs                    |
+| 0010| Structured logging with pino                     |

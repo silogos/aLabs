@@ -10,5 +10,7 @@ process.env.DATABASE_URL =
   process.env.TEST_DATABASE_URL ?? "postgres://alabs:alabs@localhost:5432/alabs_test";
 // forgot-password only returns resetPath outside production
 process.env.NODE_ENV = "test";
+// keep per-request info logs out of the reporter; warn+ still surfaces
+process.env.LOG_LEVEL ??= "warn";
 // keep file-upload tests off the repo's working tree
 process.env.UPLOADS_DIR ??= join(tmpdir(), "pmin-api-test-uploads");
